@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/receive")({
   component: Receive,
 });
 
-export const qrPayload = (code: string) => `moonlight:${code}`;
+const qrPayload = (code: string) => `moonlight:${code}`;
 
 function Receive() {
   const wallet = useWallet();
