@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
+import { PaymentAnimation } from "@/components/PaymentAnimation";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({
@@ -60,10 +61,15 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
 
 function Send() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const profile = useProfile();
   const wallet = useWallet();
   const rates = useRates();
-  const [step, setStep] = useState<"to" | "amount" | "review" | "done">("to");
+
+  const [step, setStep] = useState<"to" | "amount" | "review" | "animating" | "done">("to");
+  const [animState, setAnimState] = useState<"confirming" | "processing" | "completed" | "failed">(
+    "confirming",
+  );
   const [query, setQuery] = useState("");
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [amount, setAmount] = useState("");
@@ -72,6 +78,7 @@ function Send() {
   const [busy, setBusy] = useState(false);
   const [scan, setScan] = useState(false);
   const [txId, setTxId] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const cur = currency || profile.data?.preferred_currency || "EUR";
   const r = rates.data?.rates ?? {};
@@ -79,6 +86,7 @@ function Send() {
   const fee = amt * TRANSFER_FEE_RATE;
   const recvCur = recipient?.preferred_currency ?? "EUR";
   const recv = convert(amt, cur, recvCur, r);
+  const rateRatio = convert(1, cur, recvCur, r);
   const available = Number(wallet.data?.balance_usd ?? 0) * (r[cur] ?? 1);
 
   async function lookup(q: string) {
@@ -95,22 +103,33 @@ function Send() {
     setStep("amount");
   }
 
-  async function confirm() {
+  async function confirmTransfer() {
     if (!recipient) return;
+    setStep("animating");
+    setAnimState("processing");
     setBusy(true);
-    const { data, error } = await supabase.rpc("send_transfer", {
-      p_recipient_code: recipient.wallet_code,
-      p_amount: amt,
-      p_currency: cur,
-      ...(note ? { p_note: note } : {}),
-    });
+
+    // Give visual animation time to present processing sequence
+    const [res] = await Promise.all([
+      supabase.rpc("send_transfer", {
+        p_recipient_code: recipient.wallet_code,
+        p_amount: amt,
+        p_currency: cur,
+        ...(note ? { p_note: note } : {}),
+      }),
+      new Promise((resolve) => setTimeout(resolve, 1400)),
+    ]);
+
     setBusy(false);
-    if (error) {
-      toast.error(error.message);
+
+    if (res.error) {
+      setErrorMessage(res.error.message);
+      setAnimState("failed");
       return;
     }
-    setTxId(data as string);
-    setStep("done");
+
+    setTxId(res.data as string);
+    setAnimState("completed");
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
   }
@@ -268,11 +287,7 @@ function Send() {
             <div className="flex justify-between gap-4 py-4 text-sm">
               <span className="text-muted-foreground">Exchange Rate</span>
               <span className="text-right font-medium">
-                1 {cur} ≈{" "}
-                {convert(1, cur, recvCur, r).toLocaleString(undefined, {
-                  maximumFractionDigits: 4,
-                })}{" "}
-                {recvCur}
+                1 {cur} ≈ {rateRatio.toFixed(4)} {recvCur}
               </span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
@@ -296,7 +311,7 @@ function Send() {
               </div>
             )}
           </div>
-          <button disabled={busy} onClick={confirm} className={`${btn} mt-8`}>
+          <button disabled={busy} onClick={confirmTransfer} className={`${btn} mt-8`}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
           </button>
           <button
@@ -306,6 +321,31 @@ function Send() {
             Back
           </button>
         </>
+      )}
+
+      {step === "animating" && recipient && (
+        <div className="py-4 animate-in fade-in duration-300">
+          <PaymentAnimation
+            state={animState}
+            senderName={profile.data?.full_name || "Sender"}
+            senderCode={wallet.data?.wallet_code || "ML-SENDER"}
+            recipientName={recipient.full_name}
+            recipientCode={recipient.wallet_code}
+            sourceAmount={amt}
+            sourceCurrency={cur}
+            destinationAmount={recv}
+            destinationCurrency={recvCur}
+            exchangeRate={rateRatio}
+            fee={fee}
+            errorMessage={errorMessage}
+            onRetry={() => {
+              setStep("review");
+            }}
+            onViewReceipt={() => {
+              if (txId) navigate({ to: "/transactions/$id", params: { id: txId } });
+            }}
+          />
+        </div>
       )}
 
       {step === "done" && (

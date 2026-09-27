@@ -1,6 +1,7 @@
 export const CURRENCIES = [
-  { code: "USD", name: "US Dollar" },
   { code: "EUR", name: "Euro" },
+  { code: "CZK", name: "Czech Koruna" },
+  { code: "USD", name: "US Dollar" },
   { code: "GBP", name: "British Pound" },
   { code: "INR", name: "Indian Rupee" },
   { code: "PHP", name: "Philippine Peso" },
@@ -9,10 +10,29 @@ export const CURRENCIES = [
   { code: "CAD", name: "Canadian Dollar" },
   { code: "JPY", name: "Japanese Yen" },
   { code: "CHF", name: "Swiss Franc" },
+  { code: "AED", name: "UAE Dirham" },
+  { code: "PLN", name: "Polish Zloty" },
 ] as const;
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"];
 export const CURRENCY_CODES = CURRENCIES.map((c) => c.code) as CurrencyCode[];
+
+/** Fallback rates (quote per 1 USD) if API or DB is pending. */
+export const FALLBACK_RATES: Record<string, number> = {
+  USD: 1.0,
+  EUR: 0.92,
+  CZK: 23.25,
+  GBP: 0.79,
+  INR: 83.2,
+  PHP: 56.5,
+  SGD: 1.35,
+  AUD: 1.52,
+  CAD: 1.36,
+  JPY: 152.0,
+  CHF: 0.88,
+  AED: 3.67,
+  PLN: 3.98,
+};
 
 /** Transfer fee charged to the sender. Must match public.send_transfer. */
 export const TRANSFER_FEE_RATE = 0.005;
@@ -30,8 +50,13 @@ export function formatMoney(amount: number, currency: string, opts: { sign?: boo
 }
 
 /** rates are quote-per-1-USD */
-export function convert(amount: number, from: string, to: string, rates: Record<string, number>) {
-  const f = rates[from] ?? 1;
-  const t = rates[to] ?? 1;
+export function convert(
+  amount: number,
+  from: string,
+  to: string,
+  rates: Record<string, number> = {},
+) {
+  const f = rates[from] ?? FALLBACK_RATES[from] ?? 1;
+  const t = rates[to] ?? FALLBACK_RATES[to] ?? 1;
   return (amount / f) * t;
 }

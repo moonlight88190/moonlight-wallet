@@ -29,6 +29,7 @@ export interface GiftCardMeta {
   brand: string;
   category: "Gaming" | "Shopping" | "Entertainment" | "Luxury" | "Travel";
   imageUrl: string;
+  logoUrl?: string;
   description: string;
   popular?: boolean;
 }
@@ -40,6 +41,14 @@ export interface InvestmentMeta {
   subtitle: string;
   imageUrl: string;
   badge?: string;
+}
+
+export interface LuxuryBrandMeta {
+  id: string;
+  name: string;
+  category: string;
+  logoUrl: string;
+  photoUrl?: string;
 }
 
 export const COUNTRIES: Record<string, CountryMeta> = {
@@ -277,7 +286,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "sepa",
     name: "SEPA Instant Transfer",
     description: "Eurozone instant bank payout (EUR)",
-    iconUrl: "/assets/payment-methods/sepa.svg",
+    iconUrl: "/assets/payment-methods/sepa.png",
     region: "Europe",
     speed: "Instant",
     badge: "Europe Primary",
@@ -295,7 +304,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi",
     name: "UPI Direct",
     description: "Instant payout via Virtual Payment Address (VPA)",
-    iconUrl: "/assets/payment-methods/upi.svg",
+    iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
     badge: "NPCI Official",
@@ -304,7 +313,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi-qr",
     name: "UPI QR Code",
     description: "Scan & pay via PhonePe, Google Pay or Paytm",
-    iconUrl: "/assets/payment-methods/upi-qr.svg",
+    iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
   },
@@ -320,7 +329,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "gcash",
     name: "GCash Wallet",
     description: "Instant payout to GCash Mobile Wallet",
-    iconUrl: "/assets/payment-methods/gcash.svg",
+    iconUrl: "/assets/payment-methods/gcash.png",
     region: "Philippines",
     speed: "Instant",
     badge: "Official",
@@ -348,7 +357,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "amazon",
     brand: "Amazon",
     category: "Shopping",
-    imageUrl: "/assets/gift-cards/amazon.svg",
+    imageUrl: "/assets/gift-cards/amazon.png",
+    logoUrl: "/assets/gift-cards/amazon.png",
     description: "Digital voucher redeemable for millions of products worldwide",
     popular: true,
   },
@@ -356,7 +366,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "apple",
     brand: "Apple",
     category: "Entertainment",
-    imageUrl: "/assets/gift-cards/apple.svg",
+    imageUrl: "/assets/gift-cards/apple.png",
+    logoUrl: "/assets/gift-cards/apple.png",
     description: "Valid for App Store, Apple Music, iCloud & Apple Store products",
     popular: true,
   },
@@ -364,7 +375,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "google-play",
     brand: "Google Play",
     category: "Entertainment",
-    imageUrl: "/assets/gift-cards/google-play.svg",
+    imageUrl: "/assets/gift-cards/google-play.png",
+    logoUrl: "/assets/gift-cards/google-play.png",
     description: "Apps, games, movies and digital content on Android",
     popular: true,
   },
@@ -372,7 +384,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "steam",
     brand: "Steam",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/steam.svg",
+    imageUrl: "/assets/gift-cards/steam.png",
+    logoUrl: "/assets/gift-cards/steam.png",
     description: "Steam Wallet credits for thousands of PC games and DLCs",
     popular: true,
   },
@@ -380,7 +393,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "playstation",
     brand: "PlayStation Store",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/playstation.svg",
+    imageUrl: "/assets/gift-cards/playstation.png",
+    logoUrl: "/assets/gift-cards/playstation.png",
     description: "PSN funds for PlayStation consoles, subscriptions & games",
   },
   {
@@ -388,36 +402,144 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     brand: "Xbox",
     category: "Gaming",
     imageUrl: "/assets/gift-cards/xbox.svg",
+    logoUrl: "/assets/gift-cards/xbox.svg",
     description: "Xbox Game Pass, games and add-ons on console and PC",
   },
+];
+
+export const LUXURY_BRANDS: LuxuryBrandMeta[] = [
   {
-    id: "luxury-lifestyle",
-    brand: "Moonlight Private Luxury",
-    category: "Luxury",
-    imageUrl: "/assets/gift-cards/luxury-lifestyle.svg",
-    description: "Fine timepieces, luxury fashion houses & bespoke concierge",
-    popular: true,
+    id: "louis-vuitton",
+    name: "Louis Vuitton",
+    category: "Haute Couture & Leather",
+    logoUrl: "/assets/luxury/brands/louis-vuitton.png",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
   },
   {
-    id: "shopping",
-    brand: "Moonlight Global Retail",
-    category: "Shopping",
-    imageUrl: "/assets/gift-cards/shopping.svg",
-    description: "European luxury boutiques, department stores & fine goods",
+    id: "rolex",
+    name: "Rolex",
+    category: "Fine Horology",
+    logoUrl: "/assets/luxury/brands/rolex.png",
+    photoUrl: "/assets/luxury/photos/timepieces.jpg",
   },
   {
-    id: "entertainment",
-    brand: "Moonlight Media & Pass",
-    category: "Entertainment",
-    imageUrl: "/assets/gift-cards/entertainment.svg",
-    description: "Premium streaming services, concert tickets and cultural events",
+    id: "prada",
+    name: "Prada",
+    category: "High Fashion",
+    logoUrl: "/assets/luxury/brands/prada.png",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
   },
   {
-    id: "travel",
-    brand: "Moonlight Escapes",
-    category: "Travel",
-    imageUrl: "/assets/gift-cards/travel.svg",
-    description: "Boutique European hotel stays, flights & luxury travel vouchers",
+    id: "gucci",
+    name: "Gucci",
+    category: "Italian Luxury",
+    logoUrl: "/assets/luxury/brands/gucci.png",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "cartier",
+    name: "Cartier",
+    category: "High Jewellery",
+    logoUrl: "/assets/luxury/brands/cartier.png",
+    photoUrl: "/assets/luxury/photos/timepieces.jpg",
+  },
+  {
+    id: "dior",
+    name: "Dior",
+    category: "Parisian Elegance",
+    logoUrl: "/assets/luxury/brands/dior.png",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "hermes",
+    name: "Hermès",
+    category: "L'Art de Vivre",
+    logoUrl: "/assets/luxury/brands/hermes.png",
+    photoUrl: "/assets/luxury/photos/boutiques.jpg",
+  },
+  {
+    id: "tiffany",
+    name: "Tiffany & Co.",
+    category: "Diamond Jewellery",
+    logoUrl: "/assets/luxury/brands/tiffany.png",
+    photoUrl: "/assets/luxury/photos/timepieces.jpg",
+  },
+  {
+    id: "armani",
+    name: "Giorgio Armani",
+    category: "Bespoke Tailoring",
+    logoUrl: "/assets/luxury/brands/armani.png",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "chanel",
+    name: "Chanel",
+    category: "Haute Couture",
+    logoUrl: "/assets/luxury/brands/chanel.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "burberry",
+    name: "Burberry",
+    category: "Heritage Outerwear",
+    logoUrl: "/assets/luxury/brands/burberry.svg",
+    photoUrl: "/assets/luxury/photos/boutiques.jpg",
+  },
+  {
+    id: "versace",
+    name: "Versace",
+    category: "Glamour & Couture",
+    logoUrl: "/assets/luxury/brands/versace.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "balenciaga",
+    name: "Balenciaga",
+    category: "Avant-garde Fashion",
+    logoUrl: "/assets/luxury/brands/balenciaga.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "saint-laurent",
+    name: "Saint Laurent",
+    category: "Parisian Fashion",
+    logoUrl: "/assets/luxury/brands/saint-laurent.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "bvlgari",
+    name: "Bvlgari",
+    category: "Italian Jewellery",
+    logoUrl: "/assets/luxury/brands/bvlgari.svg",
+    photoUrl: "/assets/luxury/photos/timepieces.jpg",
+  },
+  {
+    id: "fendi",
+    name: "Fendi",
+    category: "Italian Luxury House",
+    logoUrl: "/assets/luxury/brands/fendi.svg",
+    photoUrl: "/assets/luxury/photos/boutiques.jpg",
+  },
+  {
+    id: "valentino",
+    name: "Valentino",
+    category: "Roman Couture",
+    logoUrl: "/assets/luxury/brands/valentino.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+  {
+    id: "ralph-lauren",
+    name: "Ralph Lauren",
+    category: "American Luxury",
+    logoUrl: "/assets/luxury/brands/ralph-lauren.svg",
+    photoUrl: "/assets/luxury/photos/boutiques.jpg",
+  },
+  {
+    id: "tom-ford",
+    name: "Tom Ford",
+    category: "Modern Elegance",
+    logoUrl: "/assets/luxury/brands/tom-ford.svg",
+    photoUrl: "/assets/luxury/photos/fashion.jpg",
   },
 ];
 

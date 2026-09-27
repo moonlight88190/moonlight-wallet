@@ -1,15 +1,24 @@
 import { cn } from "@/lib/utils";
 
-/** Circular emblem cropped from the official logo. */
+/** Circular emblem using the real Moonlight brand asset. */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <div className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-slate-700 text-white shadow-xs dark:from-slate-100 dark:to-slate-300 dark:text-slate-900", className)}>
-      <span className="font-bold text-xs tracking-wider">ML</span>
+    <div
+      className={cn(
+        "relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-950 p-0.5 shadow-xs transition-transform",
+        className,
+      )}
+    >
+      <img
+        src="/assets/brand/moonlight-emblem.png"
+        alt="Moonlight Emblem"
+        className="h-full w-full object-cover rounded-full"
+      />
     </div>
   );
 }
 
-/** Full official logo mark. */
+/** Full official logo mark using the real Moonlight logo asset. */
 export function LogoFull({ className }: { className?: string }) {
   return (
     <div
@@ -19,8 +28,12 @@ export function LogoFull({ className }: { className?: string }) {
       )}
     >
       <div className="flex flex-col items-center text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-700 text-xl font-bold text-white shadow-soft dark:from-slate-100 dark:to-slate-300 dark:text-slate-900">
-          ML
+        <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-1 shadow-soft">
+          <img
+            src="/assets/brand/moonlight-logo.png"
+            alt="Moonlight Wallet Logo"
+            className="h-full w-full object-contain rounded-xl"
+          />
         </div>
         <span className="mt-3 text-xs font-semibold tracking-[0.25em] text-muted-foreground uppercase">
           MOONLIGHT WALLET
