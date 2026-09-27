@@ -183,10 +183,16 @@ export function GiftCardBrand({
       </div>
       <div className="mt-2.5 px-0.5">
         <div className="flex items-center justify-between gap-1">
-          <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">{cardData.brand}</h3>
-          <span className="shrink-0 text-[10px] font-medium text-muted-foreground">{cardData.category}</span>
+          <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">
+            {cardData.brand}
+          </h3>
+          <span className="shrink-0 text-[10px] font-medium text-muted-foreground">
+            {cardData.category}
+          </span>
         </div>
-        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">{cardData.description}</p>
+        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground leading-relaxed">
+          {cardData.description}
+        </p>
       </div>
     </div>
   );
@@ -213,14 +219,18 @@ export function TransferMethodCard({
         <PaymentMethodIcon id={method.id} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h4 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">{method.name}</h4>
+            <h4 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">
+              {method.name}
+            </h4>
             {method.badge && (
               <span className="rounded-md bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 {method.badge}
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground truncate">{method.description}</p>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground truncate">
+            {method.description}
+          </p>
         </div>
       </div>
 

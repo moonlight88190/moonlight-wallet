@@ -172,7 +172,9 @@ function Withdraw() {
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate">{item.description}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -236,7 +238,9 @@ function Withdraw() {
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
                 <div>
-                  <DialogTitle className="text-base sm:text-lg font-bold">{selectedMethod.name}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg font-bold">
+                    {selectedMethod.name}
+                  </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
                     {selectedMethod.description}
                   </DialogDescription>

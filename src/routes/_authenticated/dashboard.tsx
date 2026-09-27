@@ -219,7 +219,8 @@ function Dashboard() {
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              European private banking tools, multi-currency treasury &amp; global market allocations.
+              European private banking tools, multi-currency treasury &amp; global market
+              allocations.
             </p>
           </div>
           <Link
