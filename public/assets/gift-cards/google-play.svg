@@ -1,15 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" fill="none">
-  <rect width="400" height="250" rx="18" fill="#121318"/>
-  <!-- Play Icon -->
-  <g transform="translate(50, 75)">
-    <path d="M 0 0 L 50 30 L 0 60 Z" fill="#00E676"/>
-    <path d="M 0 0 L 35 35 L 0 60 Z" fill="#00B0FF"/>
-    <path d="M 0 0 L 35 18 L 50 30 Z" fill="#FF3D00"/>
-    <path d="M 0 60 L 35 42 L 50 30 Z" fill="#FFC107"/>
-  </g>
-  <text x="130" y="105" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="28" fill="#FFFFFF">Google Play</text>
-  <text x="130" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="13" fill="#9CA3AF">Apps, games, movies &amp; books</text>
-
-  <rect x="50" y="175" width="300" height="1" fill="#262833"/>
-  <text x="50" y="202" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="12" fill="#00E676">Instant Digital Delivery</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <path d="M 15 15 L 85 50 L 15 85 L 35 50 Z" fill="#4185F4"/>
+  <path d="M 15 15 L 50 50 L 35 50 Z" fill="#34A853"/>
+  <path d="M 15 85 L 50 50 L 35 50 Z" fill="#EA4335"/>
+  <path d="M 85 50 L 50 50 L 65 35 Z" fill="#FBBC04"/>
 </svg>

@@ -1,374 +1,268 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, ArrowRight, Check, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { Landmark, CheckCircle2, Sparkles, Lock, Gift } from "lucide-react";
 import { PageTitle } from "@/components/AppShell";
-import { CountryFlag, GiftCardBrand, PaymentMethodIcon } from "@/components/AssetComponents";
+import { GiftCardBrand, TransferMethodCard } from "@/components/AssetComponents";
 import {
   GIFT_CARDS,
+  LUXURY_BRANDS,
   PAYMENT_METHODS,
   type GiftCardMeta,
   type PaymentMethodMeta,
 } from "@/lib/assets";
-import { formatMoney } from "@/lib/currency";
-import { useProfile, useWallet } from "@/hooks/use-wallet";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/withdraw")({
   head: () => ({
     meta: [
-      { title: "Withdraw & Redeem — Moonlight Wallet" },
       {
         name: "description",
-        content:
-          "Withdraw Moonlight Wallet balance via SEPA Instant, Czech Bank Transfer, UPI, GCash, SWIFT or Redeem Digital Gift Cards.",
-      },
-      { property: "og:title", content: "Withdraw — Moonlight Wallet" },
-      {
-        property: "og:description",
-        content: "European & Global Payout Channels and Premium Digital Gift Cards.",
+        content: "Withdraw funds via SEPA, UPI, GCash, Bank Transfer, or luxury vouchers.",
       },
     ],
   }),
-  component: Withdraw,
+  component: WithdrawPage,
 });
 
-const REGIONS = [
-  {
-    id: "europe",
-    title: "Europe & Czech Republic",
-    badge: "Primary Corridor",
-    flagCode: "EU",
-    items: PAYMENT_METHODS.filter((m) => m.region === "Europe"),
-  },
-  {
-    id: "india",
-    title: "India Corridor",
-    badge: "Instant NPCI Rail",
-    flagCode: "IN",
-    items: PAYMENT_METHODS.filter((m) => m.region === "India"),
-  },
-  {
-    id: "philippines",
-    title: "Philippines Corridor",
-    badge: "InstaPay & GCash",
-    flagCode: "PH",
-    items: PAYMENT_METHODS.filter((m) => m.region === "Philippines"),
-  },
-  {
-    id: "international",
-    title: "International Wire",
-    badge: "Global Payout",
-    flagCode: "US",
-    items: PAYMENT_METHODS.filter((m) => m.region === "International"),
-  },
-];
-
-function Withdraw() {
-  const { data: wallet } = useWallet();
-  const { data: profile } = useProfile();
-  const balanceUsd = Number(wallet?.balance_usd ?? 0);
-  const preferredCurrency = profile?.preferred_currency || "EUR";
-
+function WithdrawPage() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(null);
-  const [selectedCard, setSelectedCard] = useState<GiftCardMeta | null>(null);
-  const [cardValue, setCardValue] = useState<number>(50);
-  const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
-  const [accountDetails, setAccountDetails] = useState<string>("");
-  const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [selectedGiftCard, setSelectedGiftCard] = useState<GiftCardMeta | null>(null);
+  const [amount, setAmount] = useState("");
+  const [recipientDetails, setRecipientDetails] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const categories = ["All", "Luxury", "Gaming", "Shopping", "Entertainment", "Travel"];
-  const filteredCards =
-    activeCategory === "All" ? GIFT_CARDS : GIFT_CARDS.filter((c) => c.category === activeCategory);
-
-  function handleInitiateWithdraw() {
-    if (!accountDetails) {
-      toast.error("Please enter account details or VPA / IBAN");
+  function handleWithdrawSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!amount || Number(amount) <= 0) {
+      toast.error("Please enter a valid amount.");
       return;
     }
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setSelectedMethod(null);
-      setAccountDetails("");
-      toast.success(`Withdrawal request submitted! Order reference generated.`);
-    }, 1200);
-  }
-
-  function handleRedeemCard() {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setSelectedCard(null);
-      toast.success(
-        `${selectedCard?.brand} $${cardValue} gift voucher generated! Code sent to email.`,
-      );
-    }, 1200);
+    setSuccess(true);
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-12">
-      <PageTitle eyebrow="WITHDRAW & REDEEM" title="Withdraw Funds">
-        Transfer funds to European &amp; international accounts or redeem instantly into digital
-        gift vouchers.
+    <div className="space-y-10">
+      <PageTitle eyebrow="WITHDRAW &amp; PAYOUTS" title="Multi-Currency Payout Rails">
+        Direct settlement via European SEPA, India UPI, PH InstaPay/GCash, or Global Wire.
       </PageTitle>
 
-      {/* Primary Payout Methods by Region */}
-      <div className="space-y-10">
-        <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="text-xl font-semibold tracking-tight">Financial Payout Channels</h2>
-          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            Verified Financial Infrastructure
-          </span>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          {REGIONS.map((region) => (
-            <div
-              key={region.id}
-              className="rounded-3xl border bg-card/60 p-5 shadow-soft space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <CountryFlag code={region.flagCode} circle size="sm" />
-                  <h3 className="font-semibold text-foreground text-base tracking-tight">
-                    {region.title}
-                  </h3>
-                </div>
-                <span className="text-[11px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full">
-                  {region.badge}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {region.items.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedMethod(item)}
-                    className="group flex items-center justify-between rounded-2xl border border-border/50 bg-card p-3.5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <PaymentMethodIcon id={item.id} size="md" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
-                              {item.badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
-                        {item.speed}
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Corridor Selection */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Settlement Rails</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PAYMENT_METHODS.map((method) => (
+            <TransferMethodCard
+              key={method.id}
+              method={method}
+              onClick={() => {
+                setSelectedMethod(method);
+                setSuccess(false);
+                setAmount("");
+                setRecipientDetails("");
+              }}
+            />
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Gift Cards Gallery */}
-      <div className="pt-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+      {/* Gift Cards Marketplace */}
+      <section className="space-y-4 pt-6 border-t">
+        <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-500" />
-              <h2 className="text-xl font-semibold tracking-tight">
-                Gift Cards &amp; Luxury Vouchers
-              </h2>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Convert Moonlight funds into instant official brand cards and luxury vouchers.
+            <h2 className="text-xl font-semibold tracking-tight">
+              Digital Vouchers &amp; Gift Cards
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Official vouchers for global gaming, shopping, and entertainment platforms.
             </p>
           </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                  activeCategory === cat
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {filteredCards.map((card) => (
-            <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {GIFT_CARDS.map((card) => (
+            <GiftCardBrand
+              key={card.id}
+              card={card}
+              onClick={() => {
+                setSelectedGiftCard(card);
+                setSuccess(false);
+                setAmount("50");
+              }}
+            />
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Dialog for Withdrawal Method */}
-      <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
-        {selectedMethod && (
-          <DialogContent className="sm:max-w-md rounded-3xl p-6">
-            <DialogHeader>
-              <div className="flex items-center gap-3">
-                <PaymentMethodIcon id={selectedMethod.id} size="md" />
-                <div>
-                  <DialogTitle className="text-lg font-semibold">{selectedMethod.name}</DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground">
-                    {selectedMethod.description}
-                  </DialogDescription>
-                </div>
+      {/* Luxury Brands Portfolio */}
+      <section className="space-y-4 pt-6 border-t">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              <h2 className="text-xl font-semibold tracking-tight">
+                Luxury &amp; Bespoke Concierge
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              High horology, couture houses, and luxury department store redemptions.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {LUXURY_BRANDS.map((brand) => (
+            <div
+              key={brand.id}
+              onClick={() => toast.info(`Luxury Concierge: ${brand.name}`)}
+              className="flex flex-col items-center justify-center p-4 rounded-2xl border bg-card shadow-xs hover:border-primary/40 cursor-pointer transition-all group text-center"
+            >
+              <div className="h-10 w-20 flex items-center justify-center">
+                <img
+                  src={brand.logoUrl}
+                  alt={brand.name}
+                  className="max-h-full max-w-full object-contain filter dark:invert dark:brightness-200 opacity-80 group-hover:opacity-100 transition-opacity"
+                />
               </div>
-            </DialogHeader>
+              <span className="text-xs font-semibold text-foreground mt-2">{brand.name}</span>
+              <span className="text-[10px] text-muted-foreground">{brand.category}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
-            <div className="space-y-4 pt-4">
-              <div className="rounded-2xl border bg-secondary/30 p-3.5 space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payout Speed:</span>
-                  <span className="font-semibold text-emerald-500">{selectedMethod.speed}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Network Fee:</span>
-                  <span className="font-semibold">0.00 EUR (Free)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Available Balance:</span>
-                  <span className="font-semibold">{formatMoney(balanceUsd, "USD")}</span>
-                </div>
-              </div>
+      {/* Payout Modal */}
+      <Dialog open={!!selectedMethod} onOpenChange={(open) => !open && setSelectedMethod(null)}>
+        <DialogContent className="sm:max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Landmark className="h-5 w-5 text-primary" />
+              {selectedMethod?.name}
+            </DialogTitle>
+          </DialogHeader>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Withdrawal Amount (USD)
+          {success ? (
+            <div className="py-6 text-center space-y-4 animate-in fade-in">
+              <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+              <h3 className="text-xl font-semibold">Payout Request Submitted</h3>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                Your withdrawal request of €{amount} via {selectedMethod?.name} has been processed
+                onto the settlement rail.
+              </p>
+              <button
+                onClick={() => setSelectedMethod(null)}
+                className="mt-4 w-full h-11 rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleWithdrawSubmit} className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Amount (EUR €)
                 </label>
                 <Input
                   type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="100"
-                  className="rounded-xl h-11"
+                  placeholder="100.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="mt-1.5 h-12 rounded-xl text-base"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
-                  {selectedMethod.id.includes("upi")
-                    ? "Virtual Payment Address (VPA / UPI ID)"
-                    : selectedMethod.id.includes("gcash")
-                      ? "GCash Registered Mobile Number"
-                      : "Recipient IBAN / Bank Account Number"}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  {selectedMethod?.id.includes("upi")
+                    ? "UPI ID (VPA)"
+                    : selectedMethod?.id.includes("gcash")
+                      ? "GCash Mobile Number"
+                      : "IBAN / Bank Account Details"}
                 </label>
                 <Input
-                  value={accountDetails}
-                  onChange={(e) => setAccountDetails(e.target.value)}
                   placeholder={
-                    selectedMethod.id.includes("upi")
-                      ? "username@upi or mobile@paytm"
-                      : selectedMethod.id.includes("gcash")
-                        ? "+63 9XX XXX XXXX"
-                        : "CZ65 0800 0000 0012 3456 7890"
+                    selectedMethod?.id.includes("upi")
+                      ? "username@upi"
+                      : selectedMethod?.id.includes("gcash")
+                        ? "+63 912 345 6789"
+                        : "CZ65 0800 0000 0000 1234 5678"
                   }
-                  className="rounded-xl h-11"
+                  value={recipientDetails}
+                  onChange={(e) => setRecipientDetails(e.target.value)}
+                  className="mt-1.5 h-12 rounded-xl text-base"
+                  required
                 />
               </div>
-
-              <Button
-                onClick={handleInitiateWithdraw}
-                disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium mt-2"
+              <div className="rounded-xl border bg-muted/40 p-3 text-[11px] text-muted-foreground flex items-center gap-2">
+                <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span>Protected by European Financial Infrastructure &amp; Encryption</span>
+              </div>
+              <button
+                type="submit"
+                className="w-full h-12 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90 transition-opacity"
               >
-                {isProcessing ? "Processing Payout..." : "Confirm Withdrawal"}
-              </Button>
-            </div>
-          </DialogContent>
-        )}
+                Confirm Settlement
+              </button>
+            </form>
+          )}
+        </DialogContent>
       </Dialog>
 
-      {/* Dialog for Gift Card Redemption */}
-      <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
-        {selectedCard && (
-          <DialogContent className="sm:max-w-md rounded-3xl p-6">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">
-                {selectedCard.brand} Voucher
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                {selectedCard.description}
-              </DialogDescription>
-            </DialogHeader>
+      {/* Gift Card Modal */}
+      <Dialog open={!!selectedGiftCard} onOpenChange={(open) => !open && setSelectedGiftCard(null)}>
+        <DialogContent className="sm:max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Gift className="h-5 w-5 text-primary" />
+              {selectedGiftCard?.brand} Digital Voucher
+            </DialogTitle>
+          </DialogHeader>
 
-            <div className="space-y-5 pt-2">
-              <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-2xl bg-muted shadow-soft">
-                <img
-                  src={selectedCard.imageUrl}
-                  alt={selectedCard.brand}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Select Voucher Denomination
+          {success ? (
+            <div className="py-6 text-center space-y-4 animate-in fade-in">
+              <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+              <h3 className="text-xl font-semibold">Voucher Issued</h3>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                Your €{amount} digital gift card code for {selectedGiftCard?.brand} has been issued
+                and sent to your email.
+              </p>
+              <button
+                onClick={() => setSelectedGiftCard(null)}
+                className="mt-4 w-full h-11 rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleWithdrawSubmit} className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Select Denomination (EUR €)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[25, 50, 100, 250].map((val) => (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {["25", "50", "100"].map((val) => (
                     <button
+                      type="button"
                       key={val}
-                      onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2 text-xs font-semibold border transition-all ${
-                        cardValue === val
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border/60 bg-card hover:bg-accent"
+                      onClick={() => setAmount(val)}
+                      className={`h-10 rounded-xl font-semibold text-xs border transition-all ${
+                        amount === val
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border hover:border-primary/50"
                       }`}
                     >
-                      ${val}
+                      €{val}
                     </button>
                   ))}
                 </div>
               </div>
-
-              <div className="rounded-2xl border bg-secondary/30 p-3.5 space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Voucher Cost:</span>
-                  <span className="font-semibold">${cardValue}.00 USD</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery:</span>
-                  <span className="font-semibold text-emerald-500">Instant Email Code</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleRedeemCard}
-                disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium"
+              <button
+                type="submit"
+                className="w-full h-12 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90 transition-opacity mt-4"
               >
-                {isProcessing ? "Generating Code..." : `Redeem for $${cardValue}.00`}
-              </Button>
-            </div>
-          </DialogContent>
-        )}
+                Issue Digital Voucher
+              </button>
+            </form>
+          )}
+        </DialogContent>
       </Dialog>
     </div>
   );

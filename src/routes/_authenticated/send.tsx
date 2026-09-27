@@ -2,21 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
+import { PaymentAnimationOverlay, type PaymentState } from "@/components/PaymentAnimationOverlay";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({
@@ -72,6 +67,9 @@ function Send() {
   const [busy, setBusy] = useState(false);
   const [scan, setScan] = useState(false);
   const [txId, setTxId] = useState("");
+  const [animating, setAnimating] = useState(false);
+  const [animState, setAnimState] = useState<PaymentState>("CONFIRMING");
+  const [animError, setAnimError] = useState("");
 
   const cur = currency || profile.data?.preferred_currency || "EUR";
   const r = rates.data?.rates ?? {};
@@ -97,22 +95,38 @@ function Send() {
 
   async function confirm() {
     if (!recipient) return;
-    setBusy(true);
+    setAnimating(true);
+    setAnimState("CONFIRMING");
+
+    setTimeout(() => {
+      setAnimState("PROCESSING");
+    }, 800);
+
     const { data, error } = await supabase.rpc("send_transfer", {
       p_recipient_code: recipient.wallet_code,
       p_amount: amt,
       p_currency: cur,
       ...(note ? { p_note: note } : {}),
     });
-    setBusy(false);
+
     if (error) {
-      toast.error(error.message);
+      setAnimState("FAILED");
+      setAnimError(error.message);
+      setTimeout(() => {
+        setAnimating(false);
+      }, 3000);
       return;
     }
+
     setTxId(data as string);
-    setStep("done");
-    qc.invalidateQueries({ queryKey: ["wallet"] });
-    qc.invalidateQueries({ queryKey: ["transactions"] });
+    setAnimState("COMPLETED");
+
+    setTimeout(() => {
+      setAnimating(false);
+      setStep("done");
+      qc.invalidateQueries({ queryKey: ["wallet"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+    }, 1800);
   }
 
   const btn =
@@ -120,6 +134,22 @@ function Send() {
 
   return (
     <div className="mx-auto max-w-md">
+      {animating && recipient && (
+        <PaymentAnimationOverlay
+          data={{
+            sourceAmount: amt,
+            sourceCurrency: cur,
+            destinationAmount: recv,
+            destinationCurrency: recvCur,
+            recipientName: recipient.full_name,
+            recipientCode: recipient.wallet_code,
+            fee,
+            status: animState,
+            errorMessage: animError,
+          }}
+        />
+      )}
+
       {step === "to" && (
         <>
           <PageTitle eyebrow="SEND" title="Who are you sending to?">
@@ -296,8 +326,8 @@ function Send() {
               </div>
             )}
           </div>
-          <button disabled={busy} onClick={confirm} className={`${btn} mt-8`}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
+          <button disabled={animating} onClick={confirm} className={`${btn} mt-8`}>
+            {animating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
           </button>
           <button
             onClick={() => setStep("amount")}

@@ -33,6 +33,14 @@ export interface GiftCardMeta {
   popular?: boolean;
 }
 
+export interface LuxuryBrandMeta {
+  id: string;
+  name: string;
+  logoUrl: string;
+  category: string;
+  origin: string;
+}
+
 export interface InvestmentMeta {
   id: string;
   title: string;
@@ -277,7 +285,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "sepa",
     name: "SEPA Instant Transfer",
     description: "Eurozone instant bank payout (EUR)",
-    iconUrl: "/assets/payment-methods/sepa.svg",
+    iconUrl: "/assets/payment-methods/sepa.png",
     region: "Europe",
     speed: "Instant",
     badge: "Europe Primary",
@@ -295,7 +303,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi",
     name: "UPI Direct",
     description: "Instant payout via Virtual Payment Address (VPA)",
-    iconUrl: "/assets/payment-methods/upi.svg",
+    iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
     badge: "NPCI Official",
@@ -304,7 +312,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi-qr",
     name: "UPI QR Code",
     description: "Scan & pay via PhonePe, Google Pay or Paytm",
-    iconUrl: "/assets/payment-methods/upi-qr.svg",
+    iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
   },
@@ -320,7 +328,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "gcash",
     name: "GCash Wallet",
     description: "Instant payout to GCash Mobile Wallet",
-    iconUrl: "/assets/payment-methods/gcash.svg",
+    iconUrl: "/assets/payment-methods/gcash.png",
     region: "Philippines",
     speed: "Instant",
     badge: "Official",
@@ -340,6 +348,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/int-bank.svg",
     region: "International",
     speed: "1-2 business days",
+    badge: "Global Payout",
   },
 ];
 
@@ -372,7 +381,7 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "steam",
     brand: "Steam",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/steam.svg",
+    imageUrl: "/assets/gift-cards/steam.png",
     description: "Steam Wallet credits for thousands of PC games and DLCs",
     popular: true,
   },
@@ -380,44 +389,95 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "playstation",
     brand: "PlayStation Store",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/playstation.svg",
+    imageUrl: "/assets/gift-cards/playstation.png",
     description: "PSN funds for PlayStation consoles, subscriptions & games",
   },
   {
     id: "xbox",
     brand: "Xbox",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/xbox.svg",
+    imageUrl: "/assets/gift-cards/xbox.png",
     description: "Xbox Game Pass, games and add-ons on console and PC",
   },
+];
+
+export const LUXURY_BRANDS: LuxuryBrandMeta[] = [
   {
-    id: "luxury-lifestyle",
-    brand: "Moonlight Private Luxury",
-    category: "Luxury",
-    imageUrl: "/assets/gift-cards/luxury-lifestyle.svg",
-    description: "Fine timepieces, luxury fashion houses & bespoke concierge",
-    popular: true,
+    id: "louis-vuitton",
+    name: "Louis Vuitton",
+    logoUrl: "/assets/luxury/brands/louis-vuitton.png",
+    category: "Haute Couture",
+    origin: "France",
   },
   {
-    id: "shopping",
-    brand: "Moonlight Global Retail",
-    category: "Shopping",
-    imageUrl: "/assets/gift-cards/shopping.svg",
-    description: "European luxury boutiques, department stores & fine goods",
+    id: "prada",
+    name: "Prada",
+    logoUrl: "/assets/luxury/brands/prada.png",
+    category: "Fashion & Leather",
+    origin: "Italy",
   },
   {
-    id: "entertainment",
-    brand: "Moonlight Media & Pass",
-    category: "Entertainment",
-    imageUrl: "/assets/gift-cards/entertainment.svg",
-    description: "Premium streaming services, concert tickets and cultural events",
+    id: "gucci",
+    name: "Gucci",
+    logoUrl: "/assets/luxury/brands/gucci.png",
+    category: "Luxury Fashion",
+    origin: "Italy",
   },
   {
-    id: "travel",
-    brand: "Moonlight Escapes",
-    category: "Travel",
-    imageUrl: "/assets/gift-cards/travel.svg",
-    description: "Boutique European hotel stays, flights & luxury travel vouchers",
+    id: "dior",
+    name: "Dior",
+    logoUrl: "/assets/luxury/brands/dior.png",
+    category: "Couture & Beauty",
+    origin: "France",
+  },
+  {
+    id: "cartier",
+    name: "Cartier",
+    logoUrl: "/assets/luxury/brands/cartier.png",
+    category: "Fine Jewellery & Watches",
+    origin: "France",
+  },
+  {
+    id: "rolex",
+    name: "Rolex",
+    logoUrl: "/assets/luxury/brands/rolex.png",
+    category: "Swiss Horology",
+    origin: "Switzerland",
+  },
+  {
+    id: "hermes",
+    name: "Hermès",
+    logoUrl: "/assets/luxury/brands/hermes.png",
+    category: "High Leather & Silk",
+    origin: "France",
+  },
+  {
+    id: "tiffany",
+    name: "Tiffany & Co.",
+    logoUrl: "/assets/luxury/brands/tiffany.png",
+    category: "Jewelry & Luxury Goods",
+    origin: "United States",
+  },
+  {
+    id: "armani",
+    name: "Giorgio Armani",
+    logoUrl: "/assets/luxury/brands/armani.png",
+    category: "High Fashion",
+    origin: "Italy",
+  },
+  {
+    id: "chanel",
+    name: "Chanel",
+    logoUrl: "/assets/luxury/brands/chanel.svg",
+    category: "High Fashion & Fragrance",
+    origin: "France",
+  },
+  {
+    id: "burberry",
+    name: "Burberry",
+    logoUrl: "/assets/luxury/brands/burberry.svg",
+    category: "British Luxury",
+    origin: "United Kingdom",
   },
 ];
 

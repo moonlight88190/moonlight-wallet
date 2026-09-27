@@ -1,7 +1,8 @@
 export const CURRENCIES = [
-  { code: "USD", name: "US Dollar" },
   { code: "EUR", name: "Euro" },
+  { code: "USD", name: "US Dollar" },
   { code: "GBP", name: "British Pound" },
+  { code: "CZK", name: "Czech Koruna" },
   { code: "INR", name: "Indian Rupee" },
   { code: "PHP", name: "Philippine Peso" },
   { code: "SGD", name: "Singapore Dollar" },
@@ -9,6 +10,7 @@ export const CURRENCIES = [
   { code: "CAD", name: "Canadian Dollar" },
   { code: "JPY", name: "Japanese Yen" },
   { code: "CHF", name: "Swiss Franc" },
+  { code: "AED", name: "UAE Dirham" },
 ] as const;
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"];
@@ -19,7 +21,8 @@ export const TRANSFER_FEE_RATE = 0.005;
 
 export function formatMoney(amount: number, currency: string, opts: { sign?: boolean } = {}) {
   const digits = currency === "JPY" ? 0 : 2;
-  const str = new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+  const locale = currency === "INR" ? "en-IN" : currency === "EUR" ? "de-DE" : "en-US";
+  const str = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: digits,

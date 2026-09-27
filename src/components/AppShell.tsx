@@ -27,6 +27,7 @@ const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
   { to: "/send", label: "Send", icon: ArrowUpRight },
   { to: "/receive", label: "Receive", icon: ArrowDownLeft },
+  { to: "/withdraw", label: "Withdraw", icon: Landmark },
   { to: "/transactions", label: "Activity", icon: List },
 ] as const;
 
@@ -50,12 +51,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 overflow-x-hidden">
+      <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <Link to="/dashboard" className="flex items-center gap-2.5">
             <LogoMark className="h-8 w-8" />
-            <span className="text-[13px] font-semibold tracking-[0.2em]">MOONLIGHT</span>
+            <span className="text-[13px] font-semibold tracking-[0.2em] text-foreground">
+              MOONLIGHT
+            </span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((n) => (
@@ -63,16 +66,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                activeProps={{ className: "bg-secondary !text-foreground" }}
+                activeProps={{ className: "bg-secondary !text-foreground font-medium" }}
               >
                 {n.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label="More"
+                aria-label="More options"
                 className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <MoreHorizontal className="h-5 w-5" />
@@ -104,27 +107,27 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               to="/receive"
               aria-label="Profile"
-              className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-medium"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-foreground border border-border/50"
             >
               {initials}
             </Link>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-5 py-10 animate-in fade-in duration-300">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-10 animate-in fade-in duration-300">
         {children}
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-        <div className="grid grid-cols-4">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+        <div className="grid grid-cols-5">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="flex flex-col items-center gap-1 py-3 text-[11px] text-muted-foreground"
-              activeProps={{ className: "!text-foreground" }}
+              className="flex flex-col items-center gap-1 py-2.5 text-[10px] sm:text-[11px] text-muted-foreground transition-colors"
+              activeProps={{ className: "!text-foreground font-semibold" }}
             >
               <n.icon className="h-5 w-5" strokeWidth={1.5} />
-              {n.label}
+              <span className="truncate max-w-[60px] text-center">{n.label}</span>
             </Link>
           ))}
         </div>
@@ -143,12 +146,16 @@ export function PageTitle({
   children?: ReactNode;
 }) {
   return (
-    <div className="mb-10">
+    <div className="mb-6 sm:mb-10">
       {eyebrow && (
-        <p className="text-[11px] font-medium tracking-[0.25em] text-muted-foreground">{eyebrow}</p>
+        <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
+          {eyebrow}
+        </p>
       )}
-      <h1 className="mt-2 text-4xl font-semibold tracking-tight">{title}</h1>
-      {children && <div className="mt-3 text-muted-foreground">{children}</div>}
+      <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">{title}</h1>
+      {children && (
+        <div className="mt-2.5 text-sm sm:text-base text-muted-foreground">{children}</div>
+      )}
     </div>
   );
 }
