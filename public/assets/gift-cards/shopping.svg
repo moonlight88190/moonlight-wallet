@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" fill="none">
+  <rect width="400" height="250" rx="18" fill="#18181B"/>
+  <rect x="1" y="1" width="398" height="248" rx="17" stroke="#3F3F46" stroke-width="1" fill="none"/>
+  <text x="40" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="11" fill="#A1A1AA" letter-spacing="2">MOONLIGHT CARD</text>
+  <text x="40" y="105" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="28" fill="#FFFFFF">Global Shopping</text>
+  <text x="40" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="13" fill="#71717A">European Boutiques &amp; Premium Retail</text>
+
+  <circle cx="340" cy="185" r="22" fill="#27272A" stroke="#3F3F46"/>
+  <path d="M332 185 H348 M340 177 V193" stroke="#FFFFFF" stroke-width="2"/>
+</svg>
