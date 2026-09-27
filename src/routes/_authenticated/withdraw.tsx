@@ -27,11 +27,11 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/withdraw")({
   head: () => ({
     meta: [
-      { title: "Withdraw & Redeem — Moonlight Wallet" },
+      { title: "Withdraw Funds — Moonlight Wallet" },
       {
         name: "description",
         content:
-          "Withdraw Moonlight Wallet balance via SEPA Instant, Czech Bank Transfer, UPI, GCash, SWIFT or Redeem Digital Gift Cards & Luxury Vouchers.",
+          "Withdraw Moonlight Wallet balance via SEPA Instant, Czech Bank Transfer, UK Faster Payments, UPI, GCash, PayNow, Pix, SWIFT or Redeem Digital Vouchers & Luxury Vouchers.",
       },
       { property: "og:title", content: "Withdraw — Moonlight Wallet" },
       {
@@ -46,10 +46,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 const REGIONS = [
   {
     id: "europe",
-    title: "Europe & Czech Republic",
+    title: "Europe & United Kingdom",
     badge: "Primary Corridor",
     flagCode: "EU",
-    items: PAYMENT_METHODS.filter((m) => m.region === "Europe"),
+    items: PAYMENT_METHODS.filter(
+      (m) => m.region === "Europe" || m.id === "faster-payments" || m.id === "cz-bank",
+    ),
   },
   {
     id: "india",
@@ -67,14 +69,16 @@ const REGIONS = [
   },
   {
     id: "international",
-    title: "International Wire",
+    title: "Global Corridors & International",
     badge: "Global Payout",
     flagCode: "US",
-    items: PAYMENT_METHODS.filter((m) => m.region === "International"),
+    items: PAYMENT_METHODS.filter(
+      (m) => m.region === "International" && m.id !== "faster-payments",
+    ),
   },
 ];
 
-function Withdraw() {
+export function Withdraw() {
   const { data: wallet } = useWallet();
   const { data: profile } = useProfile();
   const balanceUsd = Number(wallet?.balance_usd ?? 0);
@@ -87,15 +91,19 @@ function Withdraw() {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
   const [accountDetails, setAccountDetails] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const categories = ["All", "Gaming", "Shopping", "Entertainment", "Travel"];
+  const categories = ["All", "Gaming", "Shopping", "Entertainment", "Luxury", "Travel"];
+
   const filteredCards =
-    activeCategory === "All" ? GIFT_CARDS : GIFT_CARDS.filter((c) => c.category === activeCategory);
+    activeCategory === "All"
+      ? GIFT_CARDS
+      : activeCategory === "Luxury"
+        ? GIFT_CARDS.filter((c) => c.category === "Luxury")
+        : GIFT_CARDS.filter((c) => c.category === activeCategory);
 
   function handleInitiateWithdraw() {
     if (!accountDetails.trim()) {
-      toast.error("Please enter account details, IBAN or VPA / Mobile number");
+      toast.error("Please enter recipient account details, IBAN, VPA or phone number");
       return;
     }
     const name = selectedMethod?.name || "Withdrawal";
@@ -115,8 +123,9 @@ function Withdraw() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
-      <PageTitle eyebrow="WITHDRAW & REDEEM" title="Withdraw Funds">
-        Transfer funds to European &amp; global financial accounts or redeem instantly into brand vouchers.
+      <PageTitle eyebrow="WITHDRAW" title="Withdraw Funds">
+        Transfer funds to European &amp; global financial accounts or redeem instantly into brand
+        vouchers.
       </PageTitle>
 
       {/* Primary Payout Methods by Region */}
@@ -154,9 +163,9 @@ function Withdraw() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedMethod(item)}
-                    className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation"
+                    className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-2xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation min-w-0"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <PaymentMethodIcon id={item.id} size="md" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -174,8 +183,9 @@ function Withdraw() {
                         </p>
                       </div>
                     </div>
+
                     <div className="flex items-center gap-1.5 shrink-0 pl-1">
-                      <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                      <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground group-hover:text-foreground hidden sm:inline">
                         {item.speed}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
@@ -189,13 +199,13 @@ function Withdraw() {
       </div>
 
       {/* Luxury & Lifestyle Editorial Section */}
-      <div className="pt-6 space-y-6">
+      <div className="pt-4 space-y-6">
         <div className="flex items-center justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-amber-500" />
               <h2 className="text-xl font-semibold tracking-tight">
-                Luxury &amp; Private Lifestyle
+                Luxury &amp; Private Lifestyle Vouchers
               </h2>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
@@ -204,18 +214,18 @@ function Withdraw() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {LUXURY_BRANDS.map((brand) => (
             <div
               key={brand.id}
               onClick={() => setSelectedLuxury(brand)}
-              className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer"
+              className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
             >
-              <div className="relative flex h-14 w-full items-center justify-center p-2">
+              <div className="relative flex h-12 w-full items-center justify-center p-1">
                 <img
                   src={brand.logoUrl}
                   alt={brand.name}
-                  className="max-h-10 max-w-[100px] object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                  className="max-h-9 max-w-[90px] object-contain filter dark:invert group-hover:scale-105 transition-transform"
                 />
               </div>
               <div className="mt-2 w-full border-t border-border/40 pt-2">
@@ -228,7 +238,7 @@ function Withdraw() {
       </div>
 
       {/* Gift Cards Gallery */}
-      <div className="pt-6 space-y-6">
+      <div className="pt-4 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -247,9 +257,9 @@ function Withdraw() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-all active:scale-[0.96] cursor-pointer ${
                   activeCategory === cat
-                    ? "bg-primary text-primary-foreground shadow-xs"
+                    ? "bg-primary text-primary-foreground shadow-2xs"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -259,11 +269,37 @@ function Withdraw() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {filteredCards.map((card) => (
-            <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
-          ))}
-        </div>
+        {activeCategory === "Luxury" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+            {LUXURY_BRANDS.slice(0, 8).map((brand) => (
+              <div
+                key={brand.id}
+                onClick={() => setSelectedLuxury(brand)}
+                className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-soft cursor-pointer active:scale-[0.98]"
+              >
+                <div className="relative flex h-12 w-full items-center justify-center p-1">
+                  <img
+                    src={brand.logoUrl}
+                    alt={brand.name}
+                    className="max-h-9 max-w-[90px] object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                  />
+                </div>
+                <div className="mt-2 w-full border-t border-border/40 pt-2">
+                  <p className="text-xs font-semibold text-foreground truncate">{brand.name}</p>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold truncate">
+                    Luxury Pass
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+            {filteredCards.map((card) => (
+              <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Dialog for Withdrawal Method */}
@@ -273,9 +309,11 @@ function Withdraw() {
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
-                <div>
-                  <DialogTitle className="text-base sm:text-lg font-semibold">{selectedMethod.name}</DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground">
+                <div className="min-w-0">
+                  <DialogTitle className="text-base sm:text-lg font-semibold truncate">
+                    {selectedMethod.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground truncate">
                     {selectedMethod.description}
                   </DialogDescription>
                 </div>
@@ -286,7 +324,9 @@ function Withdraw() {
               <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Payout Speed:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{selectedMethod.speed}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {selectedMethod.speed}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Network Fee:</span>
@@ -313,17 +353,25 @@ function Withdraw() {
                     ? "Virtual Payment Address (VPA / UPI ID)"
                     : selectedMethod.id.includes("gcash")
                       ? "GCash Registered Mobile Number"
-                      : "Recipient IBAN / Bank Account Number"}
+                      : selectedMethod.id === "paynow"
+                        ? "PayNow Mobile / NRIC / UEN"
+                        : selectedMethod.id === "pix"
+                          ? "Pix Key (CPF / Email / Phone)"
+                          : "Recipient IBAN / Bank Account Number"}
                 </label>
                 <Input
                   value={accountDetails}
                   onChange={(e) => setAccountDetails(e.target.value)}
                   placeholder={
                     selectedMethod.id.includes("upi")
-                      ? "username@upi or mobile@paytm"
+                      ? "username@upi"
                       : selectedMethod.id.includes("gcash")
                         ? "+63 9XX XXX XXXX"
-                        : "CZ65 0800 0000 0012 3456 7890"
+                        : selectedMethod.id === "paynow"
+                          ? "+65 9123 4567"
+                          : selectedMethod.id === "pix"
+                            ? "user@pix.br"
+                            : "CZ65 0800 0000 0012 3456 7890"
                   }
                   className="rounded-xl h-11 text-sm font-mono"
                 />
@@ -331,7 +379,7 @@ function Withdraw() {
 
               <Button
                 onClick={handleInitiateWithdraw}
-                className="w-full rounded-full h-11 font-semibold mt-2 shadow-soft active:scale-[0.98]"
+                className="w-full rounded-full h-11 font-semibold mt-2 shadow-soft active:scale-[0.98] cursor-pointer"
               >
                 Confirm Withdrawal
               </Button>
@@ -365,7 +413,7 @@ function Withdraw() {
                   <img
                     src={selectedLuxury.logoUrl}
                     alt={selectedLuxury.name}
-                    className="max-h-14 max-w-[160px] object-contain filter invert"
+                    className="max-h-12 max-w-[150px] object-contain filter invert"
                   />
                 ) : (
                   <img
@@ -385,9 +433,9 @@ function Withdraw() {
                     <button
                       key={val}
                       onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2 text-xs font-semibold border transition-all active:scale-[0.97] ${
+                      className={`rounded-xl py-2 text-xs font-semibold border transition-all active:scale-[0.97] cursor-pointer ${
                         cardValue === val
-                          ? "border-primary bg-primary/10 text-primary shadow-xs"
+                          ? "border-primary bg-primary/10 text-primary shadow-2xs"
                           : "border-border/60 bg-card hover:bg-accent text-foreground"
                       }`}
                     >
@@ -400,17 +448,21 @@ function Withdraw() {
               <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Voucher Cost:</span>
-                  <span className="font-semibold text-foreground">{formatMoney(cardValue, preferredCurrency)}</span>
+                  <span className="font-semibold text-foreground">
+                    {formatMoney(cardValue, preferredCurrency)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Delivery:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Instant Email Delivery</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    Instant Email Delivery
+                  </span>
                 </div>
               </div>
 
               <Button
                 onClick={handleRedeemCard}
-                className="w-full rounded-full h-11 font-semibold shadow-soft active:scale-[0.98]"
+                className="w-full rounded-full h-11 font-semibold shadow-soft active:scale-[0.98] cursor-pointer"
               >
                 Acquire for {formatMoney(cardValue, preferredCurrency)}
               </Button>

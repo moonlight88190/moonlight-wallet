@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <rect width="200" height="60" rx="12" fill="#0D2818"/>
+  <path d="M35 18L22 42H28.5L31.2 36.5H38.8L41.5 42H48L35 18ZM33.2 32.5L35 28.2L36.8 32.5H33.2Z" fill="#00E676"/>
+  <path d="M58 24C52.5 24 48 28 48 33.5C48 39 52.5 43 58 43C61.5 43 64.5 41.2 66 38.5V42H71.5V24.8H66V28.5C64.5 25.8 61.5 24 58 24ZM59.8 38C56.2 38 53.8 35.8 53.8 33.5C53.8 31.2 56.2 29 59.8 29C63.4 29 65.8 31.2 65.8 33.5C65.8 35.8 63.4 38 59.8 38Z" fill="#FFFFFF"/>
+  <path d="M82 24.8V28.5C80.5 25.8 77.5 24 74 24C68.5 24 64 28 64 33.5C64 39 68.5 43 74 43C77.5 43 80.5 41.2 82 38.5V42H87.5V24.8H82ZM75.8 38C72.2 38 69.8 35.8 69.8 33.5C69.8 31.2 72.2 29 75.8 29C79.4 29 81.8 31.2 81.8 33.5C81.8 35.8 79.4 38 75.8 38Z" fill="#FFFFFF"/>
+  <path d="M93 24.8V42H98.5V30.5C98.5 28.5 100.2 27.5 102 27.5C103.8 27.5 105 28.5 105 30.5V42H110.5V29.5C110.5 25.8 107.5 24 103.5 24C100.2 24 97.5 25.5 96.2 28V24.8H93Z" fill="#FFFFFF"/>
+  <circle cx="118" cy="38" r="3" fill="#00E676"/>
+  <text x="128" y="34" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#00E676" letter-spacing="1.5">AANI</text>
+  <text x="128" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="600" fill="#A0AEC0" letter-spacing="0.5">UAE PAYOUT</text>
+</svg>

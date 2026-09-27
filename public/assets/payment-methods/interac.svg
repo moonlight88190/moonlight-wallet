@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <rect width="200" height="60" rx="12" fill="#121212"/>
+  <path d="M38 12L58 30L38 48L18 30L38 12Z" fill="#FFC72C"/>
+  <path d="M38 18L52 30L38 42L24 30L38 18Z" fill="#121212"/>
+  <path d="M38 23L46 30L38 37L30 30L38 23Z" fill="#FFC72C"/>
+  <text x="68" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" letter-spacing="0.5">Interac</text>
+  <text x="68" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="700" fill="#FFC72C" letter-spacing="1">e-Transfer</text>
+</svg>
