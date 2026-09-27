@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { Check, AlertCircle, ArrowRight, RefreshCw, Receipt } from "lucide-react";
 import { CountryFlag } from "@/components/AssetComponents";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -29,8 +29,8 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   PHP: "₱",
   JPY: "¥",
   CHF: "CHF",
-  CAD: "$",
-  AUD: "$",
+  CAD: "C$",
+  AUD: "A$",
   SGD: "S$",
   AED: "AED",
   CZK: "Kč",
@@ -77,7 +77,9 @@ export function PaymentAnimation({
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border/40 text-[11px] font-semibold text-muted-foreground">
           <span>{formatMoney(sourceAmount, sourceCurrency)}</span>
           <ArrowRight className="h-3 w-3 text-primary animate-pulse motion-reduce:animate-none" />
-          <span className="text-foreground">{formatMoney(destinationAmount, destinationCurrency)}</span>
+          <span className="text-foreground">
+            {formatMoney(destinationAmount, destinationCurrency)}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -93,14 +95,14 @@ export function PaymentAnimation({
         {/* Processing Animated Ring */}
         {stage === "processing" && (
           <>
-            <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping opacity-25" />
-            <div className="absolute inset-0 rounded-full border-2 border-t-primary border-r-primary/40 border-b-primary/10 border-l-transparent animate-spin duration-700" />
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping opacity-25 motion-reduce:animate-none" />
+            <div className="absolute inset-0 rounded-full border-2 border-t-primary border-r-primary/40 border-b-primary/10 border-l-transparent animate-spin duration-700 motion-reduce:animate-none" />
           </>
         )}
 
         {/* Success Ripple Ring */}
         {stage === "completed" && (
-          <div className="absolute inset-0 rounded-full border-2 border-emerald-500/30 animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-2 border-emerald-500/30 animate-pulse motion-reduce:animate-none" />
         )}
 
         {/* Failed Status Outer Ring */}
@@ -120,22 +122,9 @@ export function PaymentAnimation({
           )}
         >
           {stage === "completed" ? (
-            <svg
-              className="h-10 w-10 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path
-                d="M20 6L9 17l-5-5"
-                className="animate-[dash_0.6s_ease-in-out_forwards] motion-reduce:animate-none"
-                style={{ strokeDasharray: 30, strokeDashoffset: 0 }}
-              />
-            </svg>
+            <Check className="h-10 w-10 stroke-[3] animate-in zoom-in-75 duration-300" />
           ) : stage === "failed" ? (
-            <AlertCircle className="h-10 w-10" />
+            <AlertCircle className="h-10 w-10 stroke-[2.5]" />
           ) : (
             <span className="text-3xl font-bold tracking-tight">
               {isCrossCurrency ? destSymbol : sourceSymbol}
@@ -178,11 +167,12 @@ export function PaymentAnimation({
 
       {/* Recipient Details & Cross Currency FX */}
       <div className="mt-6 w-full rounded-2xl border border-border/50 bg-secondary/30 p-4 space-y-2.5 text-xs">
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Recipient</span>
-          <span className="font-semibold text-foreground flex items-center gap-1.5">
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-muted-foreground shrink-0">Recipient</span>
+          <span className="font-semibold text-foreground flex items-center gap-1.5 truncate justify-end">
             <CountryFlag code={destinationCurrency} circle size="xs" />
-            {recipientName} ({recipientCode})
+            <span className="truncate">{recipientName}</span>
+            <span className="font-mono text-[10px] text-muted-foreground">({recipientCode})</span>
           </span>
         </div>
 
@@ -217,16 +207,16 @@ export function PaymentAnimation({
         {stage === "completed" && onViewReceipt && (
           <button
             onClick={onViewReceipt}
-            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-opacity hover:opacity-90"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
           >
-            View Official Receipt
+            <Receipt className="h-4 w-4" /> View Official Receipt
           </button>
         )}
 
         {stage === "failed" && onRetry && (
           <button
             onClick={onRetry}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-opacity hover:opacity-90"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
           >
             <RefreshCw className="h-4 w-4" /> Retry Transfer
           </button>

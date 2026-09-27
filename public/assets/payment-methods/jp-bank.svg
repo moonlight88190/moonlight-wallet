@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <rect width="200" height="60" rx="12" fill="#0F172A"/>
+  <circle cx="34" cy="30" r="16" fill="#DC2626"/>
+  <path d="M28 23L34 33L40 23M28 29H40M28 33H40" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="60" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" letter-spacing="0.5">ZENGIN RAIL</text>
+  <text x="60" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#94A3B8" letter-spacing="0.5">JAPANESE BANK TRANSFER (JPY)</text>
+</svg>

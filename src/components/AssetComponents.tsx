@@ -49,7 +49,7 @@ export function CountryFlag({
   return (
     <div
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-border/40 shadow-xs transition-transform",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-border/40 shadow-2xs transition-transform",
         circle ? "rounded-full object-cover" : "rounded-xs object-cover",
         circle ? CIRCLE_SIZE_MAP[size] : SIZE_MAP[size],
         className,
@@ -60,7 +60,6 @@ export function CountryFlag({
         alt={alt || country?.name || `${code} flag`}
         className="h-full w-full object-cover"
         onError={(e) => {
-          // Fallback to text badge if missing
           (e.currentTarget as HTMLElement).style.display = "none";
         }}
         {...props}
@@ -125,29 +124,47 @@ export function PaymentMethodIcon({
   const method = PAYMENT_METHODS.find((m) => m.id === id);
   const iconUrl = method?.iconUrl || `/assets/payment-methods/${id}.svg`;
 
-  const sizeClasses = {
-    sm: "h-7 w-12 p-1",
-    md: "h-10 w-16 p-1.5",
-    lg: "h-12 w-20 p-2",
-  };
+  // Determine asset aspect ratio profile to prevent oversized square containers
+  const isHorizontalLogo = [
+    "upi",
+    "sepa",
+    "faster-payments",
+    "interac",
+    "paynow",
+    "aani",
+    "jp-bank",
+  ].includes(id);
+
+  const sizeContainer = isHorizontalLogo
+    ? size === "sm"
+      ? "h-7 w-12 px-1.5 py-0.5"
+      : size === "lg"
+        ? "h-11 w-20 px-2 py-1"
+        : "h-9 sm:h-10 w-16 sm:w-18 px-2 py-1"
+    : size === "sm"
+      ? "h-7 w-8 p-1"
+      : size === "lg"
+        ? "h-11 w-12 p-2"
+        : "h-9 sm:h-10 w-10 sm:w-11 p-1.5";
 
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card shadow-2xs transition-all hover:border-primary/40",
-        sizeClasses[size],
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40",
+        sizeContainer,
         className,
       )}
     >
       <img
         src={iconUrl}
         alt={method?.name || `${id} payment method`}
-        className="h-full w-full object-contain transition-transform group-hover:scale-105"
+        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
         onError={(e) => {
-          // If SVG fails, fallback to PNG if available
           const target = e.currentTarget as HTMLImageElement;
           if (target.src.endsWith(".svg")) {
             target.src = target.src.replace(".svg", ".png");
+          } else if (target.src.endsWith(".png")) {
+            target.src = target.src.replace(".png", ".svg");
           }
         }}
       />
@@ -184,32 +201,34 @@ export function GiftCardBrand({
         className,
       )}
     >
-      <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-xl bg-muted/60">
+      <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
         <img
           src={cardData.imageUrl}
           alt={cardData.brand}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
             const target = e.currentTarget as HTMLImageElement;
-            if (target.src.endsWith(".png")) {
-              target.src = target.src.replace(".png", ".svg");
+            if (target.src.endsWith(".png") && cardData.logoUrl) {
+              target.src = cardData.logoUrl;
             }
           }}
         />
         {cardData.popular && (
-          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
+          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
             POPULAR
           </span>
         )}
       </div>
       <div className="mt-2.5 px-0.5">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground text-sm tracking-tight">{cardData.brand}</h3>
-          <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+        <div className="flex items-center justify-between gap-1">
+          <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">
+            {cardData.brand}
+          </h3>
+          <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-full shrink-0">
             {cardData.category}
           </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-snug">
+        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground leading-snug">
           {cardData.description}
         </p>
       </div>
@@ -230,26 +249,30 @@ export function TransferMethodCard({
     <div
       onClick={onClick}
       className={cn(
-        "group flex items-center justify-between rounded-2xl border bg-card p-4 shadow-soft transition-all cursor-pointer hover:border-primary/40 hover:bg-accent/40",
+        "group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border bg-card p-3.5 sm:p-4 shadow-soft transition-all cursor-pointer hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98]",
         active ? "border-primary ring-1 ring-primary bg-primary/5" : "border-border/60",
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3.5 min-w-0">
         <PaymentMethodIcon id={method.id} size="md" />
-        <div>
-          <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h4 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">
+              {method.name}
+            </h4>
             {method.badge && (
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                 {method.badge}
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{method.description}</p>
+          <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+            {method.description}
+          </p>
         </div>
       </div>
-      <div className="text-right">
-        <span className="rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0 border-t sm:border-0 border-border/40">
+        <span className="rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400">
           {method.speed}
         </span>
       </div>

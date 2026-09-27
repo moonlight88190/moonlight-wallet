@@ -6,6 +6,7 @@ import {
   ChevronRight,
   TrendingUp,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -16,13 +17,7 @@ import {
   useWallet,
 } from "@/hooks/use-wallet";
 import { CURRENCIES, formatMoney } from "@/lib/currency";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TxRow, groupByPeriod } from "@/components/TxRow";
 import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
@@ -31,7 +26,7 @@ import { INVESTMENTS } from "@/lib/assets";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Your balance — Moonlight Wallet" },
+      { title: "Dashboard — Moonlight Wallet" },
       { name: "description", content: "Your Moonlight Wallet balance and recent activity." },
       { property: "og:title", content: "Moonlight Wallet" },
       { property: "og:description", content: "Your balance and recent activity." },
@@ -39,6 +34,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   }),
   component: Dashboard,
 });
+
+function getTimeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 function Dashboard() {
   const profile = useProfile();
@@ -52,21 +54,32 @@ function Dashboard() {
   const balance = Number(wallet.data?.balance_usd ?? 0) * rate;
   const loading = profile.isLoading || wallet.isLoading || rates.isLoading;
 
+  const firstName = profile.data?.full_name?.split(" ")[0] || "there";
+  const greeting = `${getTimeGreeting()}, ${firstName}`;
+
   return (
-    <div className="space-y-8 sm:space-y-12">
-      {/* Available Balance Header */}
-      <section className="pt-2 text-center sm:pt-6">
-        <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
-          AVAILABLE BALANCE
-        </p>
-        {loading ? (
-          <Skeleton className="mx-auto mt-3 h-14 w-60 sm:h-16 sm:w-72 rounded-2xl" />
-        ) : (
-          <h1 className="tabular mt-2 text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-foreground">
-            {formatMoney(balance, cur)}
-          </h1>
-        )}
-        <div className="mt-3 flex items-center justify-center gap-2">
+    <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
+      {/* Hero Balance Section */}
+      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/80 p-6 sm:p-8 text-center shadow-soft backdrop-blur-xl">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+          <span>{greeting}</span>
+        </div>
+
+        <div className="mt-2 sm:mt-3">
+          <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
+            AVAILABLE BALANCE
+          </p>
+          {loading ? (
+            <Skeleton className="mx-auto mt-3 h-12 w-52 sm:h-14 sm:w-64 rounded-2xl" />
+          ) : (
+            <h1 className="tabular mt-1.5 text-3xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-foreground">
+              {formatMoney(balance, cur)}
+            </h1>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <Select
             value={cur}
             onValueChange={(v) =>
@@ -77,12 +90,16 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-8 sm:h-9 w-auto gap-2 rounded-full border border-border/60 bg-card px-3.5 text-xs font-semibold shadow-2xs hover:bg-accent transition-colors">
+            <SelectTrigger className="h-8 sm:h-9 w-auto gap-2 rounded-full border border-border/60 bg-background/80 px-3.5 text-xs font-semibold shadow-2xs hover:bg-accent transition-colors">
               <CurrencyIcon code={cur} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl p-1.5">
               {CURRENCIES.map((c) => (
-                <SelectItem key={c.code} value={c.code} className="rounded-xl py-2 px-3">
+                <SelectItem
+                  key={c.code}
+                  value={c.code}
+                  className="rounded-xl py-2 px-3 cursor-pointer"
+                >
                   <div className="flex items-center gap-2.5">
                     <CountryFlag code={c.code} circle size="xs" />
                     <span className="font-semibold">{c.code}</span>
@@ -92,16 +109,17 @@ function Dashboard() {
               ))}
             </SelectContent>
           </Select>
+
+          {wallet.data && (
+            <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 font-mono text-[11px] text-muted-foreground border border-border/40">
+              {wallet.data.wallet_code}
+            </span>
+          )}
         </div>
-        {wallet.data && (
-          <p className="mt-2 font-mono text-[11px] sm:text-xs text-muted-foreground/80 tracking-wider">
-            {wallet.data.wallet_code}
-          </p>
-        )}
       </section>
 
       {/* Mobile-Optimized Quick Actions */}
-      <section className="mx-auto max-w-lg">
+      <section className="mx-auto max-w-lg px-2">
         <div className="grid grid-cols-4 gap-2 sm:gap-4">
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
@@ -123,47 +141,55 @@ function Dashboard() {
               >
                 <a.icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
               </span>
-              <span className="text-xs font-semibold text-foreground tracking-tight">{a.label}</span>
+              <span className="text-xs font-semibold text-foreground tracking-tight">
+                {a.label}
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-10 md:grid-cols-5">
+      {/* Transactions & Exchange Rates Grid */}
+      <section className="grid gap-8 md:grid-cols-5">
         <div className="md:col-span-3">
-          <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold tracking-tight">Money activity</h2>
+          <div className="mb-3 flex items-center justify-between border-b pb-2">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+              Money activity
+            </h2>
             <Link
               to="/transactions"
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
               See all <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
+
           {txs.isLoading ? (
-            <div className="space-y-4 pt-4">
+            <div className="space-y-3 pt-2">
               {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-12 rounded-xl" />
+                <Skeleton key={i} className="h-14 rounded-2xl" />
               ))}
             </div>
           ) : !txs.data?.length ? (
-            <div className="rounded-3xl border border-dashed px-6 py-14 text-center">
-              <p className="font-medium">No activity yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Share your wallet ID to receive your first transfer.
+            <div className="rounded-3xl border border-dashed p-8 text-center space-y-3">
+              <p className="font-semibold text-sm text-foreground">No activity yet</p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                Share your wallet ID to receive your first transfer or send funds globally.
               </p>
               <Link
                 to="/receive"
-                className="mt-5 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+                className="inline-flex rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-soft active:scale-[0.98]"
               >
                 Receive money
               </Link>
             </div>
           ) : (
             groupByPeriod(txs.data).map((g) => (
-              <div key={g.label} className="mt-4">
-                <p className="text-xs font-medium text-muted-foreground">{g.label}</p>
-                <div className="divide-y">
+              <div key={g.label} className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">
+                  {g.label}
+                </p>
+                <div className="divide-y rounded-2xl border border-border/60 bg-card overflow-hidden shadow-2xs">
                   {g.items.map((t) => (
                     <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />
                   ))}
@@ -175,13 +201,21 @@ function Dashboard() {
 
         <aside className="md:col-span-2 space-y-6">
           <div>
-            <h2 className="mb-4 text-xl font-semibold tracking-tight">Exchange rates</h2>
-            <div className="rounded-3xl border bg-card p-2 shadow-soft">
+            <div className="mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Exchange rates
+              </h2>
+              <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full">
+                ECB Live
+              </span>
+            </div>
+
+            <div className="rounded-3xl border border-border/60 bg-card/80 p-2 shadow-soft">
               {rates.isLoading ? (
-                <Skeleton className="h-40 rounded-2xl" />
+                <Skeleton className="h-44 rounded-2xl" />
               ) : (
-                <div className="divide-y">
-                  {["EUR", "CZK", "INR", "PHP", "GBP", "USD"]
+                <div className="divide-y divide-border/40">
+                  {["EUR", "USD", "GBP", "CZK", "INR", "PHP", "CHF"]
                     .filter((c) => c !== cur)
                     .slice(0, 5)
                     .map((c) => {
@@ -189,13 +223,13 @@ function Dashboard() {
                       return (
                         <div
                           key={c}
-                          className="flex items-center justify-between px-4 py-3 text-sm"
+                          className="flex items-center justify-between px-3.5 py-2.5 text-xs sm:text-sm"
                         >
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-2">
                             <CountryFlag code={c} circle size="xs" />
-                            <span className="font-medium">1 {cur}</span>
+                            <span className="font-semibold text-foreground">1 {cur}</span>
                           </div>
-                          <span className="tabular font-semibold">
+                          <span className="tabular font-semibold text-foreground">
                             ≈ {r.toLocaleString(undefined, { maximumFractionDigits: 4 })} {c}
                           </span>
                         </div>
@@ -205,7 +239,7 @@ function Dashboard() {
               )}
             </div>
             {rates.data?.fetchedAt && (
-              <p className="mt-3 px-2 text-xs text-muted-foreground">
+              <p className="mt-2.5 px-2 text-[11px] text-muted-foreground">
                 ECB reference rates · updated {new Date(rates.data.fetchedAt).toLocaleDateString()}
               </p>
             )}
@@ -214,33 +248,33 @@ function Dashboard() {
       </section>
 
       {/* Wealth & Premium Services Showcase Section */}
-      <section className="space-y-6 pt-4 border-t">
-        <div className="flex items-center justify-between">
+      <section className="space-y-6 pt-6 border-t border-border/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
                 Wealth &amp; Portfolio Standard
               </h2>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               European private banking tools, multi-currency treasury &amp; global market
               allocations.
             </p>
           </div>
           <Link
             to="/withdraw"
-            className="hidden sm:flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+            className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
           >
             Explore Payouts &amp; Vouchers <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           {INVESTMENTS.map((inv) => (
             <div
               key={inv.id}
-              className="group relative overflow-hidden rounded-3xl border bg-card/70 p-5 shadow-soft transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-4 sm:p-5 shadow-soft transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5"
             >
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted">
                 <img
@@ -249,16 +283,18 @@ function Dashboard() {
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 {inv.badge && (
-                  <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-foreground border border-border/50">
+                  <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur-md px-3 py-1 text-[10px] font-semibold text-foreground border border-border/50">
                     {inv.badge}
                   </span>
                 )}
               </div>
-              <div className="mt-4">
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase">
+              <div className="mt-3.5">
+                <span className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase">
                   {inv.category}
                 </span>
-                <h3 className="font-semibold text-base text-foreground mt-1">{inv.title}</h3>
+                <h3 className="font-semibold text-sm sm:text-base text-foreground mt-0.5">
+                  {inv.title}
+                </h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{inv.subtitle}</p>
               </div>
             </div>
