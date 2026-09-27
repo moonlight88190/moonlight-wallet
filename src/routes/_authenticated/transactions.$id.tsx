@@ -24,7 +24,11 @@ function Receipt() {
   const tx = useQuery({
     queryKey: ["transaction", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("transactions").select("*").eq("id", id).maybeSingle();
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -35,12 +39,29 @@ function Receipt() {
   const v = txView(t, wallet.data?.id);
   const d = new Date(t.created_at);
   const rows: [string, string][] = [
-    ["From", t.sender_wallet_code ? `${t.sender_name} · ${t.sender_wallet_code}` : t.sender_name || "Moonlight"],
+    [
+      "From",
+      t.sender_wallet_code
+        ? `${t.sender_name} · ${t.sender_wallet_code}`
+        : t.sender_name || "Moonlight",
+    ],
     ["To", `${t.recipient_name} · ${t.recipient_wallet_code}`],
     ["Amount sent", formatMoney(Number(t.amount), t.currency)],
-    ...(Number(t.fee) > 0 ? [["Fee", formatMoney(Number(t.fee), t.currency)] as [string, string]] : []),
-    ["Recipient received", formatMoney(Number(t.recipient_amount ?? t.amount), t.recipient_currency ?? t.currency)],
-    ...(t.fx_rate && t.currency !== t.recipient_currency ? [["Exchange rate", `1 ${t.currency} = ${Number(t.fx_rate)} ${t.recipient_currency}`] as [string, string]] : []),
+    ...(Number(t.fee) > 0
+      ? [["Fee", formatMoney(Number(t.fee), t.currency)] as [string, string]]
+      : []),
+    [
+      "Recipient received",
+      formatMoney(Number(t.recipient_amount ?? t.amount), t.recipient_currency ?? t.currency),
+    ],
+    ...(t.fx_rate && t.currency !== t.recipient_currency
+      ? [
+          ["Exchange rate", `1 ${t.currency} = ${Number(t.fx_rate)} ${t.recipient_currency}`] as [
+            string,
+            string,
+          ],
+        ]
+      : []),
     ["Date", d.toLocaleDateString(undefined, { dateStyle: "long" })],
     ["Time", d.toLocaleTimeString()],
     ["Method", t.method],
@@ -50,13 +71,20 @@ function Receipt() {
   ];
   return (
     <div className="mx-auto max-w-md">
-      <Link to="/transactions" className="mb-8 flex items-center text-sm text-muted-foreground"><ChevronLeft className="h-4 w-4" /> Activity</Link>
+      <Link to="/transactions" className="mb-8 flex items-center text-sm text-muted-foreground">
+        <ChevronLeft className="h-4 w-4" /> Activity
+      </Link>
       <div className="rounded-[2rem] border bg-card p-8 shadow-soft">
         <p className="text-center text-sm text-muted-foreground">{v.title}</p>
-        <p className="tabular mt-2 text-center text-5xl font-semibold tracking-tight">{formatMoney(v.amount, v.currency, { sign: true })}</p>
+        <p className="tabular mt-2 text-center text-5xl font-semibold tracking-tight">
+          {formatMoney(v.amount, v.currency, { sign: true })}
+        </p>
         <div className="mt-8 divide-y">
           {rows.map(([k, val]) => (
-            <div key={k} className="flex justify-between gap-4 py-3.5 text-sm"><span className="text-muted-foreground">{k}</span><span className="text-right font-medium break-all">{val}</span></div>
+            <div key={k} className="flex justify-between gap-4 py-3.5 text-sm">
+              <span className="text-muted-foreground">{k}</span>
+              <span className="text-right font-medium break-all">{val}</span>
+            </div>
           ))}
         </div>
       </div>

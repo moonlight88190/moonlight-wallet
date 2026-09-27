@@ -9,14 +9,23 @@ async function hmac(message: string) {
   const secret = process.env["ADMIN_SESSION_SECRET"];
   if (!secret) throw new Error("Admin access is not configured");
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
-  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function safeEqual(a: string, b: string) {
   let diff = a.length ^ b.length;
-  for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++)
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
   return diff === 0;
 }
 
@@ -43,10 +52,14 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
     }
     const expected = process.env["ADMIN_ACCESS_CODE"] ?? "";
     if (!expected || !safeEqual(data.code, expected)) {
-      await supabaseAdmin.from("audit_logs").insert({ user_id: context.userId, event: "admin_code_failed" });
+      await supabaseAdmin
+        .from("audit_logs")
+        .insert({ user_id: context.userId, event: "admin_code_failed" });
       return { ok: false as const, error: "That code isn't valid." };
     }
-    await supabaseAdmin.from("audit_logs").insert({ user_id: context.userId, event: "admin_access_granted" });
+    await supabaseAdmin
+      .from("audit_logs")
+      .insert({ user_id: context.userId, event: "admin_access_granted" });
     const exp = String(Date.now() + TOKEN_TTL_MS);
     const token = `${context.userId}.${exp}.${await hmac(`${context.userId}.${exp}`)}`;
     return { ok: true as const, token };
@@ -63,7 +76,10 @@ export const adminAddBalance = createServerFn({ method: "POST" })
     z
       .object({
         token: z.string().max(300),
-        walletCode: z.string().trim().regex(/^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/i, "Enter a wallet ID like ML-7F82-29AX"),
+        walletCode: z
+          .string()
+          .trim()
+          .regex(/^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/i, "Enter a wallet ID like ML-7F82-29AX"),
         currency: z.enum(["USD", "EUR", "GBP", "INR", "PHP", "SGD", "AUD", "CAD", "JPY", "CHF"]),
         amount: z.number().positive().max(100_000_000),
         reason: z.string().trim().min(3).max(200),

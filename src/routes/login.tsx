@@ -20,7 +20,10 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-const schema = z.object({ email: z.string().trim().email("Enter a valid email").max(255), password: z.string().min(1, "Enter your password") });
+const schema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(1, "Enter your password"),
+});
 
 function Login() {
   const navigate = useNavigate();
@@ -31,16 +34,37 @@ function Login() {
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const parsed = schema.safeParse({ email, password });
-    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Check your details"); return; }
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Check your details");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     setBusy(false);
-    if (error) { toast.error(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message); return; }
+    if (error) {
+      toast.error(
+        error.message === "Invalid login credentials"
+          ? "Email or password is incorrect."
+          : error.message,
+      );
+      return;
+    }
     navigate({ to: "/dashboard" });
   }
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your wallet." footer={<>New to Moonlight? <Link to="/register" className="font-medium text-foreground">Create an account</Link></>}>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your wallet."
+      footer={
+        <>
+          New to Moonlight?{" "}
+          <Link to="/register" className="font-medium text-foreground">
+            Create an account
+          </Link>
+        </>
+      }
+    >
       <button
         onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
         className="flex w-full items-center justify-center gap-2.5 rounded-full border bg-card px-6 py-3 text-[15px] font-medium transition-colors hover:bg-accent"
@@ -51,12 +75,34 @@ function Login() {
         <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
       </div>
       <form onSubmit={submit} className="space-y-3">
-        <Input type="email" autoComplete="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
-        <Input type="password" autoComplete="current-password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" />
+        <Input
+          type="email"
+          autoComplete="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-12 rounded-xl"
+        />
+        <Input
+          type="password"
+          autoComplete="current-password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="h-12 rounded-xl"
+        />
         <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">Forgot password?</Link>
+          <Link
+            to="/forgot-password"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Forgot password?
+          </Link>
         </div>
-        <button disabled={busy} className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60">
+        <button
+          disabled={busy}
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
         </button>
       </form>

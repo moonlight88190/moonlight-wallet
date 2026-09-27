@@ -22,6 +22,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedRedeemRouteImport } from './routes/_authenticated/redeem'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticated/withdraw'
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions.index'
 import { Route as AuthenticatedTransactionsIdRouteImport } from './routes/_authenticated/transactions.$id'
 
@@ -90,6 +91,11 @@ const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
   path: '/send',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWithdrawRoute = AuthenticatedWithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTransactionsIndexRoute =
   AuthenticatedTransactionsIndexRouteImport.update({
     id: '/transactions/',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
   '/send': typeof AuthenticatedSendRoute
+  '/withdraw': typeof AuthenticatedWithdrawRoute
   '/transactions/$id': typeof AuthenticatedTransactionsIdRoute
   '/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
   '/send': typeof AuthenticatedSendRoute
+  '/withdraw': typeof AuthenticatedWithdrawRoute
   '/transactions/$id': typeof AuthenticatedTransactionsIdRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/redeem': typeof AuthenticatedRedeemRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
+  '/_authenticated/withdraw': typeof AuthenticatedWithdrawRoute
   '/_authenticated/transactions/$id': typeof AuthenticatedTransactionsIdRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/receive'
     | '/redeem'
     | '/send'
+    | '/withdraw'
     | '/transactions/$id'
     | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/receive'
     | '/redeem'
     | '/send'
+    | '/withdraw'
     | '/transactions/$id'
     | '/transactions'
   id:
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/receive'
     | '/_authenticated/redeem'
     | '/_authenticated/send'
+    | '/_authenticated/withdraw'
     | '/_authenticated/transactions/$id'
     | '/_authenticated/transactions/'
   fileRoutesById: FileRoutesById
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSendRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/withdraw': {
+      id: '/_authenticated/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof AuthenticatedWithdrawRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/transactions/': {
       id: '/_authenticated/transactions/'
       path: '/transactions'
@@ -332,6 +351,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedRedeemRoute: typeof AuthenticatedRedeemRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
+  AuthenticatedWithdrawRoute: typeof AuthenticatedWithdrawRoute
   AuthenticatedTransactionsIdRoute: typeof AuthenticatedTransactionsIdRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
 }
@@ -343,6 +363,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedRedeemRoute: AuthenticatedRedeemRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
+  AuthenticatedWithdrawRoute: AuthenticatedWithdrawRoute,
   AuthenticatedTransactionsIdRoute: AuthenticatedTransactionsIdRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
 }

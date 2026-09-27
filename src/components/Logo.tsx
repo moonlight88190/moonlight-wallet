@@ -18,8 +18,17 @@ export function LogoMark({ className }: { className?: string }) {
 /** Full official logo, shown on a light tile so it reads in dark mode too. */
 export function LogoFull({ className }: { className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-3xl bg-card shadow-soft dark:bg-[oklch(1_0_0)]", className)}>
-      <img src={full.url} alt="Premium Moonlight Wealth Management" className="h-full w-full object-contain" />
+    <div
+      className={cn(
+        "overflow-hidden rounded-3xl bg-card shadow-soft dark:bg-[oklch(1_0_0)]",
+        className,
+      )}
+    >
+      <img
+        src={full.url}
+        alt="Premium Moonlight Wealth Management"
+        className="h-full w-full object-contain"
+      />
     </div>
   );
 }

@@ -12,7 +12,10 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Create account — Moonlight Wallet" },
-      { name: "description", content: "Create your Moonlight Wallet and get your own wallet ID and QR code." },
+      {
+        name: "description",
+        content: "Create your Moonlight Wallet and get your own wallet ID and QR code.",
+      },
       { property: "og:title", content: "Create account — Moonlight Wallet" },
       { property: "og:description", content: "Your own wallet ID and QR code in seconds." },
     ],
@@ -34,35 +37,68 @@ function Register() {
   const [form, setForm] = useState({ fullName: "", email: "", password: "", confirm: "" });
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [k]: e.target.value });
 
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const p = schema.safeParse(form);
-    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Check your details"); return; }
+    if (!p.success) {
+      toast.error(p.error.issues[0]?.message ?? "Check your details");
+      return;
+    }
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email: p.data.email,
       password: p.data.password,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: p.data.fullName } },
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { full_name: p.data.fullName },
+      },
     });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (data.session) navigate({ to: "/dashboard" });
     else setSent(true);
   }
 
   if (sent) {
     return (
-      <AuthLayout title="Check your email" subtitle={`We sent a confirmation link to ${form.email}.`} footer={<Link to="/login" className="font-medium text-foreground">Back to sign in</Link>}>
-        <div className="flex justify-center"><MailCheck className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} /></div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">Once confirmed, your wallet ID and QR code will be ready on your dashboard.</p>
+      <AuthLayout
+        title="Check your email"
+        subtitle={`We sent a confirmation link to ${form.email}.`}
+        footer={
+          <Link to="/login" className="font-medium text-foreground">
+            Back to sign in
+          </Link>
+        }
+      >
+        <div className="flex justify-center">
+          <MailCheck className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} />
+        </div>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Once confirmed, your wallet ID and QR code will be ready on your dashboard.
+        </p>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout title="Create your wallet" subtitle="It takes less than a minute." footer={<>Already have an account? <Link to="/login" className="font-medium text-foreground">Sign in</Link></>}>
+    <AuthLayout
+      title="Create your wallet"
+      subtitle="It takes less than a minute."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium text-foreground">
+            Sign in
+          </Link>
+        </>
+      }
+    >
       <button
         onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
         className="flex w-full items-center justify-center gap-2.5 rounded-full border bg-card px-6 py-3 text-[15px] font-medium transition-colors hover:bg-accent"
@@ -73,11 +109,41 @@ function Register() {
         <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
       </div>
       <form onSubmit={submit} className="space-y-3">
-        <Input placeholder="Full name" autoComplete="name" value={form.fullName} onChange={set("fullName")} className="h-12 rounded-xl" />
-        <Input type="email" placeholder="Email" autoComplete="email" value={form.email} onChange={set("email")} className="h-12 rounded-xl" />
-        <Input type="password" placeholder="Password" autoComplete="new-password" value={form.password} onChange={set("password")} className="h-12 rounded-xl" />
-        <Input type="password" placeholder="Confirm password" autoComplete="new-password" value={form.confirm} onChange={set("confirm")} className="h-12 rounded-xl" />
-        <button disabled={busy} className="mt-2 flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60">
+        <Input
+          placeholder="Full name"
+          autoComplete="name"
+          value={form.fullName}
+          onChange={set("fullName")}
+          className="h-12 rounded-xl"
+        />
+        <Input
+          type="email"
+          placeholder="Email"
+          autoComplete="email"
+          value={form.email}
+          onChange={set("email")}
+          className="h-12 rounded-xl"
+        />
+        <Input
+          type="password"
+          placeholder="Password"
+          autoComplete="new-password"
+          value={form.password}
+          onChange={set("password")}
+          className="h-12 rounded-xl"
+        />
+        <Input
+          type="password"
+          placeholder="Confirm password"
+          autoComplete="new-password"
+          value={form.confirm}
+          onChange={set("confirm")}
+          className="h-12 rounded-xl"
+        />
+        <button
+          disabled={busy}
+          className="mt-2 flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
         </button>
       </form>
