@@ -161,7 +161,7 @@ function Withdraw() {
                   <div
                     key={item.id}
                     onClick={() => setSelectedMethod(item)}
-                    className="group flex items-center justify-between rounded-2xl border border-border/50 bg-card p-3.5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer"
+                    className="group flex items-center justify-between rounded-2xl border border-border/50 bg-card p-3.5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3.5">
                       <PaymentMethodIcon id={item.id} size="md" />
@@ -180,7 +180,7 @@ function Withdraw() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                      <span className="rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                         {item.speed}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
@@ -214,16 +214,16 @@ function Withdraw() {
             <div
               key={brand.id}
               onClick={() => setSelectedLuxury(brand)}
-              className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer"
+              className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer"
             >
-              <div className="relative flex h-14 w-full items-center justify-center p-2">
+              <div className="relative flex aspect-[1.5/1] w-full items-center justify-center p-3 rounded-xl bg-secondary/30">
                 <img
                   src={brand.logoUrl}
                   alt={brand.name}
-                  className="max-h-10 max-w-[100px] object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                  className="max-h-9 max-w-[110px] object-contain filter dark:invert group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              <div className="mt-2 w-full border-t border-border/40 pt-2">
+              <div className="mt-2.5 w-full border-t border-border/40 pt-2 text-center">
                 <p className="text-xs font-semibold text-foreground truncate">{brand.name}</p>
                 <p className="text-[10px] text-muted-foreground truncate">{brand.category}</p>
               </div>
