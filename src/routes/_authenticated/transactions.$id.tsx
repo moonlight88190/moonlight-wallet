@@ -75,13 +75,18 @@ function Receipt() {
         <ChevronLeft className="h-4 w-4" /> Activity
       </Link>
       <div className="rounded-[2rem] border border-border/60 bg-card p-5 sm:p-8 shadow-soft">
-        <p className="text-center text-xs sm:text-sm font-medium text-muted-foreground">{v.title}</p>
+        <p className="text-center text-xs sm:text-sm font-medium text-muted-foreground">
+          {v.title}
+        </p>
         <p className="tabular mt-2 text-center text-3xl sm:text-5xl font-semibold tracking-tight text-foreground">
           {formatMoney(v.amount, v.currency, { sign: true })}
         </p>
         <div className="mt-6 sm:mt-8 divide-y border-t border-border/50">
           {rows.map(([k, val]) => (
-            <div key={k} className="flex justify-between items-center gap-3 py-3 text-xs sm:text-sm">
+            <div
+              key={k}
+              className="flex justify-between items-center gap-3 py-3 text-xs sm:text-sm"
+            >
               <span className="text-muted-foreground shrink-0">{k}</span>
               <span className="text-right font-semibold text-foreground break-all">{val}</span>
             </div>

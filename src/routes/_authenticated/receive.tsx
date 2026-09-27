@@ -62,7 +62,13 @@ function Receive() {
           <Skeleton className="mx-auto h-48 w-48 sm:h-52 sm:w-52 rounded-2xl" />
         ) : (
           <div className="mx-auto w-fit rounded-2xl bg-[oklch(1_0_0)] p-3.5 sm:p-4 shadow-sm border border-border/20">
-            <QRCodeSVG value={qrPayload(code)} size={180} className="sm:w-[200px] sm:h-[200px]" fgColor="#1b2b45" level="M" />
+            <QRCodeSVG
+              value={qrPayload(code)}
+              size={180}
+              className="sm:w-[200px] sm:h-[200px]"
+              fgColor="#1b2b45"
+              level="M"
+            />
           </div>
         )}
 
@@ -116,7 +122,13 @@ function Receive() {
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl text-center p-5 sm:p-6">
           <DialogTitle className="text-center font-mono text-base">{code}</DialogTitle>
           <div className="mx-auto mt-2 w-fit rounded-2xl bg-[oklch(1_0_0)] p-4 sm:p-5">
-            <QRCodeSVG value={qrPayload(code)} size={220} className="sm:w-[260px] sm:h-[260px]" fgColor="#1b2b45" level="M" />
+            <QRCodeSVG
+              value={qrPayload(code)}
+              size={220}
+              className="sm:w-[260px] sm:h-[260px]"
+              fgColor="#1b2b45"
+              level="M"
+            />
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             Scan with Moonlight mobile camera or QR reader

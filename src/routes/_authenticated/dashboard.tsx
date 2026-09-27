@@ -123,7 +123,9 @@ function Dashboard() {
               >
                 <a.icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
               </span>
-              <span className="text-xs font-semibold text-foreground tracking-tight">{a.label}</span>
+              <span className="text-xs font-semibold text-foreground tracking-tight">
+                {a.label}
+              </span>
             </Link>
           ))}
         </div>

@@ -77,7 +77,9 @@ export function PaymentAnimation({
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border/40 text-[11px] font-semibold text-muted-foreground">
           <span>{formatMoney(sourceAmount, sourceCurrency)}</span>
           <ArrowRight className="h-3 w-3 text-primary animate-pulse motion-reduce:animate-none" />
-          <span className="text-foreground">{formatMoney(destinationAmount, destinationCurrency)}</span>
+          <span className="text-foreground">
+            {formatMoney(destinationAmount, destinationCurrency)}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">

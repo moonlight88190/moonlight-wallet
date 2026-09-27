@@ -16,7 +16,10 @@ export const Route = createFileRoute("/")({
           "European-first global international wallet. Send, receive and manage multi-currency funds with instant payout channels worldwide.",
       },
       { property: "og:title", content: "Moonlight Wallet — Global International Wallet" },
-      { property: "og:description", content: "European-first, globally connected international wallet." },
+      {
+        property: "og:description",
+        content: "European-first, globally connected international wallet.",
+      },
     ],
   }),
   component: Landing,
@@ -46,7 +49,8 @@ function Landing() {
             Move money without the complexity.
           </h1>
           <p className="mx-auto mt-4 sm:mt-6 max-w-lg text-base sm:text-lg text-muted-foreground leading-relaxed">
-            European-first, globally connected. Send, receive and manage international balances seamlessly across major corridors.
+            European-first, globally connected. Send, receive and manage international balances
+            seamlessly across major corridors.
           </p>
           <div className="mx-auto mt-12 flex w-full max-w-xs flex-col gap-3">
             {signedIn ? (

@@ -116,7 +116,8 @@ function Withdraw() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
       <PageTitle eyebrow="WITHDRAW & REDEEM" title="Withdraw Funds">
-        Transfer funds to European &amp; global financial accounts or redeem instantly into brand vouchers.
+        Transfer funds to European &amp; global financial accounts or redeem instantly into brand
+        vouchers.
       </PageTitle>
 
       {/* Primary Payout Methods by Region */}
@@ -274,7 +275,9 @@ function Withdraw() {
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
                 <div>
-                  <DialogTitle className="text-base sm:text-lg font-semibold">{selectedMethod.name}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg font-semibold">
+                    {selectedMethod.name}
+                  </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
                     {selectedMethod.description}
                   </DialogDescription>
@@ -286,7 +289,9 @@ function Withdraw() {
               <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Payout Speed:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{selectedMethod.speed}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {selectedMethod.speed}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Network Fee:</span>
@@ -400,11 +405,15 @@ function Withdraw() {
               <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Voucher Cost:</span>
-                  <span className="font-semibold text-foreground">{formatMoney(cardValue, preferredCurrency)}</span>
+                  <span className="font-semibold text-foreground">
+                    {formatMoney(cardValue, preferredCurrency)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Delivery:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Instant Email Delivery</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    Instant Email Delivery
+                  </span>
                 </div>
               </div>
 
