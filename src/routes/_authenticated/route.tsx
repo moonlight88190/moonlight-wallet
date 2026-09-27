@@ -15,9 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
       const hash = window.location.hash || "";
       const search = window.location.search || "";
       const hasAuthTokens =
-        hash.includes("access_token=") ||
-        hash.includes("code=") ||
-        search.includes("code=");
+        hash.includes("access_token=") || hash.includes("code=") || search.includes("code=");
 
       if (hasAuthTokens) {
         // Wait briefly for Supabase to hydrate auth tokens from URL
