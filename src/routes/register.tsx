@@ -52,7 +52,7 @@ function Register() {
       email: p.data.email,
       password: p.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: window.location.origin,
         data: { full_name: p.data.fullName },
       },
     });

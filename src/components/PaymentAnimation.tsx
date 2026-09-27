@@ -62,6 +62,7 @@ export function PaymentAnimation({
       const timer = setTimeout(() => setShowFX(true), 600);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
