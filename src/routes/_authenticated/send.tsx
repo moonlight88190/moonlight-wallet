@@ -98,9 +98,8 @@ function Send() {
     setAnimating(true);
     setAnimState("CONFIRMING");
 
-    setTimeout(() => {
-      setAnimState("PROCESSING");
-    }, 800);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setAnimState("PROCESSING");
 
     const { data, error } = await supabase.rpc("send_transfer", {
       p_recipient_code: recipient.wallet_code,
@@ -114,7 +113,7 @@ function Send() {
       setAnimError(error.message);
       setTimeout(() => {
         setAnimating(false);
-      }, 3000);
+      }, 2500);
       return;
     }
 
@@ -126,7 +125,7 @@ function Send() {
       setStep("done");
       qc.invalidateQueries({ queryKey: ["wallet"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-    }, 1800);
+    }, 1500);
   }
 
   const btn =
