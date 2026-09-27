@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" fill="none">
+  <defs>
+    <linearGradient id="brandG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="moonG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Emblem Icon -->
+  <g transform="translate(20, 20)">
+    <rect width="200" height="200" rx="50" fill="url(#brandG)"/>
+    <rect x="1" y="1" width="198" height="198" rx="49" stroke="#334155" stroke-width="2" fill="none"/>
+    <path d="M 110 30 A 70 70 0 1 0 170 110 A 52 52 0 1 1 110 30 Z" fill="url(#moonG)"/>
+    <path d="M 60 140 L 90 85 L 115 110 L 145 65 L 160 140" stroke="#38BDF8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Brand Typography -->
+  <text x="260" y="125" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="64" fill="#F8FAFC" letter-spacing="12">MOONLIGHT</text>
+  <text x="265" y="165" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="20" fill="#94A3B8" letter-spacing="16">PRIVATE WALLET</text>
+</svg>

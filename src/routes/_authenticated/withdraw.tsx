@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronRight, ArrowRight, Check, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { ChevronRight, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, GiftCardBrand, PaymentMethodIcon } from "@/components/AssetComponents";
@@ -116,65 +116,69 @@ function Withdraw() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-12">
+    <div className="mx-auto max-w-5xl space-y-12">
       <PageTitle eyebrow="WITHDRAW & REDEEM" title="Withdraw Funds">
         Transfer funds to European &amp; international accounts or redeem instantly into digital
         gift vouchers.
       </PageTitle>
 
       {/* Primary Payout Methods by Region */}
-      <div className="space-y-10">
-        <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="text-xl font-semibold tracking-tight">Financial Payout Channels</h2>
-          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+            Financial Payout Channels
+          </h2>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1 rounded-full border border-border/40">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             Verified Financial Infrastructure
           </span>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {REGIONS.map((region) => (
             <div
               key={region.id}
-              className="rounded-3xl border bg-card/60 p-5 shadow-soft space-y-4"
+              className="rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 shadow-soft space-y-3.5"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pb-1">
                 <div className="flex items-center gap-2.5">
                   <CountryFlag code={region.flagCode} circle size="sm" />
-                  <h3 className="font-semibold text-foreground text-base tracking-tight">
+                  <h3 className="font-bold text-foreground text-sm sm:text-base tracking-tight">
                     {region.title}
                   </h3>
                 </div>
-                <span className="text-[11px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full border border-border/40">
                   {region.badge}
                 </span>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {region.items.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedMethod(item)}
-                    className="group flex items-center justify-between rounded-2xl border border-border/50 bg-card p-3.5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer"
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer"
                   >
-                    <div className="flex items-center gap-3.5">
-                      <PaymentMethodIcon id={item.id} size="md" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <PaymentMethodIcon id={item.id} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-bold text-foreground text-xs sm:text-sm group-hover:text-primary transition-colors truncate">
                             {item.name}
                           </span>
                           {item.badge && (
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
                               {item.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-foreground">
                         {item.speed}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
@@ -188,16 +192,16 @@ function Withdraw() {
       </div>
 
       {/* Gift Cards Gallery */}
-      <div className="pt-6 space-y-6">
+      <div className="pt-4 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
                 Gift Cards &amp; Luxury Vouchers
               </h2>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Convert Moonlight funds into instant official brand cards and luxury vouchers.
             </p>
           </div>
@@ -207,7 +211,7 @@ function Withdraw() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                   activeCategory === cat
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -219,7 +223,7 @@ function Withdraw() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredCards.map((card) => (
             <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
           ))}
@@ -234,7 +238,9 @@ function Withdraw() {
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
                 <div>
-                  <DialogTitle className="text-lg font-semibold">{selectedMethod.name}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg font-bold">
+                    {selectedMethod.name}
+                  </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
                     {selectedMethod.description}
                   </DialogDescription>
@@ -259,7 +265,7 @@ function Withdraw() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Withdrawal Amount (USD)
                 </label>
                 <Input
@@ -267,12 +273,12 @@ function Withdraw() {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="100"
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-semibold text-muted-foreground">
                   {selectedMethod.id.includes("upi")
                     ? "Virtual Payment Address (VPA / UPI ID)"
                     : selectedMethod.id.includes("gcash")
@@ -289,14 +295,14 @@ function Withdraw() {
                         ? "+63 9XX XXX XXXX"
                         : "CZ65 0800 0000 0012 3456 7890"
                   }
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 text-sm"
                 />
               </div>
 
               <Button
                 onClick={handleInitiateWithdraw}
                 disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium mt-2"
+                className="w-full rounded-full h-11 font-semibold text-sm mt-2"
               >
                 {isProcessing ? "Processing Payout..." : "Confirm Withdrawal"}
               </Button>
@@ -310,7 +316,7 @@ function Withdraw() {
         {selectedCard && (
           <DialogContent className="sm:max-w-md rounded-3xl p-6">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">
+              <DialogTitle className="text-base sm:text-lg font-bold">
                 {selectedCard.brand} Voucher
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
@@ -319,7 +325,7 @@ function Withdraw() {
             </DialogHeader>
 
             <div className="space-y-5 pt-2">
-              <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-2xl bg-muted shadow-soft">
+              <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-2xl bg-muted shadow-soft">
                 <img
                   src={selectedCard.imageUrl}
                   alt={selectedCard.brand}
@@ -328,7 +334,7 @@ function Withdraw() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Select Voucher Denomination
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -336,7 +342,7 @@ function Withdraw() {
                     <button
                       key={val}
                       onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2 text-xs font-semibold border transition-all ${
+                      className={`rounded-xl py-2 text-xs font-bold border transition-all ${
                         cardValue === val
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border/60 bg-card hover:bg-accent"
@@ -362,7 +368,7 @@ function Withdraw() {
               <Button
                 onClick={handleRedeemCard}
                 disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium"
+                className="w-full rounded-full h-11 font-semibold text-sm"
               >
                 {isProcessing ? "Generating Code..." : `Redeem for $${cardValue}.00`}
               </Button>
