@@ -9,14 +9,14 @@ import { signInWithGoogle } from "@/lib/auth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Moonlight Wallet — Move money without the complexity" },
+      { title: "Moonlight Wallet — Global International Wallet" },
       {
         name: "description",
         content:
-          "A calm, international wallet for India, the Philippines and beyond. Send, receive and track money in one place.",
+          "European-first global international wallet. Send, receive and manage multi-currency funds with instant payout channels worldwide.",
       },
-      { property: "og:title", content: "Moonlight Wallet" },
-      { property: "og:description", content: "Move money without the complexity." },
+      { property: "og:title", content: "Moonlight Wallet — Global International Wallet" },
+      { property: "og:description", content: "European-first, globally connected international wallet." },
     ],
   }),
   component: Landing,
@@ -35,18 +35,18 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
-        <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">
-          <LogoMark className="mx-auto h-24 w-24 shadow-soft" />
-          <p className="mt-8 text-[11px] font-medium tracking-[0.35em] text-muted-foreground">
-            MOONLIGHT WALLET
+    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/10">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 py-16 sm:py-24 text-center">
+        <div className="animate-in fade-in slide-in-from-bottom-3 duration-700 max-w-3xl">
+          <LogoMark className="mx-auto h-20 w-20 sm:h-24 sm:w-24 shadow-soft" />
+          <p className="mt-6 sm:mt-8 text-[11px] font-semibold tracking-[0.35em] text-muted-foreground uppercase">
+            GLOBAL INTERNATIONAL WALLET
           </p>
-          <h1 className="mx-auto mt-6 max-w-2xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+          <h1 className="mx-auto mt-4 max-w-2xl text-4xl sm:text-6xl font-semibold leading-[1.1] tracking-tight text-foreground">
             Move money without the complexity.
           </h1>
-          <p className="mx-auto mt-6 max-w-md text-lg text-muted-foreground">
-            One quiet wallet for India, the Philippines and everywhere in between.
+          <p className="mx-auto mt-4 sm:mt-6 max-w-lg text-base sm:text-lg text-muted-foreground leading-relaxed">
+            European-first, globally connected. Send, receive and manage international balances seamlessly across major corridors.
           </p>
           <div className="mx-auto mt-12 flex w-full max-w-xs flex-col gap-3">
             {signedIn ? (
