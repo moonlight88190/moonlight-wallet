@@ -9,7 +9,11 @@ export function useProfile() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", u.user.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", u.user.id)
+        .single();
       if (error) throw error;
       return data;
     },
@@ -77,7 +81,9 @@ export function txView(tx: Tx, walletId: string | undefined) {
   return {
     outgoing: false,
     title:
-      tx.kind === "admin_credit" ? "Balance added" : `Received from ${tx.sender_name || tx.sender_wallet_code}`,
+      tx.kind === "admin_credit"
+        ? "Balance added"
+        : `Received from ${tx.sender_name || tx.sender_wallet_code}`,
     amount: Number(tx.recipient_amount ?? tx.amount),
     currency: tx.recipient_currency ?? tx.currency,
   };

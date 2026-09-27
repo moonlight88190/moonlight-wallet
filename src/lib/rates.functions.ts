@@ -12,7 +12,9 @@ export const getRates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const read = async () => {
-      const { data, error } = await context.supabase.from("exchange_rates").select("quote, rate, fetched_at, source");
+      const { data, error } = await context.supabase
+        .from("exchange_rates")
+        .select("quote, rate, fetched_at, source");
       if (error) throw new Error(error.message);
       return data ?? [];
     };
@@ -20,12 +22,21 @@ export const getRates = createServerFn({ method: "GET" })
     const oldest = rows.reduce((m, r) => Math.min(m, new Date(r.fetched_at).getTime()), Date.now());
     if (rows.length === 0 || Date.now() - oldest > DAY_MS) {
       try {
-        const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${SYMBOLS.join(",")}`);
+        const res = await fetch(
+          `https://api.frankfurter.dev/v1/latest?base=USD&symbols=${SYMBOLS.join(",")}`,
+        );
         if (res.ok) {
           const json = (await res.json()) as { rates: Record<string, number> };
           const now = new Date().toISOString();
-          const upserts = [{ quote: "USD", rate: 1, source: "frankfurter", fetched_at: now }].concat(
-            Object.entries(json.rates).map(([quote, rate]) => ({ quote, rate, source: "frankfurter", fetched_at: now })),
+          const upserts = [
+            { quote: "USD", rate: 1, source: "frankfurter", fetched_at: now },
+          ].concat(
+            Object.entries(json.rates).map(([quote, rate]) => ({
+              quote,
+              rate,
+              source: "frankfurter",
+              fetched_at: now,
+            })),
           );
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.from("exchange_rates").upsert(upserts);

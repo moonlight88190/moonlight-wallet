@@ -26,23 +26,48 @@ function Forgot() {
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const p = z.string().trim().email().max(255).safeParse(email);
-    if (!p.success) { toast.error("Enter a valid email"); return; }
+    if (!p.success) {
+      toast.error("Enter a valid email");
+      return;
+    }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(p.data, { redirectTo: `${window.location.origin}/reset-password` });
+    const { error } = await supabase.auth.resetPasswordForEmail(p.data, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setSent(true);
   }
   return (
     <AuthLayout
       title={sent ? "Check your email" : "Forgot password"}
-      subtitle={sent ? `If an account exists for ${email}, a reset link is on its way.` : "We'll email you a link to reset it."}
-      footer={<Link to="/login" className="font-medium text-foreground">Back to sign in</Link>}
+      subtitle={
+        sent
+          ? `If an account exists for ${email}, a reset link is on its way.`
+          : "We'll email you a link to reset it."
+      }
+      footer={
+        <Link to="/login" className="font-medium text-foreground">
+          Back to sign in
+        </Link>
+      }
     >
       {!sent && (
         <form onSubmit={submit} className="space-y-3">
-          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
-          <button disabled={busy} className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground disabled:opacity-60">
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12 rounded-xl"
+          />
+          <button
+            disabled={busy}
+            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground disabled:opacity-60"
+          >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send reset link"}
           </button>
         </form>

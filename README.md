@@ -6,12 +6,12 @@ The attached image is the official Moonlight Wallet logo.
 
 IMPORTANT:
 
-* Use the uploaded logo exactly as the brand logo.
-* Do NOT redesign, regenerate, or replace the logo.
-* Find/use appropriate real brand assets and imagery for payment methods, banks, gift cards, financial services and other supported services.
-* Use official/licensed assets where possible.
-* If an official asset cannot legally/technically be used, use a clean neutral icon instead.
-* Do not fabricate official logos.
+- Use the uploaded logo exactly as the brand logo.
+- Do NOT redesign, regenerate, or replace the logo.
+- Find/use appropriate real brand assets and imagery for payment methods, banks, gift cards, financial services and other supported services.
+- Use official/licensed assets where possible.
+- If an official asset cannot legally/technically be used, use a clean neutral icon instead.
+- Do not fabricate official logos.
 
 The visual direction must be Apple-inspired minimalism: extremely clean, spacious, premium, restrained and elegant.
 
@@ -23,26 +23,26 @@ This is a closed-loop project/simulation. Do NOT connect simulated wallet balanc
 
 Moonlight Wallet is an international wallet and wealth-management interface focused initially on:
 
-* India
-* Philippines
-* International users
+- India
+- Philippines
+- International users
 
 Users should be able to:
 
-* Create an account
-* Login with Google
-* Login with email/password
-* Receive money
-* Send money
-* Track transactions
-* View balances
-* Change display currency
-* Redeem/withdraw through simulated payout methods
-* View gift-card options
-* View financial/wealth-management features
-* Explore investment/market information
-* Manage account settings
-* Receive money through their unique wallet ID and QR code
+- Create an account
+- Login with Google
+- Login with email/password
+- Receive money
+- Send money
+- Track transactions
+- View balances
+- Change display currency
+- Redeem/withdraw through simulated payout methods
+- View gift-card options
+- View financial/wealth-management features
+- Explore investment/market information
+- Manage account settings
+- Receive money through their unique wallet ID and QR code
 
 The website must require authentication before users can access their wallet.
 
@@ -54,13 +54,13 @@ Use a modern scalable stack.
 
 Preferred:
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* Supabase
-* PostgreSQL
-* Supabase Authentication
-* GitHub
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Supabase
+- PostgreSQL
+- Supabase Authentication
+- GitHub
 
 GitHub must be the source of truth for the project.
 
@@ -164,24 +164,24 @@ The entire interface should look like a premium Apple-designed financial applica
 
 DO NOT make it look like:
 
-* A generic banking template
-* A crypto dashboard
-* A casino website
-* A neon fintech website
-* A complicated enterprise dashboard
+- A generic banking template
+- A crypto dashboard
+- A casino website
+- A neon fintech website
+- A complicated enterprise dashboard
 
 Design language:
 
-* Huge whitespace
-* Large elegant typography
-* Thin separators
-* Minimal cards
-* Subtle shadows
-* Soft transitions
-* Clean monochrome icons
-* High-quality imagery
-* Restrained accent color
-* Excellent alignment
+- Huge whitespace
+- Large elegant typography
+- Thin separators
+- Minimal cards
+- Subtle shadows
+- Soft transitions
+- Clean monochrome icons
+- High-quality imagery
+- Restrained accent color
+- Excellent alignment
 
 Use the uploaded Moonlight logo.
 
@@ -281,19 +281,19 @@ Research and select a reliable currency/exchange-rate API.
 
 Possible providers to evaluate:
 
-* Frankfurter / ECB
-* ExchangeRate.host
-* Open Exchange Rates
-* Fixer
-* CurrencyAPI
+- Frankfurter / ECB
+- ExchangeRate.host
+- Open Exchange Rates
+- Fixer
+- CurrencyAPI
 
 Choose the most appropriate option based on:
 
-* Free/low-cost availability
-* API reliability
-* Supported currencies
-* Rate limits
-* Ease of integration
+- Free/low-cost availability
+- API reliability
+- Supported currencies
+- Rate limits
+- Ease of integration
 
 Exchange rates should be refreshed approximately every 24 hours and cached.
 
@@ -706,20 +706,20 @@ Currency markets
 
 For market data, research suitable APIs such as:
 
-* Alpha Vantage
-* Finnhub
-* Twelve Data
-* Polygon/Massive
-* Financial Modeling Prep
+- Alpha Vantage
+- Finnhub
+- Twelve Data
+- Polygon/Massive
+- Financial Modeling Prep
 
 Choose based on:
 
-* Free tier
-* API limits
-* Market coverage
-* India availability
-* Philippines availability
-* Ease of implementation
+- Free tier
+- API limits
+- Market coverage
+- India availability
+- Philippines availability
+- Ease of implementation
 
 Initially, this can be market-data/portfolio simulation rather than actual brokerage execution.
 
@@ -1117,18 +1117,18 @@ Email notifications can later use Resend.
 
 Implement security architecture from the beginning.
 
-* Supabase Row Level Security
-* Protected routes
-* Server-side authorization
-* Secure environment variables
-* Admin authorization server-side
-* Input validation
-* Rate limiting
-* Audit logs
-* Error monitoring
-* Never expose service-role keys
-* Never trust client-provided balances
-* Never trust client-provided user roles
+- Supabase Row Level Security
+- Protected routes
+- Server-side authorization
+- Secure environment variables
+- Admin authorization server-side
+- Input validation
+- Rate limiting
+- Audit logs
+- Error monitoring
+- Never expose service-role keys
+- Never trust client-provided balances
+- Never trust client-provided user roles
 
 ⸻
 
@@ -1140,12 +1140,12 @@ The wallet’s balances are internal application/simulation balances.
 
 Do NOT connect these balances to:
 
-* Real UPI payouts
-* Real GCash payouts
-* Real bank transfers
-* Real payment processors
-* Real brokerage accounts
-* Real KYC providers
+- Real UPI payouts
+- Real GCash payouts
+- Real bank transfers
+- Real payment processors
+- Real brokerage accounts
+- Real KYC providers
 
 The UPI, GCash and bank screens are interfaces for the application’s internal redemption simulation.
 
@@ -1159,13 +1159,13 @@ Every page should be complete.
 
 No:
 
-* “Coming soon” placeholders where a working UI can be provided
-* Broken buttons
-* Dead links
-* Generic template cards
-* Excessive gradients
-* Fake logos
-* Poor-quality stock imagery
+- “Coming soon” placeholders where a working UI can be provided
+- Broken buttons
+- Dead links
+- Generic template cards
+- Excessive gradients
+- Fake logos
+- Poor-quality stock imagery
 
 Include:
 
@@ -1216,16 +1216,16 @@ GitHub must remain the single source of truth.
 
 Write a detailed README explaining:
 
-* Architecture
-* Setup
-* Supabase setup
-* Google OAuth setup
-* Environment variables
-* APIs
-* Database schema
-* Development
-* Deployment
-* How another AI coding agent can continue the project
+- Architecture
+- Setup
+- Supabase setup
+- Google OAuth setup
+- Environment variables
+- APIs
+- Database schema
+- Development
+- Deployment
+- How another AI coding agent can continue the project
 
 Keep commits organized.
 

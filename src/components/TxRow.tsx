@@ -9,14 +9,19 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
   const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
   return (
-    <Link to="/transactions/$id" params={{ id: tx.id }} className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70">
+    <Link
+      to="/transactions/$id"
+      params={{ id: tx.id }}
+      className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
+    >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
         <Icon className="h-4 w-4" strokeWidth={1.5} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-medium">{v.title}</div>
         <div className="text-xs text-muted-foreground">
-          {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+          {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
+          {d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
           {tx.status !== "completed" && <span className="ml-2 capitalize">· {tx.status}</span>}
         </div>
       </div>

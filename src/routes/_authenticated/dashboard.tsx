@@ -1,9 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowDownLeft, ArrowUpRight, Gift, ChevronRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Landmark, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { useProfile, useRates, useSetPreferredCurrency, useTransactions, useWallet } from "@/hooks/use-wallet";
+import {
+  useProfile,
+  useRates,
+  useSetPreferredCurrency,
+  useTransactions,
+  useWallet,
+} from "@/hooks/use-wallet";
 import { CURRENCIES, formatMoney } from "@/lib/currency";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TxRow, groupByPeriod } from "@/components/TxRow";
 
@@ -34,18 +46,25 @@ function Dashboard() {
   return (
     <div className="space-y-16">
       <section className="pt-6 text-center sm:pt-10">
-        <p className="text-[11px] font-medium tracking-[0.3em] text-muted-foreground">YOUR BALANCE</p>
+        <p className="text-[11px] font-medium tracking-[0.3em] text-muted-foreground">
+          YOUR BALANCE
+        </p>
         {loading ? (
           <Skeleton className="mx-auto mt-5 h-16 w-72 rounded-2xl" />
         ) : (
-          <h1 className="tabular mt-4 text-6xl font-semibold tracking-tight sm:text-7xl">{formatMoney(balance, cur)}</h1>
+          <h1 className="tabular mt-4 text-6xl font-semibold tracking-tight sm:text-7xl">
+            {formatMoney(balance, cur)}
+          </h1>
         )}
         <div className="mt-5 flex items-center justify-center gap-2">
           <Select
             value={cur}
             onValueChange={(v) =>
               profile.data &&
-              setCur.mutate({ id: profile.data.id, currency: v }, { onError: () => toast.error("Couldn't change currency") })
+              setCur.mutate(
+                { id: profile.data.id, currency: v },
+                { onError: () => toast.error("Couldn't change currency") },
+              )
             }
           >
             <SelectTrigger className="h-8 w-auto gap-1.5 rounded-full border bg-card px-3.5 text-xs font-medium shadow-none">
@@ -60,14 +79,16 @@ function Dashboard() {
             </SelectContent>
           </Select>
         </div>
-        {wallet.data && <p className="mt-4 font-mono text-xs text-muted-foreground">{wallet.data.wallet_code}</p>}
+        {wallet.data && (
+          <p className="mt-4 font-mono text-xs text-muted-foreground">{wallet.data.wallet_code}</p>
+        )}
       </section>
 
       <section className="mx-auto grid max-w-md grid-cols-3 gap-4">
         {[
           { to: "/send", label: "Send", icon: ArrowUpRight },
           { to: "/receive", label: "Receive", icon: ArrowDownLeft },
-          { to: "/redeem", label: "Redeem", icon: Gift },
+          { to: "/withdraw", label: "Withdraw", icon: Landmark },
         ].map((a) => (
           <Link key={a.to} to={a.to} className="group flex flex-col items-center gap-2.5">
             <span className="flex h-14 w-14 items-center justify-center rounded-full border bg-card shadow-soft transition-transform group-hover:-translate-y-0.5">
@@ -82,23 +103,41 @@ function Dashboard() {
         <div className="md:col-span-3">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-xl font-semibold tracking-tight">Money activity</h2>
-            <Link to="/transactions" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              to="/transactions"
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+            >
               See all <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
           {txs.isLoading ? (
-            <div className="space-y-4 pt-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
+            <div className="space-y-4 pt-4">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-12 rounded-xl" />
+              ))}
+            </div>
           ) : !txs.data?.length ? (
             <div className="rounded-3xl border border-dashed px-6 py-14 text-center">
               <p className="font-medium">No activity yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">Share your wallet ID to receive your first transfer.</p>
-              <Link to="/receive" className="mt-5 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">Receive money</Link>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Share your wallet ID to receive your first transfer.
+              </p>
+              <Link
+                to="/receive"
+                className="mt-5 inline-flex rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+              >
+                Receive money
+              </Link>
             </div>
           ) : (
             groupByPeriod(txs.data).map((g) => (
               <div key={g.label} className="mt-4">
                 <p className="text-xs font-medium text-muted-foreground">{g.label}</p>
-                <div className="divide-y">{g.items.map((t) => <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />)}</div>
+                <div className="divide-y">
+                  {g.items.map((t) => (
+                    <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />
+                  ))}
+                </div>
               </div>
             ))
           )}
@@ -110,15 +149,23 @@ function Dashboard() {
               <Skeleton className="h-40 rounded-2xl" />
             ) : (
               <div className="divide-y">
-                {["INR", "PHP", "EUR", "GBP", "SGD"].filter((c) => c !== cur).slice(0, 4).map((c) => {
-                  const r = (rates.data?.rates[c] ?? 1) / rate;
-                  return (
-                    <div key={c} className="flex items-center justify-between px-4 py-3.5 text-sm">
-                      <span className="text-muted-foreground">1 {cur}</span>
-                      <span className="tabular font-medium">≈ {r.toLocaleString(undefined, { maximumFractionDigits: 4 })} {c}</span>
-                    </div>
-                  );
-                })}
+                {["INR", "PHP", "EUR", "GBP", "SGD"]
+                  .filter((c) => c !== cur)
+                  .slice(0, 4)
+                  .map((c) => {
+                    const r = (rates.data?.rates[c] ?? 1) / rate;
+                    return (
+                      <div
+                        key={c}
+                        className="flex items-center justify-between px-4 py-3.5 text-sm"
+                      >
+                        <span className="text-muted-foreground">1 {cur}</span>
+                        <span className="tabular font-medium">
+                          ≈ {r.toLocaleString(undefined, { maximumFractionDigits: 4 })} {c}
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>
