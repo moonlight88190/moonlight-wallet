@@ -3,7 +3,12 @@ import { cn } from "@/lib/utils";
 /** Circular emblem cropped from the official logo. */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <div className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-slate-700 text-white shadow-xs dark:from-slate-100 dark:to-slate-300 dark:text-slate-900", className)}>
+    <div
+      className={cn(
+        "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-slate-700 text-white shadow-xs dark:from-slate-100 dark:to-slate-300 dark:text-slate-900",
+        className,
+      )}
+    >
       <span className="font-bold text-xs tracking-wider">ML</span>
     </div>
   );
