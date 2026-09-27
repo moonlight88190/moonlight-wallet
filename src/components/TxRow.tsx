@@ -4,7 +4,7 @@ import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 
-export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string }) {
+export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
   const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
@@ -41,7 +41,7 @@ export function groupByPeriod(txs: Tx[]) {
   for (const t of txs) {
     const ts = new Date(t.created_at).getTime();
     const g = ts >= startToday ? 0 : ts >= startWeek ? 1 : ts >= startMonth ? 2 : 3;
-    groups[g].items.push(t);
+    groups[g]!.items.push(t);
   }
   return groups.filter((g) => g.items.length);
 }

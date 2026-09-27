@@ -36,10 +36,10 @@ function Register() {
   const [sent, setSent] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent): Promise<unknown> {
     e.preventDefault();
     const p = schema.safeParse(form);
-    if (!p.success) return toast.error(p.error.issues[0].message);
+    if (!p.success) return toast.error(p.error.issues[0]?.message ?? "Check your details");
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email: p.data.email,
