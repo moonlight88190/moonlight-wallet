@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" fill="none">
+  <rect width="300" height="120" rx="16" fill="#11457E"/>
+  <rect x="25" y="30" width="60" height="60" rx="10" fill="#1E5FA8" stroke="#ffffff" stroke-opacity="0.2"/>
+  <!-- QR Platba Symbol -->
+  <path d="M40 45 H70 V75 H40 Z" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <rect x="48" y="53" width="12" height="12" fill="#D7141A"/>
+  <text x="100" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="22" fill="#FFFFFF">Česká banka</text>
+  <text x="100" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="13" fill="#A0C4FF">QR Platba · Převod CZK</text>
+</svg>

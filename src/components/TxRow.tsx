@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
+import { CountryFlag } from "@/components/AssetComponents";
 
 export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
@@ -14,8 +15,11 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       params={{ id: tx.id }}
       className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
         <Icon className="h-4 w-4" strokeWidth={1.5} />
+        <div className="absolute -bottom-1 -right-1">
+          <CountryFlag code={v.currency} circle size="xs" />
+        </div>
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-medium">{v.title}</div>
@@ -25,7 +29,12 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
           {tx.status !== "completed" && <span className="ml-2 capitalize">· {tx.status}</span>}
         </div>
       </div>
-      <div className={cn("tabular text-[15px] font-medium", !v.outgoing && "text-success")}>
+      <div
+        className={cn(
+          "tabular text-[15px] font-medium",
+          !v.outgoing && "text-emerald-600 dark:text-emerald-400",
+        )}
+      >
         {formatMoney(v.amount, v.currency, { sign: true })}
       </div>
     </Link>

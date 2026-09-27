@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" fill="none">
+  <rect width="400" height="250" rx="18" fill="#131921"/>
+  <rect x="1" y="1" width="398" height="248" rx="17" stroke="#ffffff" stroke-opacity="0.1" fill="none"/>
+  <!-- Amazon Brand Elements -->
+  <text x="40" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="32" fill="#FFFFFF">amazon</text>
+  <path d="M42 100 Q 110 125 180 98" stroke="#FF9900" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M172 90 L185 98 L175 108" fill="#FF9900"/>
+
+  <rect x="40" y="170" width="120" height="36" rx="8" fill="#FF9900"/>
+  <text x="100" y="193" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="13" fill="#131921">GIFT CARD</text>
+  <text x="360" y="200" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="14" fill="#99A9B9">Moonlight Verified</text>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" fill="none">
+  <defs>
+    <linearGradient id="trvG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F2B48"/>
+      <stop offset="100%" stop-color="#071524"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="250" rx="18" fill="url(#trvG)"/>
+  <text x="40" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="11" fill="#38BDF8" letter-spacing="2">MOONLIGHT ESCAPES</text>
+  <text x="40" y="105" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="28" fill="#FFFFFF">Fine Travel &amp; Hotels</text>
+  <text x="40" y="130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="13" fill="#94A3B8">Luxury Resorts · Global Flights · Stays</text>
+</svg>

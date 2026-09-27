@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" fill="none">
+  <rect width="300" height="120" rx="16" fill="#005CE6"/>
+  <circle cx="60" cy="60" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
+  <path d="M60 46 V60 H74" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="105" y="72" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="38" fill="#FFFFFF" letter-spacing="-0.5">GCash</text>
+</svg>

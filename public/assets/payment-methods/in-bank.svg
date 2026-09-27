@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" fill="none">
+  <rect width="300" height="120" rx="16" fill="#121824"/>
+  <path d="M35 75 H75 V70 H35 V75 Z M35 45 L55 35 L75 45 V50 H35 V45 Z M40 53 H46 V67 H40 V53 Z M52 53 H58 V67 H52 V53 Z M64 53 H70 V67 H64 V53 Z" fill="#FF9933"/>
+  <text x="92" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="20" fill="#FFFFFF">Indian Bank Transfer</text>
+  <text x="92" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="12" fill="#138808">IMPS / NEFT Instant Payout</text>
+</svg>

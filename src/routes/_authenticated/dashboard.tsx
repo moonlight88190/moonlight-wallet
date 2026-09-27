@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowDownLeft, ArrowUpRight, Landmark, ChevronRight } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Landmark,
+  ChevronRight,
+  TrendingUp,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   useProfile,
@@ -18,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TxRow, groupByPeriod } from "@/components/TxRow";
+import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
+import { INVESTMENTS } from "@/lib/assets";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -38,7 +47,7 @@ function Dashboard() {
   const txs = useTransactions(8);
   const setCur = useSetPreferredCurrency();
 
-  const cur = profile.data?.preferred_currency ?? "USD";
+  const cur = profile.data?.preferred_currency ?? "EUR";
   const rate = rates.data?.rates[cur] ?? 1;
   const balance = Number(wallet.data?.balance_usd ?? 0) * rate;
   const loading = profile.isLoading || wallet.isLoading || rates.isLoading;
@@ -47,7 +56,7 @@ function Dashboard() {
     <div className="space-y-16">
       <section className="pt-6 text-center sm:pt-10">
         <p className="text-[11px] font-medium tracking-[0.3em] text-muted-foreground">
-          YOUR BALANCE
+          AVAILABLE BALANCE
         </p>
         {loading ? (
           <Skeleton className="mx-auto mt-5 h-16 w-72 rounded-2xl" />
@@ -67,13 +76,17 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-8 w-auto gap-1.5 rounded-full border bg-card px-3.5 text-xs font-medium shadow-none">
-              <SelectValue />
+            <SelectTrigger className="h-9 w-auto gap-2 rounded-full border bg-card px-4 text-xs font-semibold shadow-soft">
+              <CurrencyIcon code={cur} />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
+            <SelectContent className="rounded-2xl p-1.5">
               {CURRENCIES.map((c) => (
-                <SelectItem key={c.code} value={c.code} className="rounded-lg">
-                  {c.code} · {c.name}
+                <SelectItem key={c.code} value={c.code} className="rounded-xl py-2 px-3">
+                  <div className="flex items-center gap-2.5">
+                    <CountryFlag code={c.code} circle size="xs" />
+                    <span className="font-semibold">{c.code}</span>
+                    <span className="text-muted-foreground text-xs">· {c.name}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -142,39 +155,98 @@ function Dashboard() {
             ))
           )}
         </div>
-        <aside className="md:col-span-2">
-          <h2 className="mb-4 text-xl font-semibold tracking-tight">Exchange rates</h2>
-          <div className="rounded-3xl border bg-card p-2 shadow-soft">
-            {rates.isLoading ? (
-              <Skeleton className="h-40 rounded-2xl" />
-            ) : (
-              <div className="divide-y">
-                {["INR", "PHP", "EUR", "GBP", "SGD"]
-                  .filter((c) => c !== cur)
-                  .slice(0, 4)
-                  .map((c) => {
-                    const r = (rates.data?.rates[c] ?? 1) / rate;
-                    return (
-                      <div
-                        key={c}
-                        className="flex items-center justify-between px-4 py-3.5 text-sm"
-                      >
-                        <span className="text-muted-foreground">1 {cur}</span>
-                        <span className="tabular font-medium">
-                          ≈ {r.toLocaleString(undefined, { maximumFractionDigits: 4 })} {c}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
+
+        <aside className="md:col-span-2 space-y-6">
+          <div>
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">Exchange rates</h2>
+            <div className="rounded-3xl border bg-card p-2 shadow-soft">
+              {rates.isLoading ? (
+                <Skeleton className="h-40 rounded-2xl" />
+              ) : (
+                <div className="divide-y">
+                  {["EUR", "CZK", "INR", "PHP", "GBP", "USD"]
+                    .filter((c) => c !== cur)
+                    .slice(0, 5)
+                    .map((c) => {
+                      const r = (rates.data?.rates[c] ?? 1) / rate;
+                      return (
+                        <div
+                          key={c}
+                          className="flex items-center justify-between px-4 py-3 text-sm"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <CountryFlag code={c} circle size="xs" />
+                            <span className="font-medium">1 {cur}</span>
+                          </div>
+                          <span className="tabular font-semibold">
+                            ≈ {r.toLocaleString(undefined, { maximumFractionDigits: 4 })} {c}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+            {rates.data?.fetchedAt && (
+              <p className="mt-3 px-2 text-xs text-muted-foreground">
+                ECB reference rates · updated {new Date(rates.data.fetchedAt).toLocaleDateString()}
+              </p>
             )}
           </div>
-          {rates.data?.fetchedAt && (
-            <p className="mt-3 px-2 text-xs text-muted-foreground">
-              ECB reference rates · updated {new Date(rates.data.fetchedAt).toLocaleDateString()}
-            </p>
-          )}
         </aside>
+      </section>
+
+      {/* Wealth & Premium Services Showcase Section */}
+      <section className="space-y-6 pt-4 border-t">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              <h2 className="text-xl font-semibold tracking-tight">
+                Wealth &amp; Portfolio Standard
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              European private banking tools, multi-currency treasury &amp; global market
+              allocations.
+            </p>
+          </div>
+          <Link
+            to="/withdraw"
+            className="hidden sm:flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+          >
+            Explore Payouts &amp; Vouchers <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          {INVESTMENTS.map((inv) => (
+            <div
+              key={inv.id}
+              className="group relative overflow-hidden rounded-3xl border bg-card/70 p-5 shadow-soft transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5"
+            >
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted">
+                <img
+                  src={inv.imageUrl}
+                  alt={inv.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {inv.badge && (
+                  <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur-md px-3 py-1 text-[11px] font-semibold text-foreground border border-border/50">
+                    {inv.badge}
+                  </span>
+                )}
+              </div>
+              <div className="mt-4">
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase">
+                  {inv.category}
+                </span>
+                <h3 className="font-semibold text-base text-foreground mt-1">{inv.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{inv.subtitle}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" fill="none">
+  <rect width="400" height="250" rx="18" fill="#107C41"/>
+  <circle cx="200" cy="100" r="42" fill="#107C41" stroke="#FFFFFF" stroke-width="4"/>
+  <path d="M175 75 C185 88 195 110 200 120 C205 110 215 88 225 75 C212 70 188 70 175 75 Z" fill="#FFFFFF"/>
+  <path d="M165 110 C178 112 190 116 200 120 C188 122 172 125 160 120 Z" fill="#FFFFFF"/>
+  <path d="M235 110 C222 112 210 116 200 120 C212 122 228 125 240 120 Z" fill="#FFFFFF"/>
+  <text x="200" y="175" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="24" fill="#FFFFFF" letter-spacing="1">XBOX</text>
+  <text x="200" y="198" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="12" fill="#A7F3D0">Digital Game Pass &amp; Gift Card</text>
+</svg>

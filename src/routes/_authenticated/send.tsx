@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2 } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
+import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({
@@ -72,11 +73,11 @@ function Send() {
   const [scan, setScan] = useState(false);
   const [txId, setTxId] = useState("");
 
-  const cur = currency || profile.data?.preferred_currency || "USD";
+  const cur = currency || profile.data?.preferred_currency || "EUR";
   const r = rates.data?.rates ?? {};
   const amt = Number(amount) || 0;
   const fee = amt * TRANSFER_FEE_RATE;
-  const recvCur = recipient?.preferred_currency ?? "USD";
+  const recvCur = recipient?.preferred_currency ?? "EUR";
   const recv = convert(amt, cur, recvCur, r);
   const available = Number(wallet.data?.balance_usd ?? 0) * (r[cur] ?? 1);
 
@@ -115,7 +116,7 @@ function Send() {
   }
 
   const btn =
-    "flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50";
+    "flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 shadow-soft";
 
   return (
     <div className="mx-auto max-w-md">
@@ -136,7 +137,7 @@ function Send() {
               placeholder="ML-XXXX-XXXX or name@email.com"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-12 rounded-xl"
+              className="h-12 rounded-xl text-base"
               maxLength={255}
             />
             <button disabled={busy || !query.trim()} className={btn}>
@@ -145,7 +146,7 @@ function Send() {
           </form>
           <button
             onClick={() => setScan(true)}
-            className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border bg-card text-[15px] font-medium hover:bg-accent"
+            className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border bg-card text-[15px] font-medium hover:bg-accent transition-colors shadow-xs"
           >
             <ScanLine className="h-4 w-4" /> Scan QR
           </button>
@@ -169,10 +170,13 @@ function Send() {
       {step === "amount" && recipient && (
         <>
           <PageTitle eyebrow="SEND" title={`To ${recipient.full_name}`}>
-            <span className="font-mono text-sm">{recipient.wallet_code}</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-mono text-sm">{recipient.wallet_code}</span>
+              <CountryFlag code={recvCur} circle size="xs" />
+            </div>
           </PageTitle>
-          <div className="space-y-3">
-            <div className="flex gap-2">
+          <div className="space-y-4">
+            <div className="flex gap-2.5">
               <Input
                 type="number"
                 inputMode="decimal"
@@ -181,22 +185,25 @@ function Send() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="tabular h-14 rounded-xl text-2xl"
+                className="tabular h-14 rounded-2xl text-2xl px-4"
               />
               <Select value={cur} onValueChange={setCurrency}>
-                <SelectTrigger className="h-14 w-28 rounded-xl">
-                  <SelectValue />
+                <SelectTrigger className="h-14 w-36 rounded-2xl border px-3">
+                  <CurrencyIcon code={cur} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl p-1">
                   {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.code}
+                    <SelectItem key={c.code} value={c.code} className="rounded-xl py-2">
+                      <div className="flex items-center gap-2">
+                        <CountryFlag code={c.code} circle size="xs" />
+                        <span className="font-semibold">{c.code}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <p className="px-1 text-xs text-muted-foreground">
+            <p className="px-1 text-xs text-muted-foreground flex items-center gap-1.5">
               Available {formatMoney(available, cur)}
             </p>
             <Input
@@ -207,24 +214,33 @@ function Send() {
               className="h-12 rounded-xl"
             />
             {amt > 0 && (
-              <p className="px-1 text-sm text-muted-foreground">
-                {recipient.full_name.split(" ")[0]} receives{" "}
-                <span className="font-medium text-foreground">{formatMoney(recv, recvCur)}</span>
-              </p>
+              <div className="rounded-2xl border bg-card p-3.5 space-y-1 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Recipient gets:</span>
+                  <span className="font-semibold text-sm text-foreground flex items-center gap-1.5">
+                    <CountryFlag code={recvCur} circle size="xs" />
+                    {formatMoney(recv, recvCur)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-muted-foreground pt-1">
+                  <span>Transfer Fee (0.5%):</span>
+                  <span>{formatMoney(fee, cur)}</span>
+                </div>
+              </div>
             )}
             <button
               disabled={amt <= 0 || amt + fee > available + 1e-9}
               onClick={() => setStep("review")}
               className={btn}
             >
-              {amt + fee > available + 1e-9 ? "Insufficient balance" : "Review"}
+              {amt + fee > available + 1e-9 ? "Insufficient balance" : "Review Transfer"}
             </button>
             <button
               onClick={() => {
                 setRecipient(null);
                 setStep("to");
               }}
-              className="w-full py-2 text-sm text-muted-foreground"
+              className="w-full py-2 text-sm text-muted-foreground hover:text-foreground"
             >
               Change recipient
             </button>
@@ -236,30 +252,56 @@ function Send() {
         <>
           <PageTitle eyebrow="REVIEW" title={formatMoney(amt, cur)} />
           <div className="divide-y rounded-3xl border bg-card px-5 shadow-soft">
-            {[
-              ["From", `${profile.data?.full_name} · ${wallet.data?.wallet_code}`],
-              ["To", `${recipient.full_name} · ${recipient.wallet_code}`],
-              [
-                "Exchange rate",
-                `1 ${cur} ≈ ${convert(1, cur, recvCur, r).toLocaleString(undefined, { maximumFractionDigits: 4 })} ${recvCur}`,
-              ],
-              ["Fee (0.5%)", formatMoney(fee, cur)],
-              ["Recipient receives", formatMoney(recv, recvCur)],
-              ["Total", formatMoney(amt + fee, cur)],
-              ...(note ? [["Note", note]] : []),
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4 py-4 text-sm">
-                <span className="text-muted-foreground">{k}</span>
-                <span className="text-right font-medium">{v}</span>
+            <div className="flex justify-between gap-4 py-4 text-sm">
+              <span className="text-muted-foreground">From</span>
+              <span className="text-right font-medium">
+                {profile.data?.full_name} · {wallet.data?.wallet_code}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 py-4 text-sm">
+              <span className="text-muted-foreground">To</span>
+              <span className="text-right font-medium flex items-center gap-1.5 justify-end">
+                <CountryFlag code={recvCur} circle size="xs" />
+                {recipient.full_name} · {recipient.wallet_code}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 py-4 text-sm">
+              <span className="text-muted-foreground">Exchange Rate</span>
+              <span className="text-right font-medium">
+                1 {cur} ≈{" "}
+                {convert(1, cur, recvCur, r).toLocaleString(undefined, {
+                  maximumFractionDigits: 4,
+                })}{" "}
+                {recvCur}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 py-4 text-sm">
+              <span className="text-muted-foreground">Fee (0.5%)</span>
+              <span className="text-right font-medium">{formatMoney(fee, cur)}</span>
+            </div>
+            <div className="flex justify-between gap-4 py-4 text-sm">
+              <span className="text-muted-foreground">Recipient receives</span>
+              <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                {formatMoney(recv, recvCur)}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 py-4 text-sm font-semibold">
+              <span>Total Charge</span>
+              <span>{formatMoney(amt + fee, cur)}</span>
+            </div>
+            {note && (
+              <div className="flex justify-between gap-4 py-4 text-sm">
+                <span className="text-muted-foreground">Note</span>
+                <span className="text-right font-medium">{note}</span>
               </div>
-            ))}
+            )}
           </div>
           <button disabled={busy} onClick={confirm} className={`${btn} mt-8`}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm transfer"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
           </button>
           <button
             onClick={() => setStep("amount")}
-            className="mt-2 w-full py-2 text-sm text-muted-foreground"
+            className="mt-2 w-full py-2 text-sm text-muted-foreground hover:text-foreground"
           >
             Back
           </button>
@@ -268,8 +310,8 @@ function Send() {
 
       {step === "done" && (
         <div className="pt-10 text-center animate-in fade-in zoom-in-95">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-success" strokeWidth={1.25} />
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight">Sent</h1>
+          <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-500" strokeWidth={1.25} />
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight">Sent Successfully</h1>
           <p className="mt-2 text-muted-foreground">
             {formatMoney(amt, cur)} to {recipient?.full_name}
           </p>
@@ -277,8 +319,11 @@ function Send() {
             <Link to="/transactions/$id" params={{ id: txId }} className={btn}>
               View receipt
             </Link>
-            <Link to="/dashboard" className="block py-2 text-sm text-muted-foreground">
-              Done
+            <Link
+              to="/dashboard"
+              className="block py-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Return to Home
             </Link>
           </div>
         </div>
