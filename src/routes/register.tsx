@@ -36,7 +36,7 @@ function Register() {
   const [sent, setSent] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
 
-  async function submit(e: React.FormEvent): Promise<unknown> {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Check your details"); return; }

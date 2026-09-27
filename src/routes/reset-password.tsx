@@ -23,7 +23,7 @@ function Reset() {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
-  async function submit(e: React.FormEvent): Promise<unknown> {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     if (pw.length < 8) { toast.error("Password must be at least 8 characters"); return; }
     if (pw !== confirm) { toast.error("Passwords don't match"); return; }

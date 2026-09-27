@@ -23,7 +23,7 @@ function Forgot() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-  async function submit(e: React.FormEvent): Promise<unknown> {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const p = z.string().trim().email().max(255).safeParse(email);
     if (!p.success) { toast.error("Enter a valid email"); return; }

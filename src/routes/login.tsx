@@ -28,7 +28,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: React.FormEvent): Promise<unknown> {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Check your details"); return; }
