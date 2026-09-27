@@ -26,11 +26,11 @@ function Forgot() {
   async function submit(e: React.FormEvent): Promise<unknown> {
     e.preventDefault();
     const p = z.string().trim().email().max(255).safeParse(email);
-    if (!p.success) return toast.error("Enter a valid email");
+    if (!p.success) { toast.error("Enter a valid email"); return; }
     setBusy(true);
     const { error } = await supabase.auth.resetPasswordForEmail(p.data, { redirectTo: `${window.location.origin}/reset-password` });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setSent(true);
   }
   return (

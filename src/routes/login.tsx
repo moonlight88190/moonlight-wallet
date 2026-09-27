@@ -31,11 +31,11 @@ function Login() {
   async function submit(e: React.FormEvent): Promise<unknown> {
     e.preventDefault();
     const parsed = schema.safeParse({ email, password });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message ?? "Check your details");
+    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Check your details"); return; }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     setBusy(false);
-    if (error) return toast.error(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message);
+    if (error) { toast.error(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message); return; }
     navigate({ to: "/dashboard" });
   }
 

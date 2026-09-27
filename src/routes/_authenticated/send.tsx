@@ -71,17 +71,17 @@ function Send() {
     setBusy(true);
     const { data, error } = await supabase.rpc("lookup_recipient", { p_query: v });
     setBusy(false);
-    if (error || !data?.length) return toast.error("No Moonlight wallet found for that ID or email.");
-    setRecipient(data[0]);
+    if (error || !data?.length) { toast.error("No Moonlight wallet found for that ID or email."); return; }
+    setRecipient(data[0] ?? null);
     setStep("amount");
   }
 
   async function confirm() {
     if (!recipient) return;
     setBusy(true);
-    const { data, error } = await supabase.rpc("send_transfer", { p_recipient_code: recipient.wallet_code, p_amount: amt, p_currency: cur, p_note: note || undefined });
+    const { data, error } = await supabase.rpc("send_transfer", { p_recipient_code: recipient.wallet_code, p_amount: amt, p_currency: cur, ...(note ? { p_note: note } : {}) });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setTxId(data as string);
     setStep("done");
     qc.invalidateQueries({ queryKey: ["wallet"] });

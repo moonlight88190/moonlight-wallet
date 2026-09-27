@@ -21,7 +21,7 @@ function AdminAccess() {
     setBusy(true);
     try {
       const res = await verify({ data: { code } });
-      if (!res.ok) return toast.error(res.error);
+      if (!res.ok) { toast.error(res.error); return; }
       sessionStorage.setItem("ml_admin_token", res.token);
       navigate({ to: "/admin" });
     } catch {

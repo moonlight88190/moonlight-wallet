@@ -44,7 +44,7 @@ function Receipt() {
     ["Date", d.toLocaleDateString(undefined, { dateStyle: "long" })],
     ["Time", d.toLocaleTimeString()],
     ["Method", t.method],
-    ["Status", t.status[0].toUpperCase() + t.status.slice(1)],
+    ["Status", t.status.charAt(0).toUpperCase() + t.status.slice(1)],
     ["Transaction ID", t.reference],
     ...(t.note ? [["Note", t.note] as [string, string]] : []),
   ];

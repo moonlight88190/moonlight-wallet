@@ -39,7 +39,7 @@ function Register() {
   async function submit(e: React.FormEvent): Promise<unknown> {
     e.preventDefault();
     const p = schema.safeParse(form);
-    if (!p.success) return toast.error(p.error.issues[0]?.message ?? "Check your details");
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Check your details"); return; }
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email: p.data.email,
@@ -47,7 +47,7 @@ function Register() {
       options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: p.data.fullName } },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     if (data.session) navigate({ to: "/dashboard" });
     else setSent(true);
   }
