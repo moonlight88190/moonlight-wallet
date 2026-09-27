@@ -54,15 +54,9 @@ export function PaymentAnimation({
   onViewReceipt,
 }: PaymentAnimationProps) {
   const [stage, setStage] = useState<"confirming" | "processing" | "completed" | "failed">(state);
-  const [showFX, setShowFX] = useState(false);
 
   useEffect(() => {
     setStage(state);
-    if (state === "processing") {
-      const timer = setTimeout(() => setShowFX(true), 600);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
@@ -70,19 +64,22 @@ export function PaymentAnimation({
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/90 p-6 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-500">
-      {/* Route Header: Country/Currency route */}
-      <div className="flex w-full items-center justify-between border-b border-border/40 pb-4 mb-6">
+    <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-300">
+      {/* Route Header: Country/Currency route with visual FX conversion trail */}
+      <div className="flex w-full items-center justify-between border-b border-border/50 pb-4 mb-5">
         <div className="flex items-center gap-2">
           <CountryFlag code={sourceCurrency} circle size="xs" />
           <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             {sourceCurrency}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-[11px] font-semibold text-muted-foreground">
-          <span>Route</span>
-          <ArrowRight className="h-3 w-3" />
+
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border/40 text-[11px] font-semibold text-muted-foreground">
+          <span>{formatMoney(sourceAmount, sourceCurrency)}</span>
+          <ArrowRight className="h-3 w-3 text-primary animate-pulse motion-reduce:animate-none" />
+          <span className="text-foreground">{formatMoney(destinationAmount, destinationCurrency)}</span>
         </div>
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             {destinationCurrency}
@@ -133,7 +130,7 @@ export function PaymentAnimation({
             >
               <path
                 d="M20 6L9 17l-5-5"
-                className="animate-[dash_0.6s_ease-in-out_forwards]"
+                className="animate-[dash_0.6s_ease-in-out_forwards] motion-reduce:animate-none"
                 style={{ strokeDasharray: 30, strokeDashoffset: 0 }}
               />
             </svg>
@@ -141,7 +138,7 @@ export function PaymentAnimation({
             <AlertCircle className="h-10 w-10" />
           ) : (
             <span className="text-3xl font-bold tracking-tight">
-              {showFX && isCrossCurrency ? destSymbol : sourceSymbol}
+              {isCrossCurrency ? destSymbol : sourceSymbol}
             </span>
           )}
         </div>

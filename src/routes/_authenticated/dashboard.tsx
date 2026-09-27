@@ -53,19 +53,20 @@ function Dashboard() {
   const loading = profile.isLoading || wallet.isLoading || rates.isLoading;
 
   return (
-    <div className="space-y-16">
-      <section className="pt-6 text-center sm:pt-10">
-        <p className="text-[11px] font-medium tracking-[0.3em] text-muted-foreground">
+    <div className="space-y-8 sm:space-y-12">
+      {/* Available Balance Header */}
+      <section className="pt-2 text-center sm:pt-6">
+        <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
           AVAILABLE BALANCE
         </p>
         {loading ? (
-          <Skeleton className="mx-auto mt-5 h-16 w-72 rounded-2xl" />
+          <Skeleton className="mx-auto mt-3 h-14 w-60 sm:h-16 sm:w-72 rounded-2xl" />
         ) : (
-          <h1 className="tabular mt-4 text-6xl font-semibold tracking-tight sm:text-7xl">
+          <h1 className="tabular mt-2 text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-foreground">
             {formatMoney(balance, cur)}
           </h1>
         )}
-        <div className="mt-5 flex items-center justify-center gap-2">
+        <div className="mt-3 flex items-center justify-center gap-2">
           <Select
             value={cur}
             onValueChange={(v) =>
@@ -76,7 +77,7 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-9 w-auto gap-2 rounded-full border bg-card px-4 text-xs font-semibold shadow-soft">
+            <SelectTrigger className="h-8 sm:h-9 w-auto gap-2 rounded-full border border-border/60 bg-card px-3.5 text-xs font-semibold shadow-2xs hover:bg-accent transition-colors">
               <CurrencyIcon code={cur} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl p-1.5">
@@ -93,23 +94,39 @@ function Dashboard() {
           </Select>
         </div>
         {wallet.data && (
-          <p className="mt-4 font-mono text-xs text-muted-foreground">{wallet.data.wallet_code}</p>
+          <p className="mt-2 font-mono text-[11px] sm:text-xs text-muted-foreground/80 tracking-wider">
+            {wallet.data.wallet_code}
+          </p>
         )}
       </section>
 
-      <section className="mx-auto grid max-w-md grid-cols-3 gap-4">
-        {[
-          { to: "/send", label: "Send", icon: ArrowUpRight },
-          { to: "/receive", label: "Receive", icon: ArrowDownLeft },
-          { to: "/withdraw", label: "Withdraw", icon: Landmark },
-        ].map((a) => (
-          <Link key={a.to} to={a.to} className="group flex flex-col items-center gap-2.5">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border bg-card shadow-soft transition-transform group-hover:-translate-y-0.5">
-              <a.icon className="h-5 w-5" strokeWidth={1.5} />
-            </span>
-            <span className="text-sm font-medium">{a.label}</span>
-          </Link>
-        ))}
+      {/* Mobile-Optimized Quick Actions */}
+      <section className="mx-auto max-w-lg">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4">
+          {[
+            { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
+            { to: "/receive", label: "Receive", icon: ArrowDownLeft, primary: false },
+            { to: "/withdraw", label: "Withdraw", icon: Landmark, primary: false },
+            { to: "/transactions", label: "Activity", icon: TrendingUp, primary: false },
+          ].map((a) => (
+            <Link
+              key={a.to}
+              to={a.to}
+              className="group flex flex-col items-center gap-1.5 p-1 touch-manipulation active:scale-[0.96] transition-transform"
+            >
+              <span
+                className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border transition-all duration-200 shadow-soft group-hover:-translate-y-0.5 ${
+                  a.primary
+                    ? "bg-primary text-primary-foreground border-primary/20"
+                    : "bg-card text-foreground border-border/60 group-hover:border-primary/40 group-hover:bg-accent/40"
+                }`}
+              >
+                <a.icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+              </span>
+              <span className="text-xs font-semibold text-foreground tracking-tight">{a.label}</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-10 md:grid-cols-5">

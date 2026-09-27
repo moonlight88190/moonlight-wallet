@@ -57,12 +57,12 @@ function Receive() {
         Anyone on Moonlight or supported payout rails can send money using this ID or QR.
       </PageTitle>
 
-      <div className="rounded-[2.5rem] border bg-card/80 p-8 shadow-soft space-y-6">
+      <div className="rounded-[2.5rem] border border-border/60 bg-card/80 p-5 sm:p-8 shadow-soft space-y-6">
         {wallet.isLoading ? (
-          <Skeleton className="mx-auto h-52 w-52 rounded-2xl" />
+          <Skeleton className="mx-auto h-48 w-48 sm:h-52 sm:w-52 rounded-2xl" />
         ) : (
-          <div className="mx-auto w-fit rounded-2xl bg-[oklch(1_0_0)] p-4 shadow-sm border border-border/20">
-            <QRCodeSVG value={qrPayload(code)} size={200} fgColor="#1b2b45" level="M" />
+          <div className="mx-auto w-fit rounded-2xl bg-[oklch(1_0_0)] p-3.5 sm:p-4 shadow-sm border border-border/20">
+            <QRCodeSVG value={qrPayload(code)} size={180} className="sm:w-[200px] sm:h-[200px]" fgColor="#1b2b45" level="M" />
           </div>
         )}
 
@@ -70,22 +70,22 @@ function Receive() {
           <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
             YOUR MOONLIGHT WALLET ID
           </p>
-          <p className="mt-1 font-mono text-2xl font-semibold tracking-wider text-foreground">
+          <p className="mt-1 font-mono text-xl sm:text-2xl font-semibold tracking-wider text-foreground">
             {code || "—"}
           </p>
           {profile.data && (
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               {profile.data.full_name}
             </p>
           )}
         </div>
 
         {/* Supported Corridor Badges */}
-        <div className="border-t pt-5 space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
+        <div className="border-t border-border/50 pt-4 space-y-2.5">
+          <p className="text-[11px] font-semibold text-muted-foreground tracking-wide uppercase">
             Compatible Payout Infrastructure
           </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
+          <div className="flex items-center justify-center gap-2.5 flex-wrap">
             <PaymentMethodIcon id="sepa" size="sm" />
             <PaymentMethodIcon id="upi-qr" size="sm" />
             <PaymentMethodIcon id="gcash" size="sm" />
@@ -94,7 +94,7 @@ function Receive() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         {[
           { label: copied ? "Copied" : "Copy ID", icon: copied ? Check : Copy, onClick: copy },
           { label: "Share", icon: Share, onClick: share },
@@ -104,7 +104,7 @@ function Receive() {
             key={b.label}
             onClick={b.onClick}
             disabled={!code}
-            className="flex flex-col items-center gap-2 rounded-2xl border bg-card py-4 text-xs font-semibold transition-all hover:bg-accent hover:border-primary/30 shadow-xs disabled:opacity-50"
+            className="flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card py-3.5 sm:py-4 text-xs font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.97] shadow-xs disabled:opacity-50 cursor-pointer touch-manipulation"
           >
             <b.icon className="h-5 w-5" strokeWidth={1.5} />
             {b.label}
@@ -113,10 +113,10 @@ function Receive() {
       </div>
 
       <Dialog open={big} onOpenChange={setBig}>
-        <DialogContent className="max-w-sm rounded-3xl text-center p-6">
-          <DialogTitle className="text-center font-mono">{code}</DialogTitle>
-          <div className="mx-auto mt-2 w-fit rounded-2xl bg-[oklch(1_0_0)] p-5">
-            <QRCodeSVG value={qrPayload(code)} size={260} fgColor="#1b2b45" level="M" />
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl text-center p-5 sm:p-6">
+          <DialogTitle className="text-center font-mono text-base">{code}</DialogTitle>
+          <div className="mx-auto mt-2 w-fit rounded-2xl bg-[oklch(1_0_0)] p-4 sm:p-5">
+            <QRCodeSVG value={qrPayload(code)} size={220} className="sm:w-[260px] sm:h-[260px]" fgColor="#1b2b45" level="M" />
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             Scan with Moonlight mobile camera or QR reader

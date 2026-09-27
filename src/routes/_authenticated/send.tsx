@@ -109,16 +109,12 @@ function Send() {
     setAnimState("processing");
     setBusy(true);
 
-    // Give visual animation time to present processing sequence
-    const [res] = await Promise.all([
-      supabase.rpc("send_transfer", {
-        p_recipient_code: recipient.wallet_code,
-        p_amount: amt,
-        p_currency: cur,
-        ...(note ? { p_note: note } : {}),
-      }),
-      new Promise((resolve) => setTimeout(resolve, 1400)),
-    ]);
+    const res = await supabase.rpc("send_transfer", {
+      p_recipient_code: recipient.wallet_code,
+      p_amount: amt,
+      p_currency: cur,
+      ...(note ? { p_note: note } : {}),
+    });
 
     setBusy(false);
 
@@ -135,7 +131,7 @@ function Send() {
   }
 
   const btn =
-    "flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50 shadow-soft";
+    "flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft touch-manipulation cursor-pointer";
 
   return (
     <div className="mx-auto max-w-md">

@@ -126,15 +126,15 @@ export function PaymentMethodIcon({
   const iconUrl = method?.iconUrl || `/assets/payment-methods/${id}.svg`;
 
   const sizeClasses = {
-    sm: "h-7 w-12",
-    md: "h-10 w-16",
-    lg: "h-14 w-24",
+    sm: "h-7 w-12 p-1",
+    md: "h-10 w-16 p-1.5",
+    lg: "h-12 w-20 p-2",
   };
 
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-card p-1 shadow-xs transition-shadow hover:shadow-soft",
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card shadow-2xs transition-all hover:border-primary/40",
         sizeClasses[size],
         className,
       )}
@@ -142,7 +142,14 @@ export function PaymentMethodIcon({
       <img
         src={iconUrl}
         alt={method?.name || `${id} payment method`}
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain transition-transform group-hover:scale-105"
+        onError={(e) => {
+          // If SVG fails, fallback to PNG if available
+          const target = e.currentTarget as HTMLImageElement;
+          if (target.src.endsWith(".svg")) {
+            target.src = target.src.replace(".svg", ".png");
+          }
+        }}
       />
     </div>
   );
@@ -164,29 +171,47 @@ export function GiftCardBrand({
   return (
     <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && onClick) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/50 bg-card p-3 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30 cursor-pointer",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
         className,
       )}
     >
-      <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-xl bg-muted">
+      <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-xl bg-muted/60">
         <img
           src={cardData.imageUrl}
           alt={cardData.brand}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src.endsWith(".png")) {
+              target.src = target.src.replace(".png", ".svg");
+            }
+          }}
         />
         {cardData.popular && (
-          <span className="absolute top-2.5 right-2.5 rounded-full bg-primary/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-primary-foreground uppercase shadow-xs">
+          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
             POPULAR
           </span>
         )}
       </div>
-      <div className="mt-3 px-1">
+      <div className="mt-2.5 px-0.5">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground text-sm tracking-tight">{cardData.brand}</h3>
-          <span className="text-[11px] font-medium text-muted-foreground">{cardData.category}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+            {cardData.category}
+          </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{cardData.description}</p>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-snug">
+          {cardData.description}
+        </p>
       </div>
     </div>
   );

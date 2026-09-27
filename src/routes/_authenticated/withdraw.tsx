@@ -94,98 +94,93 @@ function Withdraw() {
     activeCategory === "All" ? GIFT_CARDS : GIFT_CARDS.filter((c) => c.category === activeCategory);
 
   function handleInitiateWithdraw() {
-    if (!accountDetails) {
-      toast.error("Please enter account details or VPA / IBAN");
+    if (!accountDetails.trim()) {
+      toast.error("Please enter account details, IBAN or VPA / Mobile number");
       return;
     }
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setSelectedMethod(null);
-      setAccountDetails("");
-      toast.success(`Withdrawal order submitted. Reference code sent.`);
-    }, 1200);
+    const name = selectedMethod?.name || "Withdrawal";
+    setSelectedMethod(null);
+    setAccountDetails("");
+    toast.success(`${name} request submitted! Reference code dispatched.`);
   }
 
   function handleRedeemCard() {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setSelectedCard(null);
-      setSelectedLuxury(null);
-      toast.success(
-        `${selectedCard?.brand || selectedLuxury?.name} ${formatMoney(cardValue, preferredCurrency)} digital voucher generated!`,
-      );
-    }, 1200);
+    const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
+    setSelectedCard(null);
+    setSelectedLuxury(null);
+    toast.success(
+      `${brandName} (${formatMoney(cardValue, preferredCurrency)}) digital voucher generated! Check your email.`,
+    );
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-12">
+    <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
       <PageTitle eyebrow="WITHDRAW & REDEEM" title="Withdraw Funds">
-        Transfer funds to European &amp; international accounts or redeem instantly into digital
-        brand vouchers.
+        Transfer funds to European &amp; global financial accounts or redeem instantly into brand vouchers.
       </PageTitle>
 
       {/* Primary Payout Methods by Region */}
-      <div className="space-y-10">
-        <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+      <div className="space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
             Financial Payout Channels
           </h2>
-          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground bg-secondary px-3 py-1 rounded-full w-fit">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             Verified Financial Infrastructure
           </span>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
           {REGIONS.map((region) => (
             <div
               key={region.id}
-              className="rounded-3xl border bg-card/60 p-5 shadow-soft space-y-4"
+              className="rounded-3xl border border-border/60 bg-card/70 p-4 sm:p-5 shadow-soft space-y-3.5"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   <CountryFlag code={region.flagCode} circle size="sm" />
-                  <h3 className="font-semibold text-foreground text-base tracking-tight">
+                  <h3 className="font-semibold text-foreground text-sm sm:text-base tracking-tight">
                     {region.title}
                   </h3>
                 </div>
-                <span className="text-[11px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full shrink-0">
                   {region.badge}
                 </span>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {region.items.map((item) => (
-                  <div
+                  <button
                     key={item.id}
                     onClick={() => setSelectedMethod(item)}
-                    className="group flex items-center justify-between rounded-2xl border border-border/50 bg-card p-3.5 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/30 cursor-pointer"
+                    className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-3 min-w-0">
                       <PaymentMethodIcon id={item.id} size="md" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-foreground text-xs sm:text-sm group-hover:text-primary transition-colors truncate">
                             {item.name}
                           </span>
                           {item.badge && (
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded shrink-0">
                               {item.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                        <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
+                    <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                      <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground group-hover:text-foreground">
                         {item.speed}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -274,12 +269,12 @@ function Withdraw() {
       {/* Dialog for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="sm:max-w-md rounded-3xl p-6">
+          <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6">
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
                 <div>
-                  <DialogTitle className="text-lg font-semibold">{selectedMethod.name}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg font-semibold">{selectedMethod.name}</DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground">
                     {selectedMethod.description}
                   </DialogDescription>
@@ -287,20 +282,20 @@ function Withdraw() {
               </div>
             </DialogHeader>
 
-            <div className="space-y-4 pt-4">
-              <div className="rounded-2xl border bg-secondary/30 p-3.5 space-y-2 text-xs">
-                <div className="flex justify-between">
+            <div className="space-y-4 pt-3">
+              <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Payout Speed:</span>
-                  <span className="font-semibold text-emerald-500">{selectedMethod.speed}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{selectedMethod.speed}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Network Fee:</span>
                   <span className="font-semibold">0.00 EUR (Free)</span>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Withdrawal Amount ({preferredCurrency})
                 </label>
                 <Input
@@ -308,12 +303,12 @@ function Withdraw() {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="100"
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 text-base"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">
                   {selectedMethod.id.includes("upi")
                     ? "Virtual Payment Address (VPA / UPI ID)"
                     : selectedMethod.id.includes("gcash")
@@ -330,16 +325,15 @@ function Withdraw() {
                         ? "+63 9XX XXX XXXX"
                         : "CZ65 0800 0000 0012 3456 7890"
                   }
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 text-sm font-mono"
                 />
               </div>
 
               <Button
                 onClick={handleInitiateWithdraw}
-                disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium mt-2"
+                className="w-full rounded-full h-11 font-semibold mt-2 shadow-soft active:scale-[0.98]"
               >
-                {isProcessing ? "Processing Payout..." : "Confirm Withdrawal"}
+                Confirm Withdrawal
               </Button>
             </div>
           </DialogContent>
@@ -355,9 +349,9 @@ function Withdraw() {
         }}
       >
         {(selectedCard || selectedLuxury) && (
-          <DialogContent className="sm:max-w-md rounded-3xl p-6">
+          <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">
+              <DialogTitle className="text-base sm:text-lg font-semibold">
                 {selectedCard?.brand || selectedLuxury?.name} Voucher
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
@@ -365,13 +359,13 @@ function Withdraw() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-5 pt-2">
-              <div className="relative flex aspect-[1.8/1] w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-6 shadow-soft">
+            <div className="space-y-4 pt-2">
+              <div className="relative flex aspect-[1.8/1] w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-4 shadow-soft">
                 {selectedLuxury ? (
                   <img
                     src={selectedLuxury.logoUrl}
                     alt={selectedLuxury.name}
-                    className="max-h-16 max-w-[180px] object-contain filter invert"
+                    className="max-h-14 max-w-[160px] object-contain filter invert"
                   />
                 ) : (
                   <img
@@ -383,7 +377,7 @@ function Withdraw() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-semibold text-muted-foreground">
                   Select Voucher Denomination ({preferredCurrency})
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -391,10 +385,10 @@ function Withdraw() {
                     <button
                       key={val}
                       onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2 text-xs font-semibold border transition-all ${
+                      className={`rounded-xl py-2 text-xs font-semibold border transition-all active:scale-[0.97] ${
                         cardValue === val
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border/60 bg-card hover:bg-accent"
+                          ? "border-primary bg-primary/10 text-primary shadow-xs"
+                          : "border-border/60 bg-card hover:bg-accent text-foreground"
                       }`}
                     >
                       {formatMoney(val, preferredCurrency)}
@@ -403,25 +397,22 @@ function Withdraw() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border bg-secondary/30 p-3.5 space-y-1.5 text-xs">
-                <div className="flex justify-between">
+              <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Voucher Cost:</span>
-                  <span className="font-semibold">{formatMoney(cardValue, preferredCurrency)}</span>
+                  <span className="font-semibold text-foreground">{formatMoney(cardValue, preferredCurrency)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Delivery:</span>
-                  <span className="font-semibold text-emerald-500">Instant Email Delivery</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Instant Email Delivery</span>
                 </div>
               </div>
 
               <Button
                 onClick={handleRedeemCard}
-                disabled={isProcessing}
-                className="w-full rounded-full h-11 font-medium"
+                className="w-full rounded-full h-11 font-semibold shadow-soft active:scale-[0.98]"
               >
-                {isProcessing
-                  ? "Generating Code..."
-                  : `Acquire for ${formatMoney(cardValue, preferredCurrency)}`}
+                Acquire for {formatMoney(cardValue, preferredCurrency)}
               </Button>
             </div>
           </DialogContent>
