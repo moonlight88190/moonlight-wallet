@@ -1,7 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SYMBOLS = ["EUR", "GBP", "INR", "PHP", "SGD", "AUD", "CAD", "JPY", "CHF"];
+const SYMBOLS = [
+  "EUR",
+  "CZK",
+  "GBP",
+  "INR",
+  "PHP",
+  "SGD",
+  "AUD",
+  "CAD",
+  "JPY",
+  "CHF",
+  "AED",
+  "PLN",
+];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
