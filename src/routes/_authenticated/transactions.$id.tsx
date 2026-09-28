@@ -129,7 +129,9 @@ function Receipt() {
           {/* Header Branding */}
           <div className="flex items-center justify-between border-b border-border/50 pb-4">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm tracking-tight text-foreground">MOONLIGHT WALLET</span>
+              <span className="font-bold text-sm tracking-tight text-foreground">
+                MOONLIGHT WALLET
+              </span>
             </div>
             <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
               Official European Settlement
@@ -169,7 +171,11 @@ function Receipt() {
               onClick={handleCopyRef}
               className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
@@ -186,13 +192,16 @@ function Receipt() {
             ))}
             <div className="flex justify-between items-center gap-3 py-3 text-xs sm:text-sm">
               <span className="text-muted-foreground shrink-0">Processing Timeframe</span>
-              <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">Instant / Processing</span>
+              <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                Instant / Processing
+              </span>
             </div>
           </div>
 
           <div className="border-t border-border/40 pt-4 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger Entry
+              <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger
+              Entry
             </div>
             <p className="text-[10px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
               MOONLIGHT WALLET · EUROPEAN FINANCIAL INFRASTRUCTURE
@@ -237,10 +246,10 @@ function Receipt() {
     ],
     ...(t.fx_rate && t.currency !== t.recipient_currency
       ? [
-          ["Exchange Rate", `1 ${t.currency} ≈ ${Number(t.fx_rate).toFixed(4)} ${t.recipient_currency}`] as [
-            string,
-            string,
-          ],
+          [
+            "Exchange Rate",
+            `1 ${t.currency} ≈ ${Number(t.fx_rate).toFixed(4)} ${t.recipient_currency}`,
+          ] as [string, string],
         ]
       : []),
     ["Payment / Transfer Method", t.method || "Moonlight Instant Network"],
@@ -273,7 +282,9 @@ function Receipt() {
         {/* Header Branding */}
         <div className="flex items-center justify-between border-b border-border/50 pb-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-sm tracking-tight text-foreground">MOONLIGHT WALLET</span>
+            <span className="font-bold text-sm tracking-tight text-foreground">
+              MOONLIGHT WALLET
+            </span>
           </div>
           <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
             Official European Settlement
@@ -339,7 +350,8 @@ function Receipt() {
 
         <div className="border-t border-border/40 pt-4 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger Entry
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger
+            Entry
           </div>
           <p className="text-[10px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · EUROPEAN FINANCIAL INFRASTRUCTURE

@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Check, AlertCircle, ArrowRight, RefreshCw, Receipt, ShieldCheck, Activity, Clock } from "lucide-react";
+import {
+  Check,
+  AlertCircle,
+  ArrowRight,
+  RefreshCw,
+  Receipt,
+  ShieldCheck,
+  Activity,
+  Clock,
+} from "lucide-react";
 import { CountryFlag } from "@/components/AssetComponents";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -40,14 +49,19 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 function getCorridorRailMessage(currency: string, methodCode?: string): string {
   const code = (methodCode || currency).toUpperCase();
-  if (code.includes("SEPA") || code === "EUR") return "Routing via European SEPA Instant Settlement Node...";
-  if (code.includes("UPI") || code === "INR") return "Routing via NPCI VPA Instant Settlement Rail...";
+  if (code.includes("SEPA") || code === "EUR")
+    return "Routing via European SEPA Instant Settlement Node...";
+  if (code.includes("UPI") || code === "INR")
+    return "Routing via NPCI VPA Instant Settlement Rail...";
   if (code.includes("FASTER") || code === "GBP") return "Routing via UK Faster Payments Network...";
-  if (code.includes("GCASH") || code.includes("INSTAPAY") || code === "PHP") return "Routing via InstaPay Philippines Gateway...";
+  if (code.includes("GCASH") || code.includes("INSTAPAY") || code === "PHP")
+    return "Routing via InstaPay Philippines Gateway...";
   if (code.includes("PAYNOW") || code === "SGD") return "Routing via Singapore PayNow Rail...";
-  if (code.includes("PIX") || code === "BRL") return "Routing via Banco Central do Brasil Pix Rail...";
+  if (code.includes("PIX") || code === "BRL")
+    return "Routing via Banco Central do Brasil Pix Rail...";
   if (code.includes("INTERAC") || code === "CAD") return "Routing via Interac e-Transfer Rail...";
-  if (code.includes("ZENGIN") || code === "JPY") return "Routing via Japanese Zengin Banking Network...";
+  if (code.includes("ZENGIN") || code === "JPY")
+    return "Routing via Japanese Zengin Banking Network...";
   if (code.includes("AANI") || code === "AED") return "Routing via UAE Aani Instant Payout Rail...";
   if (code === "CZK") return "Routing via Czech CERTIS Clearing Rail...";
   return "Routing via Global Financial Network...";
@@ -103,11 +117,26 @@ export function PaymentAnimation({
       setActiveStep(0);
       setProgressPercent(10);
 
-      const t1 = setTimeout(() => { setActiveStep(1); setProgressPercent(28); }, 900);
-      const t2 = setTimeout(() => { setActiveStep(2); setProgressPercent(48); }, 1800);
-      const t3 = setTimeout(() => { setActiveStep(3); setProgressPercent(68); }, 2800);
-      const t4 = setTimeout(() => { setActiveStep(4); setProgressPercent(86); }, 3800);
-      const t5 = setTimeout(() => { setActiveStep(5); setProgressPercent(100); }, 4800);
+      const t1 = setTimeout(() => {
+        setActiveStep(1);
+        setProgressPercent(28);
+      }, 900);
+      const t2 = setTimeout(() => {
+        setActiveStep(2);
+        setProgressPercent(48);
+      }, 1800);
+      const t3 = setTimeout(() => {
+        setActiveStep(3);
+        setProgressPercent(68);
+      }, 2800);
+      const t4 = setTimeout(() => {
+        setActiveStep(4);
+        setProgressPercent(86);
+      }, 3800);
+      const t5 = setTimeout(() => {
+        setActiveStep(5);
+        setProgressPercent(100);
+      }, 4800);
 
       return () => {
         clearTimeout(t1);
@@ -203,7 +232,9 @@ export function PaymentAnimation({
       {stage === "processing" && (
         <div className="w-full space-y-2.5 my-2">
           <div className="flex justify-between items-center text-[11px] font-semibold text-muted-foreground px-1">
-            <span>Stage {activeStep + 1} of {steps.length}</span>
+            <span>
+              Stage {activeStep + 1} of {steps.length}
+            </span>
             <span className="font-mono text-primary">{progressPercent}%</span>
           </div>
           <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
@@ -287,14 +318,15 @@ export function PaymentAnimation({
 
       {/* Actions */}
       <div className="mt-6 w-full space-y-2">
-        {((stage === "completed") || (type === "withdrawal" && stage === "processing")) && onViewReceipt && (
-          <button
-            onClick={onViewReceipt}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
-          >
-            <Receipt className="h-4 w-4" /> View Receipt
-          </button>
-        )}
+        {(stage === "completed" || (type === "withdrawal" && stage === "processing")) &&
+          onViewReceipt && (
+            <button
+              onClick={onViewReceipt}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
+            >
+              <Receipt className="h-4 w-4" /> View Receipt
+            </button>
+          )}
 
         {stage === "failed" && onRetry && (
           <button

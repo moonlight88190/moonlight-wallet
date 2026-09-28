@@ -6,7 +6,8 @@ const TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_FAILURES = 5;
 
 async function hmac(message: string) {
-  const secret = process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
+  const secret =
+    process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -192,7 +193,14 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
       .object({
         token: z.string().max(300),
         withdrawalId: z.string().uuid(),
-        status: z.enum(["PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"]),
+        status: z.enum([
+          "PROCESSING",
+          "SUCCESSFUL",
+          "FAILED",
+          "ON HOLD",
+          "UNDER REVIEW",
+          "CANCELLED",
+        ]),
         reason: z.string().trim().min(3).max(200),
       })
       .parse(d),

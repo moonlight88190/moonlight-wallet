@@ -49,7 +49,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { PaymentMethodIcon } from "@/components/AssetComponents";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin Panel — Moonlight" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Admin Panel — Moonlight" }, { name: "robots", content: "noindex" }],
+  }),
   component: Admin,
 });
 
@@ -107,7 +109,8 @@ export function Admin() {
   const [activities, setActivities] = useState<any[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
 
-  const adminToken = typeof window !== "undefined" ? sessionStorage.getItem("ml_admin_token") ?? "" : "";
+  const adminToken =
+    typeof window !== "undefined" ? (sessionStorage.getItem("ml_admin_token") ?? "") : "";
 
   useEffect(() => {
     if (adminToken === "ml_authorized_4336") {
@@ -133,7 +136,9 @@ export function Admin() {
       .from("wallets")
       .select("id, wallet_code, balance_usd, status, is_frozen, created_at, user_id");
 
-    const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, region, created_at");
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, region, created_at");
 
     if (wallets && profiles) {
       const merged = wallets.map((w) => {
@@ -204,7 +209,9 @@ export function Admin() {
             reason: balanceForm.reason,
           },
         });
-        toast.success(`Added ${balanceForm.amount} ${balanceForm.currency} to ${balanceForm.walletCode}`);
+        toast.success(
+          `Added ${balanceForm.amount} ${balanceForm.currency} to ${balanceForm.walletCode}`,
+        );
       } else {
         await remBal({
           data: {
@@ -215,7 +222,9 @@ export function Admin() {
             reason: balanceForm.reason,
           },
         });
-        toast.success(`Removed ${balanceForm.amount} ${balanceForm.currency} from ${balanceForm.walletCode}`);
+        toast.success(
+          `Removed ${balanceForm.amount} ${balanceForm.currency} from ${balanceForm.walletCode}`,
+        );
       }
       setBalanceForm({ ...balanceForm, walletCode: "", amount: "", reason: "" });
       if (activeTab === "users") loadUsers();
@@ -311,7 +320,9 @@ export function Admin() {
     const { data: matchedTxs } = await supabase
       .from("transactions")
       .select("*")
-      .or(`reference.ilike.%${q}%,sender_wallet_code.ilike.%${q}%,recipient_wallet_code.ilike.%${q}%`);
+      .or(
+        `reference.ilike.%${q}%,sender_wallet_code.ilike.%${q}%,recipient_wallet_code.ilike.%${q}%`,
+      );
 
     setSearchResults({
       users: matchedUsers || [],
@@ -392,21 +403,27 @@ export function Admin() {
               />
             </div>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {["ALL", "PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"].map(
-                (st) => (
-                  <button
-                    key={st}
-                    onClick={() => setWdFilter(st)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition-all ${
-                      wdFilter === st
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ),
-              )}
+              {[
+                "ALL",
+                "PROCESSING",
+                "SUCCESSFUL",
+                "FAILED",
+                "ON HOLD",
+                "UNDER REVIEW",
+                "CANCELLED",
+              ].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setWdFilter(st)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition-all ${
+                    wdFilter === st
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -525,17 +542,16 @@ export function Admin() {
                       <p className="text-[10px] font-bold uppercase text-muted-foreground">
                         Balance (USD)
                       </p>
-                      <p className="font-extrabold text-foreground">${Number(u.balance_usd).toFixed(2)}</p>
+                      <p className="font-extrabold text-foreground">
+                        ${Number(u.balance_usd).toFixed(2)}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-1">
                     <div className="flex items-center gap-1.5">
                       <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                      <Select
-                        value={u.region}
-                        onValueChange={(val) => handleUpdateRegion(u, val)}
-                      >
+                      <Select value={u.region} onValueChange={(val) => handleUpdateRegion(u, val)}>
                         <SelectTrigger className="h-7 w-28 rounded-lg text-[10px] font-bold">
                           <SelectValue />
                         </SelectTrigger>
@@ -632,7 +648,9 @@ export function Admin() {
                 <label className="text-xs font-semibold text-muted-foreground">Currency</label>
                 <Select
                   value={balanceForm.currency}
-                  onValueChange={(v) => setBalanceForm({ ...balanceForm, currency: v as CurrencyCode })}
+                  onValueChange={(v) =>
+                    setBalanceForm({ ...balanceForm, currency: v as CurrencyCode })
+                  }
                 >
                   <SelectTrigger className="h-11 rounded-xl mt-1">
                     <SelectValue />
@@ -649,7 +667,9 @@ export function Admin() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground">Reason / Audit Note</label>
+              <label className="text-xs font-semibold text-muted-foreground">
+                Reason / Audit Note
+              </label>
               <Input
                 placeholder="Administrative adjustment reason..."
                 value={balanceForm.reason}
@@ -724,7 +744,9 @@ export function Admin() {
                   {searchResults.withdrawals.map((w) => (
                     <div key={w.id} className="border rounded-2xl p-3 bg-card text-xs space-y-1">
                       <p className="font-mono font-bold text-primary">{w.reference}</p>
-                      <p className="text-foreground">{w.full_name} · {formatMoney(Number(w.amount), w.currency)}</p>
+                      <p className="text-foreground">
+                        {w.full_name} · {formatMoney(Number(w.amount), w.currency)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -738,7 +760,9 @@ export function Admin() {
                   {searchResults.transactions.map((t) => (
                     <div key={t.id} className="border rounded-2xl p-3 bg-card text-xs space-y-1">
                       <p className="font-mono font-bold text-emerald-600">{t.reference}</p>
-                      <p className="text-foreground">{t.sender_name} &rarr; {t.recipient_name}</p>
+                      <p className="text-foreground">
+                        {t.sender_name} &rarr; {t.recipient_name}
+                      </p>
                       <p className="font-semibold">{formatMoney(Number(t.amount), t.currency)}</p>
                     </div>
                   ))}
@@ -827,7 +851,9 @@ export function Admin() {
             </div>
 
             <div className="space-y-2 pt-2">
-              <label className="text-xs font-bold text-foreground">Update Status Reason (Mandatory)</label>
+              <label className="text-xs font-bold text-foreground">
+                Update Status Reason (Mandatory)
+              </label>
               <Input
                 placeholder="Reason for administrative status update..."
                 value={statusReason}
@@ -871,13 +897,17 @@ export function Admin() {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-2xl border bg-secondary/30 p-3">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance (USD)</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">
+                  Balance (USD)
+                </p>
                 <p className="text-lg font-extrabold text-foreground mt-0.5">
                   ${Number(selectedUser.balance_usd).toFixed(2)}
                 </p>
               </div>
               <div className="rounded-2xl border bg-secondary/30 p-3">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Freeze Status</p>
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">
+                  Freeze Status
+                </p>
                 <p
                   className={`text-lg font-extrabold mt-0.5 ${
                     selectedUser.is_frozen ? "text-destructive" : "text-emerald-600"
@@ -900,26 +930,36 @@ export function Admin() {
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                   {(userTxHistory as any)?.withdrawals?.map((w: any) => (
-                    <div key={w.id} className="border rounded-2xl p-2.5 text-xs flex justify-between items-center">
+                    <div
+                      key={w.id}
+                      className="border rounded-2xl p-2.5 text-xs flex justify-between items-center"
+                    >
                       <div>
                         <p className="font-bold text-foreground">Withdrawal ({w.method})</p>
                         <p className="font-mono text-[10px] text-muted-foreground">{w.reference}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-foreground">{formatMoney(Number(w.amount), w.currency)}</p>
+                        <p className="font-bold text-foreground">
+                          {formatMoney(Number(w.amount), w.currency)}
+                        </p>
                         <p className="text-[10px] font-bold text-primary">{w.status}</p>
                       </div>
                     </div>
                   ))}
 
                   {(userTxHistory as any)?.transactions?.map((t: any) => (
-                    <div key={t.id} className="border rounded-2xl p-2.5 text-xs flex justify-between items-center">
+                    <div
+                      key={t.id}
+                      className="border rounded-2xl p-2.5 text-xs flex justify-between items-center"
+                    >
                       <div>
                         <p className="font-bold text-foreground">{t.kind}</p>
                         <p className="font-mono text-[10px] text-muted-foreground">{t.reference}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-foreground">{formatMoney(Number(t.amount), t.currency)}</p>
+                        <p className="font-bold text-foreground">
+                          {formatMoney(Number(t.amount), t.currency)}
+                        </p>
                         <p className="text-[10px] text-emerald-600 font-semibold">{t.status}</p>
                       </div>
                     </div>
