@@ -35,6 +35,9 @@ type Recipient = { wallet_code: string; full_name: string; preferred_currency: s
 
 function Scanner({ onResult }: { onResult: (v: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isScanningFile, setIsScanningFile] = useState(false);
+
   useEffect(() => {
     let scanner: { stop: () => Promise<void> } | null = null;
     let done = false;
@@ -49,14 +52,55 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
           onResult(text);
         },
         () => {},
-      ).catch(() => toast.error("Camera unavailable. Enter the wallet ID instead."));
+      ).catch(() => toast.error("Camera unavailable. Try uploading an image."));
     });
     return () => {
       done = true;
       scanner?.stop().catch(() => {});
     };
   }, [onResult]);
-  return <div id="ml-qr-reader" ref={ref} className="overflow-hidden rounded-2xl" />;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanningFile(true);
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const s = new Html5Qrcode("ml-qr-reader-hidden");
+      const text = await s.scanFile(file, true);
+      onResult(text);
+    } catch (err) {
+      toast.error("Could not find a valid QR code in this image.");
+    } finally {
+      setIsScanningFile(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div id="ml-qr-reader" ref={ref} className="overflow-hidden rounded-2xl bg-black" />
+      <div id="ml-qr-reader-hidden" className="hidden" />
+      <div className="flex flex-col items-center gap-2 pt-2">
+        <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">OR</p>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isScanningFile}
+          className="flex items-center gap-2 rounded-full border bg-secondary/50 px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors disabled:opacity-50"
+        >
+          {isScanningFile ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+          Upload from gallery
+        </button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleFileChange}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Send() {
