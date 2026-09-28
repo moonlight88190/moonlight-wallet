@@ -22,7 +22,71 @@ import {
 } from "@/hooks/use-wallet";
 import { formatMoney } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PaymentMethodIcon } from "@/components/AssetComponents";
+import { PaymentMethodIcon, GiftCardBrand } from "@/components/AssetComponents";
+import { GIFT_CARDS, PAYMENT_METHODS, UPI_PROVIDERS } from "@/lib/assets";
+
+function getTransactionAsset(methodName?: string, upiId?: string, providerName?: string, currency?: string) {
+  const m = (methodName || "").toLowerCase();
+  const u = (upiId || "").toLowerCase();
+  const p = (providerName || "").toLowerCase();
+  const c = (currency || "").toUpperCase();
+
+  // Gift Card Check
+  const matchedGift = GIFT_CARDS.find(
+    (g) => m.includes(g.id) || m.includes(g.brand.toLowerCase()) || p.includes(g.id),
+  );
+  if (matchedGift) {
+    return { type: "gift" as const, gift: matchedGift };
+  }
+
+  // UPI provider check (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)
+  if (p.includes("google") || u.includes("@ok") || u.includes("@gpay")) {
+    return { type: "method" as const, id: "google-pay", label: "Google Pay" };
+  }
+  if (p.includes("phonepe") || u.includes("@ybl") || u.includes("@ibl") || u.includes("@axl")) {
+    return { type: "method" as const, id: "phonepe", label: "PhonePe" };
+  }
+  if (p.includes("paytm") || u.includes("@paytm")) {
+    return { type: "method" as const, id: "paytm", label: "Paytm" };
+  }
+  if (p.includes("bhim") || u.includes("@upi") || u.includes("@bhim")) {
+    return { type: "method" as const, id: "bhim", label: "BHIM UPI" };
+  }
+  if (p.includes("amazon") || u.includes("@apl") || u.includes("@amazon")) {
+    return { type: "method" as const, id: "amazon-pay", label: "Amazon Pay" };
+  }
+
+  // Philippines assets
+  if (m.includes("gcash") || c === "PHP") {
+    if (m.includes("bank")) return { type: "method" as const, id: "ph-bank", label: "Philippine Bank (InstaPay)" };
+    return { type: "method" as const, id: "gcash", label: "GCash Wallet" };
+  }
+
+  // India assets
+  if (m.includes("upi") || c === "INR" || u.length > 0) {
+    if (m.includes("bank")) return { type: "method" as const, id: "in-bank", label: "Indian Bank (IMPS/NEFT)" };
+    return { type: "method" as const, id: "upi", label: "UPI Direct" };
+  }
+
+  // European assets
+  if (c === "EUR" || m.includes("sepa")) {
+    return { type: "method" as const, id: "sepa", label: "SEPA Instant Transfer" };
+  }
+  if (c === "CZK" || m.includes("czech") || m.includes("cz")) {
+    return { type: "method" as const, id: "cz-bank", label: "Czech Bank Transfer" };
+  }
+  if (c === "GBP" || m.includes("faster") || m.includes("uk")) {
+    return { type: "method" as const, id: "faster-payments", label: "UK Faster Payments" };
+  }
+
+  // Fallback match by PAYMENT_METHODS
+  const pm = PAYMENT_METHODS.find((item) => m.includes(item.id) || m.includes(item.name.toLowerCase()));
+  if (pm) {
+    return { type: "method" as const, id: pm.id, label: pm.name };
+  }
+
+  return { type: "method" as const, id: "sepa", label: methodName || "Bank Settlement Rail" };
+}
 
 export const Route = createFileRoute("/_authenticated/transactions/$id")({
   head: () => ({
@@ -145,6 +209,31 @@ function Receipt() {
               {formatMoney(Number(wd.amount), wd.currency)}
             </h1>
           </div>
+
+          {/* REAL ASSET DISPLAY ON RECEIPT */}
+          {(() => {
+            const assetInfo = getTransactionAsset(wd.method, wd.upi_id, wd.provider, wd.currency);
+            return (
+              <div className="flex items-center gap-3.5 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 shadow-2xs">
+                {assetInfo.type === "gift" ? (
+                  <div className="w-20 shrink-0">
+                    <GiftCardBrand card={assetInfo.gift} />
+                  </div>
+                ) : (
+                  <PaymentMethodIcon id={assetInfo.id} size="lg" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] font-bold uppercase text-primary tracking-wider">
+                    Settlement Rail &amp; Method
+                  </span>
+                  <h4 className="font-bold text-sm text-foreground truncate">{assetInfo.label}</h4>
+                  {wd.upi_id && (
+                    <p className="font-mono text-xs text-muted-foreground truncate">{wd.upi_id}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-secondary/30 p-3 text-xs">
             <div className="min-w-0 flex-1">
@@ -271,6 +360,29 @@ function Receipt() {
             {formatMoney(v.amount, v.currency, { sign: true })}
           </h1>
         </div>
+
+        {/* REAL ASSET DISPLAY ON RECEIPT */}
+        {(() => {
+          const assetInfo = getTransactionAsset(t.method, undefined, undefined, t.currency);
+          return (
+            <div className="flex items-center gap-3.5 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 shadow-2xs">
+              {assetInfo.type === "gift" ? (
+                <div className="w-20 shrink-0">
+                  <GiftCardBrand card={assetInfo.gift} />
+                </div>
+              ) : (
+                <PaymentMethodIcon id={assetInfo.id} size="lg" />
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-bold uppercase text-primary tracking-wider">
+                  Settlement Rail &amp; Method
+                </span>
+                <h4 className="font-bold text-sm text-foreground truncate">{assetInfo.label}</h4>
+                <p className="text-xs text-muted-foreground truncate">{t.method}</p>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-secondary/30 p-3 text-xs">
           <div className="min-w-0 flex-1">

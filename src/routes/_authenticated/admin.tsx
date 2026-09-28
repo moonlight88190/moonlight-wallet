@@ -41,6 +41,8 @@ import {
   adminRemoveBalance,
   adminSetFreeze,
   adminSetRegion,
+  adminListUsers,
+  adminSetAccountAge,
   adminUpdateWithdrawalStatus,
 } from "@/lib/admin.functions";
 import { CURRENCIES, type CurrencyCode, formatMoney } from "@/lib/currency";
@@ -60,6 +62,8 @@ export function Admin() {
   const remBal = useServerFn(adminRemoveBalance);
   const setFrz = useServerFn(adminSetFreeze);
   const setReg = useServerFn(adminSetRegion);
+  const listUsersFn = useServerFn(adminListUsers);
+  const setAccountAgeFn = useServerFn(adminSetAccountAge);
   const updateWd = useServerFn(adminUpdateWithdrawalStatus);
 
   const [ok, setOk] = useState<boolean | null>(null);
@@ -82,6 +86,8 @@ export function Admin() {
   const [userQuery, setUserQuery] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [editAgeHours, setEditAgeHours] = useState<string>("");
+  const [updatingAge, setUpdatingAge] = useState(false);
   const [userTxHistory, setUserTxHistory] = useState<any[]>([]);
   const [loadingUserTx, setLoadingUserTx] = useState(false);
 
@@ -129,26 +135,49 @@ export function Admin() {
 
   async function loadUsers() {
     setLoadingUsers(true);
-    const { data: wallets } = await supabase
-      .from("wallets")
-      .select("id, wallet_code, balance_usd, status, is_frozen, created_at, user_id");
-
-    const { data: profiles } = await supabase.from("profiles").select("id, full_name, email, region, created_at");
-
-    if (wallets && profiles) {
-      const merged = wallets.map((w) => {
-        const p = profiles.find((prof) => prof.id === w.user_id);
-        return {
-          ...w,
-          full_name: p?.full_name || "N/A",
-          email: p?.email || "N/A",
-          region: p?.region || "GLOBAL",
-          user_created_at: p?.created_at || w.created_at,
-        };
-      });
-      setUsers(merged);
+    try {
+      const res = await listUsersFn({ data: { token: adminToken } });
+      setUsers(res.users || []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load users.");
+    } finally {
+      setLoadingUsers(false);
     }
-    setLoadingUsers(false);
+  }
+
+  async function handleSetAccountAge(userId: string) {
+    if (!editAgeHours || isNaN(Number(editAgeHours))) {
+      toast.error("Please enter a valid number of hours.");
+      return;
+    }
+    setUpdatingAge(true);
+    try {
+      const hours = Number(editAgeHours);
+      const targetDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+      await setAccountAgeFn({
+        data: {
+          token: adminToken,
+          userId,
+          createdAtISO: targetDate,
+        },
+      });
+      toast.success(`Account creation date updated to ${hours} hours ago.`);
+      await loadUsers();
+      if (selectedUser) {
+        const updatedHours = hours;
+        const updatedDays = Math.floor(hours / 24);
+        setSelectedUser({
+          ...selectedUser,
+          created_at: targetDate,
+          account_age_hours: updatedHours,
+          account_age_days: updatedDays,
+        });
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update account age.");
+    } finally {
+      setUpdatingAge(false);
+    }
   }
 
   async function loadWithdrawals() {
@@ -514,6 +543,15 @@ export function Admin() {
                     </span>
                   </div>
 
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground border-y border-border/40 py-1.5 my-1">
+                    <span className="flex items-center gap-1 font-medium">
+                      <Clock className="h-3 w-3 text-primary" /> Age: {u.account_age_hours}h ({u.account_age_days}d)
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {u.activity_count} activity item(s)
+                    </span>
+                  </div>
+
                   <div className="flex items-center justify-between rounded-2xl bg-secondary/40 p-3 text-xs">
                     <div>
                       <p className="text-[10px] font-bold uppercase text-muted-foreground">
@@ -563,6 +601,7 @@ export function Admin() {
                       <button
                         onClick={() => {
                           setSelectedUser(u);
+                          setEditAgeHours(String(u.account_age_hours));
                           loadUserTransactions(u.user_id, u.id);
                         }}
                         className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 transition-all cursor-pointer"
@@ -885,6 +924,38 @@ export function Admin() {
                 >
                   {selectedUser.is_frozen ? "FROZEN" : "ACTIVE"}
                 </p>
+              </div>
+            </div>
+
+            {/* REAL ACCOUNT AGE ADMIN CONTROL */}
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary" /> Effective Account Age &amp; Creation
+                </h4>
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  Current: {selectedUser.account_age_hours} hrs ago
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                Change user's effective account creation date in database. Affects 48-hour withdrawal eligibility rule server-side.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Hours old (e.g. 50)"
+                  value={editAgeHours}
+                  onChange={(e) => setEditAgeHours(e.target.value)}
+                  className="h-9 text-xs rounded-xl bg-card"
+                />
+                <button
+                  disabled={updatingAge}
+                  onClick={() => handleSetAccountAge(selectedUser.user_id)}
+                  className="px-4 h-9 rounded-xl bg-primary text-primary-foreground font-bold text-xs shrink-0 cursor-pointer transition-all hover:opacity-90 disabled:opacity-50"
+                >
+                  {updatingAge ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Update Age"}
+                </button>
               </div>
             </div>
 
