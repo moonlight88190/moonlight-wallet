@@ -136,10 +136,10 @@ export function PaymentMethodIcon({
 
   const sizeContainer =
     size === "sm"
-      ? "h-7 w-10 p-1"
+      ? "h-8 w-12 p-1"
       : size === "lg"
-        ? "h-11 w-16 p-2"
-        : "h-9 w-13 sm:h-10 sm:w-14 p-1.5";
+        ? "h-12 w-20 p-2"
+        : "h-10 w-16 sm:h-11 sm:w-18 p-1.5";
 
   if (failed) {
     return (

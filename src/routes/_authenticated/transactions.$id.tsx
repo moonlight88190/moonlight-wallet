@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ShieldCheck, CheckCircle2, Clock, AlertTriangle, Globe } from "lucide-react";
+import {
+  ChevronLeft,
+  ShieldCheck,
+  CheckCircle2,
+  Globe,
+  Copy,
+  Check,
+  Printer,
+  FileCheck,
+} from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   txView,
@@ -28,6 +39,8 @@ function Receipt() {
   const { id } = Route.useParams();
   const wallet = useWallet();
   const profile = useProfile();
+  const [copied, setCopied] = useState(false);
+
   const tx = useQuery({
     queryKey: ["transaction", id],
     queryFn: async () => {
@@ -51,11 +64,24 @@ function Receipt() {
         </Link>
       </div>
     );
+
   const t = tx.data;
   const v = txView(t, wallet.data?.id);
   const d = new Date(t.created_at);
   const statusLabel = getAccountStatusLabel(profile.data?.email);
   const verified = isEuropeanVerified(profile.data?.email);
+
+  const handleCopyReference = () => {
+    if (!t.reference) return;
+    navigator.clipboard.writeText(t.reference);
+    setCopied(true);
+    toast.success("Reference code copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const rows: [string, string][] = [
     [
@@ -91,14 +117,23 @@ function Receipt() {
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <Link
-        to="/transactions"
-        className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" /> Back to Activity
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          to="/transactions"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" /> Back to Activity
+        </Link>
+        <button
+          onClick={handlePrint}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors cursor-pointer touch-manipulation"
+        >
+          <Printer className="h-3.5 w-3.5 text-muted-foreground" /> Print Receipt
+        </button>
+      </div>
 
-      <div className="rounded-3xl border border-border/60 bg-card p-6 sm:p-8 shadow-soft space-y-6">
+      <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 sm:p-8 shadow-soft space-y-6 print:border-none print:shadow-none">
+        {/* Institutional Watermark Badge */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" /> Official European Ledger Record
@@ -119,6 +154,32 @@ function Receipt() {
           </h1>
         </div>
 
+        {/* Copyable Reference Box */}
+        <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-secondary/30 p-3 text-xs">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+              Reference Code
+            </p>
+            <p className="font-mono text-xs font-semibold text-foreground truncate mt-0.5">
+              {t.reference}
+            </p>
+          </div>
+          <button
+            onClick={handleCopyReference}
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-500" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" /> Copy
+              </>
+            )}
+          </button>
+        </div>
+
         <div className="divide-y border-t border-border/50 pt-2">
           {rows.map(([k, val]) => (
             <div
@@ -131,7 +192,10 @@ function Receipt() {
           ))}
         </div>
 
-        <div className="border-t border-border/40 pt-4 text-center">
+        <div className="border-t border-border/40 pt-4 text-center space-y-1">
+          <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger Entry
+          </div>
           <p className="text-[10px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · EUROPEAN FINANCIAL INFRASTRUCTURE
           </p>
