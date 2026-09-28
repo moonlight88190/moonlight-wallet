@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoMark } from "@/components/Logo";
+import { CountryFlag } from "@/components/AssetComponents";
 import {
   txView,
   useWallet,
@@ -133,18 +135,25 @@ function Receipt() {
       </div>
 
       <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 sm:p-8 shadow-soft space-y-6 print:border-none print:shadow-none">
-        {/* Institutional Watermark Badge */}
-        <div className="text-center space-y-2">
+        {/* Header with Moonlight Logo & Institutional Watermark Badge */}
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 pb-1">
+            <LogoMark className="h-7 w-7" />
+            <span className="font-semibold tracking-tight text-xs uppercase text-muted-foreground">
+              Moonlight Wallet
+            </span>
+          </div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" /> Official European Ledger Record
           </div>
-          <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground pt-0.5">
+          <div className="flex items-center justify-center gap-2 text-[11px] font-semibold text-muted-foreground pt-0.5">
             {verified ? (
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
             ) : (
               <Globe className="h-3.5 w-3.5 text-blue-500" />
             )}
             <span>{statusLabel}</span>
+            <CountryFlag code={t.recipient_currency || t.currency} circle size="xs" />
           </div>
           <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase pt-1">
             {v.title}
@@ -194,7 +203,8 @@ function Receipt() {
 
         <div className="border-t border-border/40 pt-4 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger Entry
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger
+            Entry
           </div>
           <p className="text-[10px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · EUROPEAN FINANCIAL INFRASTRUCTURE

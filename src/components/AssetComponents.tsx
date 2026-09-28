@@ -198,15 +198,15 @@ export function GiftCardBrand({
   onClick?: () => void;
 }) {
   const cardData = card || GIFT_CARDS.find((g) => g.id === cardId) || GIFT_CARDS[0]!;
-  const [imgSrc, setImgSrc] = React.useState(cardData.imageUrl);
+  const [imgSrc, setImgSrc] = React.useState(cardData.logoUrl || cardData.imageUrl);
   const [hasRetried, setHasRetried] = React.useState(false);
   const [imgFailed, setImgFailed] = React.useState(false);
 
   React.useEffect(() => {
-    setImgSrc(cardData.imageUrl);
+    setImgSrc(cardData.logoUrl || cardData.imageUrl);
     setHasRetried(false);
     setImgFailed(false);
-  }, [cardData.imageUrl]);
+  }, [cardData.imageUrl, cardData.logoUrl]);
 
   return (
     <div
@@ -224,36 +224,52 @@ export function GiftCardBrand({
         className,
       )}
     >
-      <div className="relative aspect-[1.8/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
-        {!imgFailed ? (
-          <img
-            src={imgSrc}
-            alt={cardData.brand}
-            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-            onError={() => {
-              if (!hasRetried && cardData.logoUrl && imgSrc !== cardData.logoUrl) {
-                setHasRetried(true);
-                setImgSrc(cardData.logoUrl);
-              } else if (!hasRetried && imgSrc.endsWith(".png")) {
-                setHasRetried(true);
-                setImgSrc(imgSrc.replace(/\.png$/, ".svg"));
-              } else {
-                setImgFailed(true);
-              }
-            }}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide">
-            <Gift className="h-6 w-6 text-amber-400 mb-1" />
-            <span>{cardData.brand}</span>
-          </div>
-        )}
-        {cardData.popular && (
-          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
-            POPULAR
+      {/* Moonlight Voucher Presentation Card */}
+      <div className="relative aspect-[1.8/1] w-full overflow-hidden rounded-xl bg-slate-950 p-3 flex flex-col justify-between shadow-inner">
+        <div className="flex items-center justify-between w-full">
+          <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+            MOONLIGHT VOUCHER
           </span>
-        )}
+          {cardData.popular && (
+            <span className="rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
+              POPULAR
+            </span>
+          )}
+        </div>
+
+        <div className="relative flex h-10 w-full items-center justify-center p-1">
+          {!imgFailed ? (
+            <img
+              src={imgSrc}
+              alt={cardData.brand}
+              className={cn(
+                "max-h-8 max-w-[120px] object-contain transition-transform duration-300 group-hover:scale-105",
+                (cardData.id === "apple" || cardData.id === "amazon") &&
+                  "filter brightness-0 invert",
+              )}
+              onError={() => {
+                if (!hasRetried && imgSrc.endsWith(".svg")) {
+                  setHasRetried(true);
+                  setImgSrc(imgSrc.replace(/\.svg$/, ".png"));
+                } else {
+                  setImgFailed(true);
+                }
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-1.5 text-slate-200 font-bold text-xs tracking-wide">
+              <Gift className="h-4 w-4 text-amber-400" />
+              <span>{cardData.brand}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between w-full pt-1 border-t border-slate-800">
+          <span className="text-[9px] text-slate-400 font-mono">DIGITAL PASS</span>
+          <span className="text-[9px] font-semibold text-emerald-400">INSTANT</span>
+        </div>
       </div>
+
       <div className="mt-2.5 px-0.5 min-w-0">
         <div className="flex items-center justify-between gap-1 min-w-0">
           <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate min-w-0 flex-1">

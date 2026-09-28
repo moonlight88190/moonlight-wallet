@@ -6,7 +6,11 @@ const TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_FAILURES = 5;
 
 async function hmac(message: string) {
-  const secret = process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
+  const secret = process.env["ADMIN_SESSION_SECRET"];
+  if (!secret) {
+    console.error("[SECURITY] ADMIN_SESSION_SECRET missing from server environment.");
+    throw new Error("Admin session authentication unconfigured on server.");
+  }
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -49,8 +53,12 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
     if ((count ?? 0) >= MAX_FAILURES) {
       return { ok: false as const, error: "Too many attempts. Try again in 15 minutes." };
     }
-    const expected = process.env["ADMIN_ACCESS_CODE"] || "4336";
-    if (!expected || !safeEqual(data.code, expected)) {
+    const expected = process.env["ADMIN_ACCESS_CODE"];
+    if (!expected) {
+      console.error("[SECURITY] ADMIN_ACCESS_CODE missing from server environment.");
+      return { ok: false as const, error: "Admin access unconfigured on server." };
+    }
+    if (!safeEqual(data.code, expected)) {
       await supabaseAdmin
         .from("audit_logs")
         .insert({ user_id: context.userId, event: "admin_code_failed" });

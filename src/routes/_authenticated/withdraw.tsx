@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, ShieldCheck, Sparkles, Crown, CheckCircle2, Copy, Check } from "lucide-react";
+import {
+  ChevronRight,
+  ShieldCheck,
+  Sparkles,
+  Crown,
+  CheckCircle2,
+  Copy,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, GiftCardBrand, PaymentMethodIcon } from "@/components/AssetComponents";
@@ -121,13 +129,6 @@ export function Withdraw() {
     const trimmedAccount = accountDetails.trim();
     if (!trimmedAccount) {
       toast.error("Please enter recipient account details, IBAN, VPA or phone number");
-      return;
-    }
-
-    if (trimmedAccount === "4336") {
-      setSelectedMethod(null);
-      setAccountDetails("");
-      navigate({ to: "/admin-access" });
       return;
     }
 
@@ -489,11 +490,23 @@ export function Withdraw() {
                     className="max-h-12 max-w-[150px] object-contain filter invert"
                   />
                 ) : (
-                  <img
-                    src={selectedCard?.imageUrl}
-                    alt={selectedCard?.brand}
-                    className="h-full w-full object-cover rounded-xl"
-                  />
+                  <div className="flex flex-col items-center justify-between h-full w-full py-1">
+                    <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                      MOONLIGHT VOUCHER
+                    </span>
+                    <img
+                      src={selectedCard?.logoUrl || selectedCard?.imageUrl}
+                      alt={selectedCard?.brand}
+                      className={`max-h-12 max-w-[150px] object-contain ${
+                        selectedCard?.id === "apple" || selectedCard?.id === "amazon"
+                          ? "filter brightness-0 invert"
+                          : ""
+                      }`}
+                    />
+                    <span className="text-[9px] text-emerald-400 font-mono">
+                      OFFICIAL DIGITAL VOUCHER
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -614,7 +627,11 @@ export function Withdraw() {
                 onClick={() => copyReceiptRef(activeReceipt.reference)}
                 className="flex h-9 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
               >
-                {refCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                {refCopied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
                 {refCopied ? "Copied" : "Copy"}
               </button>
             </div>

@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Check, AlertCircle, ArrowRight, RefreshCw, Receipt, ShieldCheck, Activity } from "lucide-react";
+import {
+  Check,
+  AlertCircle,
+  ArrowRight,
+  RefreshCw,
+  Receipt,
+  ShieldCheck,
+  Activity,
+} from "lucide-react";
 import { CountryFlag } from "@/components/AssetComponents";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -67,12 +75,10 @@ export function PaymentAnimation({
     setStage(state);
     if (state === "processing") {
       setActiveStep(0);
-      const timer1 = setTimeout(() => setActiveStep(1), 600);
-      const timer2 = setTimeout(() => setActiveStep(2), 1200);
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
+      const interval = setInterval(() => {
+        setActiveStep((prev) => (prev < 2 ? prev + 1 : prev));
+      }, 500);
+      return () => clearInterval(interval);
     } else if (state === "completed") {
       setActiveStep(3);
     }
