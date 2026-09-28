@@ -171,6 +171,8 @@ function Send() {
     setAnimState("processing");
     setBusy(true);
 
+    const startTime = Date.now();
+
     const res = await supabase.rpc("send_transfer", {
       p_recipient_code: recipient.wallet_code,
       p_amount: amt,
@@ -187,9 +189,16 @@ function Send() {
     }
 
     setTxId(res.data as string);
-    setAnimState("completed");
-    qc.invalidateQueries({ queryKey: ["wallet"] });
-    qc.invalidateQueries({ queryKey: ["transactions"] });
+
+    const elapsed = Date.now() - startTime;
+    const minAnimDuration = 5200;
+    const remainingTime = Math.max(0, minAnimDuration - elapsed);
+
+    setTimeout(() => {
+      setAnimState("completed");
+      qc.invalidateQueries({ queryKey: ["wallet"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+    }, remainingTime);
   }
 
   const btn =
