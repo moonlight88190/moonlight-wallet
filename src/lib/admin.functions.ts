@@ -40,7 +40,7 @@ async function verifyToken(token: string, userId: string) {
 
 export const verifyAdminCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
+  .validator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -74,12 +74,12 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
 
 export const checkAdminToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .validator((d) => z.object({ token: z.string().max(300) }).parse(d))
   .handler(async ({ data, context }) => ({ ok: await verifyToken(data.token, context.userId) }));
 
 export const adminAddBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({
         token: z.string().max(300),
