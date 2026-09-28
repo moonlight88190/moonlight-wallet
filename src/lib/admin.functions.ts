@@ -6,7 +6,11 @@ const TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_FAILURES = 5;
 
 async function hmac(message: string) {
-  const secret = process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
+  const secret = process.env["ADMIN_SESSION_SECRET"];
+  if (!secret) {
+    console.error("[SECURITY] ADMIN_SESSION_SECRET missing from server environment.");
+    throw new Error("Admin session authentication unconfigured on server.");
+  }
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -36,7 +40,7 @@ async function verifyToken(token: string, userId: string) {
 
 export const verifyAdminCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
+  .validator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -49,8 +53,12 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
     if ((count ?? 0) >= MAX_FAILURES) {
       return { ok: false as const, error: "Too many attempts. Try again in 15 minutes." };
     }
-    const expected = process.env["ADMIN_ACCESS_CODE"] || "4336";
-    if (!expected || !safeEqual(data.code, expected)) {
+    const expected = process.env["ADMIN_ACCESS_CODE"];
+    if (!expected) {
+      console.error("[SECURITY] ADMIN_ACCESS_CODE missing from server environment.");
+      return { ok: false as const, error: "Admin access unconfigured on server." };
+    }
+    if (!safeEqual(data.code, expected)) {
       await supabaseAdmin
         .from("audit_logs")
         .insert({ user_id: context.userId, event: "admin_code_failed" });
@@ -66,12 +74,12 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
 
 export const checkAdminToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .validator((d) => z.object({ token: z.string().max(300) }).parse(d))
   .handler(async ({ data, context }) => ({ ok: await verifyToken(data.token, context.userId) }));
 
 export const adminAddBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({
         token: z.string().max(300),
