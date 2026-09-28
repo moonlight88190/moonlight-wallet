@@ -13,7 +13,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
     <Link
       to="/transactions/$id"
       params={{ id: tx.id }}
-      className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
+      className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:px-4 min-h-[52px] transition-opacity hover:opacity-70 touch-manipulation cursor-pointer"
     >
       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
         <Icon className="h-4 w-4" strokeWidth={1.5} />

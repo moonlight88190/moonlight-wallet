@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2 } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -68,12 +68,26 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
     try {
       const { Html5Qrcode } = await import("html5-qrcode");
       const s = new Html5Qrcode("ml-qr-reader-hidden");
-      const text = await s.scanFile(file, true);
-      onResult(text);
-    } catch (err) {
-      toast.error("Could not find a valid QR code in this image.");
+      const rawText = await s.scanFile(file, true);
+      const trimmed = rawText.trim();
+      let walletCode = trimmed;
+      if (trimmed.toLowerCase().startsWith("moonlight:")) {
+        walletCode = trimmed.slice(10).trim();
+      }
+
+      if (!walletCode || (!walletCode.startsWith("ML-") && !walletCode.includes("@"))) {
+        toast.error("Invalid QR code payload. Please select a valid Moonlight Wallet QR code.");
+        return;
+      }
+
+      onResult(walletCode);
+    } catch {
+      toast.error(
+        "Could not find a valid QR code in this image. Please select a clear QR code image.",
+      );
     } finally {
       setIsScanningFile(false);
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -86,9 +100,13 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isScanningFile}
-          className="flex items-center gap-2 rounded-full border bg-secondary/50 px-4 py-2 text-xs font-semibold hover:bg-secondary transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 rounded-full border bg-secondary/80 px-5 py-2.5 min-h-[44px] text-xs font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer touch-manipulation"
         >
-          {isScanningFile ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+          {isScanningFile ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4 text-primary" />
+          )}
           Upload from gallery
         </button>
         <input

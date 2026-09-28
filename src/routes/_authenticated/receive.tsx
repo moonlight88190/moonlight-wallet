@@ -1,9 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Share, QrCode, Check, ShieldCheck } from "lucide-react";
+import { Copy, Share, QrCode, Check, ShieldCheck, Globe } from "lucide-react";
 import { toast } from "sonner";
-import { useProfile, useWallet } from "@/hooks/use-wallet";
+import {
+  useProfile,
+  useWallet,
+  getAccountStatusLabel,
+  isEuropeanVerified,
+} from "@/hooks/use-wallet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
@@ -64,8 +69,12 @@ function Receive() {
 
       <div className="rounded-3xl sm:rounded-[2.5rem] border border-border/60 bg-card/80 p-5 sm:p-8 shadow-soft space-y-5 sm:space-y-6">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-          <span>European Verified Account</span>
+          {isEuropeanVerified(profile.data?.email) ? (
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+          ) : (
+            <Globe className="h-3.5 w-3.5 text-blue-500" />
+          )}
+          <span>{getAccountStatusLabel(profile.data?.email)}</span>
         </div>
 
         {wallet.isLoading ? (

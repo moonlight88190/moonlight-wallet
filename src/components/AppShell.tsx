@@ -11,10 +11,11 @@ import {
   Info,
   Landmark,
   ShieldCheck,
+  Globe,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/use-wallet";
+import { useProfile, getAccountStatusLabel, isEuropeanVerified } from "@/hooks/use-wallet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,8 +93,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuLabel className="font-normal px-3 py-2">
                   <div className="text-sm font-semibold text-foreground">{profile?.full_name}</div>
                   <div className="truncate text-xs text-muted-foreground">{profile?.email}</div>
-                  <div className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    <ShieldCheck className="h-3 w-3" /> European Verified Account
+                  <div
+                    className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${isEuropeanVerified(profile?.email) ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
+                  >
+                    {isEuropeanVerified(profile?.email) ? (
+                      <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                    ) : (
+                      <Globe className="h-3 w-3 text-blue-500" />
+                    )}
+                    <span>{getAccountStatusLabel(profile?.email)}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

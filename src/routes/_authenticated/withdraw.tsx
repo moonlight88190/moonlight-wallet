@@ -163,7 +163,7 @@ export function Withdraw() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedMethod(item)}
-                    className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-2xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation min-w-0"
+                    className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-2xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation min-w-0 min-h-[52px]"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <PaymentMethodIcon id={item.id} size="md" />
@@ -257,7 +257,7 @@ export function Withdraw() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-all active:scale-[0.96] cursor-pointer ${
+                className={`rounded-full px-4 py-2 min-h-[44px] inline-flex items-center text-xs font-semibold transition-all active:scale-[0.96] cursor-pointer touch-manipulation ${
                   activeCategory === cat
                     ? "bg-primary text-primary-foreground shadow-2xs"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -433,7 +433,7 @@ export function Withdraw() {
                     <button
                       key={val}
                       onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2 text-xs font-semibold border transition-all active:scale-[0.97] cursor-pointer ${
+                      className={`rounded-xl py-2.5 min-h-[44px] text-xs font-semibold border transition-all active:scale-[0.97] cursor-pointer touch-manipulation ${
                         cardValue === val
                           ? "border-primary bg-primary/10 text-primary shadow-2xs"
                           : "border-border/60 bg-card hover:bg-accent text-foreground"
