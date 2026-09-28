@@ -185,6 +185,98 @@ export const adminSetRegion = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminListUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: wallets, error: wErr } = await supabaseAdmin
+      .from("wallets")
+      .select("id, wallet_code, balance_usd, status, is_frozen, created_at, user_id");
+    if (wErr) throw new Error(wErr.message);
+
+    const { data: profiles, error: pErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, email, region, created_at");
+    if (pErr) throw new Error(pErr.message);
+
+    const { data: txs } = await supabaseAdmin.from("transactions").select("sender_wallet_id, recipient_wallet_id");
+    const { data: wds } = await supabaseAdmin.from("withdrawals").select("user_id");
+
+    const merged = (wallets || []).map((w) => {
+      const p = (profiles || []).find((prof) => prof.id === w.user_id);
+      const userTxs = (txs || []).filter(
+        (t) => t.sender_wallet_id === w.id || t.recipient_wallet_id === w.id,
+      ).length;
+      const userWds = (wds || []).filter((wd) => wd.user_id === w.user_id).length;
+
+      const userCreatedAt = p?.created_at || w.created_at;
+      const ageMs = Date.now() - new Date(userCreatedAt).getTime();
+      const ageHours = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60)));
+      const ageDays = Math.floor(ageHours / 24);
+
+      return {
+        id: w.id,
+        user_id: w.user_id,
+        wallet_code: w.wallet_code,
+        balance_usd: w.balance_usd,
+        status: w.status,
+        is_frozen: w.is_frozen,
+        full_name: p?.full_name || "N/A",
+        email: p?.email || "N/A",
+        region: p?.region || "GLOBAL",
+        created_at: userCreatedAt,
+        account_age_hours: ageHours,
+        account_age_days: ageDays,
+        activity_count: userTxs + userWds,
+      };
+    });
+
+    return { users: merged };
+  });
+
+export const adminSetAccountAge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        userId: z.string().uuid(),
+        createdAtISO: z.string(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const newCreatedAt = new Date(data.createdAtISO).toISOString();
+
+    const { error: pErr } = await supabaseAdmin
+      .from("profiles")
+      .update({ created_at: newCreatedAt } as any)
+      .eq("id", data.userId);
+
+    if (pErr) throw new Error(pErr.message);
+
+    await supabaseAdmin
+      .from("wallets")
+      .update({ created_at: newCreatedAt } as any)
+      .eq("user_id", data.userId);
+
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: context.userId,
+      event: "admin_set_account_age",
+      details: { target_user_id: data.userId, new_created_at: newCreatedAt },
+    });
+
+    return { ok: true, created_at: newCreatedAt };
+  });
+
 export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d) =>

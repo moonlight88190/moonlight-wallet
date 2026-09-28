@@ -203,26 +203,26 @@ export function GiftCardBrand({
         }
       }}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation min-h-[150px]",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-2.5 sm:p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
         className,
       )}
     >
-      <div className="relative flex h-24 sm:h-28 w-full items-center justify-center rounded-xl bg-slate-950/80 p-2 overflow-hidden">
+      <div className="relative flex aspect-[1.58/1] w-full items-center justify-center rounded-xl bg-slate-900/90 overflow-hidden shadow-inner">
         {!imgFailed ? (
           <img
             src={cardData.imageUrl}
             alt={cardData.brand}
-            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide">
+          <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide p-2">
             <Gift className="h-6 w-6 text-amber-400 mb-1" />
             <span>{cardData.brand}</span>
           </div>
         )}
         {cardData.popular && (
-          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
+          <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs z-10">
             POPULAR
           </span>
         )}

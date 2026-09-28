@@ -38,17 +38,13 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   PLN: "zł",
 };
 
-const TRANSFER_STEPS = [
-  "Connecting to financial corridor...",
-  "Verifying double-entry ledger balance...",
-  "Routing via instant settlement network...",
+const ANIMATION_STAGES = [
+  "Confirming transaction details...",
+  "Validating double-entry ledger & rails...",
+  "Processing settlement request...",
+  "Applying ledger transaction...",
+  "Finalizing cryptographic record...",
   "Settlement confirmed & receipt issued",
-];
-
-const WITHDRAWAL_STEPS = [
-  "Submitting withdrawal to payout corridor...",
-  "Verifying ledger allocation & compliance...",
-  "Queued for payout processing...",
 ];
 
 export function PaymentAnimation({
@@ -75,21 +71,37 @@ export function PaymentAnimation({
     setStage(state);
     if (state === "processing") {
       setActiveStep(0);
-      const timer1 = setTimeout(() => setActiveStep(1), 600);
-      const timer2 = setTimeout(() => setActiveStep(2), 1200);
+
+      // Controlled randomized delays (total ~5.2s–5.8s)
+      // Generates slightly varied delays for natural visual experience
+      const d1 = 800 + Math.floor(Math.random() * 250);   // ~800-1050ms
+      const d2 = d1 + 900 + Math.floor(Math.random() * 300);  // ~1700-2250ms
+      const d3 = d2 + 1000 + Math.floor(Math.random() * 300); // ~2700-3550ms
+      const d4 = d3 + 1000 + Math.floor(Math.random() * 300); // ~3700-4850ms
+      const d5 = d4 + 900 + Math.floor(Math.random() * 250);  // ~4600-5700ms
+
+      const t1 = setTimeout(() => setActiveStep(1), d1);
+      const t2 = setTimeout(() => setActiveStep(2), d2);
+      const t3 = setTimeout(() => setActiveStep(3), d3);
+      const t4 = setTimeout(() => setActiveStep(4), d4);
+      const t5 = setTimeout(() => setActiveStep(5), d5);
+
       return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+        clearTimeout(t5);
       };
     } else if (state === "completed") {
-      setActiveStep(3);
+      setActiveStep(ANIMATION_STAGES.length - 1);
     }
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
   const destSymbol = CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
-  const steps = type === "withdrawal" ? WITHDRAWAL_STEPS : TRANSFER_STEPS;
+  const steps = ANIMATION_STAGES;
 
   return (
     <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-300">
