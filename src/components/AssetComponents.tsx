@@ -5,9 +5,11 @@ import {
   CURRENCIES_META,
   GIFT_CARDS,
   PAYMENT_METHODS,
+  UPI_PROVIDERS,
   type CountryMeta,
   type GiftCardMeta,
   type PaymentMethodMeta,
+  type UPIProviderMeta,
 } from "@/lib/assets";
 import { cn } from "@/lib/utils";
 
@@ -123,7 +125,9 @@ export function PaymentMethodIcon({
   size?: "sm" | "md" | "lg";
 }) {
   const method = PAYMENT_METHODS.find((m) => m.id === id);
-  const iconUrl = method?.iconUrl || `/assets/payment-methods/${id}.png`;
+  const provider = UPI_PROVIDERS.find((p) => p.id === id);
+  const iconUrl = method?.iconUrl || provider?.iconUrl || `/assets/payment-methods/${id}.png`;
+  const name = method?.name || provider?.name || `${id} payment method`;
   const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
@@ -132,7 +136,7 @@ export function PaymentMethodIcon({
 
   const sizeContainer =
     size === "sm"
-      ? "h-8 w-12 p-1"
+      ? "h-8 w-11 p-1"
       : size === "lg"
         ? "h-12 w-20 p-2"
         : "h-10 w-16 sm:h-11 sm:w-18 p-1.5";
@@ -154,14 +158,14 @@ export function PaymentMethodIcon({
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40",
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 p-1.5 shadow-2xs transition-all hover:border-primary/40",
         sizeContainer,
         className,
       )}
     >
       <img
         src={iconUrl}
-        alt={method?.name || `${id} payment method`}
+        alt={name}
         className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
         onError={() => setFailed(true)}
       />
@@ -199,11 +203,11 @@ export function GiftCardBrand({
         }
       }}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation min-h-[140px]",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation min-h-[150px]",
         className,
       )}
     >
-      <div className="relative aspect-[1.8/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
+      <div className="relative flex h-24 sm:h-28 w-full items-center justify-center rounded-xl bg-slate-950/80 p-2 overflow-hidden">
         {!imgFailed ? (
           <img
             src={cardData.imageUrl}

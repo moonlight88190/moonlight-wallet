@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, ShieldCheck, Sparkles, Crown, CheckCircle2, Copy, Check } from "lucide-react";
+import { ChevronRight, ShieldCheck, Sparkles, Crown, CheckCircle2, Copy, Check, Clock, AlertTriangle, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, GiftCardBrand, PaymentMethodIcon } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
@@ -9,12 +10,14 @@ import {
   GIFT_CARDS,
   LUXURY_BRANDS,
   PAYMENT_METHODS,
+  UPI_PROVIDERS,
   type GiftCardMeta,
   type LuxuryBrandMeta,
   type PaymentMethodMeta,
 } from "@/lib/assets";
-import { formatMoney } from "@/lib/currency";
-import { useProfile, useWallet } from "@/hooks/use-wallet";
+import { formatMoney, convert } from "@/lib/currency";
+import { useProfile, useWallet, useRates } from "@/hooks/use-wallet";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
       {
         name: "description",
         content:
-          "Withdraw Moonlight Wallet balance via SEPA Instant, Czech Bank Transfer, UK Faster Payments, UPI, GCash, PayNow, Pix, SWIFT or Redeem Digital Vouchers & Luxury Vouchers.",
+          "Withdraw Moonlight Wallet balance via SEPA Instant, Czech Bank Transfer, UK Faster Payments, UPI Direct, GCash, PayNow, Pix, SWIFT or Redeem Digital Vouchers & Luxury Vouchers.",
       },
       { property: "og:title", content: "Withdraw — Moonlight Wallet" },
       {
@@ -57,7 +60,7 @@ const REGIONS = [
   {
     id: "india",
     title: "India Corridor",
-    badge: "Instant NPCI Rail",
+    badge: "NPCI Official Rail",
     flagCode: "IN",
     items: PAYMENT_METHODS.filter((m) => m.region === "India"),
   },
@@ -79,31 +82,74 @@ const REGIONS = [
   },
 ];
 
+export function parseUPIHandle(vpa: string): { isVPA: boolean; providerId?: string; providerName?: string } {
+  const trimmed = vpa.trim().toLowerCase();
+  if (!trimmed.includes("@") || trimmed.startsWith("@") || trimmed.endsWith("@")) {
+    return { isVPA: false };
+  }
+  const parts = trimmed.split("@");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return { isVPA: false };
+  }
+
+  const handle = `@${parts[1]}`;
+  const found = UPI_PROVIDERS.find((p) => p.handles.includes(handle));
+  if (found) {
+    return { isVPA: true, providerId: found.id, providerName: found.name };
+  }
+
+  return { isVPA: true, providerName: "UPI-compatible / Unknown provider" };
+}
+
 export function Withdraw() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: wallet } = useWallet();
   const { data: profile } = useProfile();
-  const preferredCurrency = profile?.preferred_currency || "EUR";
+  const rates = useRates();
 
+  const preferredCurrency = profile?.preferred_currency || "EUR";
+  const r = rates.data?.rates ?? {};
+
+  // Check 48h account age
+  const createdAt = profile?.created_at ? new Date(profile.created_at) : new Date();
+  const accountAgeHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+  const isEligible48h = accountAgeHours >= 48;
+
+  // Calculate $100 USD limit in user preferred currency
+  const usdRate = r["USD"] ?? 1;
+  const userRate = r[preferredCurrency] ?? 1;
+  const limit100InPreferred = (100 / usdRate) * userRate;
+
+  // States
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(null);
   const [selectedCard, setSelectedCard] = useState<GiftCardMeta | null>(null);
   const [selectedLuxury, setSelectedLuxury] = useState<LuxuryBrandMeta | null>(null);
   const [cardValue, setCardValue] = useState<number>(100);
+
+  // Form Fields
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
-  const [accountDetails, setAccountDetails] = useState<string>("");
+  const [upiId, setUpiId] = useState<string>("");
+  const [fullName, setFullName] = useState<string>(profile?.full_name || "");
+  const [email, setEmail] = useState<string>(profile?.email || "");
+  const [phone, setPhone] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
   // Animation & Receipt Modal State
   const [isProcessing, setIsProcessing] = useState(false);
-  const [animState, setAnimState] = useState<"processing" | "completed">("processing");
+  const [busy, setBusy] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState<{
+    id?: string;
     type: "withdraw" | "voucher";
     title: string;
     amount: number;
     currency: string;
     methodOrBrand: string;
     accountOrCode: string;
+    provider?: string;
     reference: string;
+    status: string;
     date: string;
   } | null>(null);
   const [refCopied, setRefCopied] = useState(false);
@@ -117,39 +163,81 @@ export function Withdraw() {
         ? GIFT_CARDS.filter((c) => c.category === "Luxury")
         : GIFT_CARDS.filter((c) => c.category === activeCategory);
 
-  function handleInitiateWithdraw() {
-    const trimmedAccount = accountDetails.trim();
-    if (!trimmedAccount) {
-      toast.error("Please enter recipient account details, IBAN, VPA or phone number");
+  const upiDetection = parseUPIHandle(upiId);
+
+  async function handleInitiateWithdraw() {
+    if (!isEligible48h) {
+      toast.error("Withdrawals unlock 48 hours after account creation.");
       return;
     }
 
-    const method = selectedMethod;
-    const amt = Number(withdrawAmount) || 100;
-    const refCode = `ML-WD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const amt = Number(withdrawAmount) || 0;
+    if (amt <= 0) {
+      toast.error("Please enter a valid withdrawal amount.");
+      return;
+    }
+
+    const isUPI = selectedMethod?.id === "upi" || selectedMethod?.id === "upi-qr";
+    if (isUPI) {
+      if (!upiDetection.isVPA) {
+        toast.error("Please enter a valid UPI VPA (e.g., username@provider).");
+        return;
+      }
+    }
+
+    if (!fullName.trim() || !email.trim()) {
+      toast.error("Full Name and Email are required.");
+      return;
+    }
+
+    setBusy(true);
+    const { data: wdId, error } = await supabase.rpc("create_withdrawal", {
+      p_amount: amt,
+      p_currency: preferredCurrency,
+      p_method: selectedMethod?.name || "UPI Direct",
+      p_upi_id: isUPI ? upiId.trim() : null,
+      p_provider: isUPI ? (upiDetection.providerName || "UPI") : null,
+      p_full_name: fullName.trim(),
+      p_email: email.trim(),
+      p_phone: phone.trim() || null,
+      p_reason: reason.trim() || null,
+    });
+    setBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    qc.invalidateQueries({ queryKey: ["wallet"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    qc.invalidateQueries({ queryKey: ["withdrawals"] });
+
+    const refCode = `MLW-${wdId.substring(0, 8).toUpperCase()}`;
+    const chosenMethod = selectedMethod;
 
     setSelectedMethod(null);
-    setAccountDetails("");
+    setUpiId("");
+    setReason("");
 
     setIsProcessing(true);
-    setAnimState("processing");
 
     setTimeout(() => {
-      setAnimState("completed");
-      setTimeout(() => {
-        setIsProcessing(false);
-        setActiveReceipt({
-          type: "withdraw",
-          title: "Withdrawal Settlement Dispatched",
-          amount: amt,
-          currency: preferredCurrency,
-          methodOrBrand: method?.name || "Financial Bank Payout",
-          accountOrCode: trimmedAccount,
-          reference: refCode,
-          date: new Date().toLocaleString(),
-        });
-      }, 1200);
-    }, 1800);
+      setIsProcessing(false);
+      setActiveReceipt({
+        id: wdId as string,
+        type: "withdraw",
+        title: "Withdrawal Submitted",
+        amount: amt,
+        currency: preferredCurrency,
+        methodOrBrand: chosenMethod?.name || "UPI Direct",
+        accountOrCode: isUPI ? upiId.trim() : email.trim(),
+        provider: isUPI ? upiDetection.providerName : undefined,
+        reference: refCode,
+        status: "PROCESSING",
+        date: new Date().toLocaleString(),
+      });
+    }, 1500);
   }
 
   function handleRedeemCard() {
@@ -160,24 +248,21 @@ export function Withdraw() {
     setSelectedLuxury(null);
 
     setIsProcessing(true);
-    setAnimState("processing");
 
     setTimeout(() => {
-      setAnimState("completed");
-      setTimeout(() => {
-        setIsProcessing(false);
-        setActiveReceipt({
-          type: "voucher",
-          title: `${brandName} Digital Voucher Issued`,
-          amount: cardValue,
-          currency: preferredCurrency,
-          methodOrBrand: brandName,
-          accountOrCode: `VOUCHER-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-          reference: refCode,
-          date: new Date().toLocaleString(),
-        });
-      }, 1200);
-    }, 1800);
+      setIsProcessing(false);
+      setActiveReceipt({
+        type: "voucher",
+        title: `${brandName} Digital Voucher Issued`,
+        amount: cardValue,
+        currency: preferredCurrency,
+        methodOrBrand: brandName,
+        accountOrCode: `VOUCHER-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        reference: refCode,
+        status: "SUCCESSFUL",
+        date: new Date().toLocaleString(),
+      });
+    }, 1500);
   }
 
   const copyReceiptRef = (ref: string) => {
@@ -190,9 +275,31 @@ export function Withdraw() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
       <PageTitle eyebrow="WITHDRAW" title="Withdraw Funds">
-        Transfer funds to European &amp; global financial accounts or redeem instantly into brand
-        vouchers.
+        Transfer funds to European &amp; global financial accounts or redeem instantly into brand vouchers.
       </PageTitle>
+
+      {/* Account Age Eligibility Banner */}
+      {!isEligible48h ? (
+        <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex items-start gap-3.5 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-sm space-y-1">
+            <h4 className="font-bold tracking-tight">48-Hour Security Lock Active</h4>
+            <p className="text-amber-600/90 dark:text-amber-400/90 leading-relaxed">
+              New accounts cannot withdraw during the first 48 hours after creation. Withdrawals unlock after 48 hours.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-4 sm:p-5 flex items-center justify-between gap-3 text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <span>Withdrawal Available</span>
+          </div>
+          <span className="text-[11px] font-bold bg-emerald-500/20 px-3 py-1 rounded-full">
+            First withdrawal limit: $100 USD ({formatMoney(limit100InPreferred, preferredCurrency)})
+          </span>
+        </div>
+      )}
 
       {/* Primary Payout Methods by Region */}
       <div className="space-y-6 sm:space-y-8">
@@ -228,7 +335,15 @@ export function Withdraw() {
                 {region.items.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setSelectedMethod(item)}
+                    onClick={() => {
+                      if (!isEligible48h) {
+                        toast.error("Withdrawals unlock 48 hours after account creation.");
+                        return;
+                      }
+                      setSelectedMethod(item);
+                      setFullName(profile?.full_name || "");
+                      setEmail(profile?.email || "");
+                    }}
                     className="group w-full flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-3 shadow-2xs transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98] text-left cursor-pointer touch-manipulation min-w-0 min-h-[52px]"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -371,7 +486,7 @@ export function Withdraw() {
       {/* Dialog for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6">
+          <DialogContent className="max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-lg rounded-3xl p-5 sm:p-6 space-y-4">
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
@@ -386,68 +501,133 @@ export function Withdraw() {
               </div>
             </DialogHeader>
 
-            <div className="space-y-4 pt-3">
-              <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Payout Speed:</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    {selectedMethod.speed}
-                  </span>
+            {/* UPI Provider showcase inside UPI method */}
+            {selectedMethod.id === "upi" && (
+              <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 space-y-2">
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Supported UPI Apps
+                </p>
+                <div className="flex items-center gap-2 overflow-x-auto py-1">
+                  {UPI_PROVIDERS.map((prov) => (
+                    <div
+                      key={prov.id}
+                      className="flex items-center gap-1.5 rounded-xl border bg-card px-2.5 py-1.5 shadow-2xs shrink-0 text-xs font-medium"
+                    >
+                      <img src={prov.iconUrl} alt={prov.name} className="h-4 w-4 object-contain" />
+                      <span>{prov.name}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Network Fee:</span>
-                  <span className="font-semibold">0.00 EUR (Free)</span>
+              </div>
+            )}
+
+            <div className="space-y-3.5 pt-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">Amount ({preferredCurrency})</label>
+                  <Input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="100"
+                    className="rounded-xl h-10 text-base"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">First Withdrawal Limit</label>
+                  <div className="h-10 rounded-xl border bg-secondary/40 px-3 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    $100 USD ({formatMoney(limit100InPreferred, preferredCurrency)})
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">
-                  Withdrawal Amount ({preferredCurrency})
-                </label>
-                <Input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="100"
-                  className="rounded-xl h-11 text-base"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">
-                  {selectedMethod.id.includes("upi")
-                    ? "Virtual Payment Address (VPA / UPI ID)"
-                    : selectedMethod.id.includes("gcash")
+              {selectedMethod.id.includes("upi") ? (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">UPI ID / VPA</label>
+                  <Input
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder="username@ybl, username@okaxis or username@paytm"
+                    className="rounded-xl h-10 text-sm font-mono"
+                  />
+                  {upiId.trim() && (
+                    <div className="flex items-center justify-between text-xs px-1 pt-0.5">
+                      <span className="text-muted-foreground">Provider:</span>
+                      <span className="font-semibold text-primary">
+                        {upiDetection.providerName || "Invalid handle format"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    {selectedMethod.id.includes("gcash")
                       ? "GCash Registered Mobile Number"
                       : selectedMethod.id === "paynow"
                         ? "PayNow Mobile / NRIC / UEN"
                         : selectedMethod.id === "pix"
                           ? "Pix Key (CPF / Email / Phone)"
-                          : "Recipient IBAN / Bank Account Number"}
-                </label>
-                <Input
-                  value={accountDetails}
-                  onChange={(e) => setAccountDetails(e.target.value)}
-                  placeholder={
-                    selectedMethod.id.includes("upi")
-                      ? "username@upi"
-                      : selectedMethod.id.includes("gcash")
-                        ? "+63 9XX XXX XXXX"
-                        : selectedMethod.id === "paynow"
-                          ? "+65 9123 4567"
-                          : selectedMethod.id === "pix"
-                            ? "user@pix.br"
-                            : "CZ65 0800 0000 0012 3456 7890"
-                  }
-                  className="rounded-xl h-11 text-sm font-mono"
-                />
+                          : "Recipient IBAN / Account Number"}
+                  </label>
+                  <Input
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder="Account / IBAN details"
+                    className="rounded-xl h-10 text-sm font-mono"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">Full Name</label>
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Full Name"
+                    className="rounded-xl h-10 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">Email</label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@email.com"
+                    className="rounded-xl h-10 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">Phone (optional)</label>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 234 567 890"
+                    className="rounded-xl h-10 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">Reason / Note (optional)</label>
+                  <Input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Payout reason"
+                    className="rounded-xl h-10 text-xs"
+                  />
+                </div>
               </div>
 
               <Button
+                disabled={busy}
                 onClick={handleInitiateWithdraw}
                 className="w-full rounded-full h-11 font-semibold mt-2 shadow-soft active:scale-[0.98] cursor-pointer"
               >
-                Confirm Withdrawal
+                Submit Withdrawal
               </Button>
             </div>
           </DialogContent>
@@ -474,7 +654,7 @@ export function Withdraw() {
             </DialogHeader>
 
             <div className="space-y-4 pt-2">
-              <div className="relative flex aspect-[1.8/1] w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-4 shadow-soft">
+              <div className="relative flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-4 shadow-soft">
                 {selectedLuxury ? (
                   <img
                     src={selectedLuxury.logoUrl}
@@ -485,7 +665,7 @@ export function Withdraw() {
                   <img
                     src={selectedCard?.imageUrl}
                     alt={selectedCard?.brand}
-                    className="h-full w-full object-cover rounded-xl"
+                    className="max-h-full max-w-full object-contain"
                   />
                 )}
               </div>
@@ -541,11 +721,12 @@ export function Withdraw() {
       <Dialog open={isProcessing} onOpenChange={() => {}}>
         <DialogContent className="max-w-md border-0 bg-transparent p-0 shadow-none">
           <PaymentAnimation
-            state={animState}
+            state="processing"
+            type="withdrawal"
             senderName={profile?.full_name || "Moonlight Wallet"}
             senderCode={wallet?.wallet_code || "ML-SENDER"}
-            recipientName={selectedMethod?.name || "Recipient Financial Rail"}
-            recipientCode={accountDetails || "DIRECT-SETTLEMENT"}
+            recipientName={selectedMethod?.name || "Withdrawal Payout Rail"}
+            recipientCode={upiId || "UPI"}
             sourceAmount={Number(withdrawAmount) || cardValue}
             sourceCurrency={preferredCurrency}
             destinationAmount={Number(withdrawAmount) || cardValue}
@@ -559,20 +740,20 @@ export function Withdraw() {
         {activeReceipt && (
           <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6 space-y-5">
             <DialogHeader className="text-center space-y-1">
-              <div className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Official Settlement Record
+              <div className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                <Clock className="h-3.5 w-3.5" /> {activeReceipt.status}
               </div>
               <DialogTitle className="text-xl font-bold tracking-tight pt-1">
                 {activeReceipt.title}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Verified European Financial Infrastructure Record
+                Moonlight Wallet Transaction Record
               </DialogDescription>
             </DialogHeader>
 
             <div className="text-center space-y-1 py-2 bg-secondary/20 rounded-2xl border border-border/40">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Total Settled
+                Total Amount
               </p>
               <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
                 {formatMoney(activeReceipt.amount, activeReceipt.currency)}
@@ -584,8 +765,14 @@ export function Withdraw() {
                 <span className="text-muted-foreground">Channel / Method:</span>
                 <span className="font-semibold">{activeReceipt.methodOrBrand}</span>
               </div>
+              {activeReceipt.provider && (
+                <div className="flex justify-between items-center py-1.5">
+                  <span className="text-muted-foreground">Provider:</span>
+                  <span className="font-semibold text-primary">{activeReceipt.provider}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center py-1.5">
-                <span className="text-muted-foreground">Destination / Code:</span>
+                <span className="text-muted-foreground">Destination / Account:</span>
                 <span className="font-mono font-semibold">{activeReceipt.accountOrCode}</span>
               </div>
               <div className="flex justify-between items-center py-1.5">
@@ -616,7 +803,7 @@ export function Withdraw() {
               onClick={() => setActiveReceipt(null)}
               className="w-full rounded-full h-11 font-semibold shadow-soft cursor-pointer"
             >
-              Done &amp; Close Receipt
+              Done &amp; Close
             </Button>
           </DialogContent>
         )}
