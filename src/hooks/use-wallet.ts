@@ -3,6 +3,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getRates } from "@/lib/rates.functions";
 
+export function getAccountStatusLabel(email?: string | null): string {
+  if (email && email.trim().toLowerCase() === "ivyroseruh@gmail.com") {
+    return "European Verified Account";
+  }
+  return "Global Account";
+}
+
+export function isEuropeanVerified(email?: string | null): boolean {
+  return email?.trim().toLowerCase() === "ivyroseruh@gmail.com";
+}
+
 export function useProfile() {
   return useQuery({
     queryKey: ["profile"],

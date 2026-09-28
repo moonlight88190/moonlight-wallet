@@ -1280,6 +1280,34 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
 - **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
+## Configuration & Auth Redirect Setup
+
+### Frontend Environment Variables
+
+Ensure the following environment variables are configured in your deployment platform (Vercel, Lovable Cloud, Cloudflare Pages):
+
+```env
+VITE_SUPABASE_URL="https://your-supabase-project.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="your-supabase-publishable-key"
+```
+
+### Configured Deployment Domains & Supabase Redirect Allow-List
+
+To support dynamic multi-domain authentication across all deployment environments (OAuth callbacks and email confirmation links), register the following origins in your Supabase Dashboard (**Authentication -> URL Configuration -> Redirect URLs**):
+
+1. **Lovable Cloud Preview / Published Domains**:
+   - `https://*.lovable.app`
+   - `https://*.lovableproject.com`
+   - `https://moonlight-wallet.lovable.app`
+2. **Vercel Production Domain**:
+   - `https://moonlight-wallet.vercel.app`
+3. **Local Development**:
+   - `http://localhost:3000` or `http://localhost:5173`
+4. **Any Custom Domain**:
+   - Add any custom domain or preview URL explicitly to the Supabase allow-list.
+
+> **Security Note**: Never use wildcard origins (`*`) in production. The authentication layer relies on dynamic `window.location.origin` resolution paired with Supabase's backend redirect allow-list validation.
+
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).

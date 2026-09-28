@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ShieldCheck, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ShieldCheck, CheckCircle2, Clock, AlertTriangle, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { txView, useWallet } from "@/hooks/use-wallet";
+import {
+  txView,
+  useWallet,
+  useProfile,
+  getAccountStatusLabel,
+  isEuropeanVerified,
+} from "@/hooks/use-wallet";
 import { formatMoney } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/transactions/$id")({
 function Receipt() {
   const { id } = Route.useParams();
   const wallet = useWallet();
+  const profile = useProfile();
   const tx = useQuery({
     queryKey: ["transaction", id],
     queryFn: async () => {
@@ -44,10 +51,11 @@ function Receipt() {
         </Link>
       </div>
     );
-
   const t = tx.data;
   const v = txView(t, wallet.data?.id);
   const d = new Date(t.created_at);
+  const statusLabel = getAccountStatusLabel(profile.data?.email);
+  const verified = isEuropeanVerified(profile.data?.email);
 
   const rows: [string, string][] = [
     [
@@ -94,6 +102,14 @@ function Receipt() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" /> Official European Ledger Record
+          </div>
+          <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground pt-0.5">
+            {verified ? (
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            ) : (
+              <Globe className="h-3.5 w-3.5 text-blue-500" />
+            )}
+            <span>{statusLabel}</span>
           </div>
           <p className="text-xs font-semibold text-muted-foreground tracking-wider uppercase pt-1">
             {v.title}

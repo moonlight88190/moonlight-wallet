@@ -1,4 +1,5 @@
 import React from "react";
+import { Landmark, Gift } from "lucide-react";
 import {
   COUNTRIES,
   CURRENCIES_META,
@@ -122,30 +123,37 @@ export function PaymentMethodIcon({
   size?: "sm" | "md" | "lg";
 }) {
   const method = PAYMENT_METHODS.find((m) => m.id === id);
-  const iconUrl = method?.iconUrl || `/assets/payment-methods/${id}.svg`;
+  const initialUrl = method?.iconUrl || `/assets/payment-methods/${id}.svg`;
+  const [src, setSrc] = React.useState(initialUrl);
+  const [hasRetried, setHasRetried] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
 
-  // Determine asset aspect ratio profile to prevent oversized square containers
-  const isHorizontalLogo = [
-    "upi",
-    "sepa",
-    "faster-payments",
-    "interac",
-    "paynow",
-    "aani",
-    "jp-bank",
-  ].includes(id);
+  React.useEffect(() => {
+    setSrc(initialUrl);
+    setHasRetried(false);
+    setFailed(false);
+  }, [initialUrl]);
 
-  const sizeContainer = isHorizontalLogo
-    ? size === "sm"
-      ? "h-7 w-12 px-1.5 py-0.5"
+  const sizeContainer =
+    size === "sm"
+      ? "h-7 w-10 p-1"
       : size === "lg"
-        ? "h-11 w-20 px-2 py-1"
-        : "h-9 sm:h-10 w-16 sm:w-18 px-2 py-1"
-    : size === "sm"
-      ? "h-7 w-8 p-1"
-      : size === "lg"
-        ? "h-11 w-12 p-2"
-        : "h-9 sm:h-10 w-10 sm:w-11 p-1.5";
+        ? "h-11 w-16 p-2"
+        : "h-9 w-13 sm:h-10 sm:w-14 p-1.5";
+
+  if (failed) {
+    return (
+      <div
+        className={cn(
+          "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-secondary text-muted-foreground shadow-2xs",
+          sizeContainer,
+          className,
+        )}
+      >
+        <Landmark className="h-4 w-4" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -156,15 +164,21 @@ export function PaymentMethodIcon({
       )}
     >
       <img
-        src={iconUrl}
+        src={src}
         alt={method?.name || `${id} payment method`}
         className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-        onError={(e) => {
-          const target = e.currentTarget as HTMLImageElement;
-          if (target.src.endsWith(".svg")) {
-            target.src = target.src.replace(".svg", ".png");
-          } else if (target.src.endsWith(".png")) {
-            target.src = target.src.replace(".png", ".svg");
+        onError={() => {
+          if (!hasRetried) {
+            setHasRetried(true);
+            if (src.endsWith(".png")) {
+              setSrc(src.replace(/\.png$/, ".svg"));
+            } else if (src.endsWith(".svg")) {
+              setSrc(src.replace(/\.svg$/, ".png"));
+            } else {
+              setFailed(true);
+            }
+          } else {
+            setFailed(true);
           }
         }}
       />
@@ -184,6 +198,15 @@ export function GiftCardBrand({
   onClick?: () => void;
 }) {
   const cardData = card || GIFT_CARDS.find((g) => g.id === cardId) || GIFT_CARDS[0]!;
+  const [imgSrc, setImgSrc] = React.useState(cardData.imageUrl);
+  const [hasRetried, setHasRetried] = React.useState(false);
+  const [imgFailed, setImgFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    setImgSrc(cardData.imageUrl);
+    setHasRetried(false);
+    setImgFailed(false);
+  }, [cardData.imageUrl]);
 
   return (
     <div
@@ -197,38 +220,50 @@ export function GiftCardBrand({
         }
       }}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation min-h-[140px]",
         className,
       )}
     >
-      <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
-        <img
-          src={cardData.imageUrl}
-          alt={cardData.brand}
-          className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-          onError={(e) => {
-            const target = e.currentTarget as HTMLImageElement;
-            if (target.src.endsWith(".png") && cardData.logoUrl) {
-              target.src = cardData.logoUrl;
-            }
-          }}
-        />
+      <div className="relative aspect-[1.8/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
+        {!imgFailed ? (
+          <img
+            src={imgSrc}
+            alt={cardData.brand}
+            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            onError={() => {
+              if (!hasRetried && cardData.logoUrl && imgSrc !== cardData.logoUrl) {
+                setHasRetried(true);
+                setImgSrc(cardData.logoUrl);
+              } else if (!hasRetried && imgSrc.endsWith(".png")) {
+                setHasRetried(true);
+                setImgSrc(imgSrc.replace(/\.png$/, ".svg"));
+              } else {
+                setImgFailed(true);
+              }
+            }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide">
+            <Gift className="h-6 w-6 text-amber-400 mb-1" />
+            <span>{cardData.brand}</span>
+          </div>
+        )}
         {cardData.popular && (
           <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs">
             POPULAR
           </span>
         )}
       </div>
-      <div className="mt-2.5 px-0.5">
-        <div className="flex items-center justify-between gap-1">
-          <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate">
+      <div className="mt-2.5 px-0.5 min-w-0">
+        <div className="flex items-center justify-between gap-1 min-w-0">
+          <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate min-w-0 flex-1">
             {cardData.brand}
           </h3>
           <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-full shrink-0">
             {cardData.category}
           </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground leading-snug">
+        <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground leading-snug break-words">
           {cardData.description}
         </p>
       </div>
