@@ -237,7 +237,7 @@ export function Withdraw() {
         status: "PROCESSING",
         date: new Date().toLocaleString(),
       });
-    }, 1500);
+    }, 5200);
   }
 
   function handleRedeemCard() {

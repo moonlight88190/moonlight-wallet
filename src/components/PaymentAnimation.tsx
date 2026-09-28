@@ -38,18 +38,20 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   PLN: "zł",
 };
 
-const TRANSFER_STEPS = [
-  "Connecting to financial corridor...",
-  "Verifying double-entry ledger balance...",
-  "Routing via instant settlement network...",
-  "Settlement confirmed & receipt issued",
-];
-
-const WITHDRAWAL_STEPS = [
-  "Submitting withdrawal to payout corridor...",
-  "Verifying ledger allocation & compliance...",
-  "Queued for payout processing...",
-];
+function getCorridorRailMessage(currency: string, methodCode?: string): string {
+  const code = (methodCode || currency).toUpperCase();
+  if (code.includes("SEPA") || code === "EUR") return "Routing via European SEPA Instant Settlement Node...";
+  if (code.includes("UPI") || code === "INR") return "Routing via NPCI VPA Instant Settlement Rail...";
+  if (code.includes("FASTER") || code === "GBP") return "Routing via UK Faster Payments Network...";
+  if (code.includes("GCASH") || code.includes("INSTAPAY") || code === "PHP") return "Routing via InstaPay Philippines Gateway...";
+  if (code.includes("PAYNOW") || code === "SGD") return "Routing via Singapore PayNow Rail...";
+  if (code.includes("PIX") || code === "BRL") return "Routing via Banco Central do Brasil Pix Rail...";
+  if (code.includes("INTERAC") || code === "CAD") return "Routing via Interac e-Transfer Rail...";
+  if (code.includes("ZENGIN") || code === "JPY") return "Routing via Japanese Zengin Banking Network...";
+  if (code.includes("AANI") || code === "AED") return "Routing via UAE Aani Instant Payout Rail...";
+  if (code === "CZK") return "Routing via Czech CERTIS Clearing Rail...";
+  return "Routing via Global Financial Network...";
+}
 
 export function PaymentAnimation({
   state,
@@ -70,26 +72,61 @@ export function PaymentAnimation({
 }: PaymentAnimationProps) {
   const [stage, setStage] = useState<"confirming" | "processing" | "completed" | "failed">(state);
   const [activeStep, setActiveStep] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
+
+  // Dynamic rail message per transaction
+  const railMessage = getCorridorRailMessage(destinationCurrency, recipientCode);
+
+  const transferSteps = [
+    "1. Confirming transfer details",
+    "2. Validating wallet & account eligibility",
+    `3. ${railMessage}`,
+    "4. Applying double-entry ledger transaction",
+    "5. Finalizing cryptographic ledger entry",
+    "6. Settlement complete & receipt issued",
+  ];
+
+  const withdrawalSteps = [
+    "1. Submitting payout request",
+    "2. Validating account age & balance",
+    `3. ${railMessage}`,
+    "4. Allocating ledger balance deduction",
+    "5. Transmitting payload to clearing house",
+    "6. Withdrawal queued & processing",
+  ];
+
+  const steps = type === "withdrawal" ? withdrawalSteps : transferSteps;
 
   useEffect(() => {
     setStage(state);
     if (state === "processing") {
       setActiveStep(0);
-      const timer1 = setTimeout(() => setActiveStep(1), 600);
-      const timer2 = setTimeout(() => setActiveStep(2), 1200);
+      setProgressPercent(10);
+
+      const t1 = setTimeout(() => { setActiveStep(1); setProgressPercent(28); }, 900);
+      const t2 = setTimeout(() => { setActiveStep(2); setProgressPercent(48); }, 1800);
+      const t3 = setTimeout(() => { setActiveStep(3); setProgressPercent(68); }, 2800);
+      const t4 = setTimeout(() => { setActiveStep(4); setProgressPercent(86); }, 3800);
+      const t5 = setTimeout(() => { setActiveStep(5); setProgressPercent(100); }, 4800);
+
       return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+        clearTimeout(t5);
       };
     } else if (state === "completed") {
-      setActiveStep(3);
+      setActiveStep(5);
+      setProgressPercent(100);
+    } else if (state === "failed") {
+      setProgressPercent(100);
     }
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
   const destSymbol = CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
-  const steps = type === "withdrawal" ? WITHDRAWAL_STEPS : TRANSFER_STEPS;
 
   return (
     <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-300">
@@ -162,22 +199,26 @@ export function PaymentAnimation({
         </div>
       </div>
 
-      {/* Dynamic Amount / Status Display */}
-      <div className="mt-2 text-center">
-        {type === "withdrawal" && stage === "processing" ? (
-          <div className="animate-in fade-in duration-300">
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              {formatMoney(sourceAmount, sourceCurrency)}
-            </h2>
-            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full">
-              <Clock className="h-3.5 w-3.5" /> Withdrawal Processing
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground max-w-xs mx-auto">
-              Submitted successfully. Status is actively tracked in your account.
-            </p>
+      {/* Visual Progress Bar & Stage Indicator */}
+      {stage === "processing" && (
+        <div className="w-full space-y-2.5 my-2">
+          <div className="flex justify-between items-center text-[11px] font-semibold text-muted-foreground px-1">
+            <span>Stage {activeStep + 1} of {steps.length}</span>
+            <span className="font-mono text-primary">{progressPercent}%</span>
           </div>
-        ) : stage === "completed" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Amount / Status Display */}
+      <div className="mt-2 text-center w-full">
+        {stage === "completed" ? (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-1">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
               {formatMoney(destinationAmount, destinationCurrency)}
             </h2>
@@ -195,13 +236,13 @@ export function PaymentAnimation({
             </p>
           </div>
         ) : (
-          <div>
+          <div className="space-y-2">
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
               {formatMoney(sourceAmount, sourceCurrency)}
             </h2>
-            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Activity className="h-3.5 w-3.5 animate-pulse text-primary" />
-              <span>{steps[activeStep] || steps[0]}</span>
+            <div className="flex items-center justify-center gap-2 text-xs font-medium text-foreground bg-secondary/80 border border-border/50 py-2 px-3 rounded-2xl animate-in fade-in">
+              <Activity className="h-3.5 w-3.5 animate-pulse text-primary shrink-0" />
+              <span className="truncate">{steps[activeStep]}</span>
             </div>
           </div>
         )}
