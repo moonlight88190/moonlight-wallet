@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, AlertCircle, ArrowRight, RefreshCw, Receipt } from "lucide-react";
+import { Check, AlertCircle, ArrowRight, RefreshCw, Receipt, ShieldCheck, Activity } from "lucide-react";
 import { CountryFlag } from "@/components/AssetComponents";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,13 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   PLN: "zł",
 };
 
+const STEPS = [
+  "Connecting to financial corridor...",
+  "Verifying double-entry ledger balance...",
+  "Routing via instant settlement network...",
+  "Settlement confirmed & receipt issued",
+];
+
 export function PaymentAnimation({
   state,
   senderName,
@@ -54,9 +61,21 @@ export function PaymentAnimation({
   onViewReceipt,
 }: PaymentAnimationProps) {
   const [stage, setStage] = useState<"confirming" | "processing" | "completed" | "failed">(state);
+  const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
     setStage(state);
+    if (state === "processing") {
+      setActiveStep(0);
+      const timer1 = setTimeout(() => setActiveStep(1), 600);
+      const timer2 = setTimeout(() => setActiveStep(2), 1200);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    } else if (state === "completed") {
+      setActiveStep(3);
+    }
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
@@ -140,9 +159,9 @@ export function PaymentAnimation({
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
               {formatMoney(destinationAmount, destinationCurrency)}
             </h2>
-            <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              Transfer Completed
-            </p>
+            <div className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
+              <ShieldCheck className="h-3.5 w-3.5" /> Official European Settlement
+            </div>
           </div>
         ) : stage === "failed" ? (
           <div className="animate-in fade-in duration-300">
@@ -158,12 +177,29 @@ export function PaymentAnimation({
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
               {formatMoney(sourceAmount, sourceCurrency)}
             </h2>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">
-              {stage === "confirming" ? "Confirming transfer..." : "Processing transfer..."}
-            </p>
+            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Activity className="h-3.5 w-3.5 animate-pulse text-primary" />
+              <span>{STEPS[activeStep]}</span>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Multi-step Rail Settlement Indicator Bar */}
+      {stage === "processing" && (
+        <div className="mt-4 w-full space-y-1.5">
+          <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+            <span>Rail Handshake</span>
+            <span>{Math.min(100, Math.round(((activeStep + 1) / 3) * 100))}%</span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full bg-primary transition-all duration-500 rounded-full"
+              style={{ width: `${Math.min(100, Math.round(((activeStep + 1) / 3) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Recipient Details & Cross Currency FX */}
       <div className="mt-6 w-full rounded-2xl border border-border/50 bg-secondary/30 p-4 space-y-2.5 text-xs">
