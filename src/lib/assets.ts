@@ -14,6 +14,12 @@ export interface CurrencyMeta {
   flagUrl: string;
 }
 
+export interface BankMeta {
+  id: string;
+  name: string;
+  logoUrl: string;
+}
+
 export interface PaymentMethodMeta {
   id: string;
   name: string;
@@ -313,10 +319,66 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi",
     name: "UPI Direct",
     description: "Instant payout via Virtual Payment Address (VPA)",
-    iconUrl: "/assets/payment-methods/upi.svg",
+    iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
     badge: "NPCI Official",
+  },
+  {
+    id: "google-pay",
+    name: "Google Pay",
+    description: "Instant UPI payout to Google Pay VPA",
+    iconUrl: "/assets/payment-methods/google-pay.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "phonepe",
+    name: "PhonePe",
+    description: "Instant payout to PhonePe account",
+    iconUrl: "/assets/payment-methods/phonepe.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "paytm",
+    name: "Paytm",
+    description: "Instant payout to Paytm wallet or UPI",
+    iconUrl: "/assets/payment-methods/paytm.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "bhim",
+    name: "BHIM UPI",
+    description: "Official NPCI BHIM UPI payout",
+    iconUrl: "/assets/payment-methods/bhim.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "amazon-pay",
+    name: "Amazon Pay",
+    description: "Instant payout to Amazon Pay account",
+    iconUrl: "/assets/payment-methods/amazon-pay.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Pay",
+    description: "Instant payout via WhatsApp Pay UPI",
+    iconUrl: "/assets/payment-methods/whatsapp.png",
+    region: "India",
+    speed: "Instant",
+  },
+  {
+    id: "airtel-payments-bank",
+    name: "Airtel Payments Bank",
+    description: "Payout to Airtel Payments Bank account",
+    iconUrl: "/assets/payment-methods/airtel-payments-bank.png",
+    region: "India",
+    speed: "Instant",
   },
   {
     id: "upi-qr",
@@ -412,8 +474,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "amazon",
     brand: "Amazon",
     category: "Shopping",
-    imageUrl: "/assets/gift-cards/amazon.svg",
-    logoUrl: "/assets/gift-cards/amazon.svg",
+    imageUrl: "/assets/gift-cards/amazon.png",
+    logoUrl: "/assets/gift-cards/amazon.png",
     description: "Digital voucher redeemable for millions of products worldwide",
     popular: true,
   },
@@ -421,8 +483,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "apple",
     brand: "Apple",
     category: "Entertainment",
-    imageUrl: "/assets/gift-cards/apple.svg",
-    logoUrl: "/assets/gift-cards/apple.svg",
+    imageUrl: "/assets/gift-cards/apple.png",
+    logoUrl: "/assets/gift-cards/apple.png",
     description: "Valid for App Store, Apple Music, iCloud & Apple Store products",
     popular: true,
   },
@@ -430,8 +492,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "google-play",
     brand: "Google Play",
     category: "Entertainment",
-    imageUrl: "/assets/gift-cards/google-play.svg",
-    logoUrl: "/assets/gift-cards/google-play.svg",
+    imageUrl: "/assets/gift-cards/google-play.png",
+    logoUrl: "/assets/gift-cards/google-play.png",
     description: "Apps, games, movies and digital content on Android",
     popular: true,
   },
@@ -439,8 +501,8 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "steam",
     brand: "Steam",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/steam.svg",
-    logoUrl: "/assets/gift-cards/steam.svg",
+    imageUrl: "/assets/gift-cards/steam.png",
+    logoUrl: "/assets/gift-cards/steam.png",
     description: "Steam Wallet credits for thousands of PC games and DLCs",
     popular: true,
   },
@@ -448,16 +510,16 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "playstation",
     brand: "PlayStation Store",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/playstation.svg",
-    logoUrl: "/assets/gift-cards/playstation.svg",
+    imageUrl: "/assets/gift-cards/playstation.png",
+    logoUrl: "/assets/gift-cards/playstation.png",
     description: "PSN funds for PlayStation consoles, subscriptions & games",
   },
   {
     id: "xbox",
     brand: "Xbox",
     category: "Gaming",
-    imageUrl: "/assets/gift-cards/xbox.svg",
-    logoUrl: "/assets/gift-cards/xbox.svg",
+    imageUrl: "/assets/gift-cards/xbox.png",
+    logoUrl: "/assets/gift-cards/xbox.png",
     description: "Xbox Game Pass, games and add-ons on console and PC",
   },
 ];
@@ -595,6 +657,34 @@ export const LUXURY_BRANDS: LuxuryBrandMeta[] = [
     category: "Modern Elegance",
     logoUrl: "/assets/luxury/brands/tom-ford.svg",
     photoUrl: "/assets/luxury/photos/fashion.jpg",
+  },
+];
+
+export const INDIAN_BANKS: BankMeta[] = [
+  {
+    id: "sbi",
+    name: "State Bank of India",
+    logoUrl: "/assets/banks/sbi.png",
+  },
+  {
+    id: "hdfc",
+    name: "HDFC Bank",
+    logoUrl: "/assets/banks/hdfc-bank.png",
+  },
+  {
+    id: "icici",
+    name: "ICICI Bank",
+    logoUrl: "/assets/banks/icici-bank.png",
+  },
+  {
+    id: "axis",
+    name: "Axis Bank",
+    logoUrl: "/assets/banks/axis-bank.png",
+  },
+  {
+    id: "yes-bank",
+    name: "YES BANK",
+    logoUrl: "/assets/banks/yes-bank.jpg",
   },
 ];
 
