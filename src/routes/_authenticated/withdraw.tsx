@@ -124,13 +124,6 @@ export function Withdraw() {
       return;
     }
 
-    if (trimmedAccount === "4336") {
-      setSelectedMethod(null);
-      setAccountDetails("");
-      navigate({ to: "/admin-access" });
-      return;
-    }
-
     const method = selectedMethod;
     const amt = Number(withdrawAmount) || 100;
     const refCode = `ML-WD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;

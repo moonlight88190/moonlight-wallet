@@ -123,16 +123,12 @@ export function PaymentMethodIcon({
   size?: "sm" | "md" | "lg";
 }) {
   const method = PAYMENT_METHODS.find((m) => m.id === id);
-  const initialUrl = method?.iconUrl || `/assets/payment-methods/${id}.svg`;
-  const [src, setSrc] = React.useState(initialUrl);
-  const [hasRetried, setHasRetried] = React.useState(false);
+  const iconUrl = method?.iconUrl || `/assets/payment-methods/${id}.png`;
   const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
-    setSrc(initialUrl);
-    setHasRetried(false);
     setFailed(false);
-  }, [initialUrl]);
+  }, [iconUrl]);
 
   const sizeContainer =
     size === "sm"
@@ -164,23 +160,10 @@ export function PaymentMethodIcon({
       )}
     >
       <img
-        src={src}
+        src={iconUrl}
         alt={method?.name || `${id} payment method`}
         className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-        onError={() => {
-          if (!hasRetried) {
-            setHasRetried(true);
-            if (src.endsWith(".png")) {
-              setSrc(src.replace(/\.png$/, ".svg"));
-            } else if (src.endsWith(".svg")) {
-              setSrc(src.replace(/\.svg$/, ".png"));
-            } else {
-              setFailed(true);
-            }
-          } else {
-            setFailed(true);
-          }
-        }}
+        onError={() => setFailed(true)}
       />
     </div>
   );
@@ -198,13 +181,9 @@ export function GiftCardBrand({
   onClick?: () => void;
 }) {
   const cardData = card || GIFT_CARDS.find((g) => g.id === cardId) || GIFT_CARDS[0]!;
-  const [imgSrc, setImgSrc] = React.useState(cardData.imageUrl);
-  const [hasRetried, setHasRetried] = React.useState(false);
   const [imgFailed, setImgFailed] = React.useState(false);
 
   React.useEffect(() => {
-    setImgSrc(cardData.imageUrl);
-    setHasRetried(false);
     setImgFailed(false);
   }, [cardData.imageUrl]);
 
@@ -227,20 +206,10 @@ export function GiftCardBrand({
       <div className="relative aspect-[1.8/1] w-full overflow-hidden rounded-xl bg-slate-950/80 p-2.5 flex items-center justify-center">
         {!imgFailed ? (
           <img
-            src={imgSrc}
+            src={cardData.imageUrl}
             alt={cardData.brand}
             className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-            onError={() => {
-              if (!hasRetried && cardData.logoUrl && imgSrc !== cardData.logoUrl) {
-                setHasRetried(true);
-                setImgSrc(cardData.logoUrl);
-              } else if (!hasRetried && imgSrc.endsWith(".png")) {
-                setHasRetried(true);
-                setImgSrc(imgSrc.replace(/\.png$/, ".svg"));
-              } else {
-                setImgFailed(true);
-              }
-            }}
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide">
