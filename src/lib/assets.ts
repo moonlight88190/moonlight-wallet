@@ -30,6 +30,13 @@ export interface PaymentMethodMeta {
   badge?: string;
 }
 
+export interface UPIProviderMeta {
+  id: string;
+  name: string;
+  iconUrl: string;
+  handles: string[];
+}
+
 export interface GiftCardMeta {
   id: string;
   brand: string;
@@ -318,72 +325,16 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
   {
     id: "upi",
     name: "UPI Direct",
-    description: "Instant payout via Virtual Payment Address (VPA)",
+    description: "Instant payout via Virtual Payment Address (VPA / UPI ID)",
     iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
     badge: "NPCI Official",
   },
   {
-    id: "google-pay",
-    name: "Google Pay",
-    description: "Instant UPI payout to Google Pay VPA",
-    iconUrl: "/assets/payment-methods/google-pay.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "phonepe",
-    name: "PhonePe",
-    description: "Instant payout to PhonePe account",
-    iconUrl: "/assets/payment-methods/phonepe.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "paytm",
-    name: "Paytm",
-    description: "Instant payout to Paytm wallet or UPI",
-    iconUrl: "/assets/payment-methods/paytm.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "bhim",
-    name: "BHIM UPI",
-    description: "Official NPCI BHIM UPI payout",
-    iconUrl: "/assets/payment-methods/bhim.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "amazon-pay",
-    name: "Amazon Pay",
-    description: "Instant payout to Amazon Pay account",
-    iconUrl: "/assets/payment-methods/amazon-pay.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "whatsapp",
-    name: "WhatsApp Pay",
-    description: "Instant payout via WhatsApp Pay UPI",
-    iconUrl: "/assets/payment-methods/whatsapp.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
-    id: "airtel-payments-bank",
-    name: "Airtel Payments Bank",
-    description: "Payout to Airtel Payments Bank account",
-    iconUrl: "/assets/payment-methods/airtel-payments-bank.png",
-    region: "India",
-    speed: "Instant",
-  },
-  {
     id: "upi-qr",
     name: "UPI QR Code",
-    description: "Scan & pay via PhonePe, Google Pay or Paytm",
+    description: "Scan & pay via Google Pay, PhonePe or Paytm",
     iconUrl: "/assets/payment-methods/upi-qr.svg",
     region: "India",
     speed: "Instant",
@@ -466,6 +417,39 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "1-2 business days",
     badge: "Global Payout",
+  },
+];
+
+export const UPI_PROVIDERS: UPIProviderMeta[] = [
+  {
+    id: "google-pay",
+    name: "Google Pay",
+    iconUrl: "/assets/payment-methods/google-pay.png",
+    handles: ["@okaxis", "@okhdfcbank", "@okicici", "@oksbi", "@gpay"],
+  },
+  {
+    id: "phonepe",
+    name: "PhonePe",
+    iconUrl: "/assets/payment-methods/phonepe.png",
+    handles: ["@ybl", "@ibl", "@axl"],
+  },
+  {
+    id: "paytm",
+    name: "Paytm",
+    iconUrl: "/assets/payment-methods/paytm.png",
+    handles: ["@paytm", "@paytmqr"],
+  },
+  {
+    id: "bhim",
+    name: "BHIM UPI",
+    iconUrl: "/assets/payment-methods/bhim.png",
+    handles: ["@upi", "@bhim"],
+  },
+  {
+    id: "amazon-pay",
+    name: "Amazon Pay",
+    iconUrl: "/assets/payment-methods/amazon-pay.png",
+    handles: ["@apl", "@amazon"],
   },
 ];
 

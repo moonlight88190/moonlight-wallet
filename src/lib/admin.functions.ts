@@ -100,3 +100,114 @@ export const adminAddBalance = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { transactionId: txId as string };
   });
+
+export const adminRemoveBalance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        walletCode: z
+          .string()
+          .trim()
+          .regex(/^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/i, "Enter a wallet ID like ML-7F82-29AX"),
+        currency: z.enum(["USD", "EUR", "GBP", "INR", "PHP", "SGD", "AUD", "CAD", "JPY", "CHF"]),
+        amount: z.number().positive().max(100_000_000),
+        reason: z.string().trim().min(3).max(200),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired. Enter the access code again.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: txId, error } = await supabaseAdmin.rpc("admin_debit", {
+      p_actor: context.userId,
+      p_wallet_code: data.walletCode.toUpperCase(),
+      p_amount: data.amount,
+      p_currency: data.currency,
+      p_reason: data.reason,
+    });
+    if (error) throw new Error(error.message);
+    return { transactionId: txId as string };
+  });
+
+export const adminSetFreeze = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        walletCode: z.string().trim(),
+        freeze: z.boolean(),
+        reason: z.string().trim().max(200).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("admin_set_wallet_freeze", {
+      p_actor: context.userId,
+      p_wallet_code: data.walletCode.toUpperCase(),
+      p_freeze: data.freeze,
+      p_reason: data.reason || "",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminSetRegion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        walletCode: z.string().trim(),
+        region: z.enum(["GLOBAL", "EUROPE", "INDIA", "PHILIPPINES"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("admin_set_profile_region", {
+      p_actor: context.userId,
+      p_wallet_code: data.walletCode.toUpperCase(),
+      p_region: data.region,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        withdrawalId: z.string().uuid(),
+        status: z.enum(["PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"]),
+        reason: z.string().trim().min(3).max(200),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("admin_update_withdrawal_status", {
+      p_actor: context.userId,
+      p_withdrawal_id: data.withdrawalId,
+      p_new_status: data.status,
+      p_reason: data.reason,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
