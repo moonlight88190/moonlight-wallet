@@ -10,7 +10,6 @@ import {
   Check,
   Clock,
   AlertTriangle,
-  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,7 +25,7 @@ import {
   type LuxuryBrandMeta,
   type PaymentMethodMeta,
 } from "@/lib/assets";
-import { formatMoney, convert } from "@/lib/currency";
+import { formatMoney } from "@/lib/currency";
 import { useProfile, useWallet, useRates } from "@/hooks/use-wallet";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -228,7 +227,7 @@ export function Withdraw() {
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
 
-    const refCode = `MLW-${wdId.substring(0, 8).toUpperCase()}`;
+    const refCode = `MLW-${(wdId as string).substring(0, 8).toUpperCase()}`;
     const chosenMethod = selectedMethod;
 
     setSelectedMethod(null);
@@ -288,7 +287,7 @@ export function Withdraw() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
+    <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12 pb-12">
       <PageTitle eyebrow="WITHDRAW" title="Withdraw Funds">
         Transfer funds to European &amp; global financial accounts or redeem instantly into brand
         vouchers.
@@ -500,10 +499,13 @@ export function Withdraw() {
         )}
       </div>
 
-      {/* Dialog for Withdrawal Method */}
+      {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-lg rounded-3xl p-5 sm:p-6 space-y-4">
+          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 space-y-4 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+            {/* Grab Handle for Mobile Bottom Sheet Feel */}
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
@@ -538,25 +540,27 @@ export function Withdraw() {
               </div>
             )}
 
-            <div className="space-y-3.5 pt-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+            <div className="space-y-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
                     Amount ({preferredCurrency})
                   </label>
                   <Input
                     type="number"
+                    inputMode="decimal"
+                    pattern="[0-9]*"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     placeholder="100"
-                    className="rounded-xl h-10 text-base"
+                    className="rounded-xl h-12 text-base font-medium"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
                     First Withdrawal Limit
                   </label>
-                  <div className="h-10 rounded-xl border bg-secondary/40 px-3 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <div className="h-12 rounded-xl border bg-secondary/40 px-3 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
                     $100 USD ({formatMoney(limit100InPreferred, preferredCurrency)})
                   </div>
                 </div>
@@ -571,7 +575,7 @@ export function Withdraw() {
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="username@ybl, username@okaxis or username@paytm"
-                    className="rounded-xl h-10 text-sm font-mono"
+                    className="rounded-xl h-12 text-base sm:text-sm font-mono"
                   />
                   {upiId.trim() && (
                     <div className="flex items-center justify-between text-xs px-1 pt-0.5">
@@ -597,46 +601,50 @@ export function Withdraw() {
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="Account / IBAN details"
-                    className="rounded-xl h-10 text-sm font-mono"
+                    className="rounded-xl h-12 text-base sm:text-sm font-mono"
                   />
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">Full Name</label>
                   <Input
                     value={fullName}
+                    autoComplete="name"
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Full Name"
-                    className="rounded-xl h-10 text-xs"
+                    className="rounded-xl h-12 text-base sm:text-sm"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">Email</label>
                   <Input
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@email.com"
-                    className="rounded-xl h-10 text-xs"
+                    className="rounded-xl h-12 text-base sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
                     Phone (optional)
                   </label>
                   <Input
+                    type="tel"
+                    autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+1 234 567 890"
-                    className="rounded-xl h-10 text-xs"
+                    className="rounded-xl h-12 text-base sm:text-sm"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
                     Reason / Note (optional)
                   </label>
@@ -644,18 +652,20 @@ export function Withdraw() {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Payout reason"
-                    className="rounded-xl h-10 text-xs"
+                    className="rounded-xl h-12 text-base sm:text-sm"
                   />
                 </div>
               </div>
 
-              <Button
-                disabled={busy}
-                onClick={handleInitiateWithdraw}
-                className="w-full rounded-full h-11 font-semibold mt-2 shadow-soft active:scale-[0.98] cursor-pointer"
-              >
-                Submit Withdrawal
-              </Button>
+              <div className="sticky bottom-0 pt-2 bg-background/95 backdrop-blur-xs">
+                <Button
+                  disabled={busy}
+                  onClick={handleInitiateWithdraw}
+                  className="w-full rounded-full h-12 text-base font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
+                >
+                  Submit Withdrawal
+                </Button>
+              </div>
             </div>
           </DialogContent>
         )}
@@ -670,7 +680,10 @@ export function Withdraw() {
         }}
       >
         {(selectedCard || selectedLuxury) && (
-          <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6">
+          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+            {/* Grab Handle for Mobile */}
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+
             <DialogHeader>
               <DialogTitle className="text-base sm:text-lg font-semibold">
                 {selectedCard?.brand || selectedLuxury?.name} Voucher
@@ -701,12 +714,12 @@ export function Withdraw() {
                 <label className="text-xs font-semibold text-muted-foreground">
                   Select Voucher Denomination ({preferredCurrency})
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[50, 100, 250, 500].map((val) => (
                     <button
                       key={val}
                       onClick={() => setCardValue(val)}
-                      className={`rounded-xl py-2.5 min-h-[44px] text-xs font-semibold border transition-all active:scale-[0.97] cursor-pointer touch-manipulation ${
+                      className={`rounded-xl py-2.5 min-h-[48px] text-xs font-semibold border transition-all active:scale-[0.97] cursor-pointer touch-manipulation ${
                         cardValue === val
                           ? "border-primary bg-primary/10 text-primary shadow-2xs"
                           : "border-border/60 bg-card hover:bg-accent text-foreground"
@@ -718,7 +731,7 @@ export function Withdraw() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border bg-secondary/30 p-3 space-y-1.5 text-xs">
+              <div className="rounded-2xl border bg-secondary/30 p-3.5 space-y-2 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Voucher Cost:</span>
                   <span className="font-semibold text-foreground">
@@ -735,7 +748,7 @@ export function Withdraw() {
 
               <Button
                 onClick={handleRedeemCard}
-                className="w-full rounded-full h-11 font-semibold shadow-soft active:scale-[0.98] cursor-pointer"
+                className="w-full rounded-full h-12 text-base font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
               >
                 Acquire for {formatMoney(cardValue, preferredCurrency)}
               </Button>
@@ -765,7 +778,10 @@ export function Withdraw() {
       {/* Official Transaction Receipt Modal */}
       <Dialog open={!!activeReceipt} onOpenChange={() => setActiveReceipt(null)}>
         {activeReceipt && (
-          <DialogContent className="max-h-[88vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6 space-y-5">
+          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 space-y-5 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+            {/* Grab handle for mobile */}
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+
             <DialogHeader className="text-center space-y-1">
               <div className="mx-auto inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
                 <Clock className="h-3.5 w-3.5" /> {activeReceipt.status}
@@ -778,33 +794,33 @@ export function Withdraw() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="text-center space-y-1 py-2 bg-secondary/20 rounded-2xl border border-border/40">
+            <div className="text-center space-y-1 py-3 bg-secondary/20 rounded-2xl border border-border/40">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Total Amount
               </p>
-              <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
+              <h2 className="text-3xl font-mono font-semibold text-foreground tracking-tight">
                 {formatMoney(activeReceipt.amount, activeReceipt.currency)}
               </h2>
             </div>
 
-            <div className="space-y-2 text-xs divide-y border-t border-b py-2">
-              <div className="flex justify-between items-center py-1.5">
+            <div className="space-y-1 text-xs divide-y border-t border-b border-border/50 py-1">
+              <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Channel / Method:</span>
-                <span className="font-semibold">{activeReceipt.methodOrBrand}</span>
+                <span className="font-semibold text-foreground">{activeReceipt.methodOrBrand}</span>
               </div>
               {activeReceipt.provider && (
-                <div className="flex justify-between items-center py-1.5">
+                <div className="flex justify-between items-center py-2.5">
                   <span className="text-muted-foreground">Provider:</span>
                   <span className="font-semibold text-primary">{activeReceipt.provider}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center py-1.5">
+              <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Destination / Account:</span>
-                <span className="font-mono font-semibold">{activeReceipt.accountOrCode}</span>
+                <span className="font-mono font-semibold text-foreground">{activeReceipt.accountOrCode}</span>
               </div>
-              <div className="flex justify-between items-center py-1.5">
+              <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Date &amp; Time:</span>
-                <span className="font-medium">{activeReceipt.date}</span>
+                <span className="font-medium text-foreground">{activeReceipt.date}</span>
               </div>
             </div>
 
@@ -819,23 +835,25 @@ export function Withdraw() {
               </div>
               <button
                 onClick={() => copyReceiptRef(activeReceipt.reference)}
-                className="flex h-9 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
+                className="flex h-10 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
               >
                 {refCopied ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <Check className="h-4 w-4 text-emerald-500" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 )}
                 {refCopied ? "Copied" : "Copy"}
               </button>
             </div>
 
-            <Button
-              onClick={() => setActiveReceipt(null)}
-              className="w-full rounded-full h-11 font-semibold shadow-soft cursor-pointer"
-            >
-              Done &amp; Close
-            </Button>
+            <div className="sticky bottom-0 pt-2 bg-background/95 backdrop-blur-xs">
+              <Button
+                onClick={() => setActiveReceipt(null)}
+                className="w-full rounded-full h-12 text-base font-semibold shadow-soft cursor-pointer touch-manipulation"
+              >
+                Done &amp; Close
+              </Button>
+            </div>
           </DialogContent>
         )}
       </Dialog>
