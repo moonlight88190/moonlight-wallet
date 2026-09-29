@@ -144,14 +144,15 @@ function Admin() {
     if (!token) return;
     setLoading(true);
     try {
-      const [o, l, w] = await Promise.all([
+      const [oRes, lRes, wRes] = await Promise.allSettled([
         overviewFn({ data: { token } }),
         listFn({ data: { token } }),
         listWithdrawalsFn({ data: { token } }),
       ]);
-      setOverview(o);
-      setUsers(l.users as AdminUser[]);
-      setWithdrawals(w.withdrawals as WithdrawalItem[]);
+
+      if (oRes.status === "fulfilled") setOverview(oRes.value);
+      if (lRes.status === "fulfilled") setUsers(lRes.value.users as AdminUser[]);
+      if (wRes.status === "fulfilled") setWithdrawals(wRes.value.withdrawals as WithdrawalItem[]);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
