@@ -1,1006 +1,488 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Loader2,
+  LayoutGrid,
+  Wallet,
   Users,
-  CreditCard,
-  ArrowUpRight,
-  ArrowDownLeft,
+  ShieldCheck,
+  LogOut,
   Search,
-  Activity,
   Snowflake,
   Sun,
-  Globe,
-  Filter,
-  Eye,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ShieldAlert,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   checkAdminToken,
+  adminOverview,
   adminAddBalance,
   adminRemoveBalance,
   adminSetFreeze,
   adminSetRegion,
   adminListUsers,
-  adminSetAccountAge,
-  adminUpdateWithdrawalStatus,
 } from "@/lib/admin.functions";
-import { CURRENCIES, type CurrencyCode, formatMoney } from "@/lib/currency";
-import { PageTitle } from "@/components/AppShell";
-import { supabase } from "@/integrations/supabase/client";
-import { PaymentMethodIcon } from "@/components/AssetComponents";
+import { formatMoney } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin Panel — Moonlight" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin Dashboard — Moonlight" },
+      { name: "description", content: "Moonlight internal operations dashboard." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: Admin,
 });
 
-export function Admin() {
+const ADMIN_CURRENCIES = ["USD", "EUR", "GBP", "INR", "PHP", "SGD", "AUD", "CAD", "JPY", "CHF"] as const;
+const REGIONS = ["GLOBAL", "EUROPE", "INDIA", "PHILIPPINES"] as const;
+type Section = "overview" | "balance" | "users" | "controls";
+const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
+  { id: "overview", label: "Overview", icon: LayoutGrid },
+  { id: "balance", label: "Balance Control", icon: Wallet },
+  { id: "users", label: "Users", icon: Users },
+  { id: "controls", label: "Account Controls", icon: ShieldCheck },
+];
+
+type AdminUser = {
+  id: string;
+  user_id: string;
+  wallet_code: string;
+  balance_usd: number;
+  status: string;
+  is_frozen: boolean;
+  full_name: string;
+  email: string;
+  region: string;
+  created_at: string;
+  account_age_days: number;
+  activity_count: number;
+};
+type Overview = Awaited<ReturnType<typeof adminOverview>>;
+
+function Admin() {
   const navigate = useNavigate();
   const check = useServerFn(checkAdminToken);
-  const addBal = useServerFn(adminAddBalance);
-  const remBal = useServerFn(adminRemoveBalance);
-  const setFrz = useServerFn(adminSetFreeze);
-  const setReg = useServerFn(adminSetRegion);
-  const listUsersFn = useServerFn(adminListUsers);
-  const setAccountAgeFn = useServerFn(adminSetAccountAge);
-  const updateWd = useServerFn(adminUpdateWithdrawalStatus);
-
-  const [ok, setOk] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "balance" | "users" | "withdrawals" | "search" | "activity"
-  >("withdrawals");
-
-  // Balance Adjustments State
-  const [balanceForm, setBalanceForm] = useState({
-    type: "add" as "add" | "remove",
-    walletCode: "",
-    currency: "USD" as CurrencyCode,
-    amount: "",
-    reason: "",
-  });
-  const [balanceBusy, setBalanceBusy] = useState(false);
-
-  // Users State
-  const [users, setUsers] = useState<any[]>([]);
-  const [userQuery, setUserQuery] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [editAgeHours, setEditAgeHours] = useState<string>("");
-  const [updatingAge, setUpdatingAge] = useState(false);
-  const [userTxHistory, setUserTxHistory] = useState<any[]>([]);
-  const [loadingUserTx, setLoadingUserTx] = useState(false);
-
-  // Withdrawals State
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [loadingWd, setLoadingWd] = useState(false);
-  const [wdFilter, setWdFilter] = useState<string>("ALL");
-  const [wdQuery, setWdQuery] = useState<string>("");
-  const [selectedWd, setSelectedWd] = useState<any | null>(null);
-  const [statusReason, setStatusReason] = useState("");
-  const [statusBusy, setStatusBusy] = useState(false);
-
-  // Global Search State
-  const [globalQuery, setGlobalQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<{
-    users: any[];
-    withdrawals: any[];
-    transactions: any[];
-  }>({ users: [], withdrawals: [], transactions: [] });
-  const [searchingGlobal, setSearchingGlobal] = useState(false);
-
-  // Activity Log State
-  const [activities, setActivities] = useState<any[]>([]);
-  const [loadingActivities, setLoadingActivities] = useState(false);
-
-  const adminToken = typeof window !== "undefined" ? sessionStorage.getItem("ml_admin_token") ?? "" : "";
+  const overviewFn = useServerFn(adminOverview);
+  const listFn = useServerFn(adminListUsers);
+  const [token, setToken] = useState<string | null>(null);
+  const [section, setSection] = useState<Section>("overview");
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (adminToken === "ml_authorized_4336") {
-      setOk(true);
+    const t = sessionStorage.getItem("ml_admin_token");
+    if (!t) {
+      navigate({ to: "/admin-access" });
       return;
     }
-    check({ data: { token: adminToken } })
-      .then((r) => (r.ok ? setOk(true) : navigate({ to: "/admin-access" })))
+    check({ data: { token: t } })
+      .then((r) => {
+        if (r.ok) setToken(t);
+        else {
+          sessionStorage.removeItem("ml_admin_token");
+          navigate({ to: "/admin-access" });
+        }
+      })
       .catch(() => navigate({ to: "/admin-access" }));
-  }, [check, navigate, adminToken]);
+  }, [check, navigate]);
 
-  // Load section data when tab changes
+  const refresh = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const [o, l] = await Promise.all([
+        overviewFn({ data: { token } }),
+        listFn({ data: { token } }),
+      ]);
+      setOverview(o);
+      setUsers(l.users as AdminUser[]);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, overviewFn, listFn]);
+
   useEffect(() => {
-    if (!ok) return;
-    if (activeTab === "users") loadUsers();
-    if (activeTab === "withdrawals") loadWithdrawals();
-    if (activeTab === "activity") loadActivities();
-  }, [ok, activeTab]);
+    refresh();
+  }, [refresh]);
 
-  async function loadUsers() {
-    setLoadingUsers(true);
-    try {
-      const res = await listUsersFn({ data: { token: adminToken } });
-      setUsers(res.users || []);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load users.");
-    } finally {
-      setLoadingUsers(false);
-    }
+  function exit() {
+    sessionStorage.removeItem("ml_admin_token");
+    navigate({ to: "/dashboard" });
   }
 
-  async function handleSetAccountAge(userId: string) {
-    if (!editAgeHours || isNaN(Number(editAgeHours))) {
-      toast.error("Please enter a valid number of hours.");
-      return;
-    }
-    setUpdatingAge(true);
-    try {
-      const hours = Number(editAgeHours);
-      const targetDate = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-      await setAccountAgeFn({
-        data: {
-          token: adminToken,
-          userId,
-          createdAtISO: targetDate,
-        },
-      });
-      toast.success(`Account creation date updated to ${hours} hours ago.`);
-      await loadUsers();
-      if (selectedUser) {
-        const updatedHours = hours;
-        const updatedDays = Math.floor(hours / 24);
-        setSelectedUser({
-          ...selectedUser,
-          created_at: targetDate,
-          account_age_hours: updatedHours,
-          account_age_days: updatedDays,
-        });
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update account age.");
-    } finally {
-      setUpdatingAge(false);
-    }
-  }
-
-  async function loadWithdrawals() {
-    setLoadingWd(true);
-    const { data } = await supabase
-      .from("withdrawals")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setWithdrawals(data || []);
-    setLoadingWd(false);
-  }
-
-  async function loadActivities() {
-    setLoadingActivities(true);
-    const { data } = await supabase
-      .from("admin_actions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setActivities(data || []);
-    setLoadingActivities(false);
-  }
-
-  async function loadUserTransactions(userId: string, walletId: string) {
-    setLoadingUserTx(true);
-    const { data: txs } = await supabase
-      .from("transactions")
-      .select("*")
-      .or(`sender_wallet_id.eq.${walletId},recipient_wallet_id.eq.${walletId}`)
-      .order("created_at", { ascending: false });
-
-    const { data: wds } = await supabase
-      .from("withdrawals")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    setUserTxHistory({ transactions: txs || [], withdrawals: wds || [] } as any);
-    setLoadingUserTx(false);
-  }
-
-  async function handleBalanceSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setBalanceBusy(true);
-    try {
-      if (balanceForm.type === "add") {
-        await addBal({
-          data: {
-            token: adminToken,
-            walletCode: balanceForm.walletCode,
-            currency: balanceForm.currency,
-            amount: Number(balanceForm.amount),
-            reason: balanceForm.reason,
-          },
-        });
-        toast.success(`Added ${balanceForm.amount} ${balanceForm.currency} to ${balanceForm.walletCode}`);
-      } else {
-        await remBal({
-          data: {
-            token: adminToken,
-            walletCode: balanceForm.walletCode,
-            currency: balanceForm.currency,
-            amount: Number(balanceForm.amount),
-            reason: balanceForm.reason,
-          },
-        });
-        toast.success(`Removed ${balanceForm.amount} ${balanceForm.currency} from ${balanceForm.walletCode}`);
-      }
-      setBalanceForm({ ...balanceForm, walletCode: "", amount: "", reason: "" });
-      if (activeTab === "users") loadUsers();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Balance adjustment failed.");
-    } finally {
-      setBalanceBusy(false);
-    }
-  }
-
-  async function handleToggleFreeze(user: any) {
-    const newFreeze = !user.is_frozen;
-    try {
-      await setFrz({
-        data: {
-          token: adminToken,
-          walletCode: user.wallet_code,
-          freeze: newFreeze,
-          reason: newFreeze ? "Administrative lock" : "Administrative unlock",
-        },
-      });
-      toast.success(`Wallet ${user.wallet_code} ${newFreeze ? "frozen" : "unfrozen"}`);
-      loadUsers();
-      if (selectedUser?.id === user.id) {
-        setSelectedUser({ ...selectedUser, is_frozen: newFreeze });
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Freeze operation failed.");
-    }
-  }
-
-  async function handleUpdateRegion(user: any, region: string) {
-    try {
-      await setReg({
-        data: {
-          token: adminToken,
-          walletCode: user.wallet_code,
-          region: region as any,
-        },
-      });
-      toast.success(`Updated region for ${user.wallet_code} to ${region}`);
-      loadUsers();
-      if (selectedUser?.id === user.id) {
-        setSelectedUser({ ...selectedUser, region });
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Region update failed.");
-    }
-  }
-
-  async function handleUpdateWithdrawalStatus(newStatus: string) {
-    if (!selectedWd) return;
-    if (!statusReason.trim()) {
-      toast.error("Please enter a reason for status update.");
-      return;
-    }
-    setStatusBusy(true);
-    try {
-      await updateWd({
-        data: {
-          token: adminToken,
-          withdrawalId: selectedWd.id,
-          status: newStatus as any,
-          reason: statusReason.trim(),
-        },
-      });
-      toast.success(`Withdrawal ${selectedWd.reference} status set to ${newStatus}`);
-      setStatusReason("");
-      setSelectedWd(null);
-      loadWithdrawals();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Status update failed.");
-    } finally {
-      setStatusBusy(false);
-    }
-  }
-
-  async function handleGlobalSearch() {
-    const q = globalQuery.trim();
-    if (!q) return;
-    setSearchingGlobal(true);
-
-    const { data: matchedUsers } = await supabase
-      .from("profiles")
-      .select("*, wallets(*)")
-      .or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
-
-    const { data: matchedWds } = await supabase
-      .from("withdrawals")
-      .select("*")
-      .or(`reference.ilike.%${q}%,email.ilike.%${q}%,upi_id.ilike.%${q}%`);
-
-    const { data: matchedTxs } = await supabase
-      .from("transactions")
-      .select("*")
-      .or(`reference.ilike.%${q}%,sender_wallet_code.ilike.%${q}%,recipient_wallet_code.ilike.%${q}%`);
-
-    setSearchResults({
-      users: matchedUsers || [],
-      withdrawals: matchedWds || [],
-      transactions: matchedTxs || [],
-    });
-    setSearchingGlobal(false);
-  }
-
-  if (!ok) {
+  if (!token) {
     return (
-      <div className="flex justify-center pt-20">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.email.toLowerCase().includes(userQuery.toLowerCase()) ||
-      u.wallet_code.toLowerCase().includes(userQuery.toLowerCase()) ||
-      u.full_name.toLowerCase().includes(userQuery.toLowerCase()),
-  );
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-24 md:flex-row md:pb-8">
+      <aside className="hidden w-56 shrink-0 md:block">
+        <div className="sticky top-6 space-y-1">
+          <p className="px-3 pb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Operations
+          </p>
+          {NAV.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => setSection(n.id)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                section === n.id ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60",
+              )}
+            >
+              <n.icon className="h-4 w-4" strokeWidth={1.5} />
+              {n.label}
+            </button>
+          ))}
+          <button
+            onClick={exit}
+            className="mt-6 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary/60"
+          >
+            <LogOut className="h-4 w-4" strokeWidth={1.5} /> Exit admin
+          </button>
+        </div>
+      </aside>
 
-  const filteredWithdrawals = withdrawals.filter((w) => {
-    const matchesStatus = wdFilter === "ALL" || w.status === wdFilter;
-    const matchesSearch =
-      !wdQuery ||
-      w.reference.toLowerCase().includes(wdQuery.toLowerCase()) ||
-      w.email.toLowerCase().includes(wdQuery.toLowerCase()) ||
-      (w.upi_id && w.upi_id.toLowerCase().includes(wdQuery.toLowerCase()));
-    return matchesStatus && matchesSearch;
-  });
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {NAV.map((n) => (
+          <button
+            key={n.id}
+            onClick={() => setSection(n.id)}
+            className={cn(
+              "flex min-h-14 flex-col items-center justify-center gap-1 text-[10px]",
+              section === n.id ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <n.icon className="h-5 w-5" strokeWidth={1.5} />
+            {n.label.split(" ")[0]}
+          </button>
+        ))}
+        <button onClick={exit} className="flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground">
+          <LogOut className="h-5 w-5" strokeWidth={1.5} /> Exit
+        </button>
+      </nav>
+
+      <main className="min-w-0 flex-1">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Admin</p>
+            <h1 className="text-2xl font-semibold tracking-tight">{NAV.find((n) => n.id === section)?.label}</h1>
+          </div>
+          <button
+            onClick={refresh}
+            aria-label="Refresh"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border hover:bg-secondary"
+          >
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </button>
+        </div>
+
+        {section === "overview" && <OverviewSection data={overview} users={users} />}
+        {section === "balance" && <BalanceSection token={token} users={users} onDone={refresh} />}
+        {section === "users" && <UsersSection users={users} />}
+        {section === "controls" && <ControlsSection token={token} users={users} onDone={refresh} />}
+      </main>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-2 text-xl font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function OverviewSection({ data, users }: { data: Overview | null; users: AdminUser[] }) {
+  if (!data) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
+  const recent = [...users].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Total users" value={data.totalUsers} />
+        <Stat label="New signups (7d)" value={data.newSignups} />
+        <Stat label="Total wallet balance" value={formatMoney(data.totalBalanceUsd, "USD")} />
+        <Stat label="Total transactions" value={data.totalTransactions} />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel title="Recent users">
+          {recent.map((u) => (
+            <Row key={u.id} left={u.full_name} sub={u.wallet_code} right={formatMoney(Number(u.balance_usd), "USD")} />
+          ))}
+        </Panel>
+        <Panel title="Recent transactions">
+          {data.recentTransactions.map((t) => (
+            <Row
+              key={t.id}
+              left={`${t.sender_name ?? "Moonlight"} → ${t.recipient_name ?? "Moonlight"}`}
+              sub={`${t.kind.replace("_", " ")} · ${new Date(t.created_at).toLocaleString()}`}
+              right={formatMoney(Number(t.amount), t.currency)}
+            />
+          ))}
+        </Panel>
+      </div>
+      <Panel title="Admin activity">
+        {data.recentActions.length === 0 && <p className="py-4 text-sm text-muted-foreground">No admin actions yet.</p>}
+        {data.recentActions.map((a) => (
+          <Row
+            key={a.id}
+            left={a.action.replace("_", " ")}
+            sub={new Date(a.created_at).toLocaleString()}
+            right={(a.details as { reason?: string })?.reason ?? ""}
+          />
+        ))}
+      </Panel>
+    </div>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card">
+      <h2 className="border-b border-border px-4 py-3 text-sm font-medium">{title}</h2>
+      <div className="divide-y divide-border px-4">{children}</div>
+    </section>
+  );
+}
+
+function Row({ left, sub, right }: { left: string; sub?: string; right?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm capitalize">{left}</p>
+        {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
+      </div>
+      {right && <p className="shrink-0 text-sm tabular-nums">{right}</p>}
+    </div>
+  );
+}
+
+function WalletPicker({ users, value, onChange }: { users: AdminUser[]; value: string; onChange: (v: string) => void }) {
+  const match = users.find((u) => u.wallet_code.toUpperCase() === value.trim().toUpperCase());
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs text-muted-foreground">Wallet ID</label>
+      <Input
+        list="admin-wallets"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="ML-XXXX-XXXX"
+        className="h-12 rounded-xl font-mono uppercase"
+      />
+      <datalist id="admin-wallets">
+        {users.map((u) => (
+          <option key={u.id} value={u.wallet_code}>{u.full_name} · {u.email}</option>
+        ))}
+      </datalist>
+      {match && (
+        <p className="text-xs text-muted-foreground">
+          {match.full_name} · {formatMoney(Number(match.balance_usd), "USD")} · {match.is_frozen ? "Frozen" : "Active"}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BalanceSection({ token, users, onDone }: { token: string; users: AdminUser[]; onDone: () => void }) {
+  const add = useServerFn(adminAddBalance);
+  const remove = useServerFn(adminRemoveBalance);
+  const [mode, setMode] = useState<"add" | "remove">("add");
+  const [walletCode, setWalletCode] = useState("");
+  const [currency, setCurrency] = useState<(typeof ADMIN_CURRENCIES)[number]>("USD");
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const amt = Number(amount);
+    if (!(amt > 0)) return toast.error("Enter a valid amount.");
+    if (reason.trim().length < 3) return toast.error("Add a short reason.");
+    setBusy(true);
+    try {
+      const fn = mode === "add" ? add : remove;
+      await fn({ data: { token, walletCode: walletCode.trim(), currency, amount: amt, reason } });
+      toast.success(mode === "add" ? "Balance added." : "Balance removed.");
+      setAmount("");
+      setReason("");
+      onDone();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <PageTitle eyebrow="ADMINISTRATION" title="Moonlight Control Panel">
-        Manage wallet balances, users, withdrawals, and system audit logs.
-      </PageTitle>
-
-      {/* Tabs Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b no-scrollbar">
-        {[
-          { id: "withdrawals", label: "Withdrawals", icon: ArrowUpRight },
-          { id: "users", label: "Users & Accounts", icon: Users },
-          { id: "balance", label: "Balance Adjustment", icon: CreditCard },
-          { id: "search", label: "Global Search", icon: Search },
-          { id: "activity", label: "Admin Activity", icon: Activity },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shrink-0 transition-all cursor-pointer touch-manipulation ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-soft"
-                  : "bg-secondary/70 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* TAB 1: WITHDRAWALS */}
-      {activeTab === "withdrawals" && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 flex-1 max-w-sm">
-              <Input
-                placeholder="Search reference, email or UPI..."
-                value={wdQuery}
-                onChange={(e) => setWdQuery(e.target.value)}
-                className="rounded-xl h-10 text-xs"
-              />
-            </div>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {["ALL", "PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"].map(
-                (st) => (
-                  <button
-                    key={st}
-                    onClick={() => setWdFilter(st)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition-all ${
-                      wdFilter === st
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ),
-              )}
-            </div>
-          </div>
-
-          {loadingWd ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : filteredWithdrawals.length === 0 ? (
-            <div className="text-center py-12 text-sm text-muted-foreground border rounded-3xl">
-              No withdrawal records found.
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-              {filteredWithdrawals.map((w) => (
-                <div
-                  key={w.id}
-                  onClick={() => setSelectedWd(w)}
-                  className="group rounded-3xl border border-border/60 bg-card p-4 shadow-soft hover:border-primary/40 transition-all cursor-pointer space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-primary">{w.reference}</span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        w.status === "SUCCESSFUL"
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : w.status === "FAILED" || w.status === "CANCELLED"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      }`}
-                    >
-                      {w.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-sm text-foreground">{w.full_name}</h4>
-                      <p className="text-xs text-muted-foreground">{w.email}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-base font-extrabold text-foreground">
-                        {formatMoney(Number(w.amount), w.currency)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{w.method}</p>
-                    </div>
-                  </div>
-
-                  {w.upi_id && (
-                    <div className="flex items-center gap-2 rounded-xl bg-secondary/40 p-2 text-xs">
-                      <PaymentMethodIcon id={w.provider ? "google-pay" : "upi"} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-mono text-xs font-semibold truncate">{w.upi_id}</p>
-                        <p className="text-[10px] text-muted-foreground">{w.provider || "UPI"}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground border-t pt-2">
-                    <span>Created: {new Date(w.created_at).toLocaleString()}</span>
-                    <span className="font-semibold text-primary group-hover:underline">
-                      Manage Status &rarr;
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 2: USERS */}
-      {activeTab === "users" && (
-        <div className="space-y-4">
-          <Input
-            placeholder="Search user by name, email or wallet ID..."
-            value={userQuery}
-            onChange={(e) => setUserQuery(e.target.value)}
-            className="rounded-xl h-10 max-w-md text-xs"
-          />
-
-          {loadingUsers ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-              {filteredUsers.map((u) => (
-                <div
-                  key={u.id}
-                  className="rounded-3xl border border-border/60 bg-card p-4 shadow-soft space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-sm text-foreground">{u.full_name}</h4>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
-                    </div>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        u.is_frozen
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      }`}
-                    >
-                      {u.is_frozen ? "FROZEN" : "ACTIVE"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground border-y border-border/40 py-1.5 my-1">
-                    <span className="flex items-center gap-1 font-medium">
-                      <Clock className="h-3 w-3 text-primary" /> Age: {u.account_age_hours}h ({u.account_age_days}d)
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {u.activity_count} activity item(s)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-2xl bg-secondary/40 p-3 text-xs">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">
-                        Wallet Code
-                      </p>
-                      <p className="font-mono font-bold text-foreground">{u.wallet_code}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">
-                        Balance (USD)
-                      </p>
-                      <p className="font-extrabold text-foreground">${Number(u.balance_usd).toFixed(2)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                      <Select
-                        value={u.region}
-                        onValueChange={(val) => handleUpdateRegion(u, val)}
-                      >
-                        <SelectTrigger className="h-7 w-28 rounded-lg text-[10px] font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GLOBAL">GLOBAL</SelectItem>
-                          <SelectItem value="EUROPE">EUROPE</SelectItem>
-                          <SelectItem value="INDIA">INDIA</SelectItem>
-                          <SelectItem value="PHILIPPINES">PHILIPPINES</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleToggleFreeze(u)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                          u.is_frozen
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-                            : "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                        }`}
-                      >
-                        {u.is_frozen ? "Unfreeze" : "Freeze"}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setEditAgeHours(String(u.account_age_hours));
-                          loadUserTransactions(u.user_id, u.id);
-                        }}
-                        className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 transition-all cursor-pointer"
-                      >
-                        Details &rarr;
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: BALANCE ADJUSTMENT */}
-      {activeTab === "balance" && (
-        <div className="mx-auto max-w-md rounded-3xl border border-border/60 bg-card p-6 shadow-soft space-y-4">
-          <div className="flex rounded-2xl bg-secondary p-1">
-            <button
-              onClick={() => setBalanceForm({ ...balanceForm, type: "add" })}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                balanceForm.type === "add"
-                  ? "bg-primary text-primary-foreground shadow-2xs"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Add Balance
-            </button>
-            <button
-              onClick={() => setBalanceForm({ ...balanceForm, type: "remove" })}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                balanceForm.type === "remove"
-                  ? "bg-destructive text-destructive-foreground shadow-2xs"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Remove Balance
-            </button>
-          </div>
-
-          <form onSubmit={handleBalanceSubmit} className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Wallet Code</label>
-              <Input
-                placeholder="ML-XXXX-XXXX"
-                value={balanceForm.walletCode}
-                onChange={(e) => setBalanceForm({ ...balanceForm, walletCode: e.target.value })}
-                className="h-11 rounded-xl font-mono text-sm mt-1"
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-muted-foreground">Amount</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="100.00"
-                  value={balanceForm.amount}
-                  onChange={(e) => setBalanceForm({ ...balanceForm, amount: e.target.value })}
-                  className="h-11 rounded-xl mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground">Currency</label>
-                <Select
-                  value={balanceForm.currency}
-                  onValueChange={(v) => setBalanceForm({ ...balanceForm, currency: v as CurrencyCode })}
-                >
-                  <SelectTrigger className="h-11 rounded-xl mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CURRENCIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Reason / Audit Note</label>
-              <Input
-                placeholder="Administrative adjustment reason..."
-                value={balanceForm.reason}
-                onChange={(e) => setBalanceForm({ ...balanceForm, reason: e.target.value })}
-                className="h-11 rounded-xl text-xs mt-1"
-              />
-            </div>
-
-            <button
-              disabled={balanceBusy}
-              className={`w-full h-11 rounded-full font-bold text-sm shadow-soft transition-all cursor-pointer ${
-                balanceForm.type === "add"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-destructive text-destructive-foreground"
-              }`}
-            >
-              {balanceBusy ? (
-                <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-              ) : balanceForm.type === "add" ? (
-                "Credit Wallet Balance"
-              ) : (
-                "Debit Wallet Balance"
-              )}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* TAB 4: GLOBAL SEARCH */}
-      {activeTab === "search" && (
-        <div className="space-y-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleGlobalSearch();
-            }}
-            className="flex gap-2 max-w-md"
+    <form onSubmit={submit} className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-5">
+      <div className="grid grid-cols-2 gap-1 rounded-full bg-secondary p-1">
+        {(["add", "remove"] as const).map((m) => (
+          <button
+            type="button"
+            key={m}
+            onClick={() => setMode(m)}
+            className={cn(
+              "h-10 rounded-full text-sm transition-colors",
+              mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+            )}
           >
-            <Input
-              placeholder="Search wallet ID, email, reference or name..."
-              value={globalQuery}
-              onChange={(e) => setGlobalQuery(e.target.value)}
-              className="h-11 rounded-xl text-xs"
-            />
-            <button
-              disabled={searchingGlobal}
-              className="px-5 rounded-full bg-primary text-primary-foreground font-bold text-xs cursor-pointer shrink-0"
-            >
-              {searchingGlobal ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-            </button>
-          </form>
-
-          <div className="space-y-6 pt-2">
-            {searchResults.users.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-bold text-sm text-foreground">Matching Users</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {searchResults.users.map((u) => (
-                    <div key={u.id} className="border rounded-2xl p-3 bg-card text-xs space-y-1">
-                      <p className="font-bold text-foreground">{u.full_name}</p>
-                      <p className="text-muted-foreground">{u.email}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {searchResults.withdrawals.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-bold text-sm text-foreground">Matching Withdrawals</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {searchResults.withdrawals.map((w) => (
-                    <div key={w.id} className="border rounded-2xl p-3 bg-card text-xs space-y-1">
-                      <p className="font-mono font-bold text-primary">{w.reference}</p>
-                      <p className="text-foreground">{w.full_name} · {formatMoney(Number(w.amount), w.currency)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {searchResults.transactions.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-bold text-sm text-foreground">Matching Transactions</h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {searchResults.transactions.map((t) => (
-                    <div key={t.id} className="border rounded-2xl p-3 bg-card text-xs space-y-1">
-                      <p className="font-mono font-bold text-emerald-600">{t.reference}</p>
-                      <p className="text-foreground">{t.sender_name} &rarr; {t.recipient_name}</p>
-                      <p className="font-semibold">{formatMoney(Number(t.amount), t.currency)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            {m === "add" ? "Add balance" : "Remove balance"}
+          </button>
+        ))}
+      </div>
+      <WalletPicker users={users} value={walletCode} onChange={setWalletCode} />
+      <div className="grid grid-cols-[1fr_7rem] gap-2">
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground">Amount</label>
+          <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="h-12 rounded-xl tabular-nums" />
         </div>
-      )}
+        <div className="space-y-1.5">
+          <label className="text-xs text-muted-foreground">Currency</label>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as typeof currency)}
+            className="h-12 w-full rounded-xl border border-input bg-background px-3 text-sm"
+          >
+            {ADMIN_CURRENCIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-muted-foreground">Reason (logged)</label>
+        <Input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="e.g. Promotional credit" className="h-12 rounded-xl" />
+      </div>
+      <button
+        disabled={busy || !walletCode || !amount}
+        className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground disabled:opacity-50"
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "add" ? "Add balance" : "Remove balance"}
+      </button>
+    </form>
+  );
+}
 
-      {/* TAB 5: ADMIN ACTIVITY */}
-      {activeTab === "activity" && (
-        <div className="space-y-3">
-          {loadingActivities ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+function UsersSection({ users }: { users: AdminUser[] }) {
+  const [q, setQ] = useState("");
+  const list = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return users
+      .filter((u) => !s || [u.full_name, u.email, u.wallet_code].some((v) => v.toLowerCase().includes(s)))
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }, [users, q]);
+  return (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email or wallet ID" className="h-12 rounded-xl pl-11" />
+      </div>
+      <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+        {list.map((u) => (
+          <div key={u.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{u.full_name}</p>
+              <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">{u.wallet_code}</p>
             </div>
-          ) : (
-            <div className="divide-y border rounded-3xl bg-card overflow-hidden">
-              {activities.map((act) => (
-                <div key={act.id} className="p-4 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground uppercase tracking-wider">
-                      {act.action}
-                    </span>
-                    <span className="text-muted-foreground text-[10px]">
-                      {new Date(act.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="font-mono text-muted-foreground text-[11px]">
-                    {JSON.stringify(act.details)}
-                  </p>
-                </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:justify-end">
+              <span className="rounded-full bg-secondary px-2.5 py-1">{u.region}</span>
+              <span className={cn("rounded-full px-2.5 py-1", u.is_frozen ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary")}>
+                {u.is_frozen ? "Frozen" : "Active"}
+              </span>
+              <span className="text-muted-foreground">{u.account_age_days}d · {u.activity_count} tx</span>
+              <span className="w-full text-right text-sm font-medium tabular-nums sm:w-auto">
+                {formatMoney(Number(u.balance_usd), "USD")}
+              </span>
+            </div>
+          </div>
+        ))}
+        {list.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">No users found.</p>}
+      </div>
+    </div>
+  );
+}
+
+function ControlsSection({ token, users, onDone }: { token: string; users: AdminUser[]; onDone: () => void }) {
+  const freezeFn = useServerFn(adminSetFreeze);
+  const regionFn = useServerFn(adminSetRegion);
+  const [walletCode, setWalletCode] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const user = users.find((u) => u.wallet_code.toUpperCase() === walletCode.trim().toUpperCase());
+
+  async function run(fn: () => Promise<unknown>, msg: string) {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(msg);
+      onDone();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-5">
+      <WalletPicker users={users} value={walletCode} onChange={setWalletCode} />
+      {user && (
+        <>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Reason (optional)</label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} className="h-12 rounded-xl" />
+          </div>
+          <button
+            disabled={busy}
+            onClick={() =>
+              run(
+                () => freezeFn({ data: { token, walletCode: user.wallet_code, freeze: !user.is_frozen, reason } }),
+                user.is_frozen ? "Wallet unfrozen." : "Wallet frozen.",
+              )
+            }
+            className={cn(
+              "flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium disabled:opacity-50",
+              user.is_frozen ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground",
+            )}
+          >
+            {user.is_frozen ? <Sun className="h-4 w-4" /> : <Snowflake className="h-4 w-4" />}
+            {user.is_frozen ? "Unfreeze wallet" : "Freeze wallet"}
+          </button>
+          <div className="space-y-1.5 pt-2">
+            <label className="text-xs text-muted-foreground">Account region</label>
+            <div className="grid grid-cols-2 gap-2">
+              {REGIONS.map((r) => (
+                <button
+                  key={r}
+                  disabled={busy || user.region === r}
+                  onClick={() => run(() => regionFn({ data: { token, walletCode: user.wallet_code, region: r } }), `Region set to ${r}.`)}
+                  className={cn(
+                    "h-11 rounded-xl border text-sm capitalize",
+                    user.region === r ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-secondary",
+                  )}
+                >
+                  {r.toLowerCase()}
+                </button>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
-
-      {/* WITHDRAWAL DETAIL DIALOG */}
-      <Dialog open={!!selectedWd} onOpenChange={() => setSelectedWd(null)}>
-        {selectedWd && (
-          <DialogContent className="max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-md rounded-3xl p-5 sm:p-6 space-y-4">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold">Withdrawal Details</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground font-mono">
-                {selectedWd.reference}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-2 text-xs divide-y border-t border-b py-2">
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">User:</span>
-                <span className="font-semibold">{selectedWd.full_name}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Email:</span>
-                <span className="font-semibold">{selectedWd.email}</span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Amount:</span>
-                <span className="font-bold text-foreground">
-                  {formatMoney(Number(selectedWd.amount), selectedWd.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Method:</span>
-                <span className="font-semibold">{selectedWd.method}</span>
-              </div>
-              {selectedWd.upi_id && (
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">UPI ID / VPA:</span>
-                  <span className="font-mono font-bold text-primary">{selectedWd.upi_id}</span>
-                </div>
-              )}
-              {selectedWd.provider && (
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">Provider:</span>
-                  <span className="font-semibold">{selectedWd.provider}</span>
-                </div>
-              )}
-              <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Current Status:</span>
-                <span className="font-bold uppercase text-primary">{selectedWd.status}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <label className="text-xs font-bold text-foreground">Update Status Reason (Mandatory)</label>
-              <Input
-                placeholder="Reason for administrative status update..."
-                value={statusReason}
-                onChange={(e) => setStatusReason(e.target.value)}
-                className="h-10 text-xs rounded-xl"
-              />
-
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                {["SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"].map((st) => (
-                  <button
-                    key={st}
-                    disabled={statusBusy || selectedWd.status === st}
-                    onClick={() => handleUpdateWithdrawalStatus(st)}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      st === "SUCCESSFUL"
-                        ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                        : st === "FAILED" || st === "CANCELLED"
-                          ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          : "bg-amber-500 text-white hover:bg-amber-600"
-                    } disabled:opacity-40`}
-                  >
-                    Set {st}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
-
-      {/* USER DRILL DOWN DIALOG */}
-      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        {selectedUser && (
-          <DialogContent className="max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] max-w-lg rounded-3xl p-5 sm:p-6 space-y-4">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold">{selectedUser.full_name}</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                {selectedUser.email} · {selectedUser.wallet_code}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-2xl border bg-secondary/30 p-3">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Balance (USD)</p>
-                <p className="text-lg font-extrabold text-foreground mt-0.5">
-                  ${Number(selectedUser.balance_usd).toFixed(2)}
-                </p>
-              </div>
-              <div className="rounded-2xl border bg-secondary/30 p-3">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Freeze Status</p>
-                <p
-                  className={`text-lg font-extrabold mt-0.5 ${
-                    selectedUser.is_frozen ? "text-destructive" : "text-emerald-600"
-                  }`}
-                >
-                  {selectedUser.is_frozen ? "FROZEN" : "ACTIVE"}
-                </p>
-              </div>
-            </div>
-
-            {/* REAL ACCOUNT AGE ADMIN CONTROL */}
-            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-xs text-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-primary" /> Effective Account Age &amp; Creation
-                </h4>
-                <span className="text-[10px] font-semibold text-muted-foreground">
-                  Current: {selectedUser.account_age_hours} hrs ago
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Change user's effective account creation date in database. Affects 48-hour withdrawal eligibility rule server-side.
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="Hours old (e.g. 50)"
-                  value={editAgeHours}
-                  onChange={(e) => setEditAgeHours(e.target.value)}
-                  className="h-9 text-xs rounded-xl bg-card"
-                />
-                <button
-                  disabled={updatingAge}
-                  onClick={() => handleSetAccountAge(selectedUser.user_id)}
-                  className="px-4 h-9 rounded-xl bg-primary text-primary-foreground font-bold text-xs shrink-0 cursor-pointer transition-all hover:opacity-90 disabled:opacity-50"
-                >
-                  {updatingAge ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Update Age"}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                Transaction &amp; Withdrawal History
-              </h4>
-
-              {loadingUserTx ? (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {(userTxHistory as any)?.withdrawals?.map((w: any) => (
-                    <div key={w.id} className="border rounded-2xl p-2.5 text-xs flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-foreground">Withdrawal ({w.method})</p>
-                        <p className="font-mono text-[10px] text-muted-foreground">{w.reference}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground">{formatMoney(Number(w.amount), w.currency)}</p>
-                        <p className="text-[10px] font-bold text-primary">{w.status}</p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {(userTxHistory as any)?.transactions?.map((t: any) => (
-                    <div key={t.id} className="border rounded-2xl p-2.5 text-xs flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-foreground">{t.kind}</p>
-                        <p className="font-mono text-[10px] text-muted-foreground">{t.reference}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground">{formatMoney(Number(t.amount), t.currency)}</p>
-                        <p className="text-[10px] text-emerald-600 font-semibold">{t.status}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
     </div>
   );
 }
