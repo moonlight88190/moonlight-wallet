@@ -816,7 +816,9 @@ export function Withdraw() {
               )}
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Destination / Account:</span>
-                <span className="font-mono font-semibold text-foreground">{activeReceipt.accountOrCode}</span>
+                <span className="font-mono font-semibold text-foreground">
+                  {activeReceipt.accountOrCode}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Date &amp; Time:</span>

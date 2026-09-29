@@ -56,10 +56,13 @@ AS $$
 DECLARE
   v_user_id UUID := auth.uid();
   v_wallet_id UUID;
+  v_sender_name TEXT;
+  v_sender_wallet_code TEXT;
   v_current_bal NUMERIC(18, 4);
   v_rate NUMERIC(18, 6) := 1.0;
   v_amount_usd NUMERIC(18, 4);
   v_withdrawal_id UUID;
+  v_tx_id UUID;
   v_ref_code TEXT;
   v_account_created TIMESTAMPTZ;
   v_status TEXT;
@@ -69,8 +72,8 @@ BEGIN
   END IF;
 
   -- Verify wallet and status
-  SELECT id, balance_usd, status, created_at
-  INTO v_wallet_id, v_current_bal, v_status, v_account_created
+  SELECT id, wallet_code, balance_usd, status, created_at
+  INTO v_wallet_id, v_sender_wallet_code, v_current_bal, v_status, v_account_created
   FROM public.wallets
   WHERE user_id = v_user_id
   FOR UPDATE;
@@ -78,6 +81,11 @@ BEGIN
   IF v_wallet_id IS NULL THEN
     RAISE EXCEPTION 'Wallet not found';
   END IF;
+
+  -- Get sender name from profile
+  SELECT full_name INTO v_sender_name
+  FROM public.profiles
+  WHERE id = v_user_id;
 
   IF v_status = 'frozen' THEN
     RAISE EXCEPTION 'Account is temporarily restricted';
@@ -92,7 +100,7 @@ BEGIN
   IF UPPER(p_currency) != 'USD' THEN
     SELECT rate INTO v_rate
     FROM public.exchange_rates
-    WHERE currency = UPPER(p_currency);
+    WHERE quote = UPPER(p_currency);
 
     IF v_rate IS NULL OR v_rate <= 0 THEN
       v_rate := 1.0;
@@ -130,25 +138,27 @@ BEGIN
     p_reason, v_ref_code, 'pending'
   ) RETURNING id INTO v_withdrawal_id;
 
-  -- Record transaction & ledger entry
+  -- Record transaction
   INSERT INTO public.transactions (
-    user_id, wallet_id, kind, amount_usd, fee_usd,
-    currency, recipient_amount, fx_rate, status,
-    recipient_name, description
+    sender_wallet_id, sender_name, sender_wallet_code,
+    kind, amount, amount_usd, fee, fee_usd,
+    currency, fx_rate, status,
+    recipient_name, method, reference, note
   ) VALUES (
-    v_user_id, v_wallet_id, 'withdrawal', v_amount_usd, 0,
-    UPPER(p_currency), p_amount, v_rate, 'pending',
-    COALESCE(p_upi_id, p_provider, p_method),
+    v_wallet_id, COALESCE(v_sender_name, p_full_name), v_sender_wallet_code,
+    'withdrawal', p_amount, v_amount_usd, 0, 0,
+    UPPER(p_currency), v_rate, 'pending',
+    COALESCE(p_upi_id, p_provider, p_method), p_method, v_ref_code,
     'Withdrawal via ' || p_method || ' (' || v_ref_code || ')'
-  );
+  ) RETURNING id INTO v_tx_id;
 
+  -- Record ledger entry
   INSERT INTO public.ledger_entries (
-    wallet_id, user_id, entry_type, amount_usd,
-    balance_after_usd, description
+    wallet_id, transaction_id, entry_type, amount_usd,
+    balance_after_usd
   ) VALUES (
-    v_wallet_id, v_user_id, 'debit', v_amount_usd,
-    v_current_bal - v_amount_usd,
-    'Withdrawal: ' || v_ref_code
+    v_wallet_id, v_tx_id, 'debit', v_amount_usd,
+    v_current_bal - v_amount_usd
   );
 
   RETURN v_withdrawal_id;
