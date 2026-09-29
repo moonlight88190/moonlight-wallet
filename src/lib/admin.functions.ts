@@ -36,7 +36,7 @@ async function verifyToken(token: string, userId: string) {
 
 export const verifyAdminCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
+  .inputValidator((d) => z.object({ code: z.string().trim().min(1).max(32) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -49,8 +49,9 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
     if ((count ?? 0) >= MAX_FAILURES) {
       return { ok: false as const, error: "Too many attempts. Try again in 15 minutes." };
     }
-    const expected = process.env["ADMIN_ACCESS_CODE"] || "4336";
-    if (!expected || !safeEqual(data.code, expected)) {
+    const expected = process.env["ADMIN_ACCESS_CODE"];
+    if (!expected) return { ok: false as const, error: "Authorized access is not configured." };
+    if ( !safeEqual(data.code, expected)) {
       await supabaseAdmin
         .from("audit_logs")
         .insert({ user_id: context.userId, event: "admin_code_failed" });
@@ -66,12 +67,12 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
 
 export const checkAdminToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
   .handler(async ({ data, context }) => ({ ok: await verifyToken(data.token, context.userId) }));
 
 export const adminAddBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
+  .inputValidator((d) =>
     z
       .object({
         token: z.string().max(300),
@@ -103,7 +104,7 @@ export const adminAddBalance = createServerFn({ method: "POST" })
 
 export const adminRemoveBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
+  .inputValidator((d) =>
     z
       .object({
         token: z.string().max(300),
@@ -135,7 +136,7 @@ export const adminRemoveBalance = createServerFn({ method: "POST" })
 
 export const adminSetFreeze = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
+  .inputValidator((d) =>
     z
       .object({
         token: z.string().max(300),
@@ -162,7 +163,7 @@ export const adminSetFreeze = createServerFn({ method: "POST" })
 
 export const adminSetRegion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
+  .inputValidator((d) =>
     z
       .object({
         token: z.string().max(300),
@@ -187,7 +188,7 @@ export const adminSetRegion = createServerFn({ method: "POST" })
 
 export const adminListUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
   .handler(async ({ data, context }) => {
     if (!(await verifyToken(data.token, context.userId))) {
       throw new Error("Admin session expired.");
@@ -195,7 +196,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: wallets, error: wErr } = await supabaseAdmin
       .from("wallets")
-      .select("id, wallet_code, balance_usd, status, is_frozen, created_at, user_id");
+      .select("id, wallet_code, balance_usd, status, created_at, user_id");
     if (wErr) throw new Error(wErr.message);
 
     const { data: profiles, error: pErr } = await supabaseAdmin
@@ -204,14 +205,12 @@ export const adminListUsers = createServerFn({ method: "POST" })
     if (pErr) throw new Error(pErr.message);
 
     const { data: txs } = await supabaseAdmin.from("transactions").select("sender_wallet_id, recipient_wallet_id");
-    const { data: wds } = await supabaseAdmin.from("withdrawals").select("user_id");
 
     const merged = (wallets || []).map((w) => {
       const p = (profiles || []).find((prof) => prof.id === w.user_id);
       const userTxs = (txs || []).filter(
         (t) => t.sender_wallet_id === w.id || t.recipient_wallet_id === w.id,
       ).length;
-      const userWds = (wds || []).filter((wd) => wd.user_id === w.user_id).length;
 
       const userCreatedAt = p?.created_at || w.created_at;
       const ageMs = Date.now() - new Date(userCreatedAt).getTime();
@@ -224,14 +223,14 @@ export const adminListUsers = createServerFn({ method: "POST" })
         wallet_code: w.wallet_code,
         balance_usd: w.balance_usd,
         status: w.status,
-        is_frozen: w.is_frozen,
+        is_frozen: w.status === "frozen",
         full_name: p?.full_name || "N/A",
         email: p?.email || "N/A",
         region: p?.region || "GLOBAL",
         created_at: userCreatedAt,
         account_age_hours: ageHours,
         account_age_days: ageDays,
-        activity_count: userTxs + userWds,
+        activity_count: userTxs,
       };
     });
 
@@ -240,7 +239,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
 
 export const adminSetAccountAge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
+  .inputValidator((d) =>
     z
       .object({
         token: z.string().max(300),
@@ -277,29 +276,29 @@ export const adminSetAccountAge = createServerFn({ method: "POST" })
     return { ok: true, created_at: newCreatedAt };
   });
 
-export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
+export const adminOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d) =>
-    z
-      .object({
-        token: z.string().max(300),
-        withdrawalId: z.string().uuid(),
-        status: z.enum(["PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"]),
-        reason: z.string().trim().min(3).max(200),
-      })
-      .parse(d),
-  )
+  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
   .handler(async ({ data, context }) => {
-    if (!(await verifyToken(data.token, context.userId))) {
-      throw new Error("Admin session expired.");
-    }
+    if (!(await verifyToken(data.token, context.userId))) throw new Error("Admin session expired.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.rpc("admin_update_withdrawal_status", {
-      p_actor: context.userId,
-      p_withdrawal_id: data.withdrawalId,
-      p_new_status: data.status,
-      p_reason: data.reason,
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+    const [w, u, n, t, recentTx, acts] = await Promise.all([
+      supabaseAdmin.from("wallets").select("balance_usd, status"),
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+      supabaseAdmin.from("transactions").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("transactions").select("id, reference, kind, sender_name, recipient_name, amount, currency, created_at").order("created_at", { ascending: false }).limit(8),
+      supabaseAdmin.from("admin_actions").select("id, action, details, created_at").order("created_at", { ascending: false }).limit(8),
+    ]);
+    const wallets = w.data || [];
+    return {
+      totalUsers: u.count ?? 0,
+      newSignups: n.count ?? 0,
+      totalBalanceUsd: wallets.reduce((a, x) => a + Number(x.balance_usd), 0),
+      frozen: wallets.filter((x) => x.status === "frozen").length,
+      totalTransactions: t.count ?? 0,
+      recentTransactions: recentTx.data || [],
+      recentActions: acts.data || [],
+    };
   });

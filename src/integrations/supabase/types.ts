@@ -156,6 +156,7 @@ export type Database = {
           full_name: string
           id: string
           preferred_currency: string
+          region: string
           updated_at: string
         }
         Insert: {
@@ -164,6 +165,7 @@ export type Database = {
           full_name?: string
           id: string
           preferred_currency?: string
+          region?: string
           updated_at?: string
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           full_name?: string
           id?: string
           preferred_currency?: string
+          region?: string
           updated_at?: string
         }
         Relationships: []
@@ -304,6 +307,29 @@ export type Database = {
           p_wallet_code: string
         }
         Returns: string
+      }
+      admin_debit: {
+        Args: {
+          p_actor: string
+          p_amount: number
+          p_currency: string
+          p_reason: string
+          p_wallet_code: string
+        }
+        Returns: string
+      }
+      admin_set_profile_region: {
+        Args: { p_actor: string; p_region: string; p_wallet_code: string }
+        Returns: undefined
+      }
+      admin_set_wallet_freeze: {
+        Args: {
+          p_actor: string
+          p_freeze: boolean
+          p_reason: string
+          p_wallet_code: string
+        }
+        Returns: undefined
       }
       generate_wallet_code: { Args: never; Returns: string }
       lookup_recipient: {

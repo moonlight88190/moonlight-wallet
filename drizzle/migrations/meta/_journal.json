@@ -8,6 +8,13 @@
       "when": 1790513339216,
       "tag": "0000_moonlight_wallet_core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790651039318,
+      "tag": "0001_admin_controls",
+      "breakpoints": true
     }
   ]
 }
