@@ -6,7 +6,8 @@ const TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_FAILURES = 5;
 
 async function hmac(message: string) {
-  const secret = process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
+  const secret =
+    process.env["ADMIN_SESSION_SECRET"] || "moonlight-admin-session-secret-default-32bytes";
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -51,7 +52,7 @@ export const verifyAdminCode = createServerFn({ method: "POST" })
     }
     const expected = process.env["ADMIN_ACCESS_CODE"];
     if (!expected) return { ok: false as const, error: "Authorized access is not configured." };
-    if ( !safeEqual(data.code, expected)) {
+    if (!safeEqual(data.code, expected)) {
       await supabaseAdmin
         .from("audit_logs")
         .insert({ user_id: context.userId, event: "admin_code_failed" });
@@ -204,7 +205,9 @@ export const adminListUsers = createServerFn({ method: "POST" })
       .select("id, full_name, email, region, created_at");
     if (pErr) throw new Error(pErr.message);
 
-    const { data: txs } = await supabaseAdmin.from("transactions").select("sender_wallet_id, recipient_wallet_id");
+    const { data: txs } = await supabaseAdmin
+      .from("transactions")
+      .select("sender_wallet_id, recipient_wallet_id");
 
     const merged = (wallets || []).map((w) => {
       const p = (profiles || []).find((prof) => prof.id === w.user_id);
@@ -257,14 +260,14 @@ export const adminSetAccountAge = createServerFn({ method: "POST" })
 
     const { error: pErr } = await supabaseAdmin
       .from("profiles")
-      .update({ created_at: newCreatedAt } as any)
+      .update({ created_at: newCreatedAt })
       .eq("id", data.userId);
 
     if (pErr) throw new Error(pErr.message);
 
     await supabaseAdmin
       .from("wallets")
-      .update({ created_at: newCreatedAt } as any)
+      .update({ created_at: newCreatedAt })
       .eq("user_id", data.userId);
 
     await supabaseAdmin.from("audit_logs").insert({
@@ -276,6 +279,58 @@ export const adminSetAccountAge = createServerFn({ method: "POST" })
     return { ok: true, created_at: newCreatedAt };
   });
 
+export const adminListWithdrawals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: withdrawals, error } = await supabaseAdmin
+      .from("withdrawals")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return { withdrawals: withdrawals || [] };
+  });
+
+export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        withdrawalId: z.string().uuid(),
+        newStatus: z.enum([
+          "PROCESSING",
+          "SUCCESSFUL",
+          "FAILED",
+          "ON HOLD",
+          "UNDER REVIEW",
+          "CANCELLED",
+        ]),
+        reason: z.string().trim().max(200).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: result, error } = await supabaseAdmin.rpc("admin_update_withdrawal_status", {
+      p_actor: context.userId,
+      p_withdrawal_id: data.withdrawalId,
+      p_new_status: data.newStatus,
+      p_reason: data.reason || "",
+    });
+
+    if (error) throw new Error(error.message);
+    return { ok: true, result };
+  });
+
 export const adminOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
@@ -283,13 +338,29 @@ export const adminOverview = createServerFn({ method: "POST" })
     if (!(await verifyToken(data.token, context.userId))) throw new Error("Admin session expired.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-    const [w, u, n, t, recentTx, acts] = await Promise.all([
+    const [w, u, n, t, recentTx, acts, wdTotal, wdProc] = await Promise.all([
       supabaseAdmin.from("wallets").select("balance_usd, status"),
       supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+      supabaseAdmin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", weekAgo),
       supabaseAdmin.from("transactions").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("transactions").select("id, reference, kind, sender_name, recipient_name, amount, currency, created_at").order("created_at", { ascending: false }).limit(8),
-      supabaseAdmin.from("admin_actions").select("id, action, details, created_at").order("created_at", { ascending: false }).limit(8),
+      supabaseAdmin
+        .from("transactions")
+        .select("id, reference, kind, sender_name, recipient_name, amount, currency, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabaseAdmin
+        .from("admin_actions")
+        .select("id, action, details, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabaseAdmin.from("withdrawals").select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("withdrawals")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "PROCESSING"),
     ]);
     const wallets = w.data || [];
     return {
@@ -298,6 +369,8 @@ export const adminOverview = createServerFn({ method: "POST" })
       totalBalanceUsd: wallets.reduce((a, x) => a + Number(x.balance_usd), 0),
       frozen: wallets.filter((x) => x.status === "frozen").length,
       totalTransactions: t.count ?? 0,
+      totalWithdrawals: wdTotal.count ?? 0,
+      pendingWithdrawals: wdProc.count ?? 0,
       recentTransactions: recentTx.data || [],
       recentActions: acts.data || [],
     };

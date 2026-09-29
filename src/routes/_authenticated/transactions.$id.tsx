@@ -25,7 +25,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PaymentMethodIcon, GiftCardBrand } from "@/components/AssetComponents";
 import { GIFT_CARDS, PAYMENT_METHODS, UPI_PROVIDERS } from "@/lib/assets";
 
-function getTransactionAsset(methodName?: string, upiId?: string, providerName?: string, currency?: string) {
+function getTransactionAsset(
+  methodName?: string,
+  upiId?: string,
+  providerName?: string,
+  currency?: string,
+) {
   const m = (methodName || "").toLowerCase();
   const u = (upiId || "").toLowerCase();
   const p = (providerName || "").toLowerCase();
@@ -58,13 +63,15 @@ function getTransactionAsset(methodName?: string, upiId?: string, providerName?:
 
   // Philippines assets
   if (m.includes("gcash") || c === "PHP") {
-    if (m.includes("bank")) return { type: "method" as const, id: "ph-bank", label: "Philippine Bank (InstaPay)" };
+    if (m.includes("bank"))
+      return { type: "method" as const, id: "ph-bank", label: "Philippine Bank (InstaPay)" };
     return { type: "method" as const, id: "gcash", label: "GCash Wallet" };
   }
 
   // India assets
   if (m.includes("upi") || c === "INR" || u.length > 0) {
-    if (m.includes("bank")) return { type: "method" as const, id: "in-bank", label: "Indian Bank (IMPS/NEFT)" };
+    if (m.includes("bank"))
+      return { type: "method" as const, id: "in-bank", label: "Indian Bank (IMPS/NEFT)" };
     return { type: "method" as const, id: "upi", label: "UPI Direct" };
   }
 
@@ -80,7 +87,9 @@ function getTransactionAsset(methodName?: string, upiId?: string, providerName?:
   }
 
   // Fallback match by PAYMENT_METHODS
-  const pm = PAYMENT_METHODS.find((item) => m.includes(item.id) || m.includes(item.name.toLowerCase()));
+  const pm = PAYMENT_METHODS.find(
+    (item) => m.includes(item.id) || m.includes(item.name.toLowerCase()),
+  );
   if (pm) {
     return { type: "method" as const, id: pm.id, label: pm.name };
   }
@@ -248,7 +257,11 @@ function Receipt() {
               onClick={handleCopyRef}
               className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
@@ -423,7 +436,8 @@ function Receipt() {
 
         <div className="border-t border-border/40 pt-4 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger Entry
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Cryptographic Ledger
+            Entry
           </div>
           <p className="text-[10px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · GLOBAL FINANCIAL INFRASTRUCTURE
