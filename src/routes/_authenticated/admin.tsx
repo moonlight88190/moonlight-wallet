@@ -310,8 +310,8 @@ function BalanceSection({ token, users, onDone }: { token: string; users: AdminU
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const amt = Number(amount);
-    if (!(amt > 0)) return toast.error("Enter a valid amount.");
-    if (reason.trim().length < 3) return toast.error("Add a short reason.");
+    if (!(amt > 0)) { toast.error("Enter a valid amount."); return; }
+    if (reason.trim().length < 3) { toast.error("Add a short reason."); return; }
     setBusy(true);
     try {
       const fn = mode === "add" ? add : remove;
