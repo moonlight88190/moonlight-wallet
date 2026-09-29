@@ -32,7 +32,7 @@ CREATE INDEX IF NOT EXISTS idx_withdrawals_user_created ON public.withdrawals (u
 CREATE INDEX IF NOT EXISTS idx_withdrawals_wallet_created ON public.withdrawals (wallet_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON public.withdrawals (status);
 
-GRANT SELECT ON public.withdrawals TO authenticated;
+GRANT SELECT, INSERT ON public.withdrawals TO authenticated;
 GRANT ALL ON public.withdrawals TO service_role;
 ALTER TABLE public.withdrawals ENABLE ROW LEVEL SECURITY;
 

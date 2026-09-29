@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, ShieldCheck, Sparkles, Crown, CheckCircle2, Copy, Check, Clock, AlertTriangle, Building2 } from "lucide-react";
+import {
+  ChevronRight,
+  ShieldCheck,
+  Sparkles,
+  Crown,
+  CheckCircle2,
+  Copy,
+  Check,
+  Clock,
+  AlertTriangle,
+  Building2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageTitle } from "@/components/AppShell";
@@ -82,7 +93,11 @@ const REGIONS = [
   },
 ];
 
-export function parseUPIHandle(vpa: string): { isVPA: boolean; providerId?: string; providerName?: string } {
+export function parseUPIHandle(vpa: string): {
+  isVPA: boolean;
+  providerId?: string;
+  providerName?: string;
+} {
   const trimmed = vpa.trim().toLowerCase();
   if (!trimmed.includes("@") || trimmed.startsWith("@") || trimmed.endsWith("@")) {
     return { isVPA: false };
@@ -191,12 +206,12 @@ export function Withdraw() {
     }
 
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
+    const { data: wdId, error } = await supabase.rpc("create_withdrawal", {
       p_amount: amt,
       p_currency: preferredCurrency,
       p_method: selectedMethod?.name || "UPI Direct",
       p_upi_id: isUPI ? upiId.trim() : null,
-      p_provider: isUPI ? (upiDetection.providerName || "UPI") : null,
+      p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
       p_full_name: fullName.trim(),
       p_email: email.trim(),
       p_phone: phone.trim() || null,
@@ -275,7 +290,8 @@ export function Withdraw() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12">
       <PageTitle eyebrow="WITHDRAW" title="Withdraw Funds">
-        Transfer funds to European &amp; global financial accounts or redeem instantly into brand vouchers.
+        Transfer funds to European &amp; global financial accounts or redeem instantly into brand
+        vouchers.
       </PageTitle>
 
       {/* Account Age Eligibility Banner */}
@@ -285,7 +301,8 @@ export function Withdraw() {
           <div className="text-xs sm:text-sm space-y-1">
             <h4 className="font-bold tracking-tight">48-Hour Security Lock Active</h4>
             <p className="text-amber-600/90 dark:text-amber-400/90 leading-relaxed">
-              New accounts cannot withdraw during the first 48 hours after creation. Withdrawals unlock after 48 hours.
+              New accounts cannot withdraw during the first 48 hours after creation. Withdrawals
+              unlock after 48 hours.
             </p>
           </div>
         </div>
@@ -524,7 +541,9 @@ export function Withdraw() {
             <div className="space-y-3.5 pt-1">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">Amount ({preferredCurrency})</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Amount ({preferredCurrency})
+                  </label>
                   <Input
                     type="number"
                     value={withdrawAmount}
@@ -534,7 +553,9 @@ export function Withdraw() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">First Withdrawal Limit</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    First Withdrawal Limit
+                  </label>
                   <div className="h-10 rounded-xl border bg-secondary/40 px-3 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
                     $100 USD ({formatMoney(limit100InPreferred, preferredCurrency)})
                   </div>
@@ -543,7 +564,9 @@ export function Withdraw() {
 
               {selectedMethod.id.includes("upi") ? (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">UPI ID / VPA</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    UPI ID / VPA
+                  </label>
                   <Input
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
@@ -603,7 +626,9 @@ export function Withdraw() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">Phone (optional)</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Phone (optional)
+                  </label>
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -612,7 +637,9 @@ export function Withdraw() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">Reason / Note (optional)</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Reason / Note (optional)
+                  </label>
                   <Input
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -794,7 +821,11 @@ export function Withdraw() {
                 onClick={() => copyReceiptRef(activeReceipt.reference)}
                 className="flex h-9 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
               >
-                {refCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                {refCopied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
                 {refCopied ? "Copied" : "Copy"}
               </button>
             </div>
