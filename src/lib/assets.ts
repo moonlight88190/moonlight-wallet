@@ -320,7 +320,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/faster-payments.svg",
     region: "Europe",
     speed: "Instant",
-    badge: "UK Official",
+    badge: "Faster Payments",
   },
   {
     id: "upi",
@@ -329,7 +329,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/upi.png",
     region: "India",
     speed: "Instant",
-    badge: "NPCI Official",
+    badge: "UPI",
   },
   {
     id: "upi-qr",
@@ -380,7 +380,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/pix.svg",
     region: "International",
     speed: "Instant",
-    badge: "Bacen Official",
+    badge: "PIX",
   },
   {
     id: "interac",

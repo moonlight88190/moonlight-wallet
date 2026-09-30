@@ -70,7 +70,7 @@ const REGIONS = [
   {
     id: "india",
     title: "India Corridor",
-    badge: "NPCI Official Rail",
+    badge: "UPI Rail",
     flagCode: "IN",
     items: PAYMENT_METHODS.filter((m) => m.region === "India"),
   },
@@ -205,7 +205,7 @@ export function Withdraw() {
     }
 
     setBusy(true);
-    const { data: wdId, error } = await supabase.rpc("create_withdrawal", {
+    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
       p_amount: amt,
       p_currency: preferredCurrency,
       p_method: selectedMethod?.name || "UPI Direct",
@@ -238,7 +238,7 @@ export function Withdraw() {
 
     setTimeout(() => {
       setIsProcessing(false);
-      setActiveReceipt({
+      setActiveReceipt(({
         id: wdId as string,
         type: "withdraw",
         title: "Withdrawal Submitted",
@@ -250,7 +250,7 @@ export function Withdraw() {
         reference: refCode,
         status: "PROCESSING",
         date: new Date().toLocaleString(),
-      });
+      } as any));
     }, 1500);
   }
 
@@ -502,7 +502,7 @@ export function Withdraw() {
       {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 space-y-4 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-lg max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 space-y-4 sm:border border-border/80 bg-background shadow-2xl pb-safe">
             {/* Grab Handle for Mobile Bottom Sheet Feel */}
             <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
 
@@ -680,7 +680,7 @@ export function Withdraw() {
         }}
       >
         {(selectedCard || selectedLuxury) && (
-          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-md max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 sm:border border-border/80 bg-background shadow-2xl pb-safe">
             {/* Grab Handle for Mobile */}
             <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
 
@@ -778,7 +778,7 @@ export function Withdraw() {
       {/* Official Transaction Receipt Modal */}
       <Dialog open={!!activeReceipt} onOpenChange={() => setActiveReceipt(null)}>
         {activeReceipt && (
-          <DialogContent className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 sm:left-1/2 translate-x-0 sm:-translate-x-1/2 translate-y-0 sm:-translate-y-1/2 w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 space-y-5 border-t sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-md max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 space-y-5 sm:border border-border/80 bg-background shadow-2xl pb-safe">
             {/* Grab handle for mobile */}
             <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
 
