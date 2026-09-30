@@ -322,7 +322,7 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
       throw new Error("Admin session expired.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await (supabaseAdmin as any).rpc("admin_update_withdrawal_status", {
+    const { data: result, error } = await supabaseAdmin.rpc("admin_update_withdrawal_status", {
       p_actor: context.userId,
       p_withdrawal_id: data.withdrawalId,
       p_new_status: data.newStatus,
