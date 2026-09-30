@@ -83,11 +83,11 @@ export function PaymentAnimation({
 
       // Controlled randomized delays (total ~5.2s–5.8s)
       // Generates slightly varied delays for natural visual experience
-      const d1 = 800 + Math.floor(Math.random() * 250); // ~800-1050ms
-      const d2 = d1 + 900 + Math.floor(Math.random() * 300); // ~1700-2250ms
-      const d3 = d2 + 1000 + Math.floor(Math.random() * 300); // ~2700-3550ms
-      const d4 = d3 + 1000 + Math.floor(Math.random() * 300); // ~3700-4850ms
-      const d5 = d4 + 900 + Math.floor(Math.random() * 250); // ~4600-5700ms
+      const d1 = 300; // ~800-1050ms
+      const d2 = d1 + 300; // ~1700-2250ms
+      const d3 = d2 + 300; // ~2700-3550ms
+      const d4 = d3 + 300; // ~3700-4850ms
+      const d5 = d4 + 300; // ~4600-5700ms
 
       const t1 = setTimeout(() => setActiveStep(1), d1);
       const t2 = setTimeout(() => setActiveStep(2), d2);
@@ -105,6 +105,7 @@ export function PaymentAnimation({
     } else if (state === "completed") {
       setActiveStep(ANIMATION_STAGES.length - 1);
     }
+    return undefined;
   }, [state]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;

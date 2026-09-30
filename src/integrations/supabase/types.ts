@@ -412,6 +412,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_withdrawal_status: {
+        Args: {
+          p_actor: string
+          p_new_status: string
+          p_reason: string
+          p_withdrawal_id: string
+        }
+        Returns: undefined
+      }
       create_withdrawal: {
         Args: {
           p_amount: number

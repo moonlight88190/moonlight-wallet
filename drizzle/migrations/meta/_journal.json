@@ -22,6 +22,13 @@
       "when": 1790758215696,
       "tag": "0002_create_withdrawals",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790758278809,
+      "tag": "0003_admin_withdrawal_status",
+      "breakpoints": true
     }
   ]
 }

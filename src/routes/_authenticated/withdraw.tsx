@@ -70,7 +70,7 @@ const REGIONS = [
   {
     id: "india",
     title: "India Corridor",
-    badge: "NPCI Official Rail",
+    badge: "UPI Rail",
     flagCode: "IN",
     items: PAYMENT_METHODS.filter((m) => m.region === "India"),
   },
