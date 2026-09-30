@@ -15,6 +15,13 @@
       "when": 1790651039318,
       "tag": "0001_admin_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790758215696,
+      "tag": "0002_create_withdrawals",
+      "breakpoints": true
     }
   ]
 }
