@@ -664,7 +664,7 @@ function WithdrawalsSection({
               <button
                 onClick={() => {
                   setSelectedWd(w);
-                  setNewStatus(w.status === "PROCESSING" ? "SUCCESSFUL" : w.status);
+                  setNewStatus(w.status === "PROCESSING" ? "SUCCESSFUL" : w.status as WithdrawalStatus);
                   setStatusReason(w.reason || "");
                 }}
                 className="h-9 px-4 rounded-xl border border-border bg-secondary/80 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
@@ -698,7 +698,7 @@ function WithdrawalsSection({
               <label className="text-xs text-muted-foreground">Target Status</label>
               <select
                 value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                onChange={(e) => setNewStatus(e.target.value as WithdrawalStatus)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-medium"
               >
                 {["PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"].map(
