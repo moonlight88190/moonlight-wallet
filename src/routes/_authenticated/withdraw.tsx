@@ -238,7 +238,7 @@ export function Withdraw() {
 
     setTimeout(() => {
       setIsProcessing(false);
-      setActiveReceipt({
+      setActiveReceipt(({
         id: wdId as string,
         type: "withdraw",
         title: "Withdrawal Submitted",
@@ -250,7 +250,7 @@ export function Withdraw() {
         reference: refCode,
         status: "PROCESSING",
         date: new Date().toLocaleString(),
-      });
+      } as any));
     }, 1500);
   }
 
