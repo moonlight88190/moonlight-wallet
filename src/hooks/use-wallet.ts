@@ -80,6 +80,15 @@ export type Tx = NonNullable<ReturnType<typeof useTransactions>["data"]>[number]
 
 /** Direction and amount of a transaction from the viewer's perspective. */
 export function txView(tx: Tx, walletId: string | undefined) {
+  if (tx.kind === "withdrawal") {
+    return {
+      outgoing: true,
+      title: `Withdrawn to ${tx.recipient_name || tx.method || "Payout"}`,
+      amount: -(Number(tx.amount) + Number(tx.fee)),
+      currency: tx.currency,
+    };
+  }
+
   const outgoing = tx.sender_wallet_id === walletId;
   if (outgoing) {
     return {

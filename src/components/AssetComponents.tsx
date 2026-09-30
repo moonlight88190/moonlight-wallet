@@ -124,29 +124,60 @@ export function PaymentMethodIcon({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const method = PAYMENT_METHODS.find((m) => m.id === id);
-  const provider = UPI_PROVIDERS.find((p) => p.id === id);
-  const iconUrl = method?.iconUrl || provider?.iconUrl || `/assets/payment-methods/${id}.png`;
-  const name = method?.name || provider?.name || `${id} payment method`;
+  const cleanId = id.toLowerCase().replace(/.*[\/\\]/, "").replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
+  const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
+  const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
+
+  let iconUrl = method?.iconUrl || provider?.iconUrl;
+  if (!iconUrl) {
+    if (id.startsWith("/") || id.startsWith("assets/")) {
+      iconUrl = id.startsWith("/") ? id : `/${id}`;
+    } else if (cleanId === "yes-bank") {
+      iconUrl = "/assets/banks/yes-bank.jpg";
+    } else if (["sbi", "hdfc-bank", "icici-bank", "axis-bank"].includes(cleanId)) {
+      iconUrl = `/assets/banks/${cleanId}.png`;
+    } else {
+      iconUrl = `/assets/payment-methods/${cleanId}.png`;
+    }
+  }
+
+  const name = method?.name || provider?.name || `${cleanId} payment method`;
   const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
     setFailed(false);
   }, [iconUrl]);
 
-  const sizeContainer =
-    size === "sm"
-      ? "h-8 w-11 p-1"
-      : size === "lg"
-        ? "h-12 w-20 p-2"
-        : "h-10 w-16 sm:h-11 sm:w-18 p-1.5";
+  const wideIcons = [
+    "upi",
+    "upi-qr",
+    "google-pay",
+    "phonepe",
+    "paytm",
+    "bhim",
+    "aani",
+    "sepa",
+    "faster-payments",
+    "hdfc-bank",
+    "icici-bank",
+    "axis-bank",
+    "yes-bank",
+    "amazon-pay",
+    "airtel-payments-bank",
+  ];
+
+  const isWide = wideIcons.includes(cleanId);
+
+  const containerClass = isWide
+    ? "h-9 sm:h-10 px-2.5 aspect-[2.6/1] w-auto max-w-[120px] flex items-center justify-center rounded-xl border border-border/60 bg-white dark:bg-slate-900/90"
+    : "h-10 w-10 sm:h-11 sm:w-11 p-1.5 flex items-center justify-center rounded-xl border border-border/60 bg-white dark:bg-slate-900/90";
 
   if (failed) {
     return (
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-secondary text-muted-foreground shadow-2xs",
-          sizeContainer,
+          isWide ? "h-9 sm:h-10 w-24" : "h-10 w-10 sm:h-11 sm:w-11",
           className,
         )}
       >
@@ -158,15 +189,15 @@ export function PaymentMethodIcon({
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 p-1.5 shadow-2xs transition-all hover:border-primary/40",
-        sizeContainer,
+        "relative flex shrink-0 items-center justify-center overflow-hidden shadow-2xs transition-all hover:border-primary/40",
+        containerClass,
         className,
       )}
     >
       <img
         src={iconUrl}
         alt={name}
-        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
+        className="max-h-full max-w-full object-contain object-center transition-transform group-hover:scale-105"
         onError={() => setFailed(true)}
       />
     </div>
