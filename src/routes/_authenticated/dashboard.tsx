@@ -177,7 +177,7 @@ function Dashboard() {
             { to: "/withdraw", label: "Gift Cards", icon: Gift, primary: false },
             { to: "/transactions", label: "Activity", icon: History, primary: false },
           ].map((a, idx) => (
-            <Link
+            <Link {...({} as any)}
               key={`${a.to}-${idx}`}
               to={a.to}
               search={a.search}

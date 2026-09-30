@@ -304,7 +304,7 @@ function Receipt() {
   }
 
   // Normal Send Transfer Receipt
-  const t = tx.data.data;
+  const t = tx.data.data as any;
   const v = txView(t, wallet.data?.id);
   const d = new Date(t.created_at);
 
