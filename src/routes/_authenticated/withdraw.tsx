@@ -205,7 +205,7 @@ export function Withdraw() {
     }
 
     setBusy(true);
-    const { data: wdId, error } = await supabase.rpc("create_withdrawal", {
+    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
       p_amount: amt,
       p_currency: preferredCurrency,
       p_method: selectedMethod?.name || "UPI Direct",
