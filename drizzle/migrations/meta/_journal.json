@@ -29,6 +29,13 @@
       "when": 1790758278809,
       "tag": "0003_admin_withdrawal_status",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790758608636,
+      "tag": "0004_allow_withdrawal_admin_debit_kinds",
+      "breakpoints": true
     }
   ]
 }

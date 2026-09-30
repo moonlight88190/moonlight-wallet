@@ -1,0 +1,2 @@
+ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_kind_check;
+ALTER TABLE public.transactions ADD CONSTRAINT transactions_kind_check CHECK (kind IN ('transfer', 'admin_credit', 'admin_debit', 'redemption', 'gift_card', 'withdrawal'));
