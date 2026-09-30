@@ -238,20 +238,8 @@ export function Withdraw() {
 
     setTimeout(() => {
       setIsProcessing(false);
-      setActiveReceipt(({
-        id: wdId as string,
-        type: "withdraw",
-        title: "Withdrawal Submitted",
-        amount: amt,
-        currency: preferredCurrency,
-        methodOrBrand: chosenMethod?.name || "UPI Direct",
-        accountOrCode: isUPI ? upiId.trim() : email.trim(),
-        provider: isUPI ? upiDetection.providerName : undefined,
-        reference: refCode,
-        status: "PROCESSING",
-        date: new Date().toLocaleString(),
-      } as any));
-    }, 1500);
+      navigate({ to: "/transactions/$id", params: { id: wdId as string } });
+    }, 2500);
   }
 
   function handleRedeemCard() {

@@ -125,7 +125,36 @@ function Receipt() {
         .eq("id", id)
         .maybeSingle();
 
-      if (txData) return { type: "transaction" as const, data: txData };
+      if (txData) {
+        if (txData.kind === "withdrawal") {
+          const { data: wdData } = await supabase
+            .from("withdrawals")
+            .select("*")
+            .or(`id.eq.${txData.id},transaction_id.eq.${txData.id}`)
+            .maybeSingle();
+
+          if (wdData) {
+            return { type: "withdrawal" as const, data: wdData, txData };
+          }
+
+          return {
+            type: "withdrawal" as const,
+            data: {
+              id: txData.id,
+              amount: txData.amount,
+              currency: txData.currency,
+              method: txData.method || "Payout Rail",
+              full_name: txData.recipient_name || "Beneficiary",
+              email: txData.recipient_wallet_code || "",
+              status: txData.status || "PROCESSING",
+              reference_code: txData.reference || `MLW-${txData.id.substring(0, 8).toUpperCase()}`,
+              created_at: txData.created_at,
+            },
+            txData,
+          };
+        }
+        return { type: "transaction" as const, data: txData };
+      }
 
       // If not in transactions, check withdrawals table
       const { data: wdData } = await supabase
@@ -167,6 +196,13 @@ function Receipt() {
     };
 
     const refCode = wd.reference_code || wd.reference || "";
+    const methodLower = (wd.method || "").toLowerCase();
+    const isIndianCorridor =
+      wd.currency === "INR" ||
+      methodLower.includes("upi") ||
+      methodLower.includes("in-bank") ||
+      methodLower.includes("indian") ||
+      Boolean(wd.upi_id);
 
     const rows: [string, string][] = [
       ["Method", wd.method || "UPI Direct"],
@@ -279,6 +315,23 @@ function Receipt() {
               </div>
             ))}
           </div>
+
+          {/* Accepted Indian Bank & Network Strip */}
+          {isIndianCorridor && (
+            <div className="space-y-2 pt-2 border-t border-border/40">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center">
+                Supported Bank &amp; Network Rails
+              </p>
+              <div className="flex items-center justify-start gap-2 overflow-x-auto py-2 px-1 no-scrollbar scrollbar-none touch-pan-x min-w-0">
+                <PaymentMethodIcon id="sbi" />
+                <PaymentMethodIcon id="hdfc-bank" />
+                <PaymentMethodIcon id="icici-bank" />
+                <PaymentMethodIcon id="axis-bank" />
+                <PaymentMethodIcon id="yes-bank" />
+                <PaymentMethodIcon id="upi" />
+              </div>
+            </div>
+          )}
 
           <div className="border-t border-border/40 pt-3 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">

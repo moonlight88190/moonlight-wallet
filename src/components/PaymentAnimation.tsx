@@ -47,13 +47,22 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   PLN: "zł",
 };
 
-const ANIMATION_STAGES = [
-  "Confirming transaction details...",
-  "Validating double-entry ledger & rails...",
-  "Processing settlement request...",
-  "Applying ledger transaction...",
-  "Finalizing cryptographic record...",
-  "Settlement confirmed & receipt issued",
+const WITHDRAWAL_STAGES = [
+  "Confirming withdrawal request & beneficiary details...",
+  "Validating double-entry balance & settlement limit...",
+  "Routing request to banking gateway & payout rail...",
+  "Deducting ledger balance & issuing transaction ID...",
+  "Finalizing payout dispatch & recording audit log...",
+  "Withdrawal request submitted & processing initiated",
+];
+
+const TRANSFER_STAGES = [
+  "Validating sender authentication & double-entry ledger...",
+  "Verifying recipient account & settlement network rail...",
+  "Executing real-time multi-currency FX conversion & clearance...",
+  "Applying double-entry debit & credit ledger entries...",
+  "Generating cryptographic receipt & immutable ledger proof...",
+  "Settlement confirmed & official ledger record issued",
 ];
 
 export function PaymentAnimation({
@@ -76,42 +85,58 @@ export function PaymentAnimation({
   const [stage, setStage] = useState<"confirming" | "processing" | "completed" | "failed">(state);
   const [activeStep, setActiveStep] = useState(0);
 
+  const steps = type === "withdrawal" ? WITHDRAWAL_STAGES : TRANSFER_STAGES;
+
   useEffect(() => {
     setStage(state);
     if (state === "processing") {
       setActiveStep(0);
 
-      // Controlled randomized delays (total ~5.2s–5.8s)
-      // Generates slightly varied delays for natural visual experience
-      const d1 = 300; // ~800-1050ms
-      const d2 = d1 + 300; // ~1700-2250ms
-      const d3 = d2 + 300; // ~2700-3550ms
-      const d4 = d3 + 300; // ~3700-4850ms
-      const d5 = d4 + 300; // ~4600-5700ms
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        setActiveStep(steps.length - 1);
+        return undefined;
+      }
 
-      const t1 = setTimeout(() => setActiveStep(1), d1);
-      const t2 = setTimeout(() => setActiveStep(2), d2);
-      const t3 = setTimeout(() => setActiveStep(3), d3);
-      const t4 = setTimeout(() => setActiveStep(4), d4);
-      const t5 = setTimeout(() => setActiveStep(5), d5);
+      const isWithdrawal = type === "withdrawal";
+      // Withdrawals: total ~2.0s–3.0s; Transfers: total ~4.0s–5.0s
+      const baseMin = isWithdrawal ? 400 : 800;
+      const baseMax = isWithdrawal ? 550 : 950;
+
+      const step1 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
+      const step2 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
+      const step3 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
+      const step4 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
+      const step5 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
+
+      const d1 = step1;
+      const d2 = d1 + step2;
+      const d3 = d2 + step3;
+      const d4 = d3 + step4;
+      const d5 = d4 + step5;
+
+      const timers: NodeJS.Timeout[] = [
+        setTimeout(() => setActiveStep(1), d1),
+        setTimeout(() => setActiveStep(2), d2),
+        setTimeout(() => setActiveStep(3), d3),
+        setTimeout(() => setActiveStep(4), d4),
+        setTimeout(() => setActiveStep(5), d5),
+      ];
 
       return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        clearTimeout(t4);
-        clearTimeout(t5);
+        timers.forEach((t) => clearTimeout(t));
       };
     } else if (state === "completed") {
-      setActiveStep(ANIMATION_STAGES.length - 1);
+      setActiveStep(steps.length - 1);
     }
     return undefined;
-  }, [state]);
+  }, [state, type, steps.length]);
 
   const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
   const destSymbol = CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
-  const steps = ANIMATION_STAGES;
 
   return (
     <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-300">
