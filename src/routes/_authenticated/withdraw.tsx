@@ -137,9 +137,6 @@ export function Withdraw() {
 
   // States
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(null);
-  const [selectedCard, setSelectedCard] = useState<GiftCardMeta | null>(null);
-  const [selectedLuxury, setSelectedLuxury] = useState<LuxuryBrandMeta | null>(null);
-  const [cardValue, setCardValue] = useState<number>(100);
 
   // Form Fields
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
@@ -153,20 +150,6 @@ export function Withdraw() {
   // Animation & Receipt Modal State
   const [isProcessing, setIsProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [activeReceipt, setActiveReceipt] = useState<{
-    id?: string;
-    type: "withdraw" | "voucher";
-    title: string;
-    amount: number;
-    currency: string;
-    methodOrBrand: string;
-    accountOrCode: string;
-    provider?: string;
-    reference: string;
-    status: string;
-    date: string;
-  } | null>(null);
-  const [refCopied, setRefCopied] = useState(false);
 
   const categories = ["All", "Gaming", "Shopping", "Entertainment", "Luxury", "Travel"];
 
@@ -227,9 +210,6 @@ export function Withdraw() {
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
 
-    const refCode = `MLW-${(wdId as string).substring(0, 8).toUpperCase()}`;
-    const chosenMethod = selectedMethod;
-
     setSelectedMethod(null);
     setUpiId("");
     setReason("");
@@ -241,38 +221,6 @@ export function Withdraw() {
       navigate({ to: "/transactions/$id", params: { id: wdId as string } });
     }, 2500);
   }
-
-  function handleRedeemCard() {
-    const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
-    const refCode = `ML-VC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-    setSelectedCard(null);
-    setSelectedLuxury(null);
-
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      setActiveReceipt({
-        type: "voucher",
-        title: `${brandName} Digital Voucher Issued`,
-        amount: cardValue,
-        currency: preferredCurrency,
-        methodOrBrand: brandName,
-        accountOrCode: `VOUCHER-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-        reference: refCode,
-        status: "SUCCESSFUL",
-        date: new Date().toLocaleString(),
-      });
-    }, 1500);
-  }
-
-  const copyReceiptRef = (ref: string) => {
-    navigator.clipboard.writeText(ref);
-    setRefCopied(true);
-    toast.success("Reference code copied to clipboard!");
-    setTimeout(() => setRefCopied(false), 2000);
-  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 sm:space-y-12 pb-12">
@@ -401,23 +349,21 @@ export function Withdraw() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {LUXURY_BRANDS.map((brand) => (
-            <div
+            <Button
+              type="button"
+              variant="outline"
               key={brand.id}
-              onClick={() => setSelectedLuxury(brand)}
+              onClick={() => toast.info("Coming soon")}
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
             >
               <div className="relative flex h-12 w-full items-center justify-center p-1">
-                <img
-                  src={brand.logoUrl}
-                  alt={brand.name}
-                  className="max-h-9 max-w-[90px] object-contain filter dark:invert group-hover:scale-105 transition-transform"
-                />
+                <img src={brand.logoUrl} alt={brand.name} className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform" />
               </div>
               <div className="mt-2 w-full border-t border-border/40 pt-2">
                 <p className="text-xs font-semibold text-foreground truncate">{brand.name}</p>
                 <p className="text-[10px] text-muted-foreground truncate">{brand.category}</p>
               </div>
-            </div>
+            </Button>
           ))}
         </div>
       </div>
@@ -457,9 +403,11 @@ export function Withdraw() {
         {activeCategory === "Luxury" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
             {LUXURY_BRANDS.slice(0, 8).map((brand) => (
-              <div
+              <Button
+                type="button"
+                variant="outline"
                 key={brand.id}
-                onClick={() => setSelectedLuxury(brand)}
+                onClick={() => toast.info("Coming soon")}
                 className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-soft cursor-pointer active:scale-[0.98]"
               >
                 <div className="relative flex h-12 w-full items-center justify-center p-1">
@@ -475,13 +423,13 @@ export function Withdraw() {
                     Luxury Pass
                   </p>
                 </div>
-              </div>
+              </Button>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
             {filteredCards.map((card) => (
-              <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
+              <GiftCardBrand key={card.id} card={card} onClick={() => toast.info("Coming soon")} />
             ))}
           </div>
         )}
@@ -520,7 +468,7 @@ export function Withdraw() {
                       key={prov.id}
                       className="flex items-center gap-1.5 rounded-xl border bg-card px-2.5 py-1.5 shadow-2xs shrink-0 text-xs font-medium"
                     >
-                      <img src={prov.iconUrl} alt={prov.name} className="h-4 w-4 object-contain" />
+                      <PaymentMethodIcon id={prov.id} size="sm" />
                       <span>{prov.name}</span>
                     </div>
                   ))}
@@ -563,7 +511,7 @@ export function Withdraw() {
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="username@ybl, username@okaxis or username@paytm"
-                    className="rounded-xl h-12 text-base sm:text-sm font-mono"
+                    className="rounded-xl h-12 text-base font-mono"
                   />
                   {upiId.trim() && (
                     <div className="flex items-center justify-between text-xs px-1 pt-0.5">
@@ -589,7 +537,7 @@ export function Withdraw() {
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="Account / IBAN details"
-                    className="rounded-xl h-12 text-base sm:text-sm font-mono"
+                    className="rounded-xl h-12 text-base font-mono"
                   />
                 </div>
               )}
@@ -602,7 +550,7 @@ export function Withdraw() {
                     autoComplete="name"
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Full Name"
-                    className="rounded-xl h-12 text-base sm:text-sm"
+                    className="rounded-xl h-12 text-base"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -613,7 +561,7 @@ export function Withdraw() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@email.com"
-                    className="rounded-xl h-12 text-base sm:text-sm"
+                    className="rounded-xl h-12 text-base"
                   />
                 </div>
               </div>
@@ -629,7 +577,7 @@ export function Withdraw() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+1 234 567 890"
-                    className="rounded-xl h-12 text-base sm:text-sm"
+                    className="rounded-xl h-12 text-base"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -640,7 +588,7 @@ export function Withdraw() {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Payout reason"
-                    className="rounded-xl h-12 text-base sm:text-sm"
+                    className="rounded-xl h-12 text-base"
                   />
                 </div>
               </div>

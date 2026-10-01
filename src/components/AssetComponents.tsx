@@ -217,7 +217,7 @@ export function GiftCardBrand({
 
   React.useEffect(() => {
     setImgFailed(false);
-  }, [cardData.imageUrl]);
+  }, [cardData.logoUrl]);
 
   return (
     <button
