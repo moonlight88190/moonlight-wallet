@@ -55,11 +55,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col antialiased selection:bg-primary/10">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link to="/dashboard" className="flex items-center gap-2.5 group">
+        <div className="mx-auto grid h-16 max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:px-6">
+          <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5 group">
             <LogoMark className="h-8 w-8 group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
-              <span className="text-[13px] font-semibold tracking-[0.22em] text-foreground">
+              <span className="truncate text-[13px] font-semibold tracking-[0.22em] text-foreground">
                 MOONLIGHT
               </span>
               <span className="text-[9px] font-semibold tracking-[0.15em] text-muted-foreground uppercase -mt-0.5">
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="More options"
-                className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-hidden"
               >
                 <MoreHorizontal className="h-5 w-5" />
               </DropdownMenuTrigger>
@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               to="/receive"
               aria-label="Profile Details"
-              className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-secondary border border-border/50 text-xs font-bold text-foreground transition-transform hover:scale-105"
+              className="ml-1 flex h-11 w-11 items-center justify-center rounded-full bg-secondary border border-border/50 text-xs font-bold text-foreground transition-transform hover:scale-105"
             >
               {initials}
             </Link>
@@ -138,7 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-6 sm:py-10 flex-1 pb-28 md:pb-12 animate-in fade-in duration-300">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-6 sm:py-10 flex-1 pb-36 md:pb-12 animate-in fade-in duration-300">
         {children}
       </main>
 
