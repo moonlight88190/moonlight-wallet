@@ -48,13 +48,9 @@ function Login() {
   const [fromCurr, setFromCurr] = useState<string>("USD");
   const [toCurr, setToCurr] = useState<string>("INR");
 
-  const numericAmount = Number(previewAmount) || 0;
-  const convertedVal = Number.isFinite(convert(numericAmount, fromCurr, toCurr, rates))
-    ? convert(numericAmount, fromCurr, toCurr, rates)
-    : 0;
-  const rateRatio = Number.isFinite(convert(1, fromCurr, toCurr, rates))
-    ? convert(1, fromCurr, toCurr, rates)
-    : 1;
+  const numAmt = Number(previewAmount) || 0;
+  const convertedVal = convert(numAmt, fromCurr, toCurr, rates);
+  const rateRatio = convert(1, fromCurr, toCurr, rates);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -106,7 +102,7 @@ function Login() {
     >
       <button
         onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-        className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border/80 bg-card/80 px-6 py-3.5 text-sm font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.99]"
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border/80 bg-card/80 px-6 py-3.5 text-sm font-semibold transition-all hover:bg-accent hover:border-primary/40 shadow-2xs active:scale-[0.99] cursor-pointer touch-manipulation"
       >
         <GoogleIcon /> Continue with Google
       </button>
@@ -141,7 +137,7 @@ function Login() {
         </div>
         <button
           disabled={busy}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 shadow-soft cursor-pointer touch-manipulation"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
         </button>
@@ -222,4 +218,3 @@ function Login() {
     </AuthLayout>
   );
 }
-

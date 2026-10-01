@@ -114,13 +114,9 @@ function Landing() {
   const [calcTo, setCalcTo] = useState<string>("USD");
   const [activeTab, setActiveTab] = useState<string>("EUR");
 
-  const numericAmount = Number(calcAmount) || 0;
-  const convertedVal = Number.isFinite(convert(Number(calcAmount), calcFrom, calcTo, rates))
-    ? convert(Number(calcAmount), calcFrom, calcTo, rates)
-    : 0;
-  const rateRatio = Number.isFinite(convert(1, calcFrom, calcTo, rates))
-    ? convert(1, calcFrom, calcTo, rates)
-    : 1;
+  const numAmt = Number(calcAmount) || 0;
+  const convertedVal = convert(numAmt, calcFrom, calcTo, rates);
+  const rateRatio = convert(1, calcFrom, calcTo, rates);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -244,13 +240,13 @@ function Landing() {
               <>
                 <button
                   onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-                  className="w-full sm:w-auto h-13 text-sm min-w-[200px] flex items-center justify-center gap-2.5 rounded-full border border-border/80 bg-card/90 px-6 py-3.5 font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.99]"
+                  className="w-full sm:w-auto h-13 text-sm min-w-[200px] flex items-center justify-center gap-2.5 rounded-full border border-border/80 bg-card/90 px-6 py-3.5 font-semibold transition-all hover:bg-accent hover:border-primary/40 shadow-2xs active:scale-[0.98] cursor-pointer touch-manipulation"
                 >
                   <GoogleIcon /> Continue with Google
                 </button>
                 <Link
                   to="/login"
-                  className="w-full sm:w-auto h-13 text-sm min-w-[170px] flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
+                  className="w-full sm:w-auto h-13 text-sm min-w-[170px] flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-soft active:scale-[0.98] touch-manipulation"
                 >
                   <Mail className="h-4 w-4" /> Open Account
                 </Link>
@@ -510,4 +506,3 @@ function Landing() {
     </div>
   );
 }
-
