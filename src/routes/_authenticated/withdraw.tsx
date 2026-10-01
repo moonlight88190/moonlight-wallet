@@ -137,6 +137,9 @@ export function Withdraw() {
 
   // States
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(null);
+  const [selectedCard, setSelectedCard] = useState<GiftCardMeta | null>(null);
+  const [selectedLuxury, setSelectedLuxury] = useState<LuxuryBrandMeta | null>(null);
+  const [cardValue, setCardValue] = useState<number>(100);
 
   // Form Fields
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
@@ -150,6 +153,66 @@ export function Withdraw() {
   // Animation & Receipt Modal State
   const [isProcessing, setIsProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [activeReceipt, setActiveReceipt] = useState<{
+    title: string;
+    status: string;
+    amount: number;
+    currency: string;
+    methodOrBrand: string;
+    provider?: string;
+    accountOrCode: string;
+    date: string;
+    reference: string;
+  } | null>(null);
+  const [refCopied, setRefCopied] = useState(false);
+
+  function copyReceiptRef(ref: string) {
+    navigator.clipboard.writeText(ref);
+    setRefCopied(true);
+    toast.success("Reference code copied!");
+    setTimeout(() => setRefCopied(false), 2000);
+  }
+
+  async function handleRedeemCard() {
+    if (!isEligible48h) {
+      toast.error("Withdrawals unlock 48 hours after account creation.");
+      return;
+    }
+
+    const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
+    setBusy(true);
+    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
+      p_amount: cardValue,
+      p_currency: preferredCurrency,
+      p_method: "Digital Voucher Pass",
+      p_upi_id: null,
+      p_provider: brandName,
+      p_full_name: profile?.full_name || "Valued Customer",
+      p_email: profile?.email || "customer@moonlight.com",
+      p_phone: null,
+      p_reason: `Redeemed ${brandName} Voucher`,
+    });
+    setBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    qc.invalidateQueries({ queryKey: ["wallet"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    qc.invalidateQueries({ queryKey: ["withdrawals"] });
+
+    setSelectedCard(null);
+    setSelectedLuxury(null);
+
+    setIsProcessing(true);
+
+    setTimeout(() => {
+      setIsProcessing(false);
+      navigate({ to: "/transactions/$id", params: { id: wdId as string } });
+    }, 2500);
+  }
 
   const categories = ["All", "Gaming", "Shopping", "Entertainment", "Luxury", "Travel"];
 
@@ -353,7 +416,13 @@ export function Withdraw() {
               type="button"
               variant="outline"
               key={brand.id}
-              onClick={() => toast.info("Coming soon")}
+              onClick={() => {
+                if (!isEligible48h) {
+                  toast.error("Withdrawals unlock 48 hours after account creation.");
+                  return;
+                }
+                setSelectedLuxury(brand);
+              }}
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
             >
               <div className="relative flex h-12 w-full items-center justify-center p-1">
@@ -411,7 +480,13 @@ export function Withdraw() {
                 type="button"
                 variant="outline"
                 key={brand.id}
-                onClick={() => toast.info("Coming soon")}
+                onClick={() => {
+                  if (!isEligible48h) {
+                    toast.error("Withdrawals unlock 48 hours after account creation.");
+                    return;
+                  }
+                  setSelectedLuxury(brand);
+                }}
                 className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-soft cursor-pointer active:scale-[0.98]"
               >
                 <div className="relative flex h-12 w-full items-center justify-center p-1">
@@ -433,7 +508,17 @@ export function Withdraw() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
             {filteredCards.map((card) => (
-              <GiftCardBrand key={card.id} card={card} onClick={() => toast.info("Coming soon")} />
+              <GiftCardBrand
+                key={card.id}
+                card={card}
+                onClick={() => {
+                  if (!isEligible48h) {
+                    toast.error("Withdrawals unlock 48 hours after account creation.");
+                    return;
+                  }
+                  setSelectedCard(card);
+                }}
+              />
             ))}
           </div>
         )}
