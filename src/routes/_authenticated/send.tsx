@@ -361,7 +361,8 @@ function Send() {
                   <span className="font-semibold">{formatMoney(fee, cur)}</span>
                 </div>
                 <div className="pt-1.5 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled
+                  or reversed.
                 </div>
               </div>
             )}
@@ -441,7 +442,8 @@ function Send() {
               <span>{formatMoney(amt + fee, cur)}</span>
             </div>
             <div className="py-3 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-3 rounded-xl">
-              Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+              Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or
+              reversed.
             </div>
             {note && (
               <div className="flex justify-between gap-4 py-4 text-sm">
