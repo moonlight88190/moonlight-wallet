@@ -690,3 +690,18 @@ export const INVESTMENTS: InvestmentMeta[] = [
     badge: "Private Standard",
   },
 ];
+
+export function getMethodTargetCurrency(methodId: string): string {
+  const m = methodId.toLowerCase();
+  if (m.includes("upi") || m.includes("in-bank") || m === "sbi" || m === "hdfc" || m === "icici" || m === "axis") return "INR";
+  if (m.includes("gcash") || m.includes("ph-bank")) return "PHP";
+  if (m.includes("cz-bank") || m.includes("czech")) return "CZK";
+  if (m.includes("faster-payments") || m.includes("uk")) return "GBP";
+  if (m.includes("paynow")) return "SGD";
+  if (m.includes("pix")) return "BRL";
+  if (m.includes("interac")) return "CAD";
+  if (m.includes("jp-bank") || m.includes("zengin")) return "JPY";
+  if (m.includes("aani")) return "AED";
+  if (m.includes("sepa")) return "EUR";
+  return "EUR";
+}
