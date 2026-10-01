@@ -9,7 +9,7 @@
     "directory": ".output/public"
   },
   "build": {
-    "command": "bun run build"
+    "command": "npm run build"
   },
   "observability": {
     "enabled": true
