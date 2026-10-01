@@ -100,10 +100,9 @@ export function PaymentAnimation({
         return undefined;
       }
 
-      const isWithdrawal = type === "withdrawal";
-      // Withdrawals: total ~2.0s–3.0s; Transfers: total ~4.0s–5.0s
-      const baseMin = isWithdrawal ? 400 : 800;
-      const baseMax = isWithdrawal ? 550 : 950;
+      // 5-7 seconds total duration across 5 step transitions (1000ms-1350ms per step)
+      const baseMin = 1000;
+      const baseMax = 1350;
 
       const step1 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
       const step2 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;

@@ -163,7 +163,9 @@ export function Withdraw() {
     ? getMethodTargetCurrency(selectedMethod.id)
     : withdrawCurrency;
   const sourceAmt = Number(withdrawAmount) || 0;
-  const convertedTargetAmt = convert(sourceAmt, withdrawCurrency, targetCorridorCurrency, r);
+  const withdrawalFee = sourceAmt * 0.10;
+  const netPayoutSourceAmt = Math.max(0, sourceAmt - withdrawalFee);
+  const convertedTargetAmt = convert(netPayoutSourceAmt, withdrawCurrency, targetCorridorCurrency, r);
   const fxRateRatio = convert(1, withdrawCurrency, targetCorridorCurrency, r);
   const isCrossCorridor = withdrawCurrency !== targetCorridorCurrency;
 
@@ -231,7 +233,7 @@ export function Withdraw() {
     setTimeout(() => {
       setIsProcessing(false);
       navigate({ to: "/transactions/$id", params: { id: wdId as string } });
-    }, 2500);
+    }, 6000);
   }
 
   const categories = ["All", "Gaming", "Shopping", "Entertainment", "Luxury", "Travel"];
@@ -308,7 +310,7 @@ export function Withdraw() {
     setTimeout(() => {
       setIsProcessing(false);
       navigate({ to: "/transactions/$id", params: { id: wdId as string } });
-    }, 2500);
+    }, 6000);
   }
 
   return (
@@ -377,10 +379,6 @@ export function Withdraw() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      if (!isEligible48h) {
-                        toast.error("Withdrawals unlock 48 hours after account creation.");
-                        return;
-                      }
                       setSelectedMethod(item);
                       setFullName(profile?.full_name || "");
                       setEmail(profile?.email || "");
@@ -443,10 +441,6 @@ export function Withdraw() {
               variant="outline"
               key={brand.id}
               onClick={() => {
-                if (!isEligible48h) {
-                  toast.error("Withdrawals unlock 48 hours after account creation.");
-                  return;
-                }
                 setSelectedLuxury(brand);
               }}
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
@@ -507,10 +501,6 @@ export function Withdraw() {
                 variant="outline"
                 key={brand.id}
                 onClick={() => {
-                  if (!isEligible48h) {
-                    toast.error("Withdrawals unlock 48 hours after account creation.");
-                    return;
-                  }
                   setSelectedLuxury(brand);
                 }}
                 className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-soft cursor-pointer active:scale-[0.98]"
@@ -538,10 +528,6 @@ export function Withdraw() {
                 key={card.id}
                 card={card}
                 onClick={() => {
-                  if (!isEligible48h) {
-                    toast.error("Withdrawals unlock 48 hours after account creation.");
-                    return;
-                  }
                   setSelectedCard(card);
                 }}
               />
@@ -553,15 +539,15 @@ export function Withdraw() {
       {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="fixed inset-0 z-50 flex flex-col w-full h-[100dvh] max-h-[100dvh] rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:rounded-3xl sm:border sm:border-border/80">
+          <DialogContent className="translate-x-0 translate-y-0 inset-0 left-0 top-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[92vh] sm:rounded-3xl sm:border sm:border-border/80 sm:p-6 shadow-2xl">
             {/* Grab Handle for Mobile Bottom Sheet Feel */}
-            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-2 sm:hidden shrink-0" />
 
-            <DialogHeader>
+            <DialogHeader className="text-left space-y-1 pb-2 border-b border-border/40">
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
                 <div className="min-w-0">
-                  <DialogTitle className="text-base sm:text-lg font-semibold truncate">
+                  <DialogTitle className="text-base sm:text-lg font-bold truncate">
                     {selectedMethod.name}
                   </DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground truncate">
@@ -639,6 +625,18 @@ export function Withdraw() {
                     {formatMoney(sourceAmt, withdrawCurrency)}
                   </span>
                 </div>
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Transaction Charge (10%):</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                    {formatMoney(withdrawalFee, withdrawCurrency)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-primary/10">
+                  <span className="font-semibold text-foreground">Net Amount After Charge:</span>
+                  <span className="font-semibold text-foreground">
+                    {formatMoney(netPayoutSourceAmt, withdrawCurrency)}
+                  </span>
+                </div>
                 {isCrossCorridor && (
                   <>
                     <div className="flex justify-between items-center">
@@ -655,6 +653,9 @@ export function Withdraw() {
                     </div>
                   </>
                 )}
+                <div className="pt-2 border-t border-primary/10 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Notice: Transaction charge is 10%. Once submitted, withdrawals cannot be cancelled or reversed.
+                </div>
               </div>
 
               {selectedMethod.id.includes("upi") ? (
@@ -771,12 +772,12 @@ export function Withdraw() {
         }}
       >
         {(selectedCard || selectedLuxury) && (
-          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-md max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="translate-x-0 translate-y-0 inset-0 left-0 top-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:max-h-[90vh] sm:rounded-3xl sm:border sm:border-border/80 sm:p-6 shadow-2xl">
             {/* Grab Handle for Mobile */}
-            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-2 sm:hidden shrink-0" />
 
-            <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-semibold">
+            <DialogHeader className="text-left space-y-1 pb-2 border-b border-border/40">
+              <DialogTitle className="text-base sm:text-lg font-bold">
                 {selectedCard?.brand || selectedLuxury?.name} Voucher
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
