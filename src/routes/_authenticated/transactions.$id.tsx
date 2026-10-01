@@ -185,7 +185,7 @@ function Receipt() {
   const verified = isEuropeanVerified(profile.data?.email);
 
   if (isWithdrawal) {
-    const wd = tx.data.data as any;
+    const wd = tx.data.data as Record<string, unknown>;
     const d = new Date(wd.created_at);
 
     const handleCopyRef = () => {
@@ -361,7 +361,7 @@ function Receipt() {
   }
 
   // Normal Send Transfer Receipt
-  const t = tx.data.data as any;
+  const t = tx.data.data as Record<string, unknown>;
   const v = txView(t, wallet.data?.id);
   const d = new Date(t.created_at);
 

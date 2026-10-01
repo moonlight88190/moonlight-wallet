@@ -181,7 +181,13 @@ export function Withdraw() {
 
     const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
+    const client = supabase as unknown as {
+      rpc: (
+        fn: string,
+        params: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: unknown }>;
+    };
+    const { data: wdId, error } = await client.rpc("create_withdrawal", {
       p_amount: cardValue,
       p_currency: preferredCurrency,
       p_method: "Digital Voucher Pass",
@@ -251,7 +257,13 @@ export function Withdraw() {
     }
 
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
+    const client = supabase as unknown as {
+      rpc: (
+        fn: string,
+        params: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: unknown }>;
+    };
+    const { data: wdId, error } = await client.rpc("create_withdrawal", {
       p_amount: amt,
       p_currency: preferredCurrency,
       p_method: selectedMethod?.name || "UPI Direct",

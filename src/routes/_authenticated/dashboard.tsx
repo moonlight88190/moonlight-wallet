@@ -178,7 +178,6 @@ function Dashboard() {
             { to: "/transactions", label: "Activity", icon: History, primary: false },
           ].map((a, idx) => (
             <Link
-              {...({} as any)}
               key={`${a.to}-${idx}`}
               to={a.to}
               search={a.search}
