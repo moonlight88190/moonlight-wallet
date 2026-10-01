@@ -1,6 +1,6 @@
 import { defineNitroConfig } from "nitro/config";
 
 export default defineNitroConfig({
-  preset: "cloudflare-module",
+  preset: process.env.VERCEL ? "vercel" : "cloudflare-module",
   compatibilityDate: "2024-11-01",
 });

@@ -153,7 +153,6 @@ export function PaymentMethodIcon({
 
   // CATEGORIZATION BY NATIVE ASPECT RATIO
   const SQUARE_IDS = [
-    "upi",
     "sepa",
     "sbi",
     "gcash",

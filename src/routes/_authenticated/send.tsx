@@ -335,11 +335,8 @@ function Send() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-muted-foreground pt-1">
-                  <span>Transaction Charge (10%):</span>
+                  <span>Transfer Fee (0.5%):</span>
                   <span>{formatMoney(fee, cur)}</span>
-                </div>
-                <div className="pt-2 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                  Note: Transaction charge is 10%. Once sent, transfers cannot be cancelled or reversed.
                 </div>
               </div>
             )}
@@ -399,7 +396,7 @@ function Send() {
               </span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
-              <span className="text-muted-foreground">Transaction Charge (10%)</span>
+              <span className="text-muted-foreground">Fee (0.5%)</span>
               <span className="text-right font-medium">{formatMoney(fee, cur)}</span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
@@ -418,9 +415,6 @@ function Send() {
                 <span className="text-right font-medium">{note}</span>
               </div>
             )}
-            <div className="py-3 text-[11px] text-center text-amber-600 dark:text-amber-400 font-medium">
-              Transaction charge is 10% of the transfer amount. Once sent, transactions cannot be cancelled or reversed.
-            </div>
           </div>
           <button disabled={busy} onClick={confirmTransfer} className={`${btn} mt-8`}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}

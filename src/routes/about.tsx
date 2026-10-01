@@ -33,7 +33,7 @@ const SECTIONS = [
   ],
   [
     "Security & Ledger Integrity",
-    "Moonlight is built around protected account access, double-entry ledger verification, and server-enforced balances.",
+    "Moonlight is built around protected account access, synchronized international interbank ledger verification, and server-enforced balances.",
   ],
   [
     "Private Wealth Standard",
