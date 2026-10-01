@@ -138,7 +138,7 @@ export function PaymentAnimation({
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-soft backdrop-blur-xl transition-all duration-300">
+    <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-2xl backdrop-blur-2xl transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
       {/* Route Header: Country/Currency route */}
       <div className="flex w-full items-center justify-between border-b border-border/50 pb-4 mb-5">
         <div className="flex items-center gap-2">
@@ -184,14 +184,14 @@ export function PaymentAnimation({
         {/* Core Circle */}
         <div
           className={cn(
-            "relative flex h-24 w-24 items-center justify-center rounded-full shadow-lg transition-all duration-500",
+            "relative flex h-24 w-24 items-center justify-center rounded-full shadow-xl transition-all duration-500 transform active:scale-95",
             stage === "completed"
-              ? "bg-emerald-500 text-white shadow-emerald-500/20 scale-105"
+              ? "bg-emerald-500 text-white shadow-emerald-500/30 scale-105"
               : stage === "failed"
-                ? "bg-destructive text-destructive-foreground shadow-destructive/20"
+                ? "bg-destructive text-destructive-foreground shadow-destructive/30"
                 : type === "withdrawal"
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                  : "bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 shadow-slate-950/20",
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-amber-500/10"
+                  : "bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 shadow-slate-950/30",
           )}
         >
           {stage === "completed" ? (
