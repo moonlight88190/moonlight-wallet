@@ -21,11 +21,19 @@ import {
   LUXURY_BRANDS,
   PAYMENT_METHODS,
   UPI_PROVIDERS,
+  getMethodTargetCurrency,
   type GiftCardMeta,
   type LuxuryBrandMeta,
   type PaymentMethodMeta,
 } from "@/lib/assets";
-import { formatMoney } from "@/lib/currency";
+import { CURRENCIES, convert, formatMoney } from "@/lib/currency";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useProfile, useWallet, useRates } from "@/hooks/use-wallet";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -143,12 +151,21 @@ export function Withdraw() {
 
   // Form Fields
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
+  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(preferredCurrency);
   const [upiId, setUpiId] = useState<string>("");
   const [fullName, setFullName] = useState<string>(profile?.full_name || "");
   const [email, setEmail] = useState<string>(profile?.email || "");
   const [phone, setPhone] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const targetCorridorCurrency = selectedMethod
+    ? getMethodTargetCurrency(selectedMethod.id)
+    : withdrawCurrency;
+  const sourceAmt = Number(withdrawAmount) || 0;
+  const convertedTargetAmt = convert(sourceAmt, withdrawCurrency, targetCorridorCurrency, r);
+  const fxRateRatio = convert(1, withdrawCurrency, targetCorridorCurrency, r);
+  const isCrossCorridor = withdrawCurrency !== targetCorridorCurrency;
 
   // Animation & Receipt Modal State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -181,17 +198,20 @@ export function Withdraw() {
 
     const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
-      p_amount: cardValue,
-      p_currency: preferredCurrency,
-      p_method: "Digital Voucher Pass",
-      p_upi_id: null,
-      p_provider: brandName,
-      p_full_name: profile?.full_name || "Valued Customer",
-      p_email: profile?.email || "customer@moonlight.com",
-      p_phone: null,
-      p_reason: `Redeemed ${brandName} Voucher`,
-    });
+    const { data: wdId, error } = await supabase.rpc(
+      "create_withdrawal" as never,
+      {
+        p_amount: cardValue,
+        p_currency: preferredCurrency,
+        p_method: "Digital Voucher Pass",
+        p_upi_id: null,
+        p_provider: brandName,
+        p_full_name: profile?.full_name || "Valued Customer",
+        p_email: profile?.email || "customer@moonlight.com",
+        p_phone: null,
+        p_reason: `Redeemed ${brandName} Voucher`,
+      } as never,
+    );
     setBusy(false);
 
     if (error) {
@@ -251,17 +271,23 @@ export function Withdraw() {
     }
 
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
-      p_amount: amt,
-      p_currency: preferredCurrency,
-      p_method: selectedMethod?.name || "UPI Direct",
-      p_upi_id: isUPI ? upiId.trim() : null,
-      p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
-      p_full_name: fullName.trim(),
-      p_email: email.trim(),
-      p_phone: phone.trim() || null,
-      p_reason: reason.trim() || null,
-    });
+    const finalWdAmount = convertedTargetAmt;
+    const finalWdCurrency = targetCorridorCurrency;
+
+    const { data: wdId, error } = await supabase.rpc(
+      "create_withdrawal" as never,
+      {
+        p_amount: finalWdAmount,
+        p_currency: finalWdCurrency,
+        p_method: selectedMethod?.name || "UPI Direct",
+        p_upi_id: isUPI ? upiId.trim() : null,
+        p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
+        p_full_name: fullName.trim(),
+        p_email: email.trim(),
+        p_phone: phone.trim() || null,
+        p_reason: reason.trim() || null,
+      } as never,
+    );
     setBusy(false);
 
     if (error) {
@@ -569,17 +595,31 @@ export function Withdraw() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Amount ({preferredCurrency})
+                    Withdrawal Amount
                   </label>
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    pattern="[0-9]*"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    placeholder="100"
-                    className="rounded-xl h-12 text-base font-medium"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      placeholder="100"
+                      className="rounded-xl h-12 text-base font-medium flex-1 min-w-0"
+                    />
+                    <Select value={withdrawCurrency} onValueChange={setWithdrawCurrency}>
+                      <SelectTrigger className="h-12 w-28 rounded-xl border font-semibold shrink-0">
+                        <SelectValue placeholder="Currency" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c.code} value={c.code} className="font-semibold">
+                            {c.code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
@@ -589,6 +629,32 @@ export function Withdraw() {
                     $100 USD ({formatMoney(limit100InPreferred, preferredCurrency)})
                   </div>
                 </div>
+              </div>
+
+              {/* FX Conversion Clearance Box */}
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Requested Amount:</span>
+                  <span className="font-semibold text-foreground">
+                    {formatMoney(sourceAmt, withdrawCurrency)}
+                  </span>
+                </div>
+                {isCrossCorridor && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Corridor FX Rate:</span>
+                      <span className="font-mono text-xs font-semibold text-muted-foreground">
+                        1 {withdrawCurrency} ≈ {fxRateRatio.toFixed(4)} {targetCorridorCurrency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1.5 border-t border-primary/10">
+                      <span className="font-semibold text-primary">Target Payout Amount:</span>
+                      <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatMoney(convertedTargetAmt, targetCorridorCurrency)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {selectedMethod.id.includes("upi") ? (
@@ -792,10 +858,11 @@ export function Withdraw() {
             senderCode={wallet?.wallet_code || "ML-SENDER"}
             recipientName={selectedMethod?.name || "Withdrawal Payout Rail"}
             recipientCode={upiId || "UPI"}
-            sourceAmount={Number(withdrawAmount) || cardValue}
-            sourceCurrency={preferredCurrency}
-            destinationAmount={Number(withdrawAmount) || cardValue}
-            destinationCurrency={preferredCurrency}
+            sourceAmount={sourceAmt || cardValue}
+            sourceCurrency={withdrawCurrency}
+            destinationAmount={convertedTargetAmt || cardValue}
+            destinationCurrency={targetCorridorCurrency}
+            exchangeRate={fxRateRatio}
           />
         </DialogContent>
       </Dialog>

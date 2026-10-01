@@ -2,11 +2,21 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Globe2 } from "lucide-react";
 import { AuthLayout, GoogleIcon } from "@/components/AuthLayout";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithGoogle } from "@/lib/auth";
+import { CURRENCIES, FALLBACK_RATES, convert, formatMoney } from "@/lib/currency";
+import { CountryFlag } from "@/components/AssetComponents";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRates } from "@/hooks/use-wallet";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -27,9 +37,20 @@ const schema = z.object({
 
 function Login() {
   const navigate = useNavigate();
+  const ratesQuery = useRates();
+  const rates = ratesQuery.data?.rates ?? FALLBACK_RATES;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const [previewAmount, setPreviewAmount] = useState<string>("100");
+  const [fromCurr, setFromCurr] = useState<string>("USD");
+  const [toCurr, setToCurr] = useState<string>("INR");
+
+  const numAmt = Number(previewAmount) || 0;
+  const convertedVal = convert(numAmt, fromCurr, toCurr, rates);
+  const rateRatio = convert(1, fromCurr, toCurr, rates);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -121,6 +142,79 @@ function Login() {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
         </button>
       </form>
+
+      {/* Live Currency & FX Preview Box */}
+      <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 sm:p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+            <Globe2 className="h-3.5 w-3.5" />
+            <span>Live FX Currency Preview</span>
+          </div>
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-background/80 px-2 py-0.5 rounded-full border">
+            Real-time Rates
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">From</label>
+            <div className="flex items-center gap-1.5 rounded-xl border bg-card p-1.5 shadow-2xs">
+              <Input
+                type="number"
+                value={previewAmount}
+                onChange={(e) => setPreviewAmount(e.target.value)}
+                className="h-8 border-none text-sm font-semibold focus-visible:ring-0 p-1 min-w-0"
+              />
+              <Select value={fromCurr} onValueChange={setFromCurr}>
+                <SelectTrigger className="h-8 w-24 border-none bg-secondary/60 text-xs font-bold rounded-lg shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code} className="text-xs font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <CountryFlag code={c.code} circle size="xs" />
+                        <span>{c.code}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase text-muted-foreground">To</label>
+            <div className="flex items-center gap-1.5 rounded-xl border bg-card p-1.5 shadow-2xs">
+              <div className="flex-1 px-2 text-sm font-bold text-foreground font-mono truncate">
+                {formatMoney(convertedVal, toCurr)}
+              </div>
+              <Select value={toCurr} onValueChange={setToCurr}>
+                <SelectTrigger className="h-8 w-24 border-none bg-secondary/60 text-xs font-bold rounded-lg shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code} className="text-xs font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <CountryFlag code={c.code} circle size="xs" />
+                        <span>{c.code}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+          <span>Live Corridor Rate:</span>
+          <span className="font-mono font-semibold text-foreground">
+            1 {fromCurr} ≈ {rateRatio.toFixed(4)} {toCurr}
+          </span>
+        </div>
+      </div>
     </AuthLayout>
   );
 }
