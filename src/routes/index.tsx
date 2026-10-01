@@ -12,12 +12,23 @@ import {
   Award,
   ChevronRight,
   CheckCircle2,
+  ArrowRightLeft,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { GoogleIcon } from "@/components/AuthLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithGoogle } from "@/lib/auth";
 import { CountryFlag } from "@/components/AssetComponents";
+import { CURRENCIES, FALLBACK_RATES, convert, formatMoney } from "@/lib/currency";
+import { useRates } from "@/hooks/use-wallet";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -95,8 +106,17 @@ const PRESS_ACCOLADES = [
 function Landing() {
   const navigate = useNavigate();
   const [signedIn, setSignedIn] = useState(false);
-  const [calcAmount, setCalcAmount] = useState<number>(1000);
+  const ratesQuery = useRates();
+  const rates = ratesQuery.data?.rates ?? FALLBACK_RATES;
+
+  const [calcAmount, setCalcAmount] = useState<string>("1000");
+  const [calcFrom, setCalcFrom] = useState<string>("EUR");
+  const [calcTo, setCalcTo] = useState<string>("USD");
   const [activeTab, setActiveTab] = useState<string>("EUR");
+
+  const numAmt = Number(calcAmount) || 0;
+  const convertedVal = convert(numAmt, calcFrom, calcTo, rates);
+  const rateRatio = convert(1, calcFrom, calcTo, rates);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -240,58 +260,74 @@ function Landing() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
             <div>
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                <ArrowRightLeft className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   LIVE EUROPEAN CENTRAL BANK REFERENCE RATES
                 </span>
               </div>
               <h2 className="text-lg font-semibold text-foreground mt-0.5">
-                Instant Multi-Currency Clearing
+                Interactive Currency Converter &amp; Clearing Calculator
               </h2>
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/80 px-3 py-1.5 rounded-full font-medium">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/80 px-3 py-1.5 rounded-full font-medium shrink-0">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live European Interbank Rates
+              Live Interbank Clearing Rates
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Send / Convert Amount
+                From Amount
               </label>
-              <div className="flex items-center rounded-2xl border border-border/70 bg-background/80 px-4 py-3">
-                <input
+              <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 p-2 shadow-2xs">
+                <Input
                   type="number"
                   value={calcAmount}
-                  onChange={(e) => setCalcAmount(Math.max(1, Number(e.target.value) || 0))}
-                  className="w-full bg-transparent text-xl font-semibold outline-none"
+                  onChange={(e) => setCalcAmount(e.target.value)}
+                  className="h-10 border-none text-lg font-bold focus-visible:ring-0 px-2 min-w-0 flex-1"
                 />
-                <span className="font-semibold text-sm text-foreground ml-2">EUR (€)</span>
+                <Select value={calcFrom} onValueChange={setCalcFrom}>
+                  <SelectTrigger className="h-10 w-28 border-none bg-secondary/70 text-xs font-bold rounded-xl shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code} className="text-xs font-semibold">
+                        <div className="flex items-center gap-2">
+                          <CountryFlag code={c.code} circle size="xs" />
+                          <span>{c.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Target Currency Output
+                Converted Settlement Amount
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-2xl border border-border/60 bg-secondary/50 p-3">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                    USD ($)
-                  </span>
-                  <p className="text-base font-semibold text-foreground">
-                    ${(calcAmount * 1.085).toFixed(2)}
-                  </p>
+              <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 p-2 shadow-2xs">
+                <div className="flex-1 px-3 text-lg font-bold text-foreground font-mono truncate">
+                  {formatMoney(convertedVal, calcTo)}
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-secondary/50 p-3">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                    GBP (£)
-                  </span>
-                  <p className="text-base font-semibold text-foreground">
-                    £{(calcAmount * 0.855).toFixed(2)}
-                  </p>
-                </div>
+                <Select value={calcTo} onValueChange={setCalcTo}>
+                  <SelectTrigger className="h-10 w-28 border-none bg-secondary/70 text-xs font-bold rounded-xl shrink-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl">
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code} className="text-xs font-semibold">
+                        <div className="flex items-center gap-2">
+                          <CountryFlag code={c.code} circle size="xs" />
+                          <span>{c.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -299,7 +335,9 @@ function Landing() {
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground pt-4 border-t border-border/40">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-              <span>Zero hidden spread fees • Instant SEPA &amp; SWIFT dispatch</span>
+              <span>
+                1 {calcFrom} ≈ <strong className="text-foreground font-mono">{rateRatio.toFixed(4)} {calcTo}</strong>
+              </span>
             </div>
             <span className="font-mono text-[11px]">ECB-REF-2025 • Guaranteed Settlement</span>
           </div>

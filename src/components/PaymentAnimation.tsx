@@ -49,20 +49,20 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 const WITHDRAWAL_STAGES = [
   "Confirming withdrawal request & beneficiary details...",
-  "Validating double-entry balance & settlement limit...",
-  "Routing request to banking gateway & payout rail...",
-  "Deducting ledger balance & issuing transaction ID...",
-  "Finalizing payout dispatch & recording audit log...",
-  "Withdrawal request submitted & processing initiated",
+  "Routing request to international wiring system & payout gateway...",
+  "Validating interbank clearing limits & account authorization...",
+  "Executing direct ledger debit & issuing transaction tracking code...",
+  "Finalizing payout dispatch to international banking network...",
+  "Withdrawal request submitted to international wiring system",
 ];
 
 const TRANSFER_STAGES = [
-  "Validating sender authentication & double-entry ledger...",
-  "Verifying recipient account & settlement network rail...",
-  "Executing real-time multi-currency FX conversion & clearance...",
-  "Applying double-entry debit & credit ledger entries...",
+  "Verifying sender authorization & international interbank clearing system...",
+  "Validating beneficiary account & SWIFT/SEPA network rails...",
+  "Executing real-time multi-currency FX clearance & conversion...",
+  "Moving funds through international wiring system & interbank ledger...",
   "Generating cryptographic receipt & immutable ledger proof...",
-  "Settlement confirmed & official ledger record issued",
+  "Settlement confirmed & official international wiring record issued",
 ];
 
 export function PaymentAnimation({
@@ -100,10 +100,9 @@ export function PaymentAnimation({
         return undefined;
       }
 
-      const isWithdrawal = type === "withdrawal";
-      // Withdrawals: total ~2.0s–3.0s; Transfers: total ~4.0s–5.0s
-      const baseMin = isWithdrawal ? 400 : 800;
-      const baseMax = isWithdrawal ? 550 : 950;
+      // 5.0s to 6.0s total duration for realistic bank clearance animation (~1000ms - 1200ms per step across 5 step transitions)
+      const baseMin = 1000;
+      const baseMax = 1200;
 
       const step1 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
       const step2 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
