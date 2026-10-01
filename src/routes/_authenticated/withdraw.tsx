@@ -357,7 +357,11 @@ export function Withdraw() {
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
             >
               <div className="relative flex h-12 w-full items-center justify-center p-1">
-                <img src={brand.logoUrl} alt={brand.name} className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform" />
+                <img
+                  src={brand.logoUrl}
+                  alt={brand.name}
+                  className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                />
               </div>
               <div className="mt-2 w-full border-t border-border/40 pt-2">
                 <p className="text-xs font-semibold text-foreground truncate">{brand.name}</p>
@@ -383,7 +387,7 @@ export function Withdraw() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar -mx-1 px-1 touch-pan-x min-w-0 max-w-full">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0 touch-pan-x min-w-0 max-w-full">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -438,7 +442,7 @@ export function Withdraw() {
       {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-lg max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 space-y-4 sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="fixed inset-0 z-50 flex flex-col w-full h-[100dvh] max-h-[100dvh] rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:rounded-3xl sm:border sm:border-border/80">
             {/* Grab Handle for Mobile Bottom Sheet Feel */}
             <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
 
@@ -752,7 +756,9 @@ export function Withdraw() {
               )}
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Destination / Account:</span>
-                <span className="font-mono font-semibold text-foreground">{activeReceipt.accountOrCode}</span>
+                <span className="font-mono font-semibold text-foreground">
+                  {activeReceipt.accountOrCode}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Date &amp; Time:</span>

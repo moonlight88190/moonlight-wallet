@@ -14,7 +14,10 @@ export async function signInWithGoogle(onSignedIn?: () => void) {
     if (result.redirected) return;
 
     if (result.error) {
-      console.warn("Lovable OAuth broker failed, falling back to direct OAuth redirect:", result.error);
+      console.warn(
+        "Lovable OAuth broker failed, falling back to direct OAuth redirect:",
+        result.error,
+      );
       const { data, error: directError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

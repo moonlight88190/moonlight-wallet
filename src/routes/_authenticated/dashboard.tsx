@@ -115,7 +115,7 @@ function Dashboard() {
           {loading ? (
             <Skeleton className="mx-auto mt-3 h-12 w-52 sm:h-14 sm:w-64 rounded-2xl" />
           ) : (
-            <h1 className="tabular mt-1.5 text-3xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-foreground">
+            <h1 className="tabular mt-1.5 text-3xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-foreground break-normal">
               {formatMoney(balance, cur)}
             </h1>
           )}
@@ -132,7 +132,7 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-9 w-auto gap-2 rounded-full border border-border/60 bg-background/80 px-3.5 text-xs font-semibold shadow-2xs hover:bg-accent transition-colors min-h-[44px]">
+            <SelectTrigger className="min-h-[48px] rounded-full px-4 w-auto gap-2 border border-border/60 bg-background/80 text-xs font-semibold shadow-2xs hover:bg-accent transition-colors">
               <CurrencyIcon code={cur} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl p-1.5">
@@ -161,7 +161,7 @@ function Dashboard() {
       </section>
 
       {/* Primary Quick Actions Bar */}
-      <section className="mx-auto max-w-xl px-2">
+      <section className="mx-auto max-w-xl px-1">
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 sm:gap-3">
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
@@ -177,22 +177,21 @@ function Dashboard() {
             { to: "/withdraw", label: "Gift Cards", icon: Gift, primary: false },
             { to: "/transactions", label: "Activity", icon: History, primary: false },
           ].map((a, idx) => (
-            <Link {...({} as any)}
+            <Link
+              {...({} as any)}
               key={`${a.to}-${idx}`}
               to={a.to}
               search={a.search}
-              className="group flex flex-col items-center gap-1.5 p-1 touch-manipulation active:scale-[0.96] transition-transform min-h-[44px]"
+              className="group flex flex-col items-center justify-center gap-1.5 p-3 min-h-[72px] rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:bg-accent/40 touch-manipulation active:scale-[0.96] transition-transform shadow-2xs"
             >
               <span
-                className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border transition-all duration-200 shadow-soft group-hover:-translate-y-0.5 ${
-                  a.primary
-                    ? "bg-primary text-primary-foreground border-primary/20"
-                    : "bg-card text-foreground border-border/60 group-hover:border-primary/40 group-hover:bg-accent/40"
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+                  a.primary ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                 }`}
               >
-                <a.icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+                <a.icon className="h-5 w-5" strokeWidth={1.75} />
               </span>
-              <span className="text-[11px] sm:text-xs font-semibold text-foreground tracking-tight text-center truncate w-full">
+              <span className="text-[11px] font-semibold text-foreground tracking-tight text-center truncate w-full">
                 {a.label}
               </span>
             </Link>
@@ -265,17 +264,18 @@ function Dashboard() {
             </div>
 
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 <Input
                   type="number"
+                  inputMode="decimal"
                   min="0"
                   value={calcAmount}
                   onChange={(e) => setCalcAmount(e.target.value)}
                   placeholder="100"
-                  className="rounded-xl h-11 text-sm font-semibold flex-1"
+                  className="rounded-xl h-12 text-base font-semibold flex-1"
                 />
                 <Select value={calcFrom} onValueChange={setCalcFrom}>
-                  <SelectTrigger className="h-11 w-28 rounded-xl border text-xs font-semibold">
+                  <SelectTrigger className="h-12 w-full sm:w-28 rounded-xl border text-xs font-semibold">
                     <CurrencyIcon code={calcFrom} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl p-1">
@@ -300,7 +300,7 @@ function Dashboard() {
 
               <div className="flex justify-end">
                 <Select value={calcTo} onValueChange={setCalcTo}>
-                  <SelectTrigger className="h-9 w-32 rounded-xl border text-xs font-semibold">
+                  <SelectTrigger className="h-12 w-full sm:w-32 rounded-xl border text-xs font-semibold">
                     <CurrencyIcon code={calcTo} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl p-1">

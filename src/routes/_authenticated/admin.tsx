@@ -664,7 +664,9 @@ function WithdrawalsSection({
               <button
                 onClick={() => {
                   setSelectedWd(w);
-                  setNewStatus(w.status === "PROCESSING" ? "SUCCESSFUL" : w.status as WithdrawalStatus);
+                  setNewStatus(
+                    w.status === "PROCESSING" ? "SUCCESSFUL" : (w.status as WithdrawalStatus),
+                  );
                   setStatusReason(w.reason || "");
                 }}
                 className="h-9 px-4 rounded-xl border border-border bg-secondary/80 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
