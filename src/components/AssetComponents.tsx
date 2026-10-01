@@ -148,38 +148,28 @@ export function PaymentMethodIcon({
     setFailed(false);
   }, [iconUrl]);
 
-  const wideIcons = [
-    "upi",
-    "upi-qr",
-    "google-pay",
-    "phonepe",
-    "paytm",
-    "bhim",
-    "aani",
-    "sepa",
-    "faster-payments",
-    "hdfc-bank",
-    "icici-bank",
-    "axis-bank",
-    "yes-bank",
-    "amazon-pay",
-    "airtel-payments-bank",
-  ];
-
-  const isWide = wideIcons.includes(cleanId);
-
-  const containerClass = isWide
-    ? "h-9 sm:h-10 px-2.5 aspect-[2.6/1] w-auto max-w-[120px] flex items-center justify-center rounded-xl border border-border/60 bg-white dark:bg-slate-900/90"
-    : "h-10 w-10 sm:h-11 sm:w-11 p-1.5 flex items-center justify-center rounded-xl border border-border/60 bg-white dark:bg-slate-900/90";
+  // Natural dimensions for bundled raster marks; unknown SVGs measure themselves on load.
+  const ratios: Record<string, number> = {
+    upi: 1165 / 414, "google-pay": 960 / 360, phonepe: 330 / 101,
+    paytm: 607 / 199, bhim: 294 / 79, sepa: 450 / 422,
+    gcash: 303 / 305, whatsapp: 1, sbi: 1,
+    "hdfc-bank": 960 / 167, "icici-bank": 960 / 193,
+    "axis-bank": 960 / 250, "yes-bank": 1308 / 536,
+    "amazon-pay": 300 / 58, "airtel-payments-bank": 960 / 147,
+  };
+  const [naturalRatio, setNaturalRatio] = React.useState<number | null>(null);
+  const ratio = naturalRatio ?? ratios[cleanId] ?? 1;
+  const height = size === "sm" ? 32 : size === "lg" ? 52 : 42;
+  const width = Math.max(height, Math.min(height * ratio, size === "lg" ? 210 : 168));
 
   if (failed) {
     return (
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-secondary text-muted-foreground shadow-2xs",
-          isWide ? "h-9 sm:h-10 w-24" : "h-10 w-10 sm:h-11 sm:w-11",
           className,
         )}
+        style={{ height, width }}
       >
         <Landmark className="h-4 w-4" />
       </div>
@@ -189,15 +179,22 @@ export function PaymentMethodIcon({
   return (
     <div
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden shadow-2xs transition-all hover:border-primary/40",
-        containerClass,
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-card p-1 shadow-2xs transition-all hover:border-primary/40",
         className,
       )}
+      style={{ height, width }}
     >
       <img
         src={iconUrl}
         alt={name}
-        className="max-h-full max-w-full object-contain object-center transition-transform group-hover:scale-105"
+        className="block h-full w-full object-contain object-center transition-transform group-hover:scale-105"
+        onLoad={(e) => {
+          const image = e.currentTarget;
+          if (image.naturalWidth && image.naturalHeight) {
+            const measured = image.naturalWidth / image.naturalHeight;
+            setNaturalRatio((previous) => previous === measured ? previous : measured);
+          }
+        }}
         onError={() => setFailed(true)}
       />
     </div>
@@ -223,32 +220,25 @@ export function GiftCardBrand({
   }, [cardData.imageUrl]);
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && onClick) {
-          e.preventDefault();
-          onClick();
-        }
-      }}
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-2.5 sm:p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
+        "group relative flex w-full flex-col justify-between overflow-hidden rounded-lg border border-border/60 bg-card p-3 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
         className,
       )}
     >
-      <div className="relative flex aspect-[1.58/1] w-full items-center justify-center rounded-xl bg-slate-900/90 overflow-hidden shadow-inner">
+      <div className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-md bg-secondary p-4 sm:h-36">
         {!imgFailed ? (
           <img
-            src={cardData.imageUrl}
+            src={cardData.logoUrl}
             alt={cardData.brand}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300 font-bold text-sm tracking-wide p-2">
-            <Gift className="h-6 w-6 text-amber-400 mb-1" />
+          <div className="flex flex-col items-center justify-center text-foreground font-bold text-sm p-2">
+            <Gift className="h-6 w-6 text-gold mb-1" />
             <span>{cardData.brand}</span>
           </div>
         )}
@@ -271,7 +261,7 @@ export function GiftCardBrand({
           {cardData.description}
         </p>
       </div>
-    </div>
+    </button>
   );
 }
 
