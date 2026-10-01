@@ -185,8 +185,8 @@ function Receipt() {
   const verified = isEuropeanVerified(profile.data?.email);
 
   if (isWithdrawal) {
-    const wd = tx.data.data as any;
-    const d = new Date(wd.created_at);
+    const wd = tx.data.data as Record<string, unknown>;
+    const d = new Date(wd.created_at as string);
 
     const handleCopyRef = () => {
       navigator.clipboard.writeText(wd.reference_code || wd.reference || "");
@@ -339,7 +339,8 @@ function Receipt() {
 
           <div className="border-t border-border/40 pt-3 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Double-Entry Ledger Record
+              <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Double-Entry Ledger
+              Record
             </div>
             <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
               MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE
@@ -361,9 +362,9 @@ function Receipt() {
   }
 
   // Normal Send Transfer Receipt
-  const t = tx.data.data as any;
-  const v = txView(t, wallet.data?.id);
-  const d = new Date(t.created_at);
+  const t = tx.data.data as Record<string, unknown>;
+  const v = txView(t as Parameters<typeof txView>[0], wallet.data?.id);
+  const d = new Date(t.created_at as string);
 
   const handleCopyReference = () => {
     if (!t.reference) return;
@@ -505,7 +506,8 @@ function Receipt() {
 
         <div className="border-t border-border/40 pt-3 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Double-Entry Ledger Entry
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Double-Entry Ledger
+            Entry
           </div>
           <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE

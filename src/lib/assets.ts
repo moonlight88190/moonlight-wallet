@@ -693,7 +693,15 @@ export const INVESTMENTS: InvestmentMeta[] = [
 
 export function getMethodTargetCurrency(methodId: string): string {
   const m = methodId.toLowerCase();
-  if (m.includes("upi") || m.includes("in-bank") || m === "sbi" || m === "hdfc" || m === "icici" || m === "axis") return "INR";
+  if (
+    m.includes("upi") ||
+    m.includes("in-bank") ||
+    m === "sbi" ||
+    m === "hdfc" ||
+    m === "icici" ||
+    m === "axis"
+  )
+    return "INR";
   if (m.includes("gcash") || m.includes("ph-bank")) return "PHP";
   if (m.includes("cz-bank") || m.includes("czech")) return "CZK";
   if (m.includes("faster-payments") || m.includes("uk")) return "GBP";

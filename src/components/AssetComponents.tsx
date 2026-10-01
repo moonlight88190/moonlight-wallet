@@ -126,7 +126,7 @@ export function PaymentMethodIcon({
 }) {
   const cleanId = id
     .toLowerCase()
-    .replace(/.*[\/\\]/, "")
+    .replace(/.*[/\\]/, "")
     .replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
   const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
   const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);

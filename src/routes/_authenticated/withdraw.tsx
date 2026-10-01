@@ -198,17 +198,20 @@ export function Withdraw() {
 
     const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
     setBusy(true);
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
-      p_amount: cardValue,
-      p_currency: preferredCurrency,
-      p_method: "Digital Voucher Pass",
-      p_upi_id: null,
-      p_provider: brandName,
-      p_full_name: profile?.full_name || "Valued Customer",
-      p_email: profile?.email || "customer@moonlight.com",
-      p_phone: null,
-      p_reason: `Redeemed ${brandName} Voucher`,
-    });
+    const { data: wdId, error } = await supabase.rpc(
+      "create_withdrawal" as never,
+      {
+        p_amount: cardValue,
+        p_currency: preferredCurrency,
+        p_method: "Digital Voucher Pass",
+        p_upi_id: null,
+        p_provider: brandName,
+        p_full_name: profile?.full_name || "Valued Customer",
+        p_email: profile?.email || "customer@moonlight.com",
+        p_phone: null,
+        p_reason: `Redeemed ${brandName} Voucher`,
+      } as never,
+    );
     setBusy(false);
 
     if (error) {
@@ -271,17 +274,20 @@ export function Withdraw() {
     const finalWdAmount = convertedTargetAmt;
     const finalWdCurrency = targetCorridorCurrency;
 
-    const { data: wdId, error } = await (supabase as any).rpc("create_withdrawal", {
-      p_amount: finalWdAmount,
-      p_currency: finalWdCurrency,
-      p_method: selectedMethod?.name || "UPI Direct",
-      p_upi_id: isUPI ? upiId.trim() : null,
-      p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
-      p_full_name: fullName.trim(),
-      p_email: email.trim(),
-      p_phone: phone.trim() || null,
-      p_reason: reason.trim() || null,
-    });
+    const { data: wdId, error } = await supabase.rpc(
+      "create_withdrawal" as never,
+      {
+        p_amount: finalWdAmount,
+        p_currency: finalWdCurrency,
+        p_method: selectedMethod?.name || "UPI Direct",
+        p_upi_id: isUPI ? upiId.trim() : null,
+        p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
+        p_full_name: fullName.trim(),
+        p_email: email.trim(),
+        p_phone: phone.trim() || null,
+        p_reason: reason.trim() || null,
+      } as never,
+    );
     setBusy(false);
 
     if (error) {
