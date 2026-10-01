@@ -377,10 +377,6 @@ export function Withdraw() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      if (!isEligible48h) {
-                        toast.error("Withdrawals unlock 48 hours after account creation.");
-                        return;
-                      }
                       setSelectedMethod(item);
                       setFullName(profile?.full_name || "");
                       setEmail(profile?.email || "");
@@ -443,10 +439,6 @@ export function Withdraw() {
               variant="outline"
               key={brand.id}
               onClick={() => {
-                if (!isEligible48h) {
-                  toast.error("Withdrawals unlock 48 hours after account creation.");
-                  return;
-                }
                 setSelectedLuxury(brand);
               }}
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
@@ -507,10 +499,6 @@ export function Withdraw() {
                 variant="outline"
                 key={brand.id}
                 onClick={() => {
-                  if (!isEligible48h) {
-                    toast.error("Withdrawals unlock 48 hours after account creation.");
-                    return;
-                  }
                   setSelectedLuxury(brand);
                 }}
                 className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-4 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-soft cursor-pointer active:scale-[0.98]"
@@ -538,10 +526,6 @@ export function Withdraw() {
                 key={card.id}
                 card={card}
                 onClick={() => {
-                  if (!isEligible48h) {
-                    toast.error("Withdrawals unlock 48 hours after account creation.");
-                    return;
-                  }
                   setSelectedCard(card);
                 }}
               />
@@ -553,14 +537,14 @@ export function Withdraw() {
       {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="fixed inset-0 z-50 flex flex-col w-full h-[100dvh] max-h-[100dvh] rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:rounded-3xl sm:border sm:border-border/80">
-            {/* Grab Handle for Mobile Bottom Sheet Feel */}
-            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+          <DialogContent className="fixed left-0 right-0 bottom-0 top-auto z-50 flex flex-col w-full max-h-[92dvh] rounded-t-3xl rounded-b-none p-5 pb-safe bg-background border-t border-x border-border/80 shadow-2xl overflow-hidden sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[85vh] sm:rounded-3xl sm:border sm:p-6">
+            {/* Mobile Drag Indicator */}
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-3 sm:hidden shrink-0" />
 
-            <DialogHeader>
+            <DialogHeader className="shrink-0 text-left pb-2 border-b border-border/40">
               <div className="flex items-center gap-3">
                 <PaymentMethodIcon id={selectedMethod.id} size="md" />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <DialogTitle className="text-base sm:text-lg font-semibold truncate">
                     {selectedMethod.name}
                   </DialogTitle>
@@ -571,27 +555,39 @@ export function Withdraw() {
               </div>
             </DialogHeader>
 
-            {/* UPI Provider showcase inside UPI method */}
-            {selectedMethod.id === "upi" && (
-              <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 space-y-2">
-                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Supported UPI Apps
-                </p>
-                <div className="flex items-center gap-2 overflow-x-auto py-1">
-                  {UPI_PROVIDERS.map((prov) => (
-                    <div
-                      key={prov.id}
-                      className="flex items-center gap-1.5 rounded-xl border bg-card px-2.5 py-1.5 shadow-2xs shrink-0 text-xs font-medium"
-                    >
-                      <PaymentMethodIcon id={prov.id} size="sm" />
-                      <span>{prov.name}</span>
-                    </div>
-                  ))}
+            <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1">
+              {!isEligible48h && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3 text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-bold">48-Hour Security Lock Active</p>
+                    <p className="text-amber-600/90 dark:text-amber-400/90 leading-normal">
+                      New accounts cannot withdraw during the first 48 hours after creation. You can interact with this form to preview options.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="space-y-4 pt-1">
+              {/* UPI Provider showcase inside UPI method */}
+              {selectedMethod.id === "upi" && (
+                <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 space-y-2">
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Supported UPI Apps
+                  </p>
+                  <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar">
+                    {UPI_PROVIDERS.map((prov) => (
+                      <div
+                        key={prov.id}
+                        className="flex items-center gap-1.5 rounded-xl border bg-card px-2.5 py-1.5 shadow-2xs shrink-0 text-xs font-medium"
+                      >
+                        <PaymentMethodIcon id={prov.id} size="sm" />
+                        <span>{prov.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">
@@ -607,7 +603,17 @@ export function Withdraw() {
                       placeholder="100"
                       className="rounded-xl h-12 text-base font-medium flex-1 min-w-0"
                     />
-                    <Select value={withdrawCurrency} onValueChange={setWithdrawCurrency}>
+                    <Select
+                      value={withdrawCurrency}
+                      onValueChange={(newCur) => {
+                        const curAmt = Number(withdrawAmount) || 0;
+                        if (curAmt > 0 && withdrawCurrency && newCur && withdrawCurrency !== newCur) {
+                          const converted = convert(curAmt, withdrawCurrency, newCur, r);
+                          setWithdrawAmount(converted.toFixed(2));
+                        }
+                        setWithdrawCurrency(newCur);
+                      }}
+                    >
                       <SelectTrigger className="h-12 w-28 rounded-xl border font-semibold shrink-0">
                         <SelectValue placeholder="Currency" />
                       </SelectTrigger>
@@ -639,6 +645,10 @@ export function Withdraw() {
                     {formatMoney(sourceAmt, withdrawCurrency)}
                   </span>
                 </div>
+                <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-primary/10">
+                  <span>Transaction Charge (10%):</span>
+                  <span className="font-semibold">{formatMoney(sourceAmt * 0.10, withdrawCurrency)}</span>
+                </div>
                 {isCrossCorridor && (
                   <>
                     <div className="flex justify-between items-center">
@@ -655,6 +665,9 @@ export function Withdraw() {
                     </div>
                   </>
                 )}
+                <div className="pt-2 border-t border-primary/10 text-[11px] text-amber-600 dark:text-amber-400 font-medium leading-tight">
+                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+                </div>
               </div>
 
               {selectedMethod.id.includes("upi") ? (
@@ -747,16 +760,16 @@ export function Withdraw() {
                   />
                 </div>
               </div>
+            </div>
 
-              <div className="sticky bottom-0 pt-2 bg-background/95 backdrop-blur-xs">
-                <Button
-                  disabled={busy}
-                  onClick={handleInitiateWithdraw}
-                  className="w-full rounded-full h-12 text-base font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
-                >
-                  Submit Withdrawal
-                </Button>
-              </div>
+            <div className="shrink-0 pt-3 border-t border-border/40 bg-background">
+              <Button
+                disabled={busy}
+                onClick={handleInitiateWithdraw}
+                className="w-full rounded-full h-12 text-base font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
+              >
+                Submit Withdrawal
+              </Button>
             </div>
           </DialogContent>
         )}
@@ -771,20 +784,32 @@ export function Withdraw() {
         }}
       >
         {(selectedCard || selectedLuxury) && (
-          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-md max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 sm:border border-border/80 bg-background shadow-2xl pb-safe">
-            {/* Grab Handle for Mobile */}
-            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
+          <DialogContent className="fixed left-0 right-0 bottom-0 top-auto z-50 flex flex-col w-full max-h-[92dvh] rounded-t-3xl rounded-b-none p-5 pb-safe bg-background border-t border-x border-border/80 shadow-2xl overflow-hidden sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:max-h-[85vh] sm:rounded-3xl sm:border sm:p-6">
+            {/* Mobile Drag Indicator */}
+            <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-3 sm:hidden shrink-0" />
 
-            <DialogHeader>
-              <DialogTitle className="text-base sm:text-lg font-semibold">
+            <DialogHeader className="shrink-0 text-left pb-2 border-b border-border/40">
+              <DialogTitle className="text-base sm:text-lg font-semibold truncate">
                 {selectedCard?.brand || selectedLuxury?.name} Voucher
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-muted-foreground truncate">
                 {selectedCard?.description || `Exclusive digital pass for ${selectedLuxury?.name}.`}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 pt-2">
+            <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1">
+              {!isEligible48h && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3 text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-bold">48-Hour Security Lock Active</p>
+                    <p className="text-amber-600/90 dark:text-amber-400/90 leading-normal">
+                      New accounts cannot withdraw during the first 48 hours after creation. You can interact with this form to preview options.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="relative flex h-36 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-4 shadow-soft">
                 {selectedLuxury ? (
                   <img
@@ -829,14 +854,23 @@ export function Withdraw() {
                     {formatMoney(cardValue, preferredCurrency)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-border/40">
+                  <span>Transaction Fee (10%):</span>
+                  <span className="font-semibold">{formatMoney(cardValue * 0.10, preferredCurrency)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-border/40">
                   <span className="text-muted-foreground">Delivery:</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     Instant Email Delivery
                   </span>
                 </div>
+                <div className="pt-2 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium leading-tight">
+                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+                </div>
               </div>
+            </div>
 
+            <div className="shrink-0 pt-3 border-t border-border/40 bg-background">
               <Button
                 onClick={handleRedeemCard}
                 className="w-full rounded-full h-12 text-base font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"

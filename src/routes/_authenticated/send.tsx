@@ -282,7 +282,16 @@ function Send() {
                 onChange={(e) => setAmount(e.target.value)}
                 className="tabular h-14 rounded-2xl text-2xl px-4"
               />
-              <Select value={cur} onValueChange={setCurrency}>
+              <Select
+                value={cur}
+                onValueChange={(newCur) => {
+                  if (amt > 0 && cur && newCur && cur !== newCur) {
+                    const convertedVal = convert(amt, cur, newCur, r);
+                    setAmount(convertedVal.toFixed(2));
+                  }
+                  setCurrency(newCur);
+                }}
+              >
                 <SelectTrigger className="h-14 w-36 rounded-2xl border px-3">
                   <CurrencyIcon code={cur} />
                 </SelectTrigger>
@@ -326,7 +335,7 @@ function Send() {
               className="h-12 rounded-xl"
             />
             {amt > 0 && (
-              <div className="rounded-2xl border bg-card p-3.5 space-y-1 text-xs">
+              <div className="rounded-2xl border bg-card p-3.5 space-y-2 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Recipient gets:</span>
                   <span className="font-semibold text-sm text-foreground flex items-center gap-1.5">
@@ -334,9 +343,12 @@ function Send() {
                     {formatMoney(recv, recvCur)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-muted-foreground pt-1">
-                  <span>Transfer Fee (0.5%):</span>
-                  <span>{formatMoney(fee, cur)}</span>
+                <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-border/40">
+                  <span>Transaction Charge (10%):</span>
+                  <span className="font-semibold">{formatMoney(fee, cur)}</span>
+                </div>
+                <div className="pt-1.5 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
                 </div>
               </div>
             )}
@@ -396,7 +408,7 @@ function Send() {
               </span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
-              <span className="text-muted-foreground">Fee (0.5%)</span>
+              <span className="text-muted-foreground">Transaction Fee (10%)</span>
               <span className="text-right font-medium">{formatMoney(fee, cur)}</span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
@@ -408,6 +420,9 @@ function Send() {
             <div className="flex justify-between gap-4 py-4 text-sm font-semibold">
               <span>Total Charge</span>
               <span>{formatMoney(amt + fee, cur)}</span>
+            </div>
+            <div className="py-3 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-3 rounded-xl">
+              Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
             </div>
             {note && (
               <div className="flex justify-between gap-4 py-4 text-sm">

@@ -337,10 +337,13 @@ function Receipt() {
             </div>
           )}
 
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
+            Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+          </div>
+
           <div className="border-t border-border/40 pt-3 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Interbank Ledger Record
-              Record
             </div>
             <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
               MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE
@@ -504,10 +507,13 @@ function Receipt() {
           ))}
         </div>
 
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
+          Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+        </div>
+
         <div className="border-t border-border/40 pt-3 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Interbank Ledger Record
-            Entry
+            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Interbank Ledger Record Entry
           </div>
           <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE
