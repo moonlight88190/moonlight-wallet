@@ -205,9 +205,13 @@ function Send() {
     }
 
     setTxId(res.data as string);
-    setAnimState("completed");
-    qc.invalidateQueries({ queryKey: ["wallet"] });
-    qc.invalidateQueries({ queryKey: ["transactions"] });
+
+    // Keep animation running for 6.0 seconds so user experiences full clearance sequence
+    setTimeout(() => {
+      setAnimState("completed");
+      qc.invalidateQueries({ queryKey: ["wallet"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+    }, 6000);
   }
 
   const btn =
@@ -280,7 +284,7 @@ function Send() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="tabular h-14 rounded-2xl text-2xl px-4"
+                className="tabular h-14 rounded-2xl text-2xl px-4 flex-1 min-w-0"
               />
               <Select
                 value={cur}
@@ -292,7 +296,7 @@ function Send() {
                   setCurrency(newCur);
                 }}
               >
-                <SelectTrigger className="h-14 w-36 rounded-2xl border px-3">
+                <SelectTrigger className="h-14 w-36 rounded-2xl border px-3 shrink-0">
                   <CurrencyIcon code={cur} />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl p-1">
@@ -315,7 +319,7 @@ function Send() {
               <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs space-y-1.5">
                 <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
                   <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>Security Protection & Fraud Prevention Policy</span>
+                  <span>Security Protection &amp; Fraud Prevention Policy</span>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
                   To protect your account against identity theft and unauthorized scam transactions,
@@ -337,10 +341,19 @@ function Send() {
             {amt > 0 && (
               <div className="rounded-2xl border bg-card p-3.5 space-y-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Recipient gets:</span>
+                  <span className="text-muted-foreground">Recipient receives:</span>
                   <span className="font-semibold text-sm text-foreground flex items-center gap-1.5">
                     <CountryFlag code={recvCur} circle size="xs" />
-                    {formatMoney(recv, recvCur)}
+                    {cur === recvCur ? (
+                      formatMoney(recv, recvCur)
+                    ) : (
+                      <span>
+                        {formatMoney(amt, cur)} converted to{" "}
+                        <strong className="text-emerald-600 dark:text-emerald-400">
+                          {formatMoney(recv, recvCur)}
+                        </strong>
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-border/40">
@@ -403,7 +416,7 @@ function Send() {
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm">
               <span className="text-muted-foreground">Exchange Rate</span>
-              <span className="text-right font-medium">
+              <span className="text-right font-medium font-mono text-xs">
                 1 {cur} ≈ {rateRatio.toFixed(4)} {recvCur}
               </span>
             </div>
@@ -414,7 +427,13 @@ function Send() {
             <div className="flex justify-between gap-4 py-4 text-sm">
               <span className="text-muted-foreground">Recipient receives</span>
               <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                {formatMoney(recv, recvCur)}
+                {cur === recvCur ? (
+                  formatMoney(recv, recvCur)
+                ) : (
+                  <span>
+                    {formatMoney(amt, cur)} converted to {formatMoney(recv, recvCur)}
+                  </span>
+                )}
               </span>
             </div>
             <div className="flex justify-between gap-4 py-4 text-sm font-semibold">
@@ -473,7 +492,7 @@ function Send() {
           <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-500" strokeWidth={1.25} />
           <h1 className="mt-6 text-3xl font-semibold tracking-tight">Sent Successfully</h1>
           <p className="mt-2 text-muted-foreground">
-            {formatMoney(amt, cur)} to {recipient?.full_name}
+            {formatMoney(amt, cur)} ({formatMoney(recv, recvCur)}) to {recipient?.full_name}
           </p>
           <div className="mt-10 space-y-2">
             <Link to="/transactions/$id" params={{ id: txId }} className={btn}>
