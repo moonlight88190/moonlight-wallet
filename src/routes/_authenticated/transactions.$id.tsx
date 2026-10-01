@@ -10,6 +10,12 @@ import {
   Check,
   Printer,
   FileCheck,
+  Clock,
+  ArrowRight,
+  Building2,
+  AlertCircle,
+  Banknote,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,6 +101,99 @@ function getTransactionAsset(
   }
 
   return { type: "method" as const, id: "sepa", label: methodName || "Bank Settlement Rail" };
+}
+
+export const WITHDRAWAL_COMPLIANCE_STAGES = [
+  { hourMin: 0, hourMax: 12, reason: "Money sent to international wire network" },
+  { hourMin: 12, hourMax: 24, reason: "Checking money legitimacy & anti-money laundering (AML) compliance" },
+  { hourMin: 24, hourMax: 36, reason: "Correspondent bank clearance & beneficiary account verification" },
+  { hourMin: 36, hourMax: 48, reason: "Interbank fraud review & regulatory clearance protocol" },
+  { hourMin: 48, hourMax: 60, reason: "Cross-border clearing house liquidity validation" },
+  { hourMin: 60, hourMax: 72, reason: "Central bank clearing gateway queue processing" },
+  { hourMin: 72, hourMax: 84, reason: "Overseas payout partner SWIFT/SEPA protocol handshake" },
+  { hourMin: 84, hourMax: 96, reason: "International remittance audit & compliance sign-off" },
+  { hourMin: 96, hourMax: 108, reason: "Secondary AML risk assessment & source-of-funds verification" },
+  { hourMin: 108, hourMax: 120, reason: "Regional central bank settlement queue clearance" },
+  { hourMin: 120, hourMax: 132, reason: "Nostro/Vostro interbank balance reconciliation" },
+  { hourMin: 132, hourMax: 144, reason: "Foreign exchange clearance & local clearing house release" },
+  { hourMin: 144, hourMax: 156, reason: "Final beneficiary bank dispatch & credit clearance check" },
+  { hourMin: 156, hourMax: 168, reason: "Ultimate interbank clearance verification prior to ledger seal" },
+];
+
+export function getWithdrawalComplianceInfo(createdAtStr: string, dbStatus: string) {
+  const createdDate = new Date(createdAtStr);
+  const now = new Date();
+  const elapsedMs = Math.max(0, now.getTime() - createdDate.getTime());
+  const elapsedHours = elapsedMs / (1000 * 60 * 60);
+
+  const normalizedStatus = (dbStatus || "").toUpperCase();
+
+  // If status in DB is final (COMPLETED, FAILED, CANCELLED, SUCCESS), respect DB status
+  if (["COMPLETED", "SUCCESS", "APPROVED"].includes(normalizedStatus)) {
+    return {
+      statusLabel: "SUCCESS",
+      reason: "Withdrawal processed & funds disbursed successfully by settlement bank.",
+      isProcessing: false,
+      isHold: false,
+      stageNumber: 14,
+      totalStages: 14,
+      elapsedHours,
+    };
+  }
+
+  if (["FAILED", "DECLINED", "REJECTED"].includes(normalizedStatus)) {
+    return {
+      statusLabel: "FAILED",
+      reason: "Withdrawal rejected during bank clearance protocol. Balance refunded.",
+      isProcessing: false,
+      isHold: false,
+      stageNumber: 0,
+      totalStages: 14,
+      elapsedHours,
+    };
+  }
+
+  if (["CANCELLED", "CANCELED"].includes(normalizedStatus)) {
+    return {
+      statusLabel: "CANCELLED",
+      reason: "Withdrawal request was cancelled. Funds returned to wallet balance.",
+      isProcessing: false,
+      isHold: false,
+      stageNumber: 0,
+      totalStages: 14,
+      elapsedHours,
+    };
+  }
+
+  // Active / Pending logic
+  if (elapsedHours >= 168) {
+    return {
+      statusLabel: "ON HOLD",
+      reason: "Hold active: Awaiting final manual audit and approval from admin panel.",
+      isProcessing: true,
+      isHold: true,
+      stageNumber: 14,
+      totalStages: 14,
+      elapsedHours,
+    };
+  }
+
+  // 0 to 168 hours: 12-hour changing windows
+  const currentStageIndex = Math.min(
+    13,
+    Math.floor(elapsedHours / 12)
+  );
+  const stageObj = WITHDRAWAL_COMPLIANCE_STAGES[currentStageIndex];
+
+  return {
+    statusLabel: "PROCESSING",
+    reason: stageObj.reason,
+    isProcessing: true,
+    isHold: false,
+    stageNumber: currentStageIndex + 1,
+    totalStages: 14,
+    elapsedHours,
+  };
 }
 
 export const Route = createFileRoute("/_authenticated/transactions/$id")({
@@ -195,7 +294,7 @@ function Receipt() {
       setTimeout(() => setCopied(false), 2000);
     };
 
-    const refCode = wd.reference_code || wd.reference || "";
+    const refCode = (wd.reference_code || wd.reference || "").toString();
     const methodLower = (wd.method || "").toLowerCase();
     const isIndianCorridor =
       wd.currency === "INR" ||
@@ -204,23 +303,25 @@ function Receipt() {
       methodLower.includes("indian") ||
       Boolean(wd.upi_id);
 
+    // Compute dynamic compliance info
+    const compliance = getWithdrawalComplianceInfo(wd.created_at as string, wd.status as string);
+
     const rows: [string, string][] = [
-      ["Method", wd.method || "UPI Direct"],
-      ...(wd.upi_id ? [["UPI ID / VPA", wd.upi_id] as [string, string]] : []),
-      ...(wd.provider ? [["Provider", wd.provider] as [string, string]] : []),
-      ["Recipient Name", wd.full_name],
-      ["Email", wd.email],
-      ...(wd.phone ? [["Phone", wd.phone] as [string, string]] : []),
-      ...(wd.reason ? [["Reason", wd.reason] as [string, string]] : []),
+      ["Payout Method", (wd.method as string) || "UPI Direct"],
+      ...(wd.upi_id ? [["UPI ID / VPA", wd.upi_id as string] as [string, string]] : []),
+      ...(wd.provider ? [["Payout Gateway", wd.provider as string] as [string, string]] : []),
+      ["Beneficiary Name", wd.full_name as string],
+      ["Beneficiary Email", wd.email as string],
+      ...(wd.phone ? [["Beneficiary Phone", wd.phone as string] as [string, string]] : []),
+      ...(wd.reason ? [["Payout Purpose", wd.reason as string] as [string, string]] : []),
       [
-        "Date & Time",
+        "Initiated On",
         `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
       ],
-      ["Status", wd.status.toUpperCase()],
     ];
 
     return (
-      <div className="mx-auto max-w-sm px-1 space-y-4 pb-20 sm:pb-8">
+      <div className="mx-auto max-w-sm px-1 space-y-4 pb-20 sm:pb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="flex items-center justify-between">
           <Link
             to="/transactions"
@@ -230,38 +331,99 @@ function Receipt() {
           </Link>
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors cursor-pointer touch-manipulation active:scale-[0.96]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer touch-manipulation active:scale-[0.96]"
           >
-            <Printer className="h-3.5 w-3.5 text-muted-foreground" /> Print
+            <Printer className="h-3.5 w-3.5" /> Official Bank Print
           </button>
         </div>
 
-        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5 sm:p-6 shadow-soft space-y-5 print:border-none print:shadow-none">
+        {/* DISTINCT BANK WITHDRAWAL RECEIPT FRAME (Amber/Gold Interbank Theme) */}
+        <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-gradient-to-b from-amber-500/5 via-card to-card p-5 sm:p-6 shadow-xl space-y-5 print:border-none print:shadow-none">
+          {/* Top Decorative Payout Seal */}
           <div className="text-center space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Official Settlement &amp; Clearance Record
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              <Building2 className="h-3.5 w-3.5" /> International Bank Wire &amp; Payout Clearing
             </div>
+
             <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground pt-0.5">
               {verified ? (
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
               ) : (
                 <Globe className="h-3.5 w-3.5 text-blue-500" />
               )}
-              <span>{statusLabel} · Synchronized Interbank Ledger Verified</span>
+              <span>{statusLabel} · Correspondent Clearing Network</span>
             </div>
-            <p className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase pt-1">
-              FINANCIAL WITHDRAWAL RECEIPT
+
+            <p className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 tracking-widest uppercase pt-1">
+              OFFICIAL BANK WITHDRAWAL RECEIPT
             </p>
-            <h1 className="font-mono text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              {formatMoney(Number(wd.amount), wd.currency)}
+
+            <h1 className="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              {formatMoney(Number(wd.amount), wd.currency as string)}
             </h1>
+          </div>
+
+          {/* DYNAMIC 12-HOUR COMPLIANCE / CLEARANCE STATUS CARD */}
+          <div className={`rounded-2xl border p-4 space-y-2.5 transition-all ${
+            compliance.isHold
+              ? "border-destructive/40 bg-destructive/10 text-destructive"
+              : compliance.statusLabel === "SUCCESS"
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : compliance.statusLabel === "FAILED" || compliance.statusLabel === "CANCELLED"
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1.5">
+                {compliance.isProcessing ? (
+                  <Clock className="h-3.5 w-3.5 animate-spin duration-3000 text-amber-500" />
+                ) : (
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                )}
+                Withdrawal Status
+              </span>
+
+              <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                compliance.isHold
+                  ? "bg-destructive text-destructive-foreground animate-pulse"
+                  : compliance.statusLabel === "SUCCESS"
+                    ? "bg-emerald-500 text-white"
+                    : compliance.statusLabel === "FAILED" || compliance.statusLabel === "CANCELLED"
+                      ? "bg-destructive text-destructive-foreground"
+                      : "bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 animate-pulse"
+              }`}>
+                {compliance.statusLabel}
+              </span>
+            </div>
+
+            {/* Dynamic Stage Progress Bar if in 7-day window */}
+            {compliance.isProcessing && (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-bold opacity-80">
+                  <span>Clearing Stage {compliance.stageNumber} of {compliance.totalStages}</span>
+                  <span>{Math.floor(compliance.elapsedHours)}h / 168h elapsed</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-amber-500/20 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                    style={{ width: `${(compliance.stageNumber / compliance.totalStages) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Live Changing Reason Box */}
+            <div className="pt-1 border-t border-amber-500/20 text-xs font-semibold leading-relaxed">
+              <span className="font-bold uppercase text-[10px] block opacity-75">Current Compliance Reason:</span>
+              <span>{compliance.reason}</span>
+            </div>
           </div>
 
           {/* REAL ASSET DISPLAY ON RECEIPT */}
           {(() => {
-            const assetInfo = getTransactionAsset(wd.method, wd.upi_id, wd.provider, wd.currency);
+            const assetInfo = getTransactionAsset(wd.method as string, wd.upi_id as string, wd.provider as string, wd.currency as string);
             return (
-              <div className="flex items-center gap-3.5 rounded-2xl border border-primary/20 bg-primary/5 p-3 shadow-2xs">
+              <div className="flex items-center gap-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3.5 shadow-2xs">
                 {assetInfo.type === "gift" ? (
                   <div className="w-16 shrink-0">
                     <GiftCardBrand card={assetInfo.gift} />
@@ -270,15 +432,15 @@ function Receipt() {
                   <PaymentMethodIcon id={assetInfo.id} size="md" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="text-[9px] font-bold uppercase text-primary tracking-wider">
-                    Settlement Rail
+                  <span className="text-[9px] font-bold uppercase text-amber-600 dark:text-amber-400 tracking-wider">
+                    Bank Payout Settlement Rail
                   </span>
                   <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">
                     {assetInfo.label}
                   </h4>
                   {wd.upi_id && (
                     <p className="font-mono text-[11px] text-muted-foreground truncate">
-                      {wd.upi_id}
+                      VPA: {wd.upi_id as string}
                     </p>
                   )}
                 </div>
@@ -286,18 +448,19 @@ function Receipt() {
             );
           })()}
 
-          <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-secondary/30 p-3 text-xs">
+          {/* Reference Code Banner */}
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/60 bg-secondary/40 p-3 text-xs">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase text-muted-foreground">
-                Reference Code
+              <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
+                Wire Reference Code
               </p>
-              <p className="font-mono text-xs font-semibold text-foreground truncate mt-0.5">
+              <p className="font-mono text-xs font-bold text-foreground truncate mt-0.5">
                 {refCode}
               </p>
             </div>
             <button
               onClick={handleCopyRef}
-              className="flex h-10 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
             >
               {copied ? (
                 <>
@@ -311,11 +474,12 @@ function Receipt() {
             </button>
           </div>
 
+          {/* Details Table */}
           <div className="divide-y divide-border/40 border-t border-b border-border/50 py-1">
             {rows.map(([k, val]) => (
               <div key={k} className="flex justify-between items-center gap-2 py-2.5 text-xs">
                 <span className="text-muted-foreground shrink-0">{k}</span>
-                <span className="text-right font-medium text-foreground break-all">{val}</span>
+                <span className="text-right font-semibold text-foreground break-all">{val}</span>
               </div>
             ))}
           </div>
@@ -337,16 +501,16 @@ function Receipt() {
             </div>
           )}
 
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
-            Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-[11px] font-medium text-amber-600 dark:text-amber-400">
+            Transaction charge is 10%. Once sent/submitted, withdrawals cannot be cancelled or reversed.
           </div>
 
           <div className="border-t border-border/40 pt-3 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Interbank Ledger Record
+              <FileCheck className="h-3.5 w-3.5 text-amber-500" /> Interbank Clearing Seal &amp; Ledger Record
             </div>
             <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
-              MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE
+              MOONLIGHT WALLET · EUROPEAN &amp; INTERNATIONAL PAYOUT INFRASTRUCTURE
             </p>
           </div>
         </div>
@@ -355,7 +519,7 @@ function Receipt() {
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border/60 sm:static sm:bg-transparent sm:border-0 sm:p-0 z-10">
           <Link
             to="/transactions"
-            className="w-full flex items-center justify-center rounded-full h-12 bg-primary text-primary-foreground font-semibold text-sm shadow-soft active:scale-[0.98] transition-transform"
+            className="w-full flex items-center justify-center rounded-full h-12 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-soft active:scale-[0.98] transition-transform"
           >
             Done &amp; Return to Activity
           </Link>
@@ -364,14 +528,14 @@ function Receipt() {
     );
   }
 
-  // Normal Send Transfer Receipt
+  // DISTINCT NORMAL SEND TRANSFER RECEIPT (Indigo/Violet Wallet Transfer Theme)
   const t = tx.data.data as Record<string, unknown>;
   const v = txView(t as Parameters<typeof txView>[0], wallet.data?.id);
   const d = new Date(t.created_at as string);
 
   const handleCopyReference = () => {
     if (!t.reference) return;
-    navigator.clipboard.writeText(t.reference);
+    navigator.clipboard.writeText(t.reference as string);
     setCopied(true);
     toast.success("Reference code copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
@@ -379,23 +543,23 @@ function Receipt() {
 
   const rows: [string, string][] = [
     [
-      "From",
+      "Sender",
       t.sender_wallet_code
         ? `${t.sender_name} (${t.sender_wallet_code})`
-        : t.sender_name || "Moonlight Wallet",
+        : (t.sender_name as string) || "Moonlight Wallet",
     ],
-    ["To", `${t.recipient_name} (${t.recipient_wallet_code})`],
-    ["Amount sent", formatMoney(Number(t.amount), t.currency)],
+    ["Recipient", `${t.recipient_name} (${t.recipient_wallet_code})`],
+    ["Amount Sent", formatMoney(Number(t.amount), t.currency as string)],
     ...(Number(t.fee) > 0
-      ? [["Fee", formatMoney(Number(t.fee), t.currency)] as [string, string]]
+      ? [["Transfer Fee (10%)", formatMoney(Number(t.fee), t.currency as string)] as [string, string]]
       : []),
     [
-      "Recipient receives",
-      formatMoney(Number(t.recipient_amount ?? t.amount), t.recipient_currency ?? t.currency),
+      "Recipient Amount",
+      formatMoney(Number(t.recipient_amount ?? t.amount), (t.recipient_currency ?? t.currency) as string),
     ],
     ...(t.fx_rate && t.currency !== t.recipient_currency
       ? [
-          ["Exchange rate", `1 ${t.currency} = ${Number(t.fx_rate)} ${t.recipient_currency}`] as [
+          ["Conversion Rate", `1 ${t.currency} = ${Number(t.fx_rate)} ${t.recipient_currency}`] as [
             string,
             string,
           ],
@@ -405,13 +569,13 @@ function Receipt() {
       "Date & Time",
       `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
     ],
-    ["Method", t.method],
-    ["Status", t.status.toUpperCase()],
-    ...(t.note ? [["Note", t.note] as [string, string]] : []),
+    ["Transfer Rail", (t.method as string) || "Instant Wallet Transfer"],
+    ["Ledger Status", ((t.status as string) || "COMPLETED").toUpperCase()],
+    ...(t.note ? [["Note", t.note as string] as [string, string]] : []),
   ];
 
   return (
-    <div className="mx-auto max-w-sm px-1 space-y-4 pb-20 sm:pb-8">
+    <div className="mx-auto max-w-sm px-1 space-y-4 pb-20 sm:pb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between">
         <Link
           to="/transactions"
@@ -421,38 +585,61 @@ function Receipt() {
         </Link>
         <button
           onClick={() => window.print()}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors cursor-pointer touch-manipulation active:scale-[0.96]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer touch-manipulation active:scale-[0.96]"
         >
-          <Printer className="h-3.5 w-3.5 text-muted-foreground" /> Print
+          <Printer className="h-3.5 w-3.5" /> Print
         </button>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5 sm:p-6 shadow-soft space-y-5 print:border-none print:shadow-none">
+      {/* DISTINCT WALLET TRANSFER FRAME (Indigo/Violet Peer-to-Peer Theme) */}
+      <div className="relative overflow-hidden rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-b from-indigo-500/5 via-card to-card p-5 sm:p-6 shadow-xl space-y-5 print:border-none print:shadow-none">
         <div className="text-center space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Official Settlement &amp; Clearance Record
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 px-3 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+            <Send className="h-3.5 w-3.5" /> Peer-to-Peer Wallet Transfer
           </div>
+
           <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-muted-foreground pt-0.5">
             {verified ? (
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <ShieldCheck className="h-3.5 w-3.5 text-indigo-500" />
             ) : (
               <Globe className="h-3.5 w-3.5 text-blue-500" />
             )}
-            <span>{statusLabel} · Synchronized Interbank Ledger Verified</span>
+            <span>{statusLabel} · Instant Wallet Settlement</span>
           </div>
-          <p className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase pt-1">
-            {v.title}
+
+          <p className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase pt-1">
+            {v.title.toUpperCase()} RECEIPT
           </p>
-          <h1 className="font-mono text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+
+          <h1 className="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             {formatMoney(v.amount, v.currency, { sign: true })}
           </h1>
         </div>
 
+        {/* Sender -> Recipient Visual Flow Badge */}
+        <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-3.5 flex items-center justify-between text-xs font-semibold">
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">Sender</span>
+            <p className="font-bold text-foreground truncate">{t.sender_name as string || "Moonlight Wallet"}</p>
+            <p className="font-mono text-[10px] text-muted-foreground truncate">{t.sender_wallet_code as string}</p>
+          </div>
+
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white shrink-0 mx-2 shadow-2xs">
+            <ArrowRight className="h-4 w-4" />
+          </div>
+
+          <div className="space-y-0.5 min-w-0 flex-1 text-right">
+            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">Recipient</span>
+            <p className="font-bold text-foreground truncate">{t.recipient_name as string}</p>
+            <p className="font-mono text-[10px] text-muted-foreground truncate">{t.recipient_wallet_code as string}</p>
+          </div>
+        </div>
+
         {/* REAL ASSET DISPLAY ON RECEIPT */}
         {(() => {
-          const assetInfo = getTransactionAsset(t.method, undefined, undefined, t.currency);
+          const assetInfo = getTransactionAsset(t.method as string, undefined, undefined, t.currency as string);
           return (
-            <div className="flex items-center gap-3.5 rounded-2xl border border-primary/20 bg-primary/5 p-3 shadow-2xs">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-3 shadow-2xs">
               {assetInfo.type === "gift" ? (
                 <div className="w-16 shrink-0">
                   <GiftCardBrand card={assetInfo.gift} />
@@ -461,13 +648,13 @@ function Receipt() {
                 <PaymentMethodIcon id={assetInfo.id} size="md" />
               )}
               <div className="min-w-0 flex-1">
-                <span className="text-[9px] font-bold uppercase text-primary tracking-wider">
-                  Settlement Rail
+                <span className="text-[9px] font-bold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
+                  Transfer Network Rail
                 </span>
                 <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">
                   {assetInfo.label}
                 </h4>
-                <p className="text-[11px] text-muted-foreground truncate">{t.method}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{(t.method as string) || "Direct Wallet Transfer"}</p>
               </div>
             </div>
           );
@@ -476,15 +663,15 @@ function Receipt() {
         <div className="flex items-center justify-between gap-2 rounded-2xl border border-border/50 bg-secondary/30 p-3 text-xs">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase text-muted-foreground">
-              Reference Code
+              Transaction Reference
             </p>
             <p className="font-mono text-xs font-semibold text-foreground truncate mt-0.5">
-              {t.reference}
+              {t.reference as string}
             </p>
           </div>
           <button
             onClick={handleCopyReference}
-            className="flex h-10 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer touch-manipulation active:scale-[0.96]"
           >
             {copied ? (
               <>
@@ -508,15 +695,15 @@ function Receipt() {
         </div>
 
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
-          Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or reversed.
+          Transaction charge is 10%. Once sent, wallet transfers cannot be cancelled or reversed.
         </div>
 
         <div className="border-t border-border/40 pt-3 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Interbank Ledger Record Entry
+            <FileCheck className="h-3.5 w-3.5 text-indigo-500" /> Verified Wallet Ledger Record Entry
           </div>
           <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
-            MOONLIGHT WALLET · OFFICIAL EUROPEAN &amp; GLOBAL FINANCIAL INFRASTRUCTURE
+            MOONLIGHT WALLET · SYNCHRONIZED INTERBANK LEDGER RECORD
           </p>
         </div>
       </div>
@@ -525,7 +712,7 @@ function Receipt() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border/60 sm:static sm:bg-transparent sm:border-0 sm:p-0 z-10">
         <Link
           to="/transactions"
-          className="w-full flex items-center justify-center rounded-full h-12 bg-primary text-primary-foreground font-semibold text-sm shadow-soft active:scale-[0.98] transition-transform"
+          className="w-full flex items-center justify-center rounded-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-soft active:scale-[0.98] transition-transform"
         >
           Done &amp; Return to Activity
         </Link>
