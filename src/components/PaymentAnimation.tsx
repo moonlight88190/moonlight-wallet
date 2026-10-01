@@ -103,6 +103,9 @@ export function PaymentAnimation({
       // 5.0s to 6.0s total duration for realistic bank clearance animation (~1000ms - 1200ms per step across 5 step transitions)
       const baseMin = 1000;
       const baseMax = 1200;
+      // 5-7 seconds total duration across 5 step transitions (1000ms-1350ms per step)
+      const baseMin = 1000;
+      const baseMax = 1350;
 
       const step1 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
       const step2 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;

@@ -34,8 +34,8 @@ export const FALLBACK_RATES: Record<string, number> = {
   PLN: 3.98,
 };
 
-/** Transfer fee charged to the sender. Must match public.send_transfer. */
-export const TRANSFER_FEE_RATE = 0.005;
+/** Transfer and withdrawal fee rate charged (10%). */
+export const TRANSFER_FEE_RATE = 0.10;
 
 export function formatMoney(amount: number, currency: string, opts: { sign?: boolean } = {}) {
   const digits = currency === "JPY" ? 0 : 2;
