@@ -67,7 +67,7 @@ function Dashboard() {
   const [calcFrom, setCalcFrom] = useState<string>("EUR");
   const [calcTo, setCalcTo] = useState<string>("INR");
 
-  // Simulated Security toggle
+  // Security biometric toggle state
   const [biometricsEnabled, setBiometricsEnabled] = useState<boolean>(true);
 
   const cur = profile.data?.preferred_currency ?? "EUR";
