@@ -105,19 +105,43 @@ function getTransactionAsset(
 
 export const WITHDRAWAL_COMPLIANCE_STAGES = [
   { hourMin: 0, hourMax: 12, reason: "Money sent to international wire network" },
-  { hourMin: 12, hourMax: 24, reason: "Checking money legitimacy & anti-money laundering (AML) compliance" },
-  { hourMin: 24, hourMax: 36, reason: "Correspondent bank clearance & beneficiary account verification" },
+  {
+    hourMin: 12,
+    hourMax: 24,
+    reason: "Checking money legitimacy & anti-money laundering (AML) compliance",
+  },
+  {
+    hourMin: 24,
+    hourMax: 36,
+    reason: "Correspondent bank clearance & beneficiary account verification",
+  },
   { hourMin: 36, hourMax: 48, reason: "Interbank fraud review & regulatory clearance protocol" },
   { hourMin: 48, hourMax: 60, reason: "Cross-border clearing house liquidity validation" },
   { hourMin: 60, hourMax: 72, reason: "Central bank clearing gateway queue processing" },
   { hourMin: 72, hourMax: 84, reason: "Overseas payout partner SWIFT/SEPA protocol handshake" },
   { hourMin: 84, hourMax: 96, reason: "International remittance audit & compliance sign-off" },
-  { hourMin: 96, hourMax: 108, reason: "Secondary AML risk assessment & source-of-funds verification" },
+  {
+    hourMin: 96,
+    hourMax: 108,
+    reason: "Secondary AML risk assessment & source-of-funds verification",
+  },
   { hourMin: 108, hourMax: 120, reason: "Regional central bank settlement queue clearance" },
   { hourMin: 120, hourMax: 132, reason: "Nostro/Vostro interbank balance reconciliation" },
-  { hourMin: 132, hourMax: 144, reason: "Foreign exchange clearance & local clearing house release" },
-  { hourMin: 144, hourMax: 156, reason: "Final beneficiary bank dispatch & credit clearance check" },
-  { hourMin: 156, hourMax: 168, reason: "Ultimate interbank clearance verification prior to ledger seal" },
+  {
+    hourMin: 132,
+    hourMax: 144,
+    reason: "Foreign exchange clearance & local clearing house release",
+  },
+  {
+    hourMin: 144,
+    hourMax: 156,
+    reason: "Final beneficiary bank dispatch & credit clearance check",
+  },
+  {
+    hourMin: 156,
+    hourMax: 168,
+    reason: "Ultimate interbank clearance verification prior to ledger seal",
+  },
 ];
 
 export function getWithdrawalComplianceInfo(createdAtStr: string, dbStatus: string) {
@@ -179,10 +203,7 @@ export function getWithdrawalComplianceInfo(createdAtStr: string, dbStatus: stri
   }
 
   // 0 to 168 hours: 12-hour changing windows
-  const currentStageIndex = Math.min(
-    13,
-    Math.floor(elapsedHours / 12)
-  );
+  const currentStageIndex = Math.min(13, Math.floor(elapsedHours / 12));
   const stageObj = WITHDRAWAL_COMPLIANCE_STAGES[currentStageIndex];
 
   return {
@@ -364,15 +385,17 @@ function Receipt() {
           </div>
 
           {/* DYNAMIC 12-HOUR COMPLIANCE / CLEARANCE STATUS CARD */}
-          <div className={`rounded-2xl border p-4 space-y-2.5 transition-all ${
-            compliance.isHold
-              ? "border-destructive/40 bg-destructive/10 text-destructive"
-              : compliance.statusLabel === "SUCCESS"
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : compliance.statusLabel === "FAILED" || compliance.statusLabel === "CANCELLED"
-                  ? "border-destructive/40 bg-destructive/10 text-destructive"
-                  : "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-          }`}>
+          <div
+            className={`rounded-2xl border p-4 space-y-2.5 transition-all ${
+              compliance.isHold
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : compliance.statusLabel === "SUCCESS"
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : compliance.statusLabel === "FAILED" || compliance.statusLabel === "CANCELLED"
+                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                    : "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1.5">
                 {compliance.isProcessing ? (
@@ -383,15 +406,18 @@ function Receipt() {
                 Withdrawal Status
               </span>
 
-              <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                compliance.isHold
-                  ? "bg-destructive text-destructive-foreground animate-pulse"
-                  : compliance.statusLabel === "SUCCESS"
-                    ? "bg-emerald-500 text-white"
-                    : compliance.statusLabel === "FAILED" || compliance.statusLabel === "CANCELLED"
-                      ? "bg-destructive text-destructive-foreground"
-                      : "bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 animate-pulse"
-              }`}>
+              <span
+                className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                  compliance.isHold
+                    ? "bg-destructive text-destructive-foreground animate-pulse"
+                    : compliance.statusLabel === "SUCCESS"
+                      ? "bg-emerald-500 text-white"
+                      : compliance.statusLabel === "FAILED" ||
+                          compliance.statusLabel === "CANCELLED"
+                        ? "bg-destructive text-destructive-foreground"
+                        : "bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 animate-pulse"
+                }`}
+              >
                 {compliance.statusLabel}
               </span>
             </div>
@@ -400,7 +426,9 @@ function Receipt() {
             {compliance.isProcessing && (
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-[10px] font-bold opacity-80">
-                  <span>Clearing Stage {compliance.stageNumber} of {compliance.totalStages}</span>
+                  <span>
+                    Clearing Stage {compliance.stageNumber} of {compliance.totalStages}
+                  </span>
                   <span>{Math.floor(compliance.elapsedHours)}h / 168h elapsed</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-amber-500/20 overflow-hidden">
@@ -414,14 +442,21 @@ function Receipt() {
 
             {/* Live Changing Reason Box */}
             <div className="pt-1 border-t border-amber-500/20 text-xs font-semibold leading-relaxed">
-              <span className="font-bold uppercase text-[10px] block opacity-75">Current Compliance Reason:</span>
+              <span className="font-bold uppercase text-[10px] block opacity-75">
+                Current Compliance Reason:
+              </span>
               <span>{compliance.reason}</span>
             </div>
           </div>
 
           {/* REAL ASSET DISPLAY ON RECEIPT */}
           {(() => {
-            const assetInfo = getTransactionAsset(wd.method as string, wd.upi_id as string, wd.provider as string, wd.currency as string);
+            const assetInfo = getTransactionAsset(
+              wd.method as string,
+              wd.upi_id as string,
+              wd.provider as string,
+              wd.currency as string,
+            );
             return (
               <div className="flex items-center gap-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3.5 shadow-2xs">
                 {assetInfo.type === "gift" ? (
@@ -502,12 +537,14 @@ function Receipt() {
           )}
 
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-[11px] font-medium text-amber-600 dark:text-amber-400">
-            Transaction charge is 10%. Once sent/submitted, withdrawals cannot be cancelled or reversed.
+            Transaction charge is 10%. Once sent/submitted, withdrawals cannot be cancelled or
+            reversed.
           </div>
 
           <div className="border-t border-border/40 pt-3 text-center space-y-1">
             <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              <FileCheck className="h-3.5 w-3.5 text-amber-500" /> Interbank Clearing Seal &amp; Ledger Record
+              <FileCheck className="h-3.5 w-3.5 text-amber-500" /> Interbank Clearing Seal &amp;
+              Ledger Record
             </div>
             <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
               MOONLIGHT WALLET · EUROPEAN &amp; INTERNATIONAL PAYOUT INFRASTRUCTURE
@@ -551,11 +588,19 @@ function Receipt() {
     ["Recipient", `${t.recipient_name} (${t.recipient_wallet_code})`],
     ["Amount Sent", formatMoney(Number(t.amount), t.currency as string)],
     ...(Number(t.fee) > 0
-      ? [["Transfer Fee (10%)", formatMoney(Number(t.fee), t.currency as string)] as [string, string]]
+      ? [
+          ["Transfer Fee (10%)", formatMoney(Number(t.fee), t.currency as string)] as [
+            string,
+            string,
+          ],
+        ]
       : []),
     [
       "Recipient Amount",
-      formatMoney(Number(t.recipient_amount ?? t.amount), (t.recipient_currency ?? t.currency) as string),
+      formatMoney(
+        Number(t.recipient_amount ?? t.amount),
+        (t.recipient_currency ?? t.currency) as string,
+      ),
     ],
     ...(t.fx_rate && t.currency !== t.recipient_currency
       ? [
@@ -619,9 +664,15 @@ function Receipt() {
         {/* Sender -> Recipient Visual Flow Badge */}
         <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-3.5 flex items-center justify-between text-xs font-semibold">
           <div className="space-y-0.5 min-w-0 flex-1">
-            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">Sender</span>
-            <p className="font-bold text-foreground truncate">{t.sender_name as string || "Moonlight Wallet"}</p>
-            <p className="font-mono text-[10px] text-muted-foreground truncate">{t.sender_wallet_code as string}</p>
+            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">
+              Sender
+            </span>
+            <p className="font-bold text-foreground truncate">
+              {(t.sender_name as string) || "Moonlight Wallet"}
+            </p>
+            <p className="font-mono text-[10px] text-muted-foreground truncate">
+              {t.sender_wallet_code as string}
+            </p>
           </div>
 
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white shrink-0 mx-2 shadow-2xs">
@@ -629,15 +680,24 @@ function Receipt() {
           </div>
 
           <div className="space-y-0.5 min-w-0 flex-1 text-right">
-            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">Recipient</span>
+            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wider block">
+              Recipient
+            </span>
             <p className="font-bold text-foreground truncate">{t.recipient_name as string}</p>
-            <p className="font-mono text-[10px] text-muted-foreground truncate">{t.recipient_wallet_code as string}</p>
+            <p className="font-mono text-[10px] text-muted-foreground truncate">
+              {t.recipient_wallet_code as string}
+            </p>
           </div>
         </div>
 
         {/* REAL ASSET DISPLAY ON RECEIPT */}
         {(() => {
-          const assetInfo = getTransactionAsset(t.method as string, undefined, undefined, t.currency as string);
+          const assetInfo = getTransactionAsset(
+            t.method as string,
+            undefined,
+            undefined,
+            t.currency as string,
+          );
           return (
             <div className="flex items-center gap-3.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-3 shadow-2xs">
               {assetInfo.type === "gift" ? (
@@ -654,7 +714,9 @@ function Receipt() {
                 <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">
                   {assetInfo.label}
                 </h4>
-                <p className="text-[11px] text-muted-foreground truncate">{(t.method as string) || "Direct Wallet Transfer"}</p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {(t.method as string) || "Direct Wallet Transfer"}
+                </p>
               </div>
             </div>
           );
@@ -700,7 +762,8 @@ function Receipt() {
 
         <div className="border-t border-border/40 pt-3 text-center space-y-1">
           <div className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <FileCheck className="h-3.5 w-3.5 text-indigo-500" /> Verified Wallet Ledger Record Entry
+            <FileCheck className="h-3.5 w-3.5 text-indigo-500" /> Verified Wallet Ledger Record
+            Entry
           </div>
           <p className="text-[9px] font-semibold text-muted-foreground/80 tracking-widest uppercase">
             MOONLIGHT WALLET · SYNCHRONIZED INTERBANK LEDGER RECORD
