@@ -14,8 +14,7 @@ export async function signInWithGoogle(onSignedIn?: () => void) {
     if (result.redirected) return;
 
     if (result.error) {
-      console.warn("Lovable OAuth broker reported an error, trying direct fallback:", result.error);
-      // Fallback: Direct Supabase OAuth with dynamic redirect
+      console.warn("Lovable OAuth broker failed, falling back to direct OAuth redirect:", result.error);
       const { data, error: directError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -24,9 +23,10 @@ export async function signInWithGoogle(onSignedIn?: () => void) {
       });
 
       if (directError) {
-        toast.error("Google sign-in could not be completed. Please use email sign-in.");
+        toast.error("Could not start Google sign-in. Please sign in with email.");
         return;
       }
+
       if (data?.url && typeof window !== "undefined") {
         window.location.assign(data.url);
       }

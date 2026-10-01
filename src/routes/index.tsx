@@ -44,12 +44,19 @@ function Landing() {
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSignedIn(!!s);
-      if (s) navigate({ to: "/dashboard" });
+    supabase.auth.getSession().then(({ data }) => {
+      setSignedIn(!!data.session);
+      if (data.session) {
+        navigate({ to: "/dashboard" });
+      }
     });
-    return () => data.subscription.unsubscribe();
+    const { data: authListener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(!!session);
+      if (session) {
+        navigate({ to: "/dashboard" });
+      }
+    });
+    return () => authListener.subscription.unsubscribe();
   }, [navigate]);
 
   return (

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -31,6 +31,14 @@ function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        navigate({ to: "/dashboard" });
+      }
+    });
+  }, [navigate]);
+
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const parsed = schema.safeParse({ email, password });
@@ -39,17 +47,23 @@ function Login() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     setBusy(false);
     if (error) {
-      toast.error(
-        error.message === "Invalid login credentials"
-          ? "Email or password is incorrect."
-          : error.message,
-      );
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Please verify your email address before signing in.");
+      } else if (error.message === "Invalid login credentials") {
+        toast.error("Email or password is incorrect.");
+      } else {
+        toast.error(error.message);
+      }
       return;
     }
-    navigate({ to: "/dashboard" });
+    if (data?.session) {
+      toast.success("Signed in successfully");
+      navigate({ to: "/dashboard" });
+      return;
+    }
   }
 
   return (
