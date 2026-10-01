@@ -212,7 +212,10 @@ function Receipt() {
       ["Email", wd.email],
       ...(wd.phone ? [["Phone", wd.phone] as [string, string]] : []),
       ...(wd.reason ? [["Reason", wd.reason] as [string, string]] : []),
-      ["Date & Time", `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`],
+      [
+        "Date & Time",
+        `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+      ],
       ["Status", wd.status.toUpperCase()],
     ];
 
@@ -270,9 +273,13 @@ function Receipt() {
                   <span className="text-[9px] font-bold uppercase text-primary tracking-wider">
                     Settlement Rail
                   </span>
-                  <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">{assetInfo.label}</h4>
+                  <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">
+                    {assetInfo.label}
+                  </h4>
                   {wd.upi_id && (
-                    <p className="font-mono text-[11px] text-muted-foreground truncate">{wd.upi_id}</p>
+                    <p className="font-mono text-[11px] text-muted-foreground truncate">
+                      {wd.upi_id}
+                    </p>
                   )}
                 </div>
               </div>
@@ -306,10 +313,7 @@ function Receipt() {
 
           <div className="divide-y divide-border/40 border-t border-b border-border/50 py-1">
             {rows.map(([k, val]) => (
-              <div
-                key={k}
-                className="flex justify-between items-center gap-2 py-2.5 text-xs"
-              >
+              <div key={k} className="flex justify-between items-center gap-2 py-2.5 text-xs">
                 <span className="text-muted-foreground shrink-0">{k}</span>
                 <span className="text-right font-medium text-foreground break-all">{val}</span>
               </div>
@@ -393,7 +397,10 @@ function Receipt() {
           ],
         ]
       : []),
-    ["Date & Time", `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`],
+    [
+      "Date & Time",
+      `${d.toLocaleDateString(undefined, { dateStyle: "medium" })} · ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+    ],
     ["Method", t.method],
     ["Status", t.status.toUpperCase()],
     ...(t.note ? [["Note", t.note] as [string, string]] : []),
@@ -453,7 +460,9 @@ function Receipt() {
                 <span className="text-[9px] font-bold uppercase text-primary tracking-wider">
                   Settlement Rail
                 </span>
-                <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">{assetInfo.label}</h4>
+                <h4 className="font-bold text-xs sm:text-sm text-foreground truncate">
+                  {assetInfo.label}
+                </h4>
                 <p className="text-[11px] text-muted-foreground truncate">{t.method}</p>
               </div>
             </div>
@@ -487,10 +496,7 @@ function Receipt() {
 
         <div className="divide-y divide-border/40 border-t border-b border-border/50 py-1">
           {rows.map(([k, val]) => (
-            <div
-              key={k}
-              className="flex justify-between items-center gap-2 py-2.5 text-xs"
-            >
+            <div key={k} className="flex justify-between items-center gap-2 py-2.5 text-xs">
               <span className="text-muted-foreground shrink-0">{k}</span>
               <span className="text-right font-medium text-foreground break-all">{val}</span>
             </div>

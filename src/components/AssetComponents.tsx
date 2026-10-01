@@ -124,7 +124,10 @@ export function PaymentMethodIcon({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const cleanId = id.toLowerCase().replace(/.*[\/\\]/, "").replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
+  const cleanId = id
+    .toLowerCase()
+    .replace(/.*[\/\\]/, "")
+    .replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
   const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
   const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
 
@@ -150,11 +153,27 @@ export function PaymentMethodIcon({
 
   // CATEGORIZATION BY NATIVE ASPECT RATIO
   const SQUARE_IDS = [
-    "sepa", "sbi", "gcash", "upi-qr", "cz-bank", "in-bank", "ph-bank",
-    "int-bank", "pix", "whatsapp", "steam", "moonlight-logo", "moonlight-emblem"
+    "sepa",
+    "sbi",
+    "gcash",
+    "upi-qr",
+    "cz-bank",
+    "in-bank",
+    "ph-bank",
+    "int-bank",
+    "pix",
+    "whatsapp",
+    "steam",
+    "moonlight-logo",
+    "moonlight-emblem",
   ];
   const ULTRA_WIDE_IDS = [
-    "hdfc-bank", "icici-bank", "axis-bank", "airtel-payments-bank", "amazon-pay", "xbox"
+    "hdfc-bank",
+    "icici-bank",
+    "axis-bank",
+    "airtel-payments-bank",
+    "amazon-pay",
+    "xbox",
   ];
 
   const isSquare = SQUARE_IDS.includes(cleanId);
@@ -162,19 +181,42 @@ export function PaymentMethodIcon({
 
   let containerDims = "";
   if (isSquare) {
-    containerDims = size === "sm" ? "h-8 w-8 p-1" : size === "lg" ? "h-12 w-12 sm:h-14 sm:w-14 p-2" : "h-10 w-10 sm:h-11 sm:w-11 p-1.5";
+    containerDims =
+      size === "sm"
+        ? "h-8 w-8 p-1"
+        : size === "lg"
+          ? "h-12 w-12 sm:h-14 sm:w-14 p-2"
+          : "h-10 w-10 sm:h-11 sm:w-11 p-1.5";
   } else if (isUltraWide) {
-    containerDims = size === "sm" ? "h-7 px-2 py-0.5 w-auto min-w-[70px] max-w-[100px]" : size === "lg" ? "h-11 sm:h-12 px-3.5 py-1.5 w-auto min-w-[110px] max-w-[150px]" : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[85px] max-w-[130px]";
+    containerDims =
+      size === "sm"
+        ? "h-7 px-2 py-0.5 w-auto min-w-[70px] max-w-[100px]"
+        : size === "lg"
+          ? "h-11 sm:h-12 px-3.5 py-1.5 w-auto min-w-[110px] max-w-[150px]"
+          : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[85px] max-w-[130px]";
   } else {
     // Standard horizontal wordmark (UPI, GPay, PhonePe, Paytm, BHIM, Yes Bank, etc.)
-    containerDims = size === "sm" ? "h-8 px-2 py-0.5 w-auto min-w-[60px] max-w-[90px]" : size === "lg" ? "h-11 sm:h-12 px-3 py-1 w-auto min-w-[95px] max-w-[130px]" : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[75px] max-w-[115px]";
+    containerDims =
+      size === "sm"
+        ? "h-8 px-2 py-0.5 w-auto min-w-[60px] max-w-[90px]"
+        : size === "lg"
+          ? "h-11 sm:h-12 px-3 py-1 w-auto min-w-[95px] max-w-[130px]"
+          : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[75px] max-w-[115px]";
   }
 
-  const baseContainer = "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40";
+  const baseContainer =
+    "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40";
 
   if (failed) {
     return (
-      <div className={cn(baseContainer, containerDims, "bg-secondary text-muted-foreground", className)}>
+      <div
+        className={cn(
+          baseContainer,
+          containerDims,
+          "bg-secondary text-muted-foreground",
+          className,
+        )}
+      >
         <Landmark className="h-4 w-4" />
       </div>
     );

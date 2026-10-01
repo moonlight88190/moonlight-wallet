@@ -357,7 +357,11 @@ export function Withdraw() {
               className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3.5 text-center shadow-2xs transition-all hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation"
             >
               <div className="relative flex h-12 w-full items-center justify-center p-1">
-                <img src={brand.logoUrl} alt={brand.name} className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform" />
+                <img
+                  src={brand.logoUrl}
+                  alt={brand.name}
+                  className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                />
               </div>
               <div className="mt-2 w-full border-t border-border/40 pt-2">
                 <p className="text-xs font-semibold text-foreground truncate">{brand.name}</p>
@@ -752,7 +756,9 @@ export function Withdraw() {
               )}
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Destination / Account:</span>
-                <span className="font-mono font-semibold text-foreground">{activeReceipt.accountOrCode}</span>
+                <span className="font-mono font-semibold text-foreground">
+                  {activeReceipt.accountOrCode}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2.5">
                 <span className="text-muted-foreground">Date &amp; Time:</span>

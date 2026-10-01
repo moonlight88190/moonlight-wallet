@@ -177,7 +177,8 @@ function Dashboard() {
             { to: "/withdraw", label: "Gift Cards", icon: Gift, primary: false },
             { to: "/transactions", label: "Activity", icon: History, primary: false },
           ].map((a, idx) => (
-            <Link {...({} as any)}
+            <Link
+              {...({} as any)}
               key={`${a.to}-${idx}`}
               to={a.to}
               search={a.search}
@@ -185,9 +186,7 @@ function Dashboard() {
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
-                  a.primary
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-foreground"
+                  a.primary ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                 }`}
               >
                 <a.icon className="h-5 w-5" strokeWidth={1.75} />

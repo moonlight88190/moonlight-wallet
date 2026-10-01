@@ -93,7 +93,11 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
 
   return (
     <div className="space-y-4">
-      <div id="ml-qr-reader" ref={ref} className="w-full max-w-xs aspect-square mx-auto rounded-2xl overflow-hidden bg-black" />
+      <div
+        id="ml-qr-reader"
+        ref={ref}
+        className="w-full max-w-xs aspect-square mx-auto rounded-2xl overflow-hidden bg-black"
+      />
       <div id="ml-qr-reader-hidden" className="hidden" />
       <div className="flex flex-col items-center gap-2 pt-2">
         <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">OR</p>

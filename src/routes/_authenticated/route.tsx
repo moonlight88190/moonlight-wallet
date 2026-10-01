@@ -27,13 +27,16 @@ export const Route = createFileRoute("/_authenticated")({
           }
         });
 
-        setTimeout(async () => {
-          subscription.unsubscribe();
-          const {
-            data: { session: retrySession },
-          } = await supabase.auth.getSession();
-          resolve(retrySession);
-        }, hasTokens ? 2000 : 400);
+        setTimeout(
+          async () => {
+            subscription.unsubscribe();
+            const {
+              data: { session: retrySession },
+            } = await supabase.auth.getSession();
+            resolve(retrySession);
+          },
+          hasTokens ? 2000 : 400,
+        );
       });
     }
 
