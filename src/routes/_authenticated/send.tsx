@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -155,6 +155,14 @@ function Send() {
   const rateRatio = convert(1, cur, recvCur, r);
   const available = Number(wallet.data?.balance_usd ?? 0) * (r[cur] ?? 1);
 
+  // New account anti-fraud check (48-hour security clearance window)
+  const createdAt = profile.data?.created_at ? new Date(profile.data.created_at) : new Date();
+  const accountAgeHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+  const isNewAccount = accountAgeHours < 48;
+  const curRate = r[cur] ?? 1;
+  const limit10InCur = 10 * curRate; // $10 USD equivalent in current display currency
+  const isOverNewAccountLimit = isNewAccount && amt > limit10InCur + 1e-6;
+
   async function lookup(q: string) {
     const v = q.trim().replace(/^moonlight:/i, "");
     if (!v) return;
@@ -171,6 +179,12 @@ function Send() {
 
   async function confirmTransfer() {
     if (!recipient) return;
+    if (isOverNewAccountLimit) {
+      toast.error(
+        `New account security limit: Maximum transfer amount during the 48-hour security clearance window is $10.00 USD (${formatMoney(limit10InCur, cur)}).`,
+      );
+      return;
+    }
     setStep("animating");
     setAnimState("processing");
     setBusy(true);
@@ -287,6 +301,23 @@ function Send() {
             <p className="px-1 text-xs text-muted-foreground flex items-center gap-1.5">
               Available {formatMoney(available, cur)}
             </p>
+
+            {isNewAccount && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs space-y-1.5">
+                <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
+                  <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span>Security Protection & Fraud Prevention Policy</span>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  To protect your account against identity theft and unauthorized scam transactions,
+                  transfers for accounts under 48 hours old are limited to{" "}
+                  <strong className="text-foreground">$10.00 USD</strong> (
+                  {formatMoney(limit10InCur, cur)}) during the initial verification clearance
+                  period.
+                </p>
+              </div>
+            )}
+
             <Input
               placeholder="Note (optional)"
               maxLength={200}
@@ -310,11 +341,23 @@ function Send() {
               </div>
             )}
             <button
-              disabled={amt <= 0 || amt + fee > available + 1e-9}
-              onClick={() => setStep("review")}
+              disabled={amt <= 0 || amt + fee > available + 1e-9 || isOverNewAccountLimit}
+              onClick={() => {
+                if (isOverNewAccountLimit) {
+                  toast.error(
+                    `New account security limit: Max $10.00 USD (${formatMoney(limit10InCur, cur)}).`,
+                  );
+                  return;
+                }
+                setStep("review");
+              }}
               className={btn}
             >
-              {amt + fee > available + 1e-9 ? "Insufficient balance" : "Review Transfer"}
+              {amt + fee > available + 1e-9
+                ? "Insufficient balance"
+                : isOverNewAccountLimit
+                  ? `Limit Exceeded ($10 USD Max for New Accounts)`
+                  : "Review Transfer"}
             </button>
             <button
               onClick={() => {

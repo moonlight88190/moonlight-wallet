@@ -14,20 +14,50 @@ export function AuthLayout({
   footer?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <Link to="/" className="mx-auto mb-10 flex w-fit flex-col items-center gap-3">
-          <LogoMark className="h-14 w-14" />
-          <span className="text-[11px] font-medium tracking-[0.3em] text-muted-foreground">
-            MOONLIGHT WALLET
-          </span>
-        </Link>
-        <h1 className="text-center text-3xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && (
-          <p className="mt-2 text-center text-[15px] text-muted-foreground">{subtitle}</p>
-        )}
-        <div className="mt-10">{children}</div>
-        {footer && <div className="mt-8 text-center text-sm text-muted-foreground">{footer}</div>}
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 bg-background text-foreground selection:bg-primary/10 overflow-x-hidden">
+      {/* Background ambient lighting */}
+      <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[450px] w-[450px] rounded-full bg-primary/10 blur-[100px] opacity-60" />
+
+      <div className="relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-3 duration-500">
+        <div className="rounded-3xl border border-border/60 bg-card/70 p-6 sm:p-10 backdrop-blur-2xl shadow-soft">
+          <Link to="/" className="mx-auto mb-8 flex w-fit flex-col items-center gap-2.5 group">
+            <LogoMark className="h-12 w-12 group-hover:scale-105 transition-transform duration-300" />
+            <div className="flex flex-col items-center text-center">
+              <span className="text-[12px] font-semibold tracking-[0.28em] text-foreground">
+                MOONLIGHT
+              </span>
+              <span className="text-[9px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                European Financial Infrastructure
+              </span>
+            </div>
+          </Link>
+
+          <h1 className="text-center text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-2 text-center text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {subtitle}
+            </p>
+          )}
+
+          <div className="mt-8">{children}</div>
+
+          {footer && (
+            <div className="mt-8 text-center text-xs text-muted-foreground pt-4 border-t border-border/40">
+              {footer}
+            </div>
+          )}
+        </div>
+
+        {/* Security badge footer */}
+        <div className="mt-6 flex items-center justify-center gap-3 text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
+          <span>256-Bit SSL</span>
+          <span>•</span>
+          <span>EU Regulated Standard</span>
+          <span>•</span>
+          <span>Encrypted Ledger</span>
+        </div>
       </div>
     </div>
   );

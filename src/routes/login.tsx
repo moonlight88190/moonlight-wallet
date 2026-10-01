@@ -68,34 +68,35 @@ function Login() {
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to your wallet."
+      title="Access Your Account"
+      subtitle="Sign in to your secure Moonlight account."
       footer={
         <>
           New to Moonlight?{" "}
-          <Link to="/register" className="font-medium text-foreground">
-            Create an account
+          <Link to="/register" className="font-semibold text-foreground hover:underline">
+            Open an Account
           </Link>
         </>
       }
     >
       <button
         onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-        className="flex w-full items-center justify-center gap-2.5 rounded-full border bg-card px-6 py-3 text-[15px] font-medium transition-colors hover:bg-accent"
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border/80 bg-card/80 px-6 py-3.5 text-sm font-semibold transition-all hover:bg-accent hover:border-primary/40 shadow-2xs active:scale-[0.99] cursor-pointer touch-manipulation"
       >
         <GoogleIcon /> Continue with Google
       </button>
-      <div className="my-8 flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
+      <div className="my-6 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+        <div className="h-px flex-1 bg-border/60" /> OR EMAIL{" "}
+        <div className="h-px flex-1 bg-border/60" />
       </div>
-      <form onSubmit={submit} className="space-y-3">
+      <form onSubmit={submit} className="space-y-3.5">
         <Input
           type="email"
           autoComplete="email"
-          placeholder="Email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-2xl bg-card/50 px-4 text-sm border-border/70 focus:border-primary transition-all"
         />
         <Input
           type="password"
@@ -103,21 +104,21 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-2xl bg-card/50 px-4 text-sm border-border/70 focus:border-primary transition-all"
         />
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-0.5">
           <Link
             to="/forgot-password"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Forgot password?
           </Link>
         </div>
         <button
           disabled={busy}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 shadow-soft cursor-pointer touch-manipulation"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
         </button>
       </form>
     </AuthLayout>
