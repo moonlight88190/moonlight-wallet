@@ -8,20 +8,7 @@
     "binding": "ASSETS",
     "directory": ".output/public"
   },
-  "build": {
-    "command": "npm run build"
-  },
   "observability": {
     "enabled": true
-  },
-  "no_bundle": true,
-  "rules": [
-    {
-      "type": "ESModule",
-      "globs": [
-        "**/*.mjs",
-        "**/*.js"
-      ]
-    }
-  ]
+  }
 }
