@@ -107,25 +107,25 @@ function Landing() {
             </span>
           </div>
 
-          <h1 className="mx-auto max-w-2xl text-4xl sm:text-6xl md:text-7xl font-semibold leading-[1.08] tracking-tight text-foreground">
+          <h1 className="mx-auto max-w-2xl text-3xl sm:text-5xl md:text-6xl font-semibold leading-[1.12] tracking-tight text-foreground">
             Global money, <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
               beautifully connected.
             </span>
           </h1>
 
-          <p className="mx-auto max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="mx-auto max-w-xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
             A multi-currency wallet for sending, receiving, managing and moving money across
             borders.
           </p>
 
           {/* Global Connectivity Ticker / Currency Route */}
           <div className="pt-2 pb-4">
-            <div className="mx-auto flex flex-wrap items-center justify-center gap-2 max-w-2xl">
+            <div className="mx-auto flex flex-wrap items-center justify-center gap-2 max-w-2xl px-1">
               {GLOBAL_CURRENCIES.map((c) => (
                 <div
                   key={c.code}
-                  className="flex items-center gap-1.5 rounded-full border border-border/50 bg-card/70 px-3 py-1 shadow-2xs text-xs font-semibold"
+                  className="flex items-center gap-1.5 rounded-full border border-border/50 bg-card/70 px-2.5 py-1.5 shadow-2xs text-xs font-semibold"
                 >
                   <CountryFlag code={c.flag} circle size="xs" />
                   <span className="text-foreground">{c.code}</span>
@@ -133,8 +133,8 @@ function Landing() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[11px] font-semibold text-muted-foreground/80 tracking-widest uppercase flex items-center justify-center gap-1.5">
-              <Globe className="h-3.5 w-3.5 text-primary" />
+            <p className="mt-3 text-[11px] font-semibold text-muted-foreground/80 tracking-widest uppercase flex flex-wrap items-center justify-center gap-1.5 text-center px-2">
+              <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
               Prague → London → New York → Dubai → Singapore → Tokyo → Sydney
             </p>
           </div>
@@ -144,7 +144,7 @@ function Landing() {
             {signedIn ? (
               <Link
                 to="/dashboard"
-                className="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-[15px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-soft"
+                className="w-full sm:w-auto h-12 text-base min-w-[200px] flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-soft"
               >
                 Open your wallet <ArrowRight className="h-4 w-4" />
               </Link>
@@ -152,13 +152,13 @@ function Landing() {
               <>
                 <button
                   onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-                  className="w-full sm:w-auto min-w-[190px] flex items-center justify-center gap-2.5 rounded-full border border-border/80 bg-card px-6 py-3.5 text-[14px] font-semibold transition-all hover:bg-accent hover:border-primary/40 shadow-2xs active:scale-[0.98] cursor-pointer"
+                  className="w-full sm:w-auto h-12 text-base min-w-[190px] flex items-center justify-center gap-2.5 rounded-full border border-border/80 bg-card px-6 py-3 font-semibold transition-all hover:bg-accent hover:border-primary/40 shadow-2xs active:scale-[0.98] cursor-pointer touch-manipulation"
                 >
                   <GoogleIcon /> Continue with Google
                 </button>
                 <Link
                   to="/login"
-                  className="w-full sm:w-auto min-w-[180px] flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-[14px] font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-soft active:scale-[0.98]"
+                  className="w-full sm:w-auto h-12 text-base min-w-[180px] flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-soft active:scale-[0.98] touch-manipulation"
                 >
                   <Mail className="h-4 w-4" /> Get Started
                 </Link>
@@ -166,7 +166,7 @@ function Landing() {
             )}
             <Link
               to="/about"
-              className="w-full sm:w-auto flex items-center justify-center gap-1 px-5 py-3.5 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full sm:w-auto h-12 text-base flex items-center justify-center gap-1 px-5 py-3 font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Explore Moonlight
             </Link>

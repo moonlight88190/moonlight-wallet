@@ -138,17 +138,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-6 sm:py-10 flex-1 pb-36 md:pb-12 animate-in fade-in duration-300">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-6 sm:py-10 flex-1 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-12 animate-in fade-in duration-300">
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] md:hidden shadow-lg">
+      <nav className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/60 pb-[env(safe-area-inset-bottom)] md:hidden shadow-lg">
         <div className="grid grid-cols-5 py-1">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground min-h-[48px]"
+              className="flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground min-h-[48px] touch-manipulation"
               activeProps={{ className: "text-foreground font-semibold" }}
             >
               <n.icon className="h-5 w-5" strokeWidth={1.75} />

@@ -383,7 +383,7 @@ export function Withdraw() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar -mx-1 px-1 touch-pan-x min-w-0 max-w-full">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0 touch-pan-x min-w-0 max-w-full">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -438,7 +438,7 @@ export function Withdraw() {
       {/* Dialog / Bottom Sheet for Withdrawal Method */}
       <Dialog open={!!selectedMethod} onOpenChange={() => setSelectedMethod(null)}>
         {selectedMethod && (
-          <DialogContent className="top-0 left-0 translate-x-0 translate-y-0 h-[100dvh] max-w-none rounded-none border-0 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-auto w-full sm:max-w-lg max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto sm:rounded-3xl p-5 sm:p-6 space-y-4 sm:border border-border/80 bg-background shadow-2xl pb-safe">
+          <DialogContent className="fixed inset-0 z-50 flex flex-col w-full h-[100dvh] max-h-[100dvh] rounded-none p-4 pt-safe pb-safe bg-background border-none overflow-y-auto sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:h-auto sm:rounded-3xl sm:border sm:border-border/80">
             {/* Grab Handle for Mobile Bottom Sheet Feel */}
             <div className="w-12 h-1.5 rounded-full bg-muted mx-auto mb-1 sm:hidden shrink-0" />
 

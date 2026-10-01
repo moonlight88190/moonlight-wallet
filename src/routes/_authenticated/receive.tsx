@@ -131,7 +131,7 @@ function Receive() {
             key={b.label}
             onClick={b.onClick}
             disabled={!code}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card py-3.5 sm:py-4 text-xs font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.97] shadow-2xs disabled:opacity-50 cursor-pointer touch-manipulation"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-card min-h-[52px] py-3 text-xs font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.97] shadow-2xs disabled:opacity-50 cursor-pointer touch-manipulation"
           >
             <b.icon className="h-5 w-5" strokeWidth={1.75} />
             {b.label}

@@ -93,14 +93,14 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
 
   return (
     <div className="space-y-4">
-      <div id="ml-qr-reader" ref={ref} className="overflow-hidden rounded-2xl bg-black" />
+      <div id="ml-qr-reader" ref={ref} className="w-full max-w-xs aspect-square mx-auto rounded-2xl overflow-hidden bg-black" />
       <div id="ml-qr-reader-hidden" className="hidden" />
       <div className="flex flex-col items-center gap-2 pt-2">
         <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">OR</p>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isScanningFile}
-          className="flex items-center gap-2 rounded-full border bg-secondary/80 px-5 py-2.5 min-h-[44px] text-xs font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer touch-manipulation"
+          className="w-full flex items-center justify-center gap-2 rounded-full border bg-secondary/80 px-5 h-12 text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer touch-manipulation"
         >
           {isScanningFile ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -193,7 +193,7 @@ function Send() {
   }
 
   const btn =
-    "flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft touch-manipulation cursor-pointer";
+    "flex h-[52px] w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft touch-manipulation cursor-pointer";
 
   return (
     <div className="mx-auto max-w-md">

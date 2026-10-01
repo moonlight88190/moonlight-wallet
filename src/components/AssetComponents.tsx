@@ -148,53 +148,44 @@ export function PaymentMethodIcon({
     setFailed(false);
   }, [iconUrl]);
 
-  // Natural dimensions for bundled raster marks; unknown SVGs measure themselves on load.
-  const ratios: Record<string, number> = {
-    upi: 1165 / 414, "google-pay": 960 / 360, phonepe: 330 / 101,
-    paytm: 607 / 199, bhim: 294 / 79, sepa: 450 / 422,
-    gcash: 303 / 305, whatsapp: 1, sbi: 1,
-    "hdfc-bank": 960 / 167, "icici-bank": 960 / 193,
-    "axis-bank": 960 / 250, "yes-bank": 1308 / 536,
-    "amazon-pay": 300 / 58, "airtel-payments-bank": 960 / 147,
-  };
-  const [naturalRatio, setNaturalRatio] = React.useState<number | null>(null);
-  const ratio = naturalRatio ?? ratios[cleanId] ?? 1;
-  const height = size === "sm" ? 32 : size === "lg" ? 52 : 42;
-  const width = Math.max(height, Math.min(height * ratio, size === "lg" ? 210 : 168));
+  // CATEGORIZATION BY NATIVE ASPECT RATIO
+  const SQUARE_IDS = [
+    "sepa", "sbi", "gcash", "upi-qr", "cz-bank", "in-bank", "ph-bank",
+    "int-bank", "pix", "whatsapp", "steam", "moonlight-logo", "moonlight-emblem"
+  ];
+  const ULTRA_WIDE_IDS = [
+    "hdfc-bank", "icici-bank", "axis-bank", "airtel-payments-bank", "amazon-pay", "xbox"
+  ];
+
+  const isSquare = SQUARE_IDS.includes(cleanId);
+  const isUltraWide = ULTRA_WIDE_IDS.includes(cleanId);
+
+  let containerDims = "";
+  if (isSquare) {
+    containerDims = size === "sm" ? "h-8 w-8 p-1" : size === "lg" ? "h-12 w-12 sm:h-14 sm:w-14 p-2" : "h-10 w-10 sm:h-11 sm:w-11 p-1.5";
+  } else if (isUltraWide) {
+    containerDims = size === "sm" ? "h-7 px-2 py-0.5 w-auto min-w-[70px] max-w-[100px]" : size === "lg" ? "h-11 sm:h-12 px-3.5 py-1.5 w-auto min-w-[110px] max-w-[150px]" : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[85px] max-w-[130px]";
+  } else {
+    // Standard horizontal wordmark (UPI, GPay, PhonePe, Paytm, BHIM, Yes Bank, etc.)
+    containerDims = size === "sm" ? "h-8 px-2 py-0.5 w-auto min-w-[60px] max-w-[90px]" : size === "lg" ? "h-11 sm:h-12 px-3 py-1 w-auto min-w-[95px] max-w-[130px]" : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[75px] max-w-[115px]";
+  }
+
+  const baseContainer = "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40";
 
   if (failed) {
     return (
-      <div
-        className={cn(
-          "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-secondary text-muted-foreground shadow-2xs",
-          className,
-        )}
-        style={{ height, width }}
-      >
+      <div className={cn(baseContainer, containerDims, "bg-secondary text-muted-foreground", className)}>
         <Landmark className="h-4 w-4" />
       </div>
     );
   }
 
   return (
-    <div
-      className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-card p-1 shadow-2xs transition-all hover:border-primary/40",
-        className,
-      )}
-      style={{ height, width }}
-    >
+    <div className={cn(baseContainer, containerDims, className)}>
       <img
         src={iconUrl}
         alt={name}
-        className="block h-full w-full object-contain object-center transition-transform group-hover:scale-105"
-        onLoad={(e) => {
-          const image = e.currentTarget;
-          if (image.naturalWidth && image.naturalHeight) {
-            const measured = image.naturalWidth / image.naturalHeight;
-            setNaturalRatio((previous) => previous === measured ? previous : measured);
-          }
-        }}
+        className="max-h-full max-w-full object-contain object-center transition-transform group-hover:scale-105"
         onError={() => setFailed(true)}
       />
     </div>
@@ -217,29 +208,34 @@ export function GiftCardBrand({
 
   React.useEffect(() => {
     setImgFailed(false);
-  }, [cardData.logoUrl]);
+  }, [cardData.imageUrl, cardData.logoUrl]);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full flex-col justify-between overflow-hidden rounded-lg border border-border/60 bg-card p-3 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
+        "group relative flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-2.5 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
         className,
       )}
     >
-      <div className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-md bg-secondary p-4 sm:h-36">
+      <div className="bg-slate-900/90 rounded-xl overflow-hidden aspect-[1.5/1] flex items-center justify-center p-2 relative w-full">
         {!imgFailed ? (
           <img
-            src={cardData.logoUrl}
+            src={cardData.imageUrl}
             alt={cardData.brand}
             className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-foreground font-bold text-sm p-2">
-            <Gift className="h-6 w-6 text-gold mb-1" />
+          <div className="flex flex-col items-center justify-center text-white font-bold text-sm p-2">
+            <Gift className="h-6 w-6 text-amber-400 mb-1" />
             <span>{cardData.brand}</span>
+          </div>
+        )}
+        {cardData.logoUrl && !imgFailed && (
+          <div className="absolute top-2 left-2 h-6 w-6 rounded-lg bg-black/60 backdrop-blur-md p-1 border border-white/20 flex items-center justify-center shadow-xs">
+            <img src={cardData.logoUrl} alt="" className="h-full w-full object-contain" />
           </div>
         )}
         {cardData.popular && (
@@ -248,7 +244,7 @@ export function GiftCardBrand({
           </span>
         )}
       </div>
-      <div className="mt-2.5 px-0.5 min-w-0">
+      <div className="mt-2 px-0.5 min-w-0">
         <div className="flex items-center justify-between gap-1 min-w-0">
           <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate min-w-0 flex-1">
             {cardData.brand}
