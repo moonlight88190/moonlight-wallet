@@ -156,7 +156,9 @@ export function Withdraw() {
   const [cardValue, setCardValue] = useState<number>(100);
 
   // Active UI tab for categories on mobile screens
-  const [payoutCategory, setPayoutCategory] = useState<"channels" | "vouchers" | "luxury">("channels");
+  const [payoutCategory, setPayoutCategory] = useState<"channels" | "vouchers" | "luxury">(
+    "channels",
+  );
 
   // Form Fields
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
@@ -349,7 +351,10 @@ export function Withdraw() {
       )}
 
       {/* Main Centered Mobile-First Form Card */}
-      <div id="withdrawal-form-card" className="rounded-3xl border border-border/80 bg-card p-4 sm:p-6 shadow-soft space-y-4">
+      <div
+        id="withdrawal-form-card"
+        className="rounded-3xl border border-border/80 bg-card p-4 sm:p-6 shadow-soft space-y-4"
+      >
         {/* Header with Selected Channel */}
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -376,9 +381,7 @@ export function Withdraw() {
 
         {/* Amount Input & Currency Selector */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-muted-foreground">
-            Withdrawal Amount
-          </label>
+          <label className="text-xs font-semibold text-muted-foreground">Withdrawal Amount</label>
           <div className="flex gap-2">
             <Input
               type="number"
@@ -437,9 +440,7 @@ export function Withdraw() {
         {/* Recipient Details */}
         {selectedMethod?.id.includes("upi") ? (
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">
-              UPI ID / VPA
-            </label>
+            <label className="text-xs font-semibold text-muted-foreground">UPI ID / VPA</label>
             <Input
               value={upiId}
               onChange={(e) => setUpiId(e.target.value)}
@@ -509,7 +510,7 @@ export function Withdraw() {
           </div>
           <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-primary/10">
             <span>Transaction Fee (10%):</span>
-            <span className="font-semibold">{formatMoney(sourceAmt * 0.10, withdrawCurrency)}</span>
+            <span className="font-semibold">{formatMoney(sourceAmt * 0.1, withdrawCurrency)}</span>
           </div>
           {isCrossCorridor && (
             <>
@@ -802,7 +803,9 @@ export function Withdraw() {
                 </div>
                 <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-border/40">
                   <span>Transaction Fee (10%):</span>
-                  <span className="font-semibold">{formatMoney(cardValue * 0.10, preferredCurrency)}</span>
+                  <span className="font-semibold">
+                    {formatMoney(cardValue * 0.1, preferredCurrency)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-border/40">
                   <span className="text-muted-foreground">Delivery:</span>

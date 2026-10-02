@@ -46,9 +46,10 @@ async function loadMarkets() {
       };
       const result = json.chart?.result?.[0];
       const meta = result?.meta;
-      const close = result?.indicators?.quote?.[0]?.close?.filter(
-        (value): value is number => typeof value === "number" && Number.isFinite(value),
-      ) ?? [];
+      const close =
+        result?.indicators?.quote?.[0]?.close?.filter(
+          (value): value is number => typeof value === "number" && Number.isFinite(value),
+        ) ?? [];
       const price = meta?.regularMarketPrice ?? close.at(-1);
       const previous = meta?.previousClose ?? meta?.chartPreviousClose ?? close.at(-2);
       if (!price || !previous || !Number.isFinite(price) || !Number.isFinite(previous)) {
@@ -64,7 +65,7 @@ async function loadMarkets() {
       };
     }),
   );
-  const quotes = settled.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+  const quotes = settled.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
   if (quotes.length === 0) throw new Error("Market quotes unavailable");
   cached = { quotes, fetchedAt: Date.now() };
   return cached;
@@ -72,7 +73,9 @@ async function loadMarkets() {
 
 export const getMarkets = createServerFn({ method: "GET" }).handler(async () => {
   if (cached && Date.now() - cached.fetchedAt < CACHE_MS) return cached;
-  pending ??= loadMarkets().finally(() => { pending = undefined; });
+  pending ??= loadMarkets().finally(() => {
+    pending = undefined;
+  });
   try {
     return await pending;
   } catch {

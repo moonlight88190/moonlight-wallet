@@ -336,7 +336,10 @@ function Landing() {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
               <span>
-                1 {calcFrom} ≈ <strong className="text-foreground font-mono">{rateRatio.toFixed(4)} {calcTo}</strong>
+                1 {calcFrom} ≈{" "}
+                <strong className="text-foreground font-mono">
+                  {rateRatio.toFixed(4)} {calcTo}
+                </strong>
               </span>
             </div>
             <span className="font-mono text-[11px]">ECB-REF-2025 • Guaranteed Settlement</span>
