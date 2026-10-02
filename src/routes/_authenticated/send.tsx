@@ -296,7 +296,7 @@ function Send() {
                   setCurrency(newCur);
                 }}
               >
-                <SelectTrigger className="h-14 w-36 rounded-2xl border px-3 shrink-0">
+                <SelectTrigger className="h-14 w-28 sm:w-36 rounded-2xl border px-3 shrink-0">
                   <CurrencyIcon code={cur} />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl p-1">

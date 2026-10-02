@@ -31,7 +31,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       </div>
       <div
         className={cn(
-          "tabular text-[15px] font-medium",
+          "tabular text-[15px] font-medium shrink-0 text-right",
           !v.outgoing && "text-emerald-600 dark:text-emerald-400",
         )}
       >

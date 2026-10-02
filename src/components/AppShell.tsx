@@ -12,6 +12,7 @@ import {
   Landmark,
   ShieldCheck,
   Globe,
+  TrendingUp,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const DESKTOP_NAV = [
+  { to: "/dashboard", label: "Home", icon: Home },
+  { to: "/markets", label: "Markets", icon: TrendingUp },
+  { to: "/send", label: "Send", icon: ArrowUpRight },
+  { to: "/receive", label: "Receive", icon: ArrowDownLeft },
+  { to: "/withdraw", label: "Withdraw", icon: Landmark },
+  { to: "/transactions", label: "Activity", icon: List },
+] as const;
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
@@ -69,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV.map((n) => (
+            {DESKTOP_NAV.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
@@ -105,6 +115,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                  onClick={() => navigate({ to: "/markets" })}
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" /> Global Markets
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
                   onClick={() => navigate({ to: "/withdraw" })}
