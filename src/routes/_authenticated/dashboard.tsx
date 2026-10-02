@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   Landmark,
   ChevronRight,
-  TrendingUp,
   Sparkles,
   ShieldCheck,
   Globe,
@@ -34,6 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TxRow, groupByPeriod } from "@/components/TxRow";
 import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComponents";
 import { GIFT_CARDS } from "@/lib/assets";
+import { StockMarketSection } from "@/components/StockMarketSection";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -348,6 +348,9 @@ function Dashboard() {
           </div>
         </aside>
       </section>
+
+      {/* Stock Market Section */}
+      <StockMarketSection />
 
       {/* Digital Gift Cards Marketplace Section */}
       <section className="space-y-4 pt-4 border-t border-border/50">
