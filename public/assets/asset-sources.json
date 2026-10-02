@@ -1,0 +1,135 @@
+{
+  "public/assets/payment-methods/upi.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:UPI-Logo-vector.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/pix.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Pix (Brazil) logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/sepa.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Single euro payments area.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Single_euro_payments_area.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/faster-payments.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Faster Payments logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Faster_Payments_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/interac.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:InteracLogo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/3/31/InteracLogo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/gcash.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:GCash logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/52/GCash_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/google-pay.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Google Pay Logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/phonepe.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:PhonePe Logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/paytm.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Paytm Logo (standalone).svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/amazon-pay.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Amazon Pay logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/29/Amazon_Pay_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/bhim.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Bhim app logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Bhim_app_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/sbi.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:SBI-logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/SBI-logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/icici-bank.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:ICICI Bank Logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/axis-bank.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Axis Bank logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/yes-bank.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Yes Bank SVG Logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Yes_Bank_SVG_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/paynow.png": {
+    "source": "Wikipedia (English)",
+    "file_title": "File:PAYNOW logo.png",
+    "url": "https://upload.wikimedia.org/wikipedia/en/2/25/PAYNOW_logo.png",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/aani.png": {
+    "source": "Al Etihad Payments (Official Portal aep.ae)",
+    "file_title": "Aani Instant Payments Platform Logo",
+    "url": "https://aep.ae/media/wczftgc4/aani-1320x763.png",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/hdfc-bank.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:HDFC Bank Logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/HDFC_Bank_Logo.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/luxury/brands/balenciaga.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Balenciaga Logo.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/luxury/brands/moncler.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Logo Moncler Group.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/luxury/brands/dolce-gabbana.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Dolce & Gabbana.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/luxury/brands/givenchy.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Givenchy - logo (France, 2003).svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/luxury/brands/hugo-boss.svg": {
+    "source": "Wikimedia Commons",
+    "file_title": "File:Boss logo 2021.svg",
+    "downloaded_at": "2026-10-02"
+  }
+}

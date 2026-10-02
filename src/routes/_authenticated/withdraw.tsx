@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageTitle } from "@/components/AppShell";
-import { CountryFlag, GiftCardBrand, PaymentMethodIcon } from "@/components/AssetComponents";
+import { CountryFlag, GiftCardBrand, GiftCardImage, PaymentMethodIcon } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
 import {
   GIFT_CARDS,
@@ -126,7 +126,7 @@ export function parseUPIHandle(vpa: string): {
   return { isVPA: true, providerName: "UPI-compatible / Unknown provider" };
 }
 
-export function Withdraw() {
+function Withdraw() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: wallet } = useWallet();
@@ -763,21 +763,19 @@ export function Withdraw() {
                 </div>
               )}
 
-              <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-950 p-3 shadow-soft">
-                {selectedLuxury ? (
+              {selectedLuxury ? (
+                <div className="flex h-36 w-full items-center justify-center rounded-2xl border border-border/50 bg-secondary/20 p-6">
                   <img
                     src={selectedLuxury.logoUrl}
                     alt={selectedLuxury.name}
-                    className="max-h-12 max-w-[150px] object-contain filter invert"
+                    className="max-h-12 max-w-[180px] object-contain dark:invert"
                   />
-                ) : (
-                  <img
-                    src={selectedCard?.imageUrl}
-                    alt={selectedCard?.brand}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                )}
-              </div>
+                </div>
+              ) : selectedCard ? (
+                <div className="flex justify-center w-full py-1">
+                  <GiftCardImage id={selectedCard.id} className="max-w-[280px] sm:max-w-[320px] shadow-md border border-border/40" />
+                </div>
+              ) : null}
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground">

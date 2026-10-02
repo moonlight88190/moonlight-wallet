@@ -14,14 +14,27 @@ export interface CurrencyMeta {
   flagUrl: string;
 }
 
+export type AssetCategory = "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | "flag" | "investment";
+
+export interface BrandAssetMeta {
+  id: string;
+  name: string;
+  category: AssetCategory;
+  logoUrl: string;
+  sourceRatio?: "square" | "wide" | "ultra-wide" | "card";
+  renderMode?: "contain" | "cover";
+  opticalScale?: number;
+  badge?: string;
+}
+
 export interface BankMeta {
   id: string;
   name: string;
   logoUrl: string;
   /** preferred object-fit mode for the logo container */
   renderMode?: "contain" | "cover";
-  /** w:h ratio hint for the logo source */
-  sourceRatio?: "wide" | "square" | "tall";
+  /** w:h ratio hint for optical logo sizing */
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface PaymentMethodMeta {
@@ -32,6 +45,7 @@ export interface PaymentMethodMeta {
   region: "Europe" | "India" | "Philippines" | "International";
   speed: string;
   badge?: string;
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface UPIProviderMeta {
@@ -39,6 +53,7 @@ export interface UPIProviderMeta {
   name: string;
   iconUrl: string;
   handles: string[];
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface GiftCardMeta {
@@ -314,6 +329,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "Europe",
     speed: "Instant",
     badge: "Europe Primary",
+    sourceRatio: "wide",
   },
   {
     id: "cz-bank",
@@ -323,6 +339,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "Europe",
     speed: "Instant / Same-day",
     badge: "Czech Republic",
+    sourceRatio: "wide",
   },
   {
     id: "faster-payments",
@@ -332,6 +349,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "Europe",
     speed: "Instant",
     badge: "Faster Payments",
+    sourceRatio: "wide",
   },
   {
     id: "upi",
@@ -341,6 +359,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "India",
     speed: "Instant",
     badge: "UPI",
+    sourceRatio: "wide",
   },
   {
     id: "upi-qr",
@@ -349,6 +368,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/upi-qr.svg",
     region: "India",
     speed: "Instant",
+    sourceRatio: "square",
   },
   {
     id: "in-bank",
@@ -357,15 +377,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/in-bank.svg",
     region: "India",
     speed: "Instant (IMPS)",
+    sourceRatio: "wide",
   },
   {
     id: "gcash",
     name: "GCash Wallet",
     description: "Instant payout to GCash Mobile Wallet",
-    iconUrl: "/assets/payment-methods/gcash.png",
+    iconUrl: "/assets/payment-methods/gcash.svg",
     region: "Philippines",
     speed: "Instant",
     badge: "Official",
+    sourceRatio: "wide",
   },
   {
     id: "ph-bank",
@@ -374,15 +396,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/ph-bank.svg",
     region: "Philippines",
     speed: "Instant (InstaPay)",
+    sourceRatio: "wide",
   },
   {
     id: "paynow",
     name: "Singapore PayNow",
     description: "Instant payout via NRIC/FIN or Mobile (SGD)",
-    iconUrl: "/assets/payment-methods/paynow.svg",
+    iconUrl: "/assets/payment-methods/paynow.png",
     region: "International",
     speed: "Instant",
     badge: "Singapore Official",
+    sourceRatio: "wide",
   },
   {
     id: "pix",
@@ -392,6 +416,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant",
     badge: "PIX",
+    sourceRatio: "wide",
   },
   {
     id: "interac",
@@ -401,6 +426,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant",
     badge: "Interac Official",
+    sourceRatio: "wide",
   },
   {
     id: "jp-bank",
@@ -410,15 +436,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant / Same-day",
     badge: "Zengin Rail",
+    sourceRatio: "wide",
   },
   {
     id: "aani",
     name: "UAE Aani Instant Payout",
     description: "Instant UAE payment via Al Etihad Payments (AED)",
-    iconUrl: "/assets/payment-methods/aani.svg",
+    iconUrl: "/assets/payment-methods/aani.png",
     region: "International",
     speed: "Instant",
     badge: "UAE Official",
+    sourceRatio: "wide",
   },
   {
     id: "int-bank",
@@ -428,6 +456,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "1-2 business days",
     badge: "Global Payout",
+    sourceRatio: "wide",
   },
 ];
 
@@ -437,30 +466,35 @@ export const UPI_PROVIDERS: UPIProviderMeta[] = [
     name: "Google Pay",
     iconUrl: "/assets/payment-methods/google-pay.svg",
     handles: ["@okaxis", "@okhdfcbank", "@okicici", "@oksbi", "@gpay"],
+    sourceRatio: "wide",
   },
   {
     id: "phonepe",
     name: "PhonePe",
-    iconUrl: "/assets/payment-methods/phonepe.png",
+    iconUrl: "/assets/payment-methods/phonepe.svg",
     handles: ["@ybl", "@ibl", "@axl"],
+    sourceRatio: "wide",
   },
   {
     id: "paytm",
     name: "Paytm",
-    iconUrl: "/assets/payment-methods/paytm.png",
+    iconUrl: "/assets/payment-methods/paytm.svg",
     handles: ["@paytm", "@paytmqr"],
+    sourceRatio: "wide",
   },
   {
     id: "bhim",
     name: "BHIM UPI",
-    iconUrl: "/assets/payment-methods/bhim.png",
+    iconUrl: "/assets/payment-methods/bhim.svg",
     handles: ["@upi", "@bhim"],
+    sourceRatio: "wide",
   },
   {
     id: "amazon-pay",
     name: "Amazon Pay",
-    iconUrl: "/assets/payment-methods/amazon-pay.png",
+    iconUrl: "/assets/payment-methods/amazon-pay.svg",
     handles: ["@apl", "@amazon"],
+    sourceRatio: "ultra-wide",
   },
 ];
 
@@ -667,39 +701,39 @@ export const INDIAN_BANKS: BankMeta[] = [
   {
     id: "sbi",
     name: "State Bank of India",
-    // Source: Custom SVG based on official SBI brand colors (blue #22409A + keyhole logo)
-    logoUrl: "/assets/banks/sbi.svg",
+    // Source: Official State Bank of India brand emblem (transparent high-res)
+    logoUrl: "/assets/banks/sbi.png",
     renderMode: "contain",
-    sourceRatio: "wide",
+    sourceRatio: "square",
   },
   {
     id: "hdfc",
     name: "HDFC Bank",
-    // Source: Downloaded from Wikimedia Commons (CC), official HDFC Bank vector
+    // Source: Official HDFC Bank vector (Wikimedia Commons)
     logoUrl: "/assets/banks/hdfc-bank.svg",
     renderMode: "contain",
-    sourceRatio: "wide",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "icici",
     name: "ICICI Bank",
-    // Source: Custom SVG based on official ICICI orange/red brand colors
+    // Source: Official ICICI Bank vector (Wikimedia Commons)
     logoUrl: "/assets/banks/icici-bank.svg",
     renderMode: "contain",
-    sourceRatio: "wide",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "axis",
     name: "Axis Bank",
-    // Source: Custom SVG based on official Axis Bank maroon brand colors
+    // Source: Official Axis Bank vector (Wikimedia Commons)
     logoUrl: "/assets/banks/axis-bank.svg",
     renderMode: "contain",
-    sourceRatio: "wide",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "yes-bank",
     name: "YES BANK",
-    // Source: Custom SVG based on official YES BANK blue and gold brand colors
+    // Source: Official YES Bank vector (Wikimedia Commons)
     logoUrl: "/assets/banks/yes-bank.svg",
     renderMode: "contain",
     sourceRatio: "wide",

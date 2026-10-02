@@ -6,8 +6,10 @@ import {
   RefreshCw,
   Receipt,
   ShieldCheck,
-  Activity,
-  Clock,
+  Building2,
+  Wallet,
+  ArrowDownToLine,
+  Send,
 } from "lucide-react";
 import { CountryFlag } from "@/components/AssetComponents";
 import { formatMoney } from "@/lib/currency";
@@ -31,38 +33,18 @@ export interface PaymentAnimationProps {
   onViewReceipt?: () => void;
 }
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-  INR: "₹",
-  PHP: "₱",
-  JPY: "¥",
-  CHF: "CHF",
-  CAD: "C$",
-  AUD: "A$",
-  SGD: "S$",
-  AED: "AED",
-  CZK: "Kč",
-  PLN: "zł",
-};
-
-const WITHDRAWAL_STAGES = [
-  "Confirming withdrawal request & beneficiary details...",
-  "Routing request to international wiring system & payout gateway...",
-  "Validating interbank clearing limits & account authorization...",
-  "Executing direct ledger debit & issuing transaction tracking code...",
-  "Finalizing payout dispatch to international banking network...",
-  "Withdrawal request submitted to international wiring system",
+const TRANSFER_STEPS = [
+  { id: "auth", label: "Authorization", desc: "Verifying account balance & limits" },
+  { id: "routing", label: "Rail Routing", desc: "Establishing direct peer connection" },
+  { id: "clearing", label: "Ledger Update", desc: "Applying atomic debit & credit balance" },
+  { id: "settlement", label: "Settled", desc: "Funds delivered to recipient wallet" },
 ];
 
-const TRANSFER_STAGES = [
-  "Verifying sender authorization & international interbank clearing system...",
-  "Validating beneficiary account & SWIFT/SEPA network rails...",
-  "Executing real-time multi-currency FX clearance & conversion...",
-  "Moving funds through international wiring system & interbank ledger...",
-  "Generating cryptographic receipt & immutable ledger proof...",
-  "Settlement confirmed & official international wiring record issued",
+const WITHDRAWAL_STEPS = [
+  { id: "validation", label: "Validation", desc: "Checking beneficiary & channel limits" },
+  { id: "dispatch", label: "Payout Dispatch", desc: "Queued for settlement gateway" },
+  { id: "processing", label: "Processing", desc: "Awaiting corridor clearing confirmation" },
+  { id: "scheduled", label: "Confirmed", desc: "Payout recorded on settlement ledger" },
 ];
 
 export function PaymentAnimation({
@@ -82,235 +64,240 @@ export function PaymentAnimation({
   onRetry,
   onViewReceipt,
 }: PaymentAnimationProps) {
-  const [stage, setStage] = useState<"confirming" | "processing" | "completed" | "failed">(state);
-  const [activeStep, setActiveStep] = useState(0);
-
-  const steps = type === "withdrawal" ? WITHDRAWAL_STAGES : TRANSFER_STAGES;
+  const [activeStep, setActiveStep] = useState(state === "completed" ? 3 : 0);
+  const isWithdrawal = type === "withdrawal";
+  const steps = isWithdrawal ? WITHDRAWAL_STEPS : TRANSFER_STEPS;
+  const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
   useEffect(() => {
-    setStage(state);
+    if (state === "completed") {
+      setActiveStep(3);
+      return undefined;
+    }
+
+    if (state === "failed") {
+      return undefined;
+    }
+
     if (state === "processing") {
       setActiveStep(0);
 
+      // Check prefers-reduced-motion
       if (
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ) {
-        setActiveStep(steps.length - 1);
+        setActiveStep(2);
         return undefined;
       }
 
-      // 5.0s to 7.0s total duration for realistic bank clearance animation (~1000ms - 1400ms per step across 5 step transitions)
-      const baseMin = 1000;
-      const baseMax = 1400;
-
-      const step1 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-      const step2 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-      const step3 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-      const step4 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-      const step5 = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-
-      const d1 = step1;
-      const d2 = d1 + step2;
-      const d3 = d2 + step3;
-      const d4 = d3 + step4;
-      const d5 = d4 + step5;
-
-      const timers: NodeJS.Timeout[] = [
-        setTimeout(() => setActiveStep(1), d1),
-        setTimeout(() => setActiveStep(2), d2),
-        setTimeout(() => setActiveStep(3), d3),
-        setTimeout(() => setActiveStep(4), d4),
-        setTimeout(() => setActiveStep(5), d5),
-      ];
+      // Smooth step progression over ~4.8s
+      const timer1 = setTimeout(() => setActiveStep(1), 1100);
+      const timer2 = setTimeout(() => setActiveStep(2), 2400);
+      const timer3 = setTimeout(() => setActiveStep(3), 4200);
 
       return () => {
-        timers.forEach((t) => clearTimeout(t));
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
       };
-    } else if (state === "completed") {
-      setActiveStep(steps.length - 1);
     }
-    return undefined;
-  }, [state, type, steps.length]);
 
-  const sourceSymbol = CURRENCY_SYMBOLS[sourceCurrency] || sourceCurrency;
-  const destSymbol = CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
-  const isCrossCurrency = sourceCurrency !== destinationCurrency;
+    return undefined;
+  }, [state]);
+
+  const isComplete = state === "completed" || activeStep === 3;
+  const isFailed = state === "failed";
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-col items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-card/95 p-5 sm:p-8 shadow-2xl backdrop-blur-2xl transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
-      {/* Route Header: Country/Currency route */}
-      <div className="flex w-full items-center justify-between border-b border-border/50 pb-4 mb-5">
-        <div className="flex items-center gap-2">
-          <CountryFlag code={sourceCurrency} circle size="xs" />
-          <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            {sourceCurrency}
+    <div
+      role="status"
+      aria-live="polite"
+      className="relative mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border/70 bg-card p-4 sm:p-5 shadow-lg backdrop-blur-xl transition-all"
+    >
+      {/* Top Header: Route badge & Amount */}
+      <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
+        <div className="flex items-center gap-1.5">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+            {isWithdrawal ? (
+              <ArrowDownToLine className="h-3 w-3" />
+            ) : (
+              <Send className="h-3 w-3" />
+            )}
+          </div>
+          <span className="text-xs font-semibold text-foreground tracking-tight">
+            {isWithdrawal ? "Payout Request" : "Transfer"}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border/40 text-[11px] font-semibold text-muted-foreground">
-          <span>{formatMoney(sourceAmount, sourceCurrency)}</span>
-          <ArrowRight className="h-3 w-3 text-primary animate-pulse motion-reduce:animate-none" />
-          <span className="text-foreground">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-sm font-bold text-foreground">
             {formatMoney(destinationAmount, destinationCurrency)}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            {destinationCurrency}
           </span>
           <CountryFlag code={destinationCurrency} circle size="xs" />
         </div>
       </div>
 
-      {/* Main Animated Currency Orb */}
-      <div className="relative my-4 flex h-32 w-32 items-center justify-center">
-        {stage === "processing" && (
-          <>
-            <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping opacity-25 motion-reduce:animate-none" />
-            <div className="absolute inset-0 rounded-full border-2 border-t-primary border-r-primary/40 border-b-primary/10 border-l-transparent animate-spin duration-700 motion-reduce:animate-none" />
-          </>
-        )}
+      {/* Corridor Summary Row: Sender -> Destination */}
+      <div className="flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2.5 mb-4 text-xs">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
+            {isWithdrawal ? "From" : "Sender"}
+          </div>
+          <div className="font-medium text-foreground truncate">
+            {senderName}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground truncate">
+            {senderCode}
+          </div>
+        </div>
 
-        {stage === "completed" && (
-          <div className="absolute inset-0 rounded-full border-2 border-emerald-500/30 animate-pulse motion-reduce:animate-none" />
-        )}
-
-        {stage === "failed" && (
-          <div className="absolute inset-0 rounded-full border-2 border-destructive/40" />
-        )}
-
-        {/* Core Circle */}
-        <div
-          className={cn(
-            "relative flex h-24 w-24 items-center justify-center rounded-full shadow-xl transition-all duration-500 transform active:scale-95",
-            stage === "completed"
-              ? "bg-emerald-500 text-white shadow-emerald-500/30 scale-105"
-              : stage === "failed"
-                ? "bg-destructive text-destructive-foreground shadow-destructive/30"
-                : type === "withdrawal"
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-amber-500/10"
-                  : "bg-slate-950 text-white dark:bg-slate-100 dark:text-slate-950 shadow-slate-950/30",
-          )}
-        >
-          {stage === "completed" ? (
-            <Check className="h-10 w-10 stroke-[3] animate-in zoom-in-75 duration-300" />
-          ) : stage === "failed" ? (
-            <AlertCircle className="h-10 w-10 stroke-[2.5]" />
-          ) : type === "withdrawal" ? (
-            <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
-          ) : (
-            <span className="text-3xl font-bold tracking-tight">
-              {isCrossCurrency ? destSymbol : sourceSymbol}
+        <div className="flex flex-col items-center px-2 shrink-0">
+          <div
+            className={cn(
+              "flex h-6 w-6 items-center justify-center rounded-full border transition-colors",
+              isComplete
+                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-500"
+                : isFailed
+                  ? "border-destructive/50 bg-destructive/10 text-destructive"
+                  : "border-primary/40 bg-primary/10 text-primary",
+            )}
+          >
+            <ArrowRight className="h-3 w-3" />
+          </div>
+          {isCrossCurrency && exchangeRate && (
+            <span className="font-mono text-[9px] text-muted-foreground mt-0.5">
+              FX {exchangeRate.toFixed(2)}
             </span>
           )}
         </div>
+
+        <div className="min-w-0 flex-1 text-right">
+          <div className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
+            {isWithdrawal ? "Destination" : "Recipient"}
+          </div>
+          <div className="font-medium text-foreground truncate">
+            {recipientName}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground truncate">
+            {recipientCode}
+          </div>
+        </div>
       </div>
 
-      {/* Dynamic Amount / Status Display */}
-      <div className="mt-2 text-center">
-        {type === "withdrawal" && stage === "processing" ? (
-          <div className="animate-in fade-in duration-300">
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              {formatMoney(sourceAmount, sourceCurrency)}
-            </h2>
-            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full">
-              <Clock className="h-3.5 w-3.5" /> Withdrawal Processing
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground max-w-xs mx-auto">
-              Submitted successfully. Status is actively tracked in your account.
-            </p>
-          </div>
-        ) : stage === "completed" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              {formatMoney(destinationAmount, destinationCurrency)}
-            </h2>
-            <div className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
-              <ShieldCheck className="h-3.5 w-3.5" /> Official Settlement Record
-            </div>
-          </div>
-        ) : stage === "failed" ? (
-          <div className="animate-in fade-in duration-300">
-            <h2 className="text-2xl font-semibold tracking-tight text-destructive">
-              Transaction Failed
-            </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {errorMessage || "Transaction was declined."}
-            </p>
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              {formatMoney(sourceAmount, sourceCurrency)}
-            </h2>
-            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Activity className="h-3.5 w-3.5 animate-pulse text-primary" />
-              <span>{steps[activeStep] || steps[0]}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Details Box */}
-      <div className="mt-6 w-full rounded-2xl border border-border/50 bg-secondary/30 p-4 space-y-2.5 text-xs">
-        <div className="flex justify-between items-center gap-2">
-          <span className="text-muted-foreground shrink-0">Recipient / Method</span>
-          <span className="font-semibold text-foreground flex items-center gap-1.5 truncate justify-end">
-            <CountryFlag code={destinationCurrency} circle size="xs" />
-            <span className="truncate">{recipientName}</span>
-            <span className="font-mono text-[10px] text-muted-foreground">({recipientCode})</span>
+      {/* Progress Journey Track */}
+      <div className="space-y-3 my-2">
+        <div className="flex items-center justify-between text-xs px-0.5">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {isFailed
+              ? "Transaction Status"
+              : isComplete
+                ? "Settlement Confirmed"
+                : "Transaction Progress"}
+          </span>
+          <span
+            className={cn(
+              "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+              isFailed
+                ? "bg-destructive/15 text-destructive"
+                : isComplete
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                  : "bg-primary/15 text-primary",
+            )}
+          >
+            {isFailed ? "Failed" : isComplete ? "Completed" : steps[activeStep]?.label}
           </span>
         </div>
 
-        {isCrossCurrency && (
-          <div className="flex justify-between items-center pt-1 border-t border-border/40">
-            <span className="text-muted-foreground">Destination Amount</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              {formatMoney(destinationAmount, destinationCurrency)}
-            </span>
-          </div>
-        )}
+        {/* Step Nodes Row */}
+        <div className="relative flex items-center justify-between px-1">
+          {/* Connecting line */}
+          <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-border/60 -z-0" />
+          <div
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-0.5 bg-primary transition-all duration-700 ease-out -z-0"
+            style={{
+              width: `${(Math.min(activeStep, 3) / 3) * (100 - 8)}%`,
+            }}
+          />
 
-        {exchangeRate && isCrossCurrency && (
-          <div className="flex justify-between items-center text-muted-foreground">
-            <span>Exchange Rate</span>
-            <span>
-              1 {sourceCurrency} ≈ {exchangeRate.toFixed(4)} {destinationCurrency}
-            </span>
-          </div>
-        )}
+          {steps.map((s, idx) => {
+            const stepDone = isComplete || activeStep > idx;
+            const stepActive = !isComplete && !isFailed && activeStep === idx;
+            return (
+              <div key={s.id} className="relative z-10 flex flex-col items-center">
+                <div
+                  className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold transition-all duration-300",
+                    stepDone
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : stepActive
+                        ? "border-primary bg-background text-primary ring-2 ring-primary/20 scale-110"
+                        : "border-border bg-card text-muted-foreground",
+                  )}
+                >
+                  {stepDone ? (
+                    <Check className="h-3 w-3 stroke-[3]" />
+                  ) : (
+                    <span>{idx + 1}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-        {fee > 0 && (
-          <div className="flex justify-between items-center text-muted-foreground">
-            <span>Fee</span>
-            <span>{formatMoney(fee, sourceCurrency)}</span>
+        {/* Active Stage Description */}
+        <div className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 text-center transition-all">
+          <div className="text-xs font-semibold text-foreground">
+            {isFailed
+              ? "Payment could not be processed"
+              : isComplete
+                ? isWithdrawal
+                  ? "Withdrawal Dispatched Successfully"
+                  : "Funds Transferred Successfully"
+                : steps[activeStep]?.desc}
           </div>
-        )}
+          {fee > 0 && (
+            <div className="text-[10px] text-muted-foreground mt-0.5">
+              Service Fee: {formatMoney(fee, sourceCurrency)}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="mt-6 w-full space-y-2">
-        {(stage === "completed" || (type === "withdrawal" && stage === "processing")) &&
-          onViewReceipt && (
+      {/* Failure State */}
+      {isFailed && (
+        <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive space-y-1">
+          <div className="flex items-center gap-1.5 font-bold">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>Transfer Failed</span>
+          </div>
+          <p className="text-[11px] leading-relaxed opacity-90">
+            {errorMessage || "Unable to complete transaction. Balance has not been debited."}
+          </p>
+          {onRetry && (
             <button
-              onClick={onViewReceipt}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
+              onClick={onRetry}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:opacity-90"
             >
-              <Receipt className="h-4 w-4" /> View Receipt
+              <RefreshCw className="h-3 w-3" /> Retry
             </button>
           )}
+        </div>
+      )}
 
-        {stage === "failed" && onRetry && (
+      {/* Completion Action */}
+      {isComplete && onViewReceipt && (
+        <div className="mt-3 pt-3 border-t border-border/50">
           <button
-            onClick={onRetry}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer touch-manipulation"
+            onClick={onViewReceipt}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-95 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
           >
-            <RefreshCw className="h-4 w-4" /> Retry Operation
+            <Receipt className="h-3.5 w-3.5" />
+            View Transaction Receipt
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
