@@ -17,17 +17,20 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageTitle } from "@/components/AppShell";
-import { CountryFlag, GiftCardBrand, GiftCardImage, PaymentMethodIcon } from "@/components/AssetComponents";
+import { BankLogo, CountryFlag, GiftCardBrand, GiftCardImage, PaymentMethodIcon, UPIProviderLogo } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
 import {
   GIFT_CARDS,
   LUXURY_BRANDS,
   PAYMENT_METHODS,
   UPI_PROVIDERS,
+  INDIAN_BANKS,
   getMethodTargetCurrency,
+  type BankMeta,
   type GiftCardMeta,
   type LuxuryBrandMeta,
   type PaymentMethodMeta,
+  type UPIProviderMeta,
 } from "@/lib/assets";
 import { CURRENCIES, convert, formatMoney } from "@/lib/currency";
 import {
@@ -166,6 +169,10 @@ function Withdraw() {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
   const [withdrawCurrency, setWithdrawCurrency] = useState<string>(preferredCurrency);
   const [upiId, setUpiId] = useState<string>("");
+  const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(null);
+  const [selectedBank, setSelectedBank] = useState<BankMeta | null>(INDIAN_BANKS[0]);
+  const [accountNumber, setAccountNumber] = useState<string>("");
+  const [ifscCode, setIfscCode] = useState<string>("");
   const [fullName, setFullName] = useState<string>(profile?.full_name || "");
   const [email, setEmail] = useState<string>(profile?.email || "");
   const [phone, setPhone] = useState<string>("");
@@ -180,28 +187,11 @@ function Withdraw() {
   const fxRateRatio = convert(1, withdrawCurrency, targetCorridorCurrency, r);
   const isCrossCorridor = withdrawCurrency !== targetCorridorCurrency;
 
-  // Animation & Receipt Modal State
-  const [isProcessing, setIsProcessing] = useState(false);
+  // State-driven Transaction Animation
+  const [animState, setAnimState] = useState<"idle" | "processing" | "completed" | "failed">("idle");
   const [busy, setBusy] = useState(false);
-  const [activeReceipt, setActiveReceipt] = useState<{
-    title: string;
-    status: string;
-    amount: number;
-    currency: string;
-    methodOrBrand: string;
-    provider?: string;
-    accountOrCode: string;
-    date: string;
-    reference: string;
-  } | null>(null);
-  const [refCopied, setRefCopied] = useState(false);
-
-  function copyReceiptRef(ref: string) {
-    navigator.clipboard.writeText(ref);
-    setRefCopied(true);
-    toast.success("Reference code copied!");
-    setTimeout(() => setRefCopied(false), 2000);
-  }
+  const [createdWdId, setCreatedWdId] = useState<string | null>(null);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   async function handleRedeemCard() {
     if (!isEligible48h) {
@@ -211,6 +201,9 @@ function Withdraw() {
 
     const brandName = selectedCard?.brand || selectedLuxury?.name || "Digital Voucher";
     setBusy(true);
+    setWithdrawError(null);
+    setAnimState("processing");
+
     const { data: wdId, error } = await supabase.rpc(
       "create_withdrawal" as never,
       {
@@ -228,23 +221,20 @@ function Withdraw() {
     setBusy(false);
 
     if (error) {
+      setWithdrawError(error.message);
+      setAnimState("failed");
       toast.error(error.message);
       return;
     }
 
+    setSelectedCard(null);
+    setSelectedLuxury(null);
+    setCreatedWdId(wdId as string);
+    setAnimState("completed");
+
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
-
-    setSelectedCard(null);
-    setSelectedLuxury(null);
-
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      navigate({ to: "/transactions/$id", params: { id: wdId as string } });
-    }, 6000);
   }
 
   const categories = ["All", "Gaming", "Shopping", "Entertainment", "Luxury", "Travel"];
@@ -271,9 +261,22 @@ function Withdraw() {
     }
 
     const isUPI = selectedMethod?.id === "upi" || selectedMethod?.id === "upi-qr";
+    const isIndianBank = selectedMethod?.id === "in-bank";
+
     if (isUPI) {
-      if (!upiDetection.isVPA) {
+      if (!upiId.trim() || !upiDetection.isVPA) {
         toast.error("Please enter a valid UPI VPA (e.g., username@provider).");
+        return;
+      }
+    }
+
+    if (isIndianBank) {
+      if (!accountNumber.trim() || accountNumber.trim().length < 8) {
+        toast.error("Please enter a valid bank account number (minimum 8 digits).");
+        return;
+      }
+      if (!ifscCode.trim() || ifscCode.trim().length < 4) {
+        toast.error("Please enter a valid IFSC code (e.g. HDFC0001234 or SBIN0000300).");
         return;
       }
     }
@@ -284,42 +287,61 @@ function Withdraw() {
     }
 
     setBusy(true);
+    setWithdrawError(null);
+    setAnimState("processing");
+
     const finalWdAmount = convertedTargetAmt;
     const finalWdCurrency = targetCorridorCurrency;
+
+    const methodName = isIndianBank
+      ? `${selectedBank?.name || "Indian Bank"} IMPS Transfer`
+      : selectedUPIApp
+        ? `${selectedUPIApp.name} (UPI)`
+        : selectedMethod?.name || "UPI Direct";
+
+    const providerName = isIndianBank
+      ? selectedBank?.name
+      : selectedUPIApp
+        ? selectedUPIApp.name
+        : isUPI
+          ? upiDetection.providerName || "UPI"
+          : selectedMethod?.name;
+
+    const withdrawReason = isIndianBank
+      ? `Transfer to ${selectedBank?.name || "Indian Bank"} A/C ••••${accountNumber.slice(-4)} (IFSC: ${ifscCode.toUpperCase()})`
+      : isUPI
+        ? `UPI Payout to ${upiId.trim()} via ${providerName}`
+        : reason.trim() || null;
 
     const { data: wdId, error } = await supabase.rpc(
       "create_withdrawal" as never,
       {
         p_amount: finalWdAmount,
         p_currency: finalWdCurrency,
-        p_method: selectedMethod?.name || "UPI Direct",
+        p_method: methodName,
         p_upi_id: isUPI ? upiId.trim() : null,
-        p_provider: isUPI ? upiDetection.providerName || "UPI" : null,
+        p_provider: providerName,
         p_full_name: fullName.trim(),
         p_email: email.trim(),
         p_phone: phone.trim() || null,
-        p_reason: reason.trim() || null,
+        p_reason: withdrawReason,
       } as never,
     );
     setBusy(false);
 
     if (error) {
+      setWithdrawError(error.message);
+      setAnimState("failed");
       toast.error(error.message);
       return;
     }
 
+    setCreatedWdId(wdId as string);
+    setAnimState("completed");
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
-
     setReason("");
-
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      navigate({ to: "/transactions/$id", params: { id: wdId as string } });
-    }, 6000);
   }
 
   return (
@@ -419,46 +441,154 @@ function Withdraw() {
           </div>
         </div>
 
-        {/* UPI Handle Detection Showcase inside form */}
-        {selectedMethod?.id === "upi" && (
-          <div className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 space-y-1.5">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-              Supported UPI Handles
-            </p>
-            <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
-              {UPI_PROVIDERS.map((prov) => (
-                <div
-                  key={prov.id}
-                  className="flex items-center gap-1 rounded-lg border bg-card px-2 py-1 shadow-2xs shrink-0 text-[11px] font-medium"
-                >
-                  <PaymentMethodIcon id={prov.id} size="sm" />
-                  <span>{prov.name}</span>
+        {/* UPI Handle & App Selection */}
+        {selectedMethod?.id.includes("upi") && (
+          <div className="space-y-2.5">
+            <div className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Select UPI Application
+                </p>
+                {selectedUPIApp && (
+                  <span className="text-[10px] font-semibold text-primary">
+                    {selectedUPIApp.name} selected
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 py-0.5">
+                {UPI_PROVIDERS.map((prov) => {
+                  const isAppSelected = selectedUPIApp?.id === prov.id;
+                  return (
+                    <button
+                      key={prov.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedUPIApp(prov);
+                      }}
+                      className={`flex flex-col items-center justify-center gap-1 rounded-xl border p-2 text-center transition-all cursor-pointer touch-manipulation ${
+                        isAppSelected
+                          ? "border-primary bg-primary/10 shadow-2xs font-bold"
+                          : "border-border/50 bg-card hover:bg-accent/40"
+                      }`}
+                    >
+                      <UPIProviderLogo providerId={prov.id} size="sm" />
+                      <span className="text-[10px] font-medium leading-tight truncate w-full">
+                        {prov.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                UPI ID / VPA {selectedUPIApp ? `(${selectedUPIApp.name})` : ""}
+              </label>
+              <Input
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder={
+                  selectedUPIApp?.id === "google-pay"
+                    ? "username@okhdfcbank or username@okaxis"
+                    : selectedUPIApp?.id === "phonepe"
+                      ? "username@ybl or username@ibl"
+                      : selectedUPIApp?.id === "paytm"
+                        ? "mobilenumber@paytm"
+                        : selectedUPIApp?.id === "bhim"
+                          ? "mobilenumber@upi"
+                          : selectedUPIApp?.id === "amazon-pay"
+                            ? "username@apl"
+                            : "username@bank or mobilenumber@upi"
+                }
+                className="rounded-xl h-12 text-sm font-mono"
+              />
+              {upiId.trim() && (
+                <div className="flex items-center justify-between text-xs px-1 pt-0.5">
+                  <span className="text-muted-foreground">Detected Rail:</span>
+                  <span className="font-semibold text-primary">
+                    {upiDetection.providerName || "Validating UPI format"}
+                  </span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
 
-        {/* Recipient Details */}
-        {selectedMethod?.id.includes("upi") ? (
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">UPI ID / VPA</label>
-            <Input
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              placeholder="username@ybl, username@gpay or username@paytm"
-              className="rounded-xl h-12 text-sm font-mono"
-            />
-            {upiId.trim() && (
-              <div className="flex items-center justify-between text-xs px-1 pt-0.5">
-                <span className="text-muted-foreground">Provider:</span>
-                <span className="font-semibold text-primary">
-                  {upiDetection.providerName || "Invalid handle format"}
-                </span>
+        {/* Indian Bank Transfer (IMPS/NEFT) */}
+        {selectedMethod?.id === "in-bank" && (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Select Destination Bank
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {INDIAN_BANKS.map((b) => {
+                  const isBankSelected = selectedBank?.id === b.id;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setSelectedBank(b)}
+                      className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-2.5 text-center transition-all cursor-pointer touch-manipulation ${
+                        isBankSelected
+                          ? "border-primary bg-primary/10 shadow-2xs font-bold"
+                          : "border-border/50 bg-card hover:bg-accent/40"
+                      }`}
+                    >
+                      <BankLogo bankId={b.id} size="md" />
+                      <span className="text-[11px] font-medium leading-tight truncate w-full">
+                        {b.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                Bank Account Number ({selectedBank?.name || "Selected Bank"})
+              </label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="10 to 18-digit account number"
+                className="rounded-xl h-12 text-sm font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                Bank IFSC Code
+              </label>
+              <Input
+                value={ifscCode}
+                onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                placeholder={
+                  selectedBank?.id === "sbi"
+                    ? "SBIN0000300"
+                    : selectedBank?.id === "hdfc"
+                      ? "HDFC0000123"
+                      : selectedBank?.id === "icici"
+                        ? "ICIC0000001"
+                        : selectedBank?.id === "axis"
+                          ? "UTIB0000001"
+                          : selectedBank?.id === "yes-bank"
+                            ? "YESB0000001"
+                            : "IFSC Code (11 characters)"
+                }
+                className="rounded-xl h-12 text-sm font-mono uppercase"
+                maxLength={11}
+              />
+            </div>
           </div>
-        ) : (
+        )}
+
+        {/* Global / Other Rails (Non-UPI, Non-Indian Bank) */}
+        {!selectedMethod?.id.includes("upi") && selectedMethod?.id !== "in-bank" && (
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-muted-foreground">
               {selectedMethod?.id.includes("gcash")
@@ -467,7 +597,11 @@ function Withdraw() {
                   ? "PayNow Mobile / NRIC / UEN"
                   : selectedMethod?.id === "pix"
                     ? "Pix Key (CPF / Email / Phone)"
-                    : "Recipient IBAN / Account Number"}
+                    : selectedMethod?.id === "cz-bank"
+                      ? "Czech Account Number (Format: 123456/0800)"
+                      : selectedMethod?.id === "faster-payments"
+                        ? "UK Sort Code & Account Number"
+                        : "Recipient IBAN / Account Number"}
             </label>
             <Input
               value={upiId}
@@ -832,21 +966,65 @@ function Withdraw() {
         )}
       </Dialog>
 
-      {/* Processing Animation Modal */}
-      <Dialog open={isProcessing} onOpenChange={() => {}}>
+      {/* State-driven Transaction Animation Modal */}
+      <Dialog
+        open={animState !== "idle"}
+        onOpenChange={(open) => {
+          if (!open && animState !== "processing") {
+            setAnimState("idle");
+          }
+        }}
+      >
         <DialogContent className="max-w-md border-0 bg-transparent p-0 shadow-none">
           <PaymentAnimation
-            state="processing"
+            state={animState}
             type="withdrawal"
             senderName={profile?.full_name || "Moonlight Wallet"}
             senderCode={wallet?.wallet_code || "ML-SENDER"}
-            recipientName={selectedMethod?.name || "Withdrawal Payout Rail"}
-            recipientCode={upiId || "UPI"}
+            recipientName={
+              selectedMethod?.id === "in-bank"
+                ? `${selectedBank?.name || "Indian Bank"} (${accountNumber ? `••••${accountNumber.slice(-4)}` : "Account"})`
+                : selectedUPIApp
+                  ? `${selectedUPIApp.name} (${upiId || "UPI"})`
+                  : selectedMethod?.name || "Withdrawal Payout Rail"
+            }
+            recipientCode={
+              selectedMethod?.id === "in-bank"
+                ? accountNumber
+                  ? `A/C ••••${accountNumber.slice(-4)}`
+                  : "BANK"
+                : upiId || "UPI"
+            }
             sourceAmount={sourceAmt || cardValue}
             sourceCurrency={withdrawCurrency}
             destinationAmount={convertedTargetAmt || cardValue}
             destinationCurrency={targetCorridorCurrency}
+            paymentMethodId={
+              selectedMethod?.id === "in-bank"
+                ? selectedBank?.id || "in-bank"
+                : selectedUPIApp
+                  ? selectedUPIApp.id
+                  : selectedMethod?.id || "moonlight"
+            }
+            paymentMethodName={
+              selectedMethod?.id === "in-bank"
+                ? selectedBank?.name || "Indian Bank Transfer"
+                : selectedUPIApp
+                  ? selectedUPIApp.name
+                  : selectedMethod?.name || "Moonlight Payout Rail"
+            }
             exchangeRate={fxRateRatio}
+            fee={(sourceAmt || cardValue) * 0.1}
+            errorMessage={withdrawError || undefined}
+            onRetry={() => {
+              setAnimState("idle");
+            }}
+            onViewReceipt={() => {
+              if (createdWdId) {
+                setAnimState("idle");
+                navigate({ to: "/transactions/$id", params: { id: createdWdId } });
+              }
+            }}
           />
         </DialogContent>
       </Dialog>

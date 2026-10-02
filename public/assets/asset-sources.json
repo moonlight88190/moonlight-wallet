@@ -1,97 +1,143 @@
 {
   "public/assets/payment-methods/upi.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:UPI-Logo-vector.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/pix.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Pix (Brazil) logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/sepa.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Single euro payments area.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Single_euro_payments_area.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/faster-payments.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Faster Payments logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Faster_Payments_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/interac.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:InteracLogo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/3/31/InteracLogo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/gcash.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:GCash logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/5/52/GCash_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/google-pay.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Google Pay Logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/phonepe.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:PhonePe Logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/paytm.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Paytm Logo (standalone).svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/payment-methods/amazon-pay.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Amazon Pay logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/2/29/Amazon_Pay_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "source": "Government of India UXDT / NPCI (National Payments Corporation of India)",
+    "file_title": "Unified Payments Interface (UPI) Official Vector",
+    "url": "https://www.uxdt.nic.in/documents/logos/unified-payments-interface-upi/",
+    "guidelines": "https://www.npci.org.in/uploads/BHIM_UPI_Guidelines_2026_012a0b1bce.pdf",
     "downloaded_at": "2026-10-02"
   },
   "public/assets/payment-methods/bhim.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Bhim app logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Bhim_app_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "source": "Government of India UXDT / NPCI (National Payments Corporation of India)",
+    "file_title": "BHIM Official Brand Asset",
+    "url": "https://www.uxdt.nic.in/documents/logos/bhim/",
+    "guidelines": "https://www.npci.org.in/uploads/BHIM_UPI_Guidelines_2026_012a0b1bce.pdf",
     "downloaded_at": "2026-10-02"
   },
-  "public/assets/banks/sbi.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:SBI-logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/SBI-logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "public/assets/payment-methods/google-pay.svg": {
+    "source": "Google Developers Brand Assets / Google Pay Acceptance Mark Package",
+    "file_title": "Google Pay Official Vector Logo & Acceptance Mark",
+    "url": "https://developers.google.com/static/pay/api/download-assets/Google-Pay-Acceptance.zip",
+    "guidelines": "https://developers.google.com/pay/india/api/web/brand-guidelines",
     "downloaded_at": "2026-10-02"
   },
-  "public/assets/banks/icici-bank.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:ICICI Bank Logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+  "public/assets/payment-methods/google-pay.png": {
+    "source": "Google Pay India Developer Documentation",
+    "file_title": "Google Pay Official Mark",
+    "url": "https://developers.google.com/pay/india/api/web/brand-guidelines",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/amazon-pay.svg": {
+    "source": "Amazon Pay Developer Documentation Brand Assets CDN",
+    "file_title": "Amazon Pay Official Brand Vector (Color)",
+    "url": "https://m.media-amazon.com/images/G/01/amazonpayments/documentation/AmazonPay_BrandAssets/Logos/amazonpay-logo_clr.svg",
+    "integration_docs": "https://developer.amazon.com/docs/amazon-pay-checkout/take-your-integration-live.html",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/phonepe.png": {
+    "source": "PhonePe Official Press & Media Kit",
+    "file_title": "PhonePe Official Brand Asset",
+    "url": "https://www.phonepe.com/pressstatic/Phonepe_logo_380dc4eebb_c922f903ad.png",
+    "portal": "https://www.phonepe.com/press/",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/phonepe.svg": {
+    "source": "PhonePe Official Brand Asset Vector",
+    "file_title": "PhonePe Logo Vector",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/paytm.png": {
+    "source": "Paytm Official Investor Relations Press Kit",
+    "file_title": "Paytm IR Official Brand Asset",
+    "url": "https://pwebassets.paytm.com/ocl-documents/document/ir/press-kit/brand.png",
+    "portal": "https://ir.paytm.com/press-kit",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/paytm.svg": {
+    "source": "Paytm Brand Vector",
+    "file_title": "Paytm Logo",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/hdfc-bank.png": {
+    "source": "HDFC Bank Official Corporate Server (Adobe Scene7 Public Web Server)",
+    "file_title": "HDFC Bank Official Corporate Logo (Transparent Alpha)",
+    "url": "https://s7ap1.scene7.com/is/image/hdfcbankPWS/HDFC-logo?fmt=png-alpha",
+    "newsroom": "https://www.hdfc.bank.in/news-room",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/hdfc-bank.svg": {
+    "source": "HDFC Bank Vector Asset",
+    "file_title": "HDFC Bank Official Vector",
     "downloaded_at": "2026-10-02"
   },
   "public/assets/banks/axis-bank.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Axis Bank logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "source": "Axis Bank Official BBPS Brand Guidelines",
+    "file_title": "Axis Bank Official Brand Mark",
+    "url": "https://www.axisbank.com/docs/default-source/business-banking/bbps-brand-guidelines.pdf",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/sbi.svg": {
+    "source": "State Bank of India Official Brand Guidelines",
+    "file_title": "State Bank of India Official Emblem",
+    "url": "https://sbi.bank.in/",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/sbi.png": {
+    "source": "State Bank of India Official Emblem High-Resolution",
+    "file_title": "State Bank of India Official Seal",
+    "url": "https://sbi.bank.in/",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/banks/icici-bank.svg": {
+    "source": "ICICI Bank Brand Identity",
+    "file_title": "ICICI Bank Official Logo Vector",
+    "url": "https://www.icicibank.com/",
     "downloaded_at": "2026-10-02"
   },
   "public/assets/banks/yes-bank.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Yes Bank SVG Logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Yes_Bank_SVG_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "source": "YES BANK Refreshed Brand Identity Portal",
+    "file_title": "YES BANK Official Refreshed Logo Vector",
+    "url": "https://www.yesbank.in/content/published/api/v1.1/assets/CONTB8477AE871C34111AFC87F9819204B5F/native/launch_of_refreshed_yb_brand.pdf",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/countries/in.svg": {
+    "source": "Flag Code of India / Official Standard Vector (24-spoke Ashoka Chakra)",
+    "file_title": "Flag of India Vector",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_India.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/pix.svg": {
+    "source": "Banco Central do Brasil / Wikimedia Commons",
+    "file_title": "Pix (Brazil) logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/sepa.svg": {
+    "source": "European Payments Council / Wikimedia Commons",
+    "file_title": "Single euro payments area.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Single_euro_payments_area.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/faster-payments.svg": {
+    "source": "Pay.UK / Faster Payments Service",
+    "file_title": "Faster Payments logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Faster_Payments_logo.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/interac.svg": {
+    "source": "Interac Corp. / Wikimedia Commons",
+    "file_title": "InteracLogo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/3/31/InteracLogo.svg",
+    "downloaded_at": "2026-10-02"
+  },
+  "public/assets/payment-methods/gcash.svg": {
+    "source": "Mynt / GCash Philippines",
+    "file_title": "GCash logo.svg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/52/GCash_logo.svg",
     "downloaded_at": "2026-10-02"
   },
   "public/assets/payment-methods/paynow.png": {
-    "source": "Wikipedia (English)",
-    "file_title": "File:PAYNOW logo.png",
+    "source": "Association of Banks in Singapore (ABS) PayNow",
+    "file_title": "PAYNOW logo.png",
     "url": "https://upload.wikimedia.org/wikipedia/en/2/25/PAYNOW_logo.png",
     "downloaded_at": "2026-10-02"
   },
@@ -99,37 +145,6 @@
     "source": "Al Etihad Payments (Official Portal aep.ae)",
     "file_title": "Aani Instant Payments Platform Logo",
     "url": "https://aep.ae/media/wczftgc4/aani-1320x763.png",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/banks/hdfc-bank.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:HDFC Bank Logo.svg",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/HDFC_Bank_Logo.svg",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/luxury/brands/balenciaga.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Balenciaga Logo.svg",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/luxury/brands/moncler.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Logo Moncler Group.svg",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/luxury/brands/dolce-gabbana.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Dolce & Gabbana.svg",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/luxury/brands/givenchy.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Givenchy - logo (France, 2003).svg",
-    "downloaded_at": "2026-10-02"
-  },
-  "public/assets/luxury/brands/hugo-boss.svg": {
-    "source": "Wikimedia Commons",
-    "file_title": "File:Boss logo 2021.svg",
     "downloaded_at": "2026-10-02"
   }
 }
