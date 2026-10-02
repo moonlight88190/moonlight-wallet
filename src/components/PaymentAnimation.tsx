@@ -2,20 +2,16 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   Check,
   AlertCircle,
-  ArrowDown,
+  XCircle,
   RefreshCw,
   Receipt,
-  XCircle,
-  Building2,
-  Wallet,
-  ShieldCheck,
-  Smartphone,
-  ChevronRight,
 } from "lucide-react";
 import { BrandAsset, CountryFlag } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
+
+/* ─── Types ─── */
 
 export interface PaymentAnimationProps {
   state: "validating" | "processing" | "completed" | "failed" | "cancelled" | "confirming";
@@ -38,6 +34,34 @@ export interface PaymentAnimationProps {
   onCancel?: () => void;
 }
 
+/* ─── Stage definitions ─── */
+
+interface StageConfig {
+  title: string;
+  description: string;
+}
+
+function getTransferStages(providerLabel: string): StageConfig[] {
+  return [
+    { title: "Reviewing details", description: "Verifying payment details and balance" },
+    { title: "Payment method", description: `Routing via ${providerLabel}` },
+    { title: "Processing", description: "Securing transaction parameters" },
+    { title: "Verification", description: "Updating wallet ledger" },
+    { title: "Complete", description: "Payment processed successfully" },
+  ];
+}
+
+function getWithdrawalStages(providerLabel: string): StageConfig[] {
+  return [
+    { title: "Eligibility check", description: "Verifying balance and account status" },
+    { title: "Payout method", description: `Authorizing via ${providerLabel}` },
+    { title: "Recording", description: "Logging beneficiary and compliance details" },
+    { title: "Queued", description: "Withdrawal request queued for review" },
+  ];
+}
+
+/* ─── Component ─── */
+
 export function PaymentAnimation({
   state,
   type = "transfer",
@@ -59,12 +83,12 @@ export function PaymentAnimation({
   onCancel,
 }: PaymentAnimationProps) {
   const isWithdrawal = type === "withdrawal";
-  const isBackendCompleted = state === "completed";
+  const isBackendDone = state === "completed";
   const isFailed = state === "failed";
   const isCancelled = state === "cancelled";
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
-  // Resolve payment provider via the shared authoritative resolver
+  // Resolve payment provider asset
   const paymentAsset = resolvePaymentAsset(
     paymentMethodName || paymentMethodId,
     recipientCode.includes("@") ? recipientCode : undefined,
@@ -72,385 +96,328 @@ export function PaymentAnimation({
     destinationCurrency,
   );
 
-  // Progressive visual stage controller
-  // For transfer: 1 -> 2 -> 3 -> 4 -> 5 (Completed) (~5.5s total)
-  // For withdrawal: 1 -> 2 -> 3 -> 4 (Recorded) (~3.5s total)
-  const maxVisualSteps = isWithdrawal ? 4 : 5;
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [canShowComplete, setCanShowComplete] = useState<boolean>(false);
-  const backendDoneRef = useRef(isBackendCompleted);
-  backendDoneRef.current = isBackendCompleted;
+  const stages = isWithdrawal
+    ? getWithdrawalStages(paymentAsset.label)
+    : getTransferStages(paymentAsset.label);
+
+  const totalStages = stages.length;
+
+  // Animation timeline controller
+  const [visualStage, setVisualStage] = useState(0);
+  const [showComplete, setShowComplete] = useState(false);
+  const backendDoneRef = useRef(isBackendDone);
+  backendDoneRef.current = isBackendDone;
+
+  // Step intervals: transfer ~1.2s per step, withdrawal ~0.9s per step
+  const stepMs = isWithdrawal ? 900 : 1200;
 
   useEffect(() => {
-    if (isFailed || isCancelled) {
-      return;
-    }
+    if (isFailed || isCancelled) return;
 
-    let isMounted = true;
-    const stepIntervalMs = isWithdrawal ? 900 : 1200;
-
+    let mounted = true;
     const timer = setInterval(() => {
-      if (!isMounted) return;
-      setCurrentStep((prev) => {
-        if (prev < maxVisualSteps - 1) {
-          return prev + 1;
-        } else if (prev === maxVisualSteps - 1) {
-          // At the second to last step, only advance to final complete if the backend is also done!
+      if (!mounted) return;
+      setVisualStage((prev) => {
+        const nextStage = prev + 1;
+        // Can only reach final stage if backend is done
+        if (nextStage >= totalStages - 1) {
           if (backendDoneRef.current) {
-            setCanShowComplete(true);
-            return maxVisualSteps;
+            return totalStages - 1;
           }
-          return prev;
+          // Hold at penultimate stage
+          return Math.min(prev, totalStages - 2);
         }
-        return prev;
+        return nextStage;
       });
-    }, stepIntervalMs);
+    }, stepMs);
 
     return () => {
-      isMounted = false;
+      mounted = false;
       clearInterval(timer);
     };
-  }, [isWithdrawal, isFailed, isCancelled, maxVisualSteps]);
+  }, [isWithdrawal, isFailed, isCancelled, totalStages, stepMs]);
 
-  // If backend finishes after we reached step (maxVisualSteps - 1), unlock completion immediately
+  // If backend finishes while we're at or past penultimate stage, advance
   useEffect(() => {
-    if (isBackendCompleted && currentStep >= maxVisualSteps - 1) {
-      const delay = setTimeout(() => {
-        setCanShowComplete(true);
-        setCurrentStep(maxVisualSteps);
-      }, 500);
-      return () => clearTimeout(delay);
+    if (isBackendDone && visualStage >= totalStages - 2) {
+      const t = setTimeout(() => {
+        setVisualStage(totalStages - 1);
+        setShowComplete(true);
+      }, 400);
+      return () => clearTimeout(t);
     }
-  }, [isBackendCompleted, currentStep, maxVisualSteps]);
+  }, [isBackendDone, visualStage, totalStages]);
 
-  const isFinalComplete = canShowComplete && isBackendCompleted;
-
-  // Truthful status messaging
-  const getTransferStepDescription = (step: number) => {
-    switch (step) {
-      case 1:
-        return "Reviewing payment details & balance...";
-      case 2:
-        return `Routing to ${paymentAsset.label}...`;
-      case 3:
-        return "Securing transaction parameters...";
-      case 4:
-        return "Updating Moonlight balance & ledger snapshot...";
-      case 5:
-        return "Payment processed & settled successfully.";
-      default:
-        return "Processing transaction...";
+  // Mark complete when visual reaches final stage AND backend is done
+  useEffect(() => {
+    if (visualStage === totalStages - 1 && isBackendDone) {
+      setShowComplete(true);
     }
-  };
+  }, [visualStage, totalStages, isBackendDone]);
 
-  const getWithdrawalStepDescription = (step: number) => {
-    switch (step) {
-      case 1:
-        return "Checking account balance & eligibility...";
-      case 2:
-        return `Authorizing payout via ${paymentAsset.label}...`;
-      case 3:
-        return "Recording beneficiary details & compliance window...";
-      case 4:
-        return "Withdrawal request recorded & queued for review.";
-      default:
-        return "Processing withdrawal...";
-    }
-  };
-
-  const activeDescription = isFailed
-    ? errorMessage || "Transaction could not be completed."
-    : isCancelled
-      ? "Transaction cancelled."
-      : isWithdrawal
-        ? getWithdrawalStepDescription(currentStep)
-        : getTransferStepDescription(currentStep);
+  const isComplete = showComplete && isBackendDone;
+  const isTerminal = isComplete || isFailed || isCancelled;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="relative mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-3xl border border-border/70 bg-card p-5 sm:p-6 shadow-xl backdrop-blur-xl transition-all animate-in fade-in zoom-in-95 duration-200"
+      className="relative mx-auto w-full max-w-sm animate-in fade-in duration-200"
     >
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
-            {isWithdrawal ? <Wallet className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
-          </span>
-          <div className="min-w-0">
-            <span className="text-xs font-bold text-foreground tracking-tight block truncate">
-              {isWithdrawal ? "Moonlight Withdrawal" : "Moonlight Transfer"}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="font-mono text-sm font-bold text-foreground tabular-nums">
-            {formatMoney(destinationAmount, destinationCurrency)}
-          </span>
-          <CountryFlag code={destinationCurrency} circle size="xs" />
-        </div>
+      {/* Amount Hero */}
+      <div className="text-center mb-6">
+        <p className="text-[11px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
+          {isWithdrawal ? "Withdrawal" : "Transfer"}
+        </p>
+        <h2 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
+          {formatMoney(destinationAmount, destinationCurrency)}
+        </h2>
+        {isCrossCurrency && exchangeRate && (
+          <p className="mt-1 text-xs text-muted-foreground font-mono">
+            {formatMoney(sourceAmount, sourceCurrency)} · 1 {sourceCurrency} ≈ {exchangeRate.toFixed(2)} {destinationCurrency}
+          </p>
+        )}
       </div>
 
-      {/* Progressive Step Progress Indicator */}
-      <div className="flex items-center gap-1.5 mb-5 px-1">
-        {Array.from({ length: maxVisualSteps }).map((_, idx) => {
-          const stepNum = idx + 1;
-          const isDone = currentStep > stepNum || (isFinalComplete && stepNum === maxVisualSteps);
-          const isCurrent = currentStep === stepNum && !isFinalComplete && !isFailed;
+      {/* Journey Timeline */}
+      <div className="space-y-0">
+        {stages.map((stage, idx) => {
+          const isDone = isComplete ? true : visualStage > idx;
+          const isCurrent = !isTerminal && visualStage === idx;
+          const isPending = !isDone && !isCurrent;
+          const isLast = idx === totalStages - 1;
+          const showProviderLogo = idx === 1; // Stage 2: Payment method
+
           return (
-            <div
-              key={idx}
-              className={cn(
-                "h-1.5 flex-1 rounded-full transition-all duration-300",
-                isFailed
-                  ? "bg-destructive/40"
-                  : isDone
-                    ? "bg-emerald-500"
-                    : isCurrent
-                      ? "bg-primary animate-pulse"
-                      : "bg-secondary",
+            <React.Fragment key={idx}>
+              {/* Stage Row */}
+              <div
+                className={cn(
+                  "flex items-start gap-3 py-3 px-1 transition-all duration-300",
+                  isCurrent && "anim-stage-enter",
+                  isDone && !isLast && "opacity-60",
+                )}
+                style={isCurrent ? { animationDelay: `${idx * 0.08}s` } : undefined}
+              >
+                {/* Stage Indicator */}
+                <div className="flex flex-col items-center pt-0.5">
+                  <div
+                    className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 shrink-0",
+                      isFailed && isCurrent
+                        ? "bg-destructive/15 text-destructive border border-destructive/30"
+                        : isDone
+                          ? "bg-emerald-500 text-white"
+                          : isCurrent
+                            ? "bg-primary text-primary-foreground ring-2 ring-primary/20"
+                            : "bg-secondary text-muted-foreground border border-border/50",
+                    )}
+                  >
+                    {isDone ? (
+                      <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                    ) : isFailed && isCurrent ? (
+                      <AlertCircle className="h-3.5 w-3.5" />
+                    ) : (
+                      <span>{idx + 1}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stage Content */}
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "text-xs font-semibold transition-colors duration-200",
+                        isCurrent
+                          ? "text-foreground"
+                          : isDone
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground/50",
+                      )}
+                    >
+                      {stage.title}
+                    </span>
+                    {isCurrent && !isFailed && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary anim-subtle-pulse" />
+                    )}
+                  </div>
+                  <p
+                    className={cn(
+                      "text-[11px] leading-relaxed mt-0.5 transition-colors duration-200",
+                      isCurrent
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/40",
+                    )}
+                  >
+                    {isFailed && isCurrent
+                      ? errorMessage || "Transaction could not be completed."
+                      : stage.description}
+                  </p>
+
+                  {/* Provider logo appears at stage 2 */}
+                  {showProviderLogo && (isCurrent || isDone) && (
+                    <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-border/50 bg-secondary/30 px-3 py-2 anim-stage-enter">
+                      <BrandAsset id={paymentAsset.id} size="xs" />
+                      <div className="min-w-0">
+                        <span className="text-[11px] font-semibold text-foreground block truncate">
+                          {paymentAsset.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground block truncate">
+                          {recipientCode.includes("@")
+                            ? recipientCode
+                            : paymentAsset.subtitle}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Connection Line (between stages) */}
+              {!isLast && (
+                <div className="flex items-stretch gap-3 pl-1">
+                  <div className="flex justify-center w-7">
+                    <div
+                      className={cn(
+                        "w-px h-3 transition-all duration-500",
+                        isDone
+                          ? "bg-emerald-500/40"
+                          : isCurrent
+                            ? "bg-primary/30"
+                            : "bg-border/40",
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1" />
+                </div>
               )}
-            />
+            </React.Fragment>
           );
         })}
       </div>
 
-      {/* Transaction Journey Cards: Source -> Selected Rail -> Destination */}
-      <div className="space-y-2.5 mb-4">
-        {/* Node 1: Sender / Source */}
-        <div
-          className={cn(
-            "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
-            currentStep >= 1
-              ? "border-border/60 bg-secondary/30"
-              : "border-border/30 opacity-60",
-          )}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0 font-bold text-xs">
-              ML
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Origin Account
-              </div>
-              <div className="text-xs font-semibold text-foreground truncate">
-                {senderName || "Moonlight Wallet"}
-              </div>
-              <div className="font-mono text-[10px] text-muted-foreground truncate">
-                {senderCode}
-              </div>
-            </div>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-[10px] font-semibold text-muted-foreground">Debited</div>
-            <div className="font-mono text-xs font-bold text-foreground tabular-nums">
-              {formatMoney(sourceAmount, sourceCurrency)}
-            </div>
-          </div>
+      {/* Participants Row */}
+      <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-secondary/20 px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">From</span>
+          <span className="text-[11px] font-semibold text-foreground truncate block">{senderName}</span>
+          <span className="text-[10px] font-mono text-muted-foreground truncate block">{senderCode}</span>
         </div>
-
-        {/* Transition Line 1 */}
-        <div className="flex justify-center -my-1 relative z-10">
-          <div
-            className={cn(
-              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300",
-              currentStep >= 2
-                ? "border-primary/50 bg-background text-primary"
-                : "border-border/40 bg-muted text-muted-foreground",
-            )}
-          >
-            <ArrowDown className="h-3 w-3" />
-          </div>
+        <div className="flex flex-col items-center gap-0.5 px-2 shrink-0">
+          <svg width="24" height="12" viewBox="0 0 24 12" className="text-muted-foreground/40">
+            <path d="M0 6h20M16 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <CountryFlag code={destinationCurrency} circle size="xs" />
         </div>
-
-        {/* Node 2: Selected Payment Provider / Rail (ALWAYS RETAINED) */}
-        <div
-          className={cn(
-            "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
-            currentStep >= 2
-              ? isFinalComplete
-                ? "border-emerald-500/40 bg-emerald-500/5 shadow-2xs"
-                : isFailed
-                  ? "border-destructive/30 bg-destructive/5"
-                  : "border-primary/40 bg-primary/5 shadow-2xs"
-              : "border-border/30 opacity-60",
-          )}
-        >
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="flex items-center justify-center shrink-0">
-              <BrandAsset id={paymentAsset.id} size="sm" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                {isWithdrawal ? "Payout Rail" : "Payment Method"}
-              </div>
-              <div className="text-xs font-bold text-foreground truncate">
-                {paymentAsset.label}
-              </div>
-              <div className="text-[10px] text-muted-foreground truncate">
-                {recipientCode.includes("@")
-                  ? `VPA: ${recipientCode}`
-                  : paymentAsset.subtitle}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-right shrink-0 pl-2">
-            <span
-              className={cn(
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase",
-                isFinalComplete
-                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                  : isFailed
-                    ? "bg-destructive/20 text-destructive"
-                    : currentStep >= 2
-                      ? "bg-primary/20 text-primary"
-                      : "bg-muted text-muted-foreground",
-              )}
-            >
-              {isFinalComplete ? "Settled" : isFailed ? "Halted" : "Active Rail"}
-            </span>
-            {isCrossCurrency && exchangeRate && (
-              <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
-                1 {sourceCurrency} ≈ {exchangeRate.toFixed(2)} {destinationCurrency}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Transition Line 2 */}
-        <div className="flex justify-center -my-1 relative z-10">
-          <div
-            className={cn(
-              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300",
-              currentStep >= 3
-                ? "border-primary/50 bg-background text-primary"
-                : "border-border/40 bg-muted text-muted-foreground",
-            )}
-          >
-            <ArrowDown className="h-3 w-3" />
-          </div>
-        </div>
-
-        {/* Node 3: Beneficiary / Destination */}
-        <div
-          className={cn(
-            "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
-            currentStep >= 3
-              ? "border-border/60 bg-secondary/30"
-              : "border-border/30 opacity-60",
-          )}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground shrink-0 font-bold text-xs">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Beneficiary
-              </div>
-              <div className="text-xs font-semibold text-foreground truncate">
-                {recipientName}
-              </div>
-              <div className="font-mono text-[10px] text-muted-foreground truncate">
-                {recipientCode}
-              </div>
-            </div>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-[10px] font-semibold text-muted-foreground">Credited</div>
-            <div className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-              {formatMoney(destinationAmount, destinationCurrency)}
-            </div>
-          </div>
+        <div className="min-w-0 flex-1 text-right">
+          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">To</span>
+          <span className="text-[11px] font-semibold text-foreground truncate block">{recipientName}</span>
+          <span className="text-[10px] font-mono text-muted-foreground truncate block">{recipientCode}</span>
         </div>
       </div>
 
-      {/* Transaction Status Summary Box (Truthful Financial Wording, No Fake Theater) */}
+      {/* Fee */}
+      {fee > 0 && (
+        <p className="mt-2 text-center text-[10px] text-muted-foreground">
+          Fee: {formatMoney(fee, sourceCurrency)}
+        </p>
+      )}
+
+      {/* Status Summary */}
       <div
         className={cn(
-          "rounded-xl border p-3 text-center transition-all duration-200",
-          isFinalComplete
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+          "mt-4 rounded-xl border px-4 py-3 text-center transition-all duration-300",
+          isComplete
+            ? "border-emerald-500/30 bg-emerald-500/5"
             : isFailed
-              ? "border-destructive/30 bg-destructive/10 text-destructive"
+              ? "border-destructive/30 bg-destructive/5"
               : isCancelled
-                ? "border-muted bg-secondary/40 text-muted-foreground"
-                : "border-primary/20 bg-primary/5 text-foreground",
+                ? "border-border bg-secondary/30"
+                : "border-primary/15 bg-primary/[0.03]",
         )}
       >
-        <div className="flex items-center justify-center gap-1.5 font-bold text-xs">
-          {isFinalComplete ? (
+        <div className="flex items-center justify-center gap-2">
+          {isComplete ? (
             <>
-              <Check className="h-4 w-4 text-emerald-500 stroke-[3]" />
-              <span>{isWithdrawal ? "Withdrawal Request Recorded" : "Transaction Settled"}</span>
+              <div className="anim-success-scale">
+                <Check className="h-5 w-5 text-emerald-500 stroke-[2.5]" />
+              </div>
+              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                {isWithdrawal ? "Withdrawal request recorded" : "Payment complete"}
+              </span>
             </>
           ) : isFailed ? (
             <>
               <AlertCircle className="h-4 w-4 text-destructive" />
-              <span>Request Could Not Be Processed</span>
+              <span className="text-sm font-semibold text-destructive">
+                Request could not be processed
+              </span>
             </>
           ) : isCancelled ? (
             <>
               <XCircle className="h-4 w-4 text-muted-foreground" />
-              <span>Transaction Cancelled</span>
+              <span className="text-sm font-semibold text-muted-foreground">
+                Transaction cancelled
+              </span>
             </>
           ) : (
             <>
-              <div className="h-2 w-2 rounded-full bg-primary motion-safe:animate-ping" />
-              <span>{activeDescription}</span>
+              <span className="h-2 w-2 rounded-full bg-primary anim-subtle-pulse" />
+              <span className="text-xs font-medium text-foreground">
+                {stages[Math.min(visualStage, totalStages - 1)]?.description}
+              </span>
             </>
           )}
         </div>
-
-        <p className="mt-1 text-[11px] text-muted-foreground leading-normal">
-          {isFinalComplete
-            ? isWithdrawal
-              ? "Your withdrawal request is logged. 12-hour review stage initiated."
-              : "Balance debited and internal ledger snapshot recorded."
-            : isFailed
-              ? errorMessage || "Unable to complete request. Your balance was not charged."
-              : isCancelled
-                ? "The transfer was aborted before settlement."
-                : "Moonlight Ledger clearance in progress..."}
-        </p>
-
-        {fee > 0 && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/30 text-[10px] text-muted-foreground">
-            Transaction Charge (10%): {formatMoney(fee, sourceCurrency)}
-          </div>
+        {isComplete && isWithdrawal && (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            12-hour compliance review initiated
+          </p>
+        )}
+        {isFailed && errorMessage && (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {errorMessage}
+          </p>
         )}
       </div>
 
+      {/* Progress Bar (non-terminal only) */}
+      {!isTerminal && (
+        <div className="mt-3 h-1 rounded-full bg-secondary overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
+            style={{ width: `${((visualStage + 1) / totalStages) * 100}%` }}
+          />
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="mt-4 space-y-2">
-        {isFinalComplete && onViewReceipt && (
+      <div className="mt-5 space-y-2">
+        {isComplete && onViewReceipt && (
           <button
             onClick={onViewReceipt}
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground hover:opacity-95 transition-all shadow-md cursor-pointer active:scale-[0.98] touch-manipulation"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-95 transition-all shadow-soft cursor-pointer active:scale-[0.98] touch-manipulation anim-stage-enter"
           >
-            <Receipt className="h-3.5 w-3.5" />
-            {isWithdrawal ? "View Withdrawal Confirmation" : "View Transaction Receipt"}
+            <Receipt className="h-4 w-4" />
+            {isWithdrawal ? "View confirmation" : "View receipt"}
           </button>
         )}
 
         {isFailed && onRetry && (
           <button
             onClick={onRetry}
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-destructive px-4 py-3 text-xs font-semibold text-destructive-foreground hover:opacity-90 transition-all shadow-sm cursor-pointer active:scale-[0.98] touch-manipulation"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-4 py-3.5 text-sm font-semibold text-destructive-foreground hover:opacity-90 transition-all shadow-sm cursor-pointer active:scale-[0.98] touch-manipulation"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Retry Transaction
+            <RefreshCw className="h-4 w-4" />
+            Try again
           </button>
         )}
 
-        {!isFinalComplete && !isFailed && onCancel && (
+        {!isTerminal && onCancel && (
           <button
             onClick={onCancel}
-            className="w-full text-center py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            className="w-full text-center py-2 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           >
             Cancel
           </button>

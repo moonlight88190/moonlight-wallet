@@ -216,3 +216,72 @@
 .active-press:active {
   transform: scale(0.98);
 }
+
+/* ─── Payment Journey Animation System ─── */
+@keyframes stage-enter {
+  0% { opacity: 0; transform: translateY(8px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes stage-complete {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+@keyframes connection-flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes check-draw {
+  0% { stroke-dashoffset: 24; opacity: 0; }
+  40% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes success-scale {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+@keyframes progress-fill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.anim-stage-enter {
+  animation: stage-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-stage-complete {
+  animation: stage-complete 0.3s ease both;
+}
+.anim-check-draw {
+  animation: check-draw 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+.anim-success-scale {
+  animation: success-scale 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-subtle-pulse {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .anim-stage-enter,
+  .anim-stage-complete,
+  .anim-check-draw,
+  .anim-success-scale,
+  .anim-subtle-pulse,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-shimmer {
+    animation: none !important;
+  }
+}
+
+/* Receipt print optimization */
+@media print {
+  .no-print { display: none !important; }
+  .print-break { page-break-before: always; }
+}
