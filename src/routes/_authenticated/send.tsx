@@ -473,7 +473,9 @@ function Send() {
             destinationAmount={recv}
             destinationCurrency={recvCur}
             paymentMethodId={cur === "INR" || recvCur === "INR" ? "upi" : "moonlight"}
-            paymentMethodName={cur === "INR" || recvCur === "INR" ? "UPI Direct" : "Moonlight Wallet"}
+            paymentMethodName={
+              cur === "INR" || recvCur === "INR" ? "UPI Direct" : "Moonlight Wallet"
+            }
             exchangeRate={rateRatio}
             fee={fee}
             errorMessage={errorMessage}
