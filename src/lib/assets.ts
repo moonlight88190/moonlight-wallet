@@ -771,7 +771,8 @@ export function getMethodTargetCurrency(methodId: string): string {
     m === "sbi" ||
     m === "hdfc" ||
     m === "icici" ||
-    m === "axis"
+    m === "axis" ||
+    m === "yes-bank"
   )
     return "INR";
   if (m.includes("gcash") || m.includes("ph-bank")) return "PHP";
@@ -785,3 +786,182 @@ export function getMethodTargetCurrency(methodId: string): string {
   if (m.includes("sepa")) return "EUR";
   return "EUR";
 }
+
+export interface ResolvedPaymentAsset {
+  type: "gift" | "bank" | "upi" | "method";
+  id: string;
+  label: string;
+  subtitle: string;
+  sourceRatio?: "square" | "wide" | "ultra-wide" | "card";
+  giftCard?: GiftCardMeta;
+}
+
+export function resolvePaymentAsset(
+  methodName?: string,
+  upiId?: string,
+  providerName?: string,
+  currency?: string,
+): ResolvedPaymentAsset {
+  const m = (methodName || "").toLowerCase();
+  const u = (upiId || "").toLowerCase();
+  const p = (providerName || "").toLowerCase();
+  const c = (currency || "").toUpperCase();
+
+  // 1. Gift card match
+  const matchedGift = GIFT_CARDS.find(
+    (g) => m.includes(g.id) || m.includes(g.brand.toLowerCase()) || p.includes(g.id),
+  );
+  if (matchedGift) {
+    return {
+      type: "gift",
+      id: matchedGift.id,
+      label: `${matchedGift.brand} Gift Card`,
+      subtitle: "Digital Voucher Redemption",
+      sourceRatio: "card",
+      giftCard: matchedGift,
+    };
+  }
+
+  // 2. UPI Provider match (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)
+  const upiMatch = UPI_PROVIDERS.find(
+    (prov) =>
+      p.includes(prov.id) ||
+      p.includes(prov.name.toLowerCase()) ||
+      m.includes(prov.id) ||
+      m.includes(prov.name.toLowerCase()) ||
+      prov.handles.some((h) => u.includes(h)),
+  );
+  if (upiMatch) {
+    return {
+      type: "upi",
+      id: upiMatch.id,
+      label: upiMatch.name,
+      subtitle: "Unified Payments Interface (UPI)",
+      sourceRatio: upiMatch.sourceRatio || "wide",
+    };
+  }
+
+  // 3. Indian Bank match (SBI, HDFC, ICICI, Axis, YES Bank)
+  const bankMatch = INDIAN_BANKS.find(
+    (b) =>
+      m.includes(b.id) ||
+      m.includes(b.name.toLowerCase()) ||
+      p.includes(b.id) ||
+      p.includes(b.name.toLowerCase()),
+  );
+  if (bankMatch) {
+    return {
+      type: "bank",
+      id: bankMatch.id,
+      label: bankMatch.name,
+      subtitle: "Direct Bank Transfer (IMPS/NEFT)",
+      sourceRatio: bankMatch.sourceRatio || "ultra-wide",
+    };
+  }
+
+  // 4. Specific payment rails
+  if (m.includes("gcash") || c === "PHP") {
+    return {
+      type: "method",
+      id: "gcash",
+      label: "GCash Wallet",
+      subtitle: "Mobile Wallet Payout",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("paynow") || c === "SGD") {
+    return {
+      type: "method",
+      id: "paynow",
+      label: "Singapore PayNow",
+      subtitle: "National Instant Payout",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("pix") || c === "BRL") {
+    return {
+      type: "method",
+      id: "pix",
+      label: "Pix Instant",
+      subtitle: "Central Bank of Brazil Rail",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("sepa") || c === "EUR") {
+    return {
+      type: "method",
+      id: "sepa",
+      label: "SEPA Instant",
+      subtitle: "Eurozone Interbank Network",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("faster") || c === "GBP") {
+    return {
+      type: "method",
+      id: "faster-payments",
+      label: "Faster Payments",
+      subtitle: "UK Instant Bank Rail",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("interac") || c === "CAD") {
+    return {
+      type: "method",
+      id: "interac",
+      label: "Interac e-Transfer",
+      subtitle: "Canadian Electronic Clearing",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("aani") || c === "AED") {
+    return {
+      type: "method",
+      id: "aani",
+      label: "Aani Instant",
+      subtitle: "UAE National Payment Platform",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("cz") || c === "CZK") {
+    return {
+      type: "method",
+      id: "cz-bank",
+      label: "Czech Bank Transfer",
+      subtitle: "QR Platba / Local Clearing",
+      sourceRatio: "wide",
+    };
+  }
+  if (m.includes("upi") || c === "INR" || u.length > 0) {
+    return {
+      type: "upi",
+      id: "upi",
+      label: "UPI Direct",
+      subtitle: "Unified Payments Interface",
+      sourceRatio: "wide",
+    };
+  }
+
+  // 5. General payment method match
+  const pm = PAYMENT_METHODS.find(
+    (item) => m.includes(item.id) || m.includes(item.name.toLowerCase()),
+  );
+  if (pm) {
+    return {
+      type: "method",
+      id: pm.id,
+      label: pm.name,
+      subtitle: pm.description,
+      sourceRatio: pm.sourceRatio || "wide",
+    };
+  }
+
+  return {
+    type: "method",
+    id: "moonlight",
+    label: methodName || "Moonlight Ledger",
+    subtitle: "Internal Wallet Settlement",
+    sourceRatio: "square",
+  };
+}
+

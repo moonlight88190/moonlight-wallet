@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Check,
   AlertCircle,
@@ -10,8 +10,10 @@ import {
   Wallet,
   ShieldCheck,
   Smartphone,
+  ChevronRight,
 } from "lucide-react";
 import { BrandAsset, CountryFlag } from "@/components/AssetComponents";
+import { resolvePaymentAsset } from "@/lib/assets";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 
@@ -57,66 +59,128 @@ export function PaymentAnimation({
   onCancel,
 }: PaymentAnimationProps) {
   const isWithdrawal = type === "withdrawal";
-  const isCompleted = state === "completed";
+  const isBackendCompleted = state === "completed";
   const isFailed = state === "failed";
   const isCancelled = state === "cancelled";
-  const isProcessing = state === "processing" || state === "validating" || state === "confirming";
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
-  // Resolve method ID and name for the payment corridor node
-  const resolvedMethodId =
-    paymentMethodId ||
-    (recipientCode.includes("@")
-      ? "upi"
-      : destinationCurrency === "INR"
-        ? "upi"
-        : isWithdrawal
-          ? "in-bank"
-          : "moonlight");
+  // Resolve payment provider via the shared authoritative resolver
+  const paymentAsset = resolvePaymentAsset(
+    paymentMethodName || paymentMethodId,
+    recipientCode.includes("@") ? recipientCode : undefined,
+    paymentMethodName,
+    destinationCurrency,
+  );
 
-  const resolvedMethodName =
-    paymentMethodName ||
-    (resolvedMethodId === "google-pay"
-      ? "Google Pay"
-      : resolvedMethodId === "phonepe"
-        ? "PhonePe"
-        : resolvedMethodId === "paytm"
-          ? "Paytm"
-          : resolvedMethodId === "bhim"
-            ? "BHIM UPI"
-            : resolvedMethodId === "amazon-pay"
-              ? "Amazon Pay"
-              : resolvedMethodId === "upi"
-                ? "UPI Direct"
-                : resolvedMethodId === "sbi"
-                  ? "State Bank of India"
-                  : resolvedMethodId === "hdfc"
-                    ? "HDFC Bank"
-                    : resolvedMethodId === "icici"
-                      ? "ICICI Bank"
-                      : resolvedMethodId === "axis"
-                        ? "Axis Bank"
-                        : resolvedMethodId === "yes-bank"
-                          ? "YES BANK"
-                          : isWithdrawal
-                            ? "Payout Rail"
-                            : "Moonlight Wallet");
+  // Progressive visual stage controller
+  // For transfer: 1 -> 2 -> 3 -> 4 -> 5 (Completed) (~5.5s total)
+  // For withdrawal: 1 -> 2 -> 3 -> 4 (Recorded) (~3.5s total)
+  const maxVisualSteps = isWithdrawal ? 4 : 5;
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [canShowComplete, setCanShowComplete] = useState<boolean>(false);
+  const backendDoneRef = useRef(isBackendCompleted);
+  backendDoneRef.current = isBackendCompleted;
+
+  useEffect(() => {
+    if (isFailed || isCancelled) {
+      return;
+    }
+
+    let isMounted = true;
+    const stepIntervalMs = isWithdrawal ? 900 : 1200;
+
+    const timer = setInterval(() => {
+      if (!isMounted) return;
+      setCurrentStep((prev) => {
+        if (prev < maxVisualSteps - 1) {
+          return prev + 1;
+        } else if (prev === maxVisualSteps - 1) {
+          // At the second to last step, only advance to final complete if the backend is also done!
+          if (backendDoneRef.current) {
+            setCanShowComplete(true);
+            return maxVisualSteps;
+          }
+          return prev;
+        }
+        return prev;
+      });
+    }, stepIntervalMs);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [isWithdrawal, isFailed, isCancelled, maxVisualSteps]);
+
+  // If backend finishes after we reached step (maxVisualSteps - 1), unlock completion immediately
+  useEffect(() => {
+    if (isBackendCompleted && currentStep >= maxVisualSteps - 1) {
+      const delay = setTimeout(() => {
+        setCanShowComplete(true);
+        setCurrentStep(maxVisualSteps);
+      }, 500);
+      return () => clearTimeout(delay);
+    }
+  }, [isBackendCompleted, currentStep, maxVisualSteps]);
+
+  const isFinalComplete = canShowComplete && isBackendCompleted;
+
+  // Truthful status messaging
+  const getTransferStepDescription = (step: number) => {
+    switch (step) {
+      case 1:
+        return "Reviewing payment details & balance...";
+      case 2:
+        return `Routing to ${paymentAsset.label}...`;
+      case 3:
+        return "Securing transaction parameters...";
+      case 4:
+        return "Updating Moonlight balance & ledger snapshot...";
+      case 5:
+        return "Payment processed & settled successfully.";
+      default:
+        return "Processing transaction...";
+    }
+  };
+
+  const getWithdrawalStepDescription = (step: number) => {
+    switch (step) {
+      case 1:
+        return "Checking account balance & eligibility...";
+      case 2:
+        return `Authorizing payout via ${paymentAsset.label}...`;
+      case 3:
+        return "Recording beneficiary details & compliance window...";
+      case 4:
+        return "Withdrawal request recorded & queued for review.";
+      default:
+        return "Processing withdrawal...";
+    }
+  };
+
+  const activeDescription = isFailed
+    ? errorMessage || "Transaction could not be completed."
+    : isCancelled
+      ? "Transaction cancelled."
+      : isWithdrawal
+        ? getWithdrawalStepDescription(currentStep)
+        : getTransferStepDescription(currentStep);
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="relative mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-3xl border border-border/80 bg-card p-4 sm:p-6 shadow-xl backdrop-blur-xl transition-all"
+      className="relative mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-3xl border border-border/70 bg-card p-5 sm:p-6 shadow-xl backdrop-blur-xl transition-all animate-in fade-in zoom-in-95 duration-200"
     >
-      {/* Top Header: Badge, Currency & Destination Amount */}
+      {/* Top Header */}
       <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-4">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
-            {isWithdrawal ? <Wallet className="h-3.5 w-3.5" /> : <Smartphone className="h-3.5 w-3.5" />}
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
+            {isWithdrawal ? <Wallet className="h-4 w-4" /> : <Smartphone className="h-4 w-4" />}
           </span>
           <div className="min-w-0">
             <span className="text-xs font-bold text-foreground tracking-tight block truncate">
-              {isWithdrawal ? "Payout Transfer" : "Wallet Transfer"}
+              {isWithdrawal ? "Moonlight Withdrawal" : "Moonlight Transfer"}
             </span>
           </div>
         </div>
@@ -129,20 +193,51 @@ export function PaymentAnimation({
         </div>
       </div>
 
-      {/* Structured Pipeline Journey: Source -> Selected Rail -> Recipient */}
-      <div className="space-y-2 mb-4">
-        {/* Node 1: Sender (Moonlight Account) */}
-        <div className="flex items-center justify-between rounded-xl border border-border/50 bg-secondary/30 p-2.5">
+      {/* Progressive Step Progress Indicator */}
+      <div className="flex items-center gap-1.5 mb-5 px-1">
+        {Array.from({ length: maxVisualSteps }).map((_, idx) => {
+          const stepNum = idx + 1;
+          const isDone = currentStep > stepNum || (isFinalComplete && stepNum === maxVisualSteps);
+          const isCurrent = currentStep === stepNum && !isFinalComplete && !isFailed;
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "h-1.5 flex-1 rounded-full transition-all duration-300",
+                isFailed
+                  ? "bg-destructive/40"
+                  : isDone
+                    ? "bg-emerald-500"
+                    : isCurrent
+                      ? "bg-primary animate-pulse"
+                      : "bg-secondary",
+              )}
+            />
+          );
+        })}
+      </div>
+
+      {/* Transaction Journey Cards: Source -> Selected Rail -> Destination */}
+      <div className="space-y-2.5 mb-4">
+        {/* Node 1: Sender / Source */}
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
+            currentStep >= 1
+              ? "border-border/60 bg-secondary/30"
+              : "border-border/30 opacity-60",
+          )}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0 font-bold text-xs">
               ML
             </div>
             <div className="min-w-0">
               <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Origin
+                Origin Account
               </div>
               <div className="text-xs font-semibold text-foreground truncate">
-                {senderName}
+                {senderName || "Moonlight Wallet"}
               </div>
               <div className="font-mono text-[10px] text-muted-foreground truncate">
                 {senderCode}
@@ -161,15 +256,13 @@ export function PaymentAnimation({
         <div className="flex justify-center -my-1 relative z-10">
           <div
             className={cn(
-              "flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-300",
-              isCompleted
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-500"
-                : isFailed
-                  ? "border-destructive bg-destructive/10 text-destructive"
-                  : "border-primary/50 bg-background text-primary",
+              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300",
+              currentStep >= 2
+                ? "border-primary/50 bg-background text-primary"
+                : "border-border/40 bg-muted text-muted-foreground",
             )}
           >
-            <ArrowDown className={cn("h-3.5 w-3.5", isProcessing && "motion-safe:animate-bounce")} />
+            <ArrowDown className="h-3 w-3" />
           </div>
         </div>
 
@@ -177,30 +270,30 @@ export function PaymentAnimation({
         <div
           className={cn(
             "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
-            isCompleted
-              ? "border-emerald-500/40 bg-emerald-500/5 shadow-2xs"
-              : isFailed
-                ? "border-destructive/30 bg-destructive/5"
-                : "border-primary/40 bg-primary/5 shadow-2xs",
+            currentStep >= 2
+              ? isFinalComplete
+                ? "border-emerald-500/40 bg-emerald-500/5 shadow-2xs"
+                : isFailed
+                  ? "border-destructive/30 bg-destructive/5"
+                  : "border-primary/40 bg-primary/5 shadow-2xs"
+              : "border-border/30 opacity-60",
           )}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="flex items-center justify-center shrink-0">
-              <BrandAsset id={resolvedMethodId} size="sm" />
+              <BrandAsset id={paymentAsset.id} size="sm" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                Selected Rail
+                {isWithdrawal ? "Payout Rail" : "Payment Method"}
               </div>
               <div className="text-xs font-bold text-foreground truncate">
-                {resolvedMethodName}
+                {paymentAsset.label}
               </div>
               <div className="text-[10px] text-muted-foreground truncate">
                 {recipientCode.includes("@")
                   ? `VPA: ${recipientCode}`
-                  : destinationCurrency === "INR"
-                    ? "Instant Indian Clearing"
-                    : "Direct Ledger Allocation"}
+                  : paymentAsset.subtitle}
               </div>
             </div>
           </div>
@@ -209,14 +302,16 @@ export function PaymentAnimation({
             <span
               className={cn(
                 "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase",
-                isCompleted
+                isFinalComplete
                   ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                   : isFailed
                     ? "bg-destructive/20 text-destructive"
-                    : "bg-primary/20 text-primary",
+                    : currentStep >= 2
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground",
               )}
             >
-              {isCompleted ? "Transacted" : isFailed ? "Halted" : "Active Rail"}
+              {isFinalComplete ? "Settled" : isFailed ? "Halted" : "Active Rail"}
             </span>
             {isCrossCurrency && exchangeRate && (
               <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
@@ -230,26 +325,25 @@ export function PaymentAnimation({
         <div className="flex justify-center -my-1 relative z-10">
           <div
             className={cn(
-              "flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-300",
-              isCompleted
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-500"
-                : isFailed
-                  ? "border-destructive bg-destructive/10 text-destructive"
-                  : "border-primary/50 bg-background text-primary",
+              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300",
+              currentStep >= 3
+                ? "border-primary/50 bg-background text-primary"
+                : "border-border/40 bg-muted text-muted-foreground",
             )}
           >
-            {isCompleted ? (
-              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-            ) : isFailed ? (
-              <AlertCircle className="h-3.5 w-3.5" />
-            ) : (
-              <ArrowDown className={cn("h-3.5 w-3.5", isProcessing && "motion-safe:animate-bounce")} />
-            )}
+            <ArrowDown className="h-3 w-3" />
           </div>
         </div>
 
         {/* Node 3: Beneficiary / Destination */}
-        <div className="flex items-center justify-between rounded-xl border border-border/50 bg-secondary/30 p-2.5">
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-xl border p-2.5 transition-all duration-300",
+            currentStep >= 3
+              ? "border-border/60 bg-secondary/30"
+              : "border-border/30 opacity-60",
+          )}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground shrink-0 font-bold text-xs">
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -275,11 +369,11 @@ export function PaymentAnimation({
         </div>
       </div>
 
-      {/* Transaction Status Summary Box (Real Product State, No Fake Claims) */}
+      {/* Transaction Status Summary Box (Truthful Financial Wording, No Fake Theater) */}
       <div
         className={cn(
           "rounded-xl border p-3 text-center transition-all duration-200",
-          isCompleted
+          isFinalComplete
             ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
             : isFailed
               ? "border-destructive/30 bg-destructive/10 text-destructive"
@@ -289,15 +383,15 @@ export function PaymentAnimation({
         )}
       >
         <div className="flex items-center justify-center gap-1.5 font-bold text-xs">
-          {isCompleted ? (
+          {isFinalComplete ? (
             <>
               <Check className="h-4 w-4 text-emerald-500 stroke-[3]" />
-              <span>Transaction Settled Successfully</span>
+              <span>{isWithdrawal ? "Withdrawal Request Recorded" : "Transaction Settled"}</span>
             </>
           ) : isFailed ? (
             <>
               <AlertCircle className="h-4 w-4 text-destructive" />
-              <span>Transaction Could Not Be Processed</span>
+              <span>Request Could Not Be Processed</span>
             </>
           ) : isCancelled ? (
             <>
@@ -307,19 +401,21 @@ export function PaymentAnimation({
           ) : (
             <>
               <div className="h-2 w-2 rounded-full bg-primary motion-safe:animate-ping" />
-              <span>Simulating Moonlight Ledger Clearance...</span>
+              <span>{activeDescription}</span>
             </>
           )}
         </div>
 
         <p className="mt-1 text-[11px] text-muted-foreground leading-normal">
-          {isCompleted
-            ? "Balance debited and internal ledger snapshot recorded."
+          {isFinalComplete
+            ? isWithdrawal
+              ? "Your withdrawal request is logged. 12-hour review stage initiated."
+              : "Balance debited and internal ledger snapshot recorded."
             : isFailed
               ? errorMessage || "Unable to complete request. Your balance was not charged."
               : isCancelled
                 ? "The transfer was aborted before settlement."
-                : "Verifying account rules and applying security balance lock."}
+                : "Moonlight Ledger clearance in progress..."}
         </p>
 
         {fee > 0 && (
@@ -331,13 +427,13 @@ export function PaymentAnimation({
 
       {/* Actions */}
       <div className="mt-4 space-y-2">
-        {isCompleted && onViewReceipt && (
+        {isFinalComplete && onViewReceipt && (
           <button
             onClick={onViewReceipt}
             className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-3 text-xs font-semibold text-primary-foreground hover:opacity-95 transition-all shadow-md cursor-pointer active:scale-[0.98] touch-manipulation"
           >
             <Receipt className="h-3.5 w-3.5" />
-            View Transaction Receipt
+            {isWithdrawal ? "View Withdrawal Confirmation" : "View Transaction Receipt"}
           </button>
         )}
 
@@ -351,7 +447,7 @@ export function PaymentAnimation({
           </button>
         )}
 
-        {!isCompleted && !isFailed && onCancel && (
+        {!isFinalComplete && !isFailed && onCancel && (
           <button
             onClick={onCancel}
             className="w-full text-center py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors"

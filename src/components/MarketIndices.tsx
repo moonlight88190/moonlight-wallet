@@ -65,9 +65,9 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
   }, [fetchedAt]);
 
   const filterTabs: Array<{ id: MarketFilter; label: string }> = [
-    { id: "all", label: "All Assets" },
+    { id: "all", label: "All" },
     { id: "indices", label: "Indices" },
-    { id: "stocks", label: "Equities" },
+    { id: "stocks", label: "Stocks" },
     { id: "europe", label: "Europe" },
     { id: "us", label: "US" },
     { id: "india", label: "India" },
