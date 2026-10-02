@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTransactions, useWallet } from "@/hooks/use-wallet";
-import { TxRow, groupByPeriod } from "@/components/TxRow";
+import { TxRow } from "@/components/TxRow";
+import { groupByPeriod } from "@/lib/compliance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageTitle } from "@/components/AppShell";
 

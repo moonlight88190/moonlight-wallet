@@ -32,11 +32,7 @@ export function MarketMiniWidget() {
   }, [instruments]);
 
   const activeInstrument = useMemo(() => {
-    return (
-      instruments.find((i) => i.symbol === selectedSymbol) ??
-      benchmarks[0] ??
-      instruments[0]
-    );
+    return instruments.find((i) => i.symbol === selectedSymbol) ?? benchmarks[0] ?? instruments[0];
   }, [instruments, selectedSymbol, benchmarks]);
 
   const chartData = useMemo(() => {
@@ -116,7 +112,9 @@ export function MarketMiniWidget() {
                 </span>
                 <span
                   className={`inline-flex items-center text-[10px] font-bold ${
-                    pos ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                    pos
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-rose-600 dark:text-rose-400"
                   }`}
                 >
                   {pos ? "+" : ""}
@@ -125,7 +123,10 @@ export function MarketMiniWidget() {
               </div>
               <div className="font-mono text-xs text-muted-foreground mt-0.5">
                 {bench.currencySymbol}
-                {bench.price.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+                {bench.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 2,
+                })}
               </div>
             </button>
           );
@@ -137,9 +138,7 @@ export function MarketMiniWidget() {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-foreground">
-                {activeInstrument.name}
-              </span>
+              <span className="font-bold text-sm text-foreground">{activeInstrument.name}</span>
               <span className="text-[10px] font-mono font-semibold text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
                 {activeInstrument.symbol}
               </span>
@@ -154,10 +153,16 @@ export function MarketMiniWidget() {
               </span>
               <span
                 className={`inline-flex items-center text-xs font-bold ${
-                  isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                  isPositive
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
                 }`}
               >
-                {isPositive ? <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" /> : <ArrowDownRight className="h-3.5 w-3.5 stroke-[2.5]" />}
+                {isPositive ? (
+                  <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5 stroke-[2.5]" />
+                )}
                 {isPositive ? "+" : ""}
                 {activeInstrument.changePercent.toFixed(2)}%
               </span>

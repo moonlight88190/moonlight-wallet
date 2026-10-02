@@ -236,7 +236,11 @@ export function BrandAsset({
       <img
         src={resolvedUrl}
         alt={displayName}
-        className={cn("object-contain object-center transition-transform", imgMaxDimensions, imgClassName)}
+        className={cn(
+          "object-contain object-center transition-transform",
+          imgMaxDimensions,
+          imgClassName,
+        )}
         loading="lazy"
         onError={(e) => {
           const target = e.currentTarget;
@@ -349,7 +353,10 @@ export function GiftCardImage({
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden rounded-xl bg-card border border-border/40", className)}
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl bg-card border border-border/40",
+        className,
+      )}
       style={{ aspectRatio }}
     >
       {!failed && resolvedUrl ? (

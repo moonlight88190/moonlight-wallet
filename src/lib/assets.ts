@@ -14,7 +14,8 @@ export interface CurrencyMeta {
   flagUrl: string;
 }
 
-export type AssetCategory = "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | "flag" | "investment";
+export type AssetCategory =
+  "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | "flag" | "investment";
 
 export interface BrandAssetMeta {
   id: string;
@@ -965,3 +966,25 @@ export function resolvePaymentAsset(
   };
 }
 
+export function parseUPIHandle(vpa: string): {
+  isVPA: boolean;
+  providerId?: string;
+  providerName?: string;
+} {
+  const trimmed = vpa.trim().toLowerCase();
+  if (!trimmed.includes("@") || trimmed.startsWith("@") || trimmed.endsWith("@")) {
+    return { isVPA: false };
+  }
+  const parts = trimmed.split("@");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return { isVPA: false };
+  }
+
+  const handle = `@${parts[1]}`;
+  const found = UPI_PROVIDERS.find((p) => p.handles.includes(handle));
+  if (found) {
+    return { isVPA: true, providerId: found.id, providerName: found.name };
+  }
+
+  return { isVPA: true, providerName: "UPI-compatible format" };
+}

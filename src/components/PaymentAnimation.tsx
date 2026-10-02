@@ -1,11 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Check,
-  AlertCircle,
-  XCircle,
-  RefreshCw,
-  Receipt,
-} from "lucide-react";
+import { Check, AlertCircle, XCircle, RefreshCw, Receipt } from "lucide-react";
 import { BrandAsset, CountryFlag } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
 import { formatMoney } from "@/lib/currency";
@@ -174,7 +168,8 @@ export function PaymentAnimation({
         </h2>
         {isCrossCurrency && exchangeRate && (
           <p className="mt-1 text-xs text-muted-foreground font-mono">
-            {formatMoney(sourceAmount, sourceCurrency)} · 1 {sourceCurrency} ≈ {exchangeRate.toFixed(2)} {destinationCurrency}
+            {formatMoney(sourceAmount, sourceCurrency)} · 1 {sourceCurrency} ≈{" "}
+            {exchangeRate.toFixed(2)} {destinationCurrency}
           </p>
         )}
       </div>
@@ -245,9 +240,7 @@ export function PaymentAnimation({
                   <p
                     className={cn(
                       "text-[11px] leading-relaxed mt-0.5 transition-colors duration-200",
-                      isCurrent
-                        ? "text-muted-foreground"
-                        : "text-muted-foreground/40",
+                      isCurrent ? "text-muted-foreground" : "text-muted-foreground/40",
                     )}
                   >
                     {isFailed && isCurrent
@@ -264,9 +257,7 @@ export function PaymentAnimation({
                           {paymentAsset.label}
                         </span>
                         <span className="text-[10px] text-muted-foreground block truncate">
-                          {recipientCode.includes("@")
-                            ? recipientCode
-                            : paymentAsset.subtitle}
+                          {recipientCode.includes("@") ? recipientCode : paymentAsset.subtitle}
                         </span>
                       </div>
                     </div>
@@ -281,11 +272,7 @@ export function PaymentAnimation({
                     <div
                       className={cn(
                         "w-px h-3 transition-all duration-500",
-                        isDone
-                          ? "bg-emerald-500/40"
-                          : isCurrent
-                            ? "bg-primary/30"
-                            : "bg-border/40",
+                        isDone ? "bg-emerald-500/40" : isCurrent ? "bg-primary/30" : "bg-border/40",
                       )}
                     />
                   </div>
@@ -300,20 +287,39 @@ export function PaymentAnimation({
       {/* Participants Row */}
       <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-secondary/20 px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">From</span>
-          <span className="text-[11px] font-semibold text-foreground truncate block">{senderName}</span>
-          <span className="text-[10px] font-mono text-muted-foreground truncate block">{senderCode}</span>
+          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            From
+          </span>
+          <span className="text-[11px] font-semibold text-foreground truncate block">
+            {senderName}
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground truncate block">
+            {senderCode}
+          </span>
         </div>
         <div className="flex flex-col items-center gap-0.5 px-2 shrink-0">
           <svg width="24" height="12" viewBox="0 0 24 12" className="text-muted-foreground/40">
-            <path d="M0 6h20M16 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M0 6h20M16 2l4 4-4 4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <CountryFlag code={destinationCurrency} circle size="xs" />
         </div>
         <div className="min-w-0 flex-1 text-right">
-          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">To</span>
-          <span className="text-[11px] font-semibold text-foreground truncate block">{recipientName}</span>
-          <span className="text-[10px] font-mono text-muted-foreground truncate block">{recipientCode}</span>
+          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            To
+          </span>
+          <span className="text-[11px] font-semibold text-foreground truncate block">
+            {recipientName}
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground truncate block">
+            {recipientCode}
+          </span>
         </div>
       </div>
 
@@ -376,9 +382,7 @@ export function PaymentAnimation({
           </p>
         )}
         {isFailed && errorMessage && (
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {errorMessage}
-          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">{errorMessage}</p>
         )}
       </div>
 

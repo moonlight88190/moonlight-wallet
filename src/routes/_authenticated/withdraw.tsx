@@ -24,6 +24,7 @@ import {
   UPI_PROVIDERS,
   INDIAN_BANKS,
   getMethodTargetCurrency,
+  parseUPIHandle,
   type BankMeta,
   type GiftCardMeta,
   type PaymentMethodMeta,
@@ -67,29 +68,6 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
   }),
   component: Withdraw,
 });
-
-export function parseUPIHandle(vpa: string): {
-  isVPA: boolean;
-  providerId?: string;
-  providerName?: string;
-} {
-  const trimmed = vpa.trim().toLowerCase();
-  if (!trimmed.includes("@") || trimmed.startsWith("@") || trimmed.endsWith("@")) {
-    return { isVPA: false };
-  }
-  const parts = trimmed.split("@");
-  if (parts.length !== 2 || !parts[0] || !parts[1]) {
-    return { isVPA: false };
-  }
-
-  const handle = `@${parts[1]}`;
-  const found = UPI_PROVIDERS.find((p) => p.handles.includes(handle));
-  if (found) {
-    return { isVPA: true, providerId: found.id, providerName: found.name };
-  }
-
-  return { isVPA: true, providerName: "UPI-compatible format" };
-}
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
@@ -153,7 +131,9 @@ function Withdraw() {
   const [activeCardCategory, setActiveCardCategory] = useState<string>("All");
 
   // Animation state
-  const [animState, setAnimState] = useState<"idle" | "processing" | "completed" | "failed">("idle");
+  const [animState, setAnimState] = useState<"idle" | "processing" | "completed" | "failed">(
+    "idle",
+  );
   const [busy, setBusy] = useState(false);
   const [createdWdId, setCreatedWdId] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
@@ -370,7 +350,9 @@ function Withdraw() {
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2.5 text-xs">
           <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-amber-700 dark:text-amber-400">48-hour clearance window</p>
+            <p className="font-semibold text-amber-700 dark:text-amber-400">
+              48-hour clearance window
+            </p>
             <p className="text-muted-foreground mt-0.5">
               Withdrawals unlock 48 hours after account creation.
             </p>
@@ -412,9 +394,7 @@ function Withdraw() {
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Payout method
               </span>
-              <span className="text-[10px] font-semibold text-primary">
-                {selectedMethod.name}
-              </span>
+              <span className="text-[10px] font-semibold text-primary">{selectedMethod.name}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-1.5">
@@ -508,7 +488,8 @@ function Withdraw() {
                 Amount
               </span>
               <span className="text-[11px] font-mono text-muted-foreground">
-                Balance: {formatMoney(Number(wallet?.balance_usd || 0) * userRate, preferredCurrency)}
+                Balance:{" "}
+                {formatMoney(Number(wallet?.balance_usd || 0) * userRate, preferredCurrency)}
               </span>
             </div>
 
@@ -537,7 +518,11 @@ function Withdraw() {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code} className="font-semibold cursor-pointer">
+                    <SelectItem
+                      key={c.code}
+                      value={c.code}
+                      className="font-semibold cursor-pointer"
+                    >
                       {c.code}
                     </SelectItem>
                   ))}
@@ -629,7 +614,8 @@ function Withdraw() {
               <div className="flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
                 <span>
-                  Profile: <strong className="text-foreground">{fullName || profile?.full_name}</strong>
+                  Profile:{" "}
+                  <strong className="text-foreground">{fullName || profile?.full_name}</strong>
                 </span>
               </div>
               <ChevronDown
@@ -717,11 +703,7 @@ function Withdraw() {
             {GIFT_CARDS.filter(
               (c) => activeCardCategory === "All" || c.category === activeCardCategory,
             ).map((card) => (
-              <GiftCardBrand
-                key={card.id}
-                card={card}
-                onClick={() => setSelectedCard(card)}
-              />
+              <GiftCardBrand key={card.id} card={card} onClick={() => setSelectedCard(card)} />
             ))}
           </div>
         </div>
@@ -752,7 +734,9 @@ function Withdraw() {
             </div>
             <div className="flex justify-between border-b border-border/30 pb-2">
               <span className="text-muted-foreground">Amount</span>
-              <span className="font-mono font-semibold">{formatMoney(sourceAmt, withdrawCurrency)}</span>
+              <span className="font-mono font-semibold">
+                {formatMoney(sourceAmt, withdrawCurrency)}
+              </span>
             </div>
             <div className="flex justify-between border-b border-border/30 pb-2">
               <span className="text-muted-foreground">Fee (10%)</span>
@@ -789,7 +773,9 @@ function Withdraw() {
       <Dialog open={!!selectedCard} onOpenChange={(open) => !open && setSelectedCard(null)}>
         <DialogContent className="max-w-sm rounded-2xl p-5">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Redeem {selectedCard?.brand}</DialogTitle>
+            <DialogTitle className="text-base font-semibold">
+              Redeem {selectedCard?.brand}
+            </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Voucher code issued upon wallet balance deduction.
             </DialogDescription>

@@ -3,20 +3,34 @@ import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
-import { CountryFlag } from "@/components/AssetComponents";
+import { CountryFlag, BrandAsset } from "@/components/AssetComponents";
+import { resolvePaymentAsset } from "@/lib/assets";
 
 export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
   const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
+
+  const paymentAsset = resolvePaymentAsset(
+    tx.kind === "withdrawal" ? tx.method || "Payout Rail" : tx.method || tx.recipient_name,
+    tx.recipient_wallet_code?.includes("@") ? tx.recipient_wallet_code : undefined,
+    undefined,
+    tx.currency,
+  );
+  const showBrand = paymentAsset.id !== "moonlight" && tx.kind !== "admin_credit";
+
   return (
     <Link
       to="/transactions/$id"
       params={{ id: tx.id }}
       className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:px-4 min-h-[52px] transition-opacity hover:opacity-70 touch-manipulation cursor-pointer"
     >
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
-        <Icon className="h-4 w-4" strokeWidth={1.5} />
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary overflow-hidden">
+        {showBrand ? (
+          <BrandAsset id={paymentAsset.id} size="xs" />
+        ) : (
+          <Icon className="h-4 w-4" strokeWidth={1.5} />
+        )}
         <div className="absolute -bottom-1 -right-1">
           <CountryFlag code={v.currency} circle size="xs" />
         </div>
@@ -39,23 +53,4 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       </div>
     </Link>
   );
-}
-
-export function groupByPeriod(txs: Tx[]) {
-  const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startWeek = startToday - 6 * 86400000;
-  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  const groups: { label: string; items: Tx[] }[] = [
-    { label: "Today", items: [] },
-    { label: "This week", items: [] },
-    { label: "This month", items: [] },
-    { label: "Earlier", items: [] },
-  ];
-  for (const t of txs) {
-    const ts = new Date(t.created_at).getTime();
-    const g = ts >= startToday ? 0 : ts >= startWeek ? 1 : ts >= startMonth ? 2 : 3;
-    groups[g]!.items.push(t);
-  }
-  return groups.filter((g) => g.items.length);
 }

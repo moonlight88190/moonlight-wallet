@@ -1,20 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Landmark,
-  ScanLine,
-  Copy,
-  Check,
-} from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Landmark, ScanLine, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import {
-  useProfile,
-  useRates,
-  useSetPreferredCurrency,
-  useWallet,
-} from "@/hooks/use-wallet";
+import { useProfile, useRates, useSetPreferredCurrency, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, formatMoney } from "@/lib/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +13,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Moonlight Wallet" },
-      { name: "description", content: "Your Moonlight Wallet balance, quick actions and global markets." },
+      {
+        name: "description",
+        content: "Your Moonlight Wallet balance, quick actions and global markets.",
+      },
       { property: "og:title", content: "Moonlight Wallet" },
       { property: "og:description", content: "Your balance and market performance." },
     ],
@@ -56,7 +47,6 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6 animate-in fade-in duration-200">
-
       {/* ─── Balance ─── */}
       <section className="text-center pt-2 pb-1">
         {/* Wallet code */}

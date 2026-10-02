@@ -34,136 +34,10 @@ export const Route = createFileRoute("/_authenticated/transactions/$id")({
   component: Receipt,
 });
 
-/* ─── 14-stage 168-hour withdrawal compliance timeline ─── */
-
-export interface ComplianceStage {
-  stage: number;
-  hourMin: number;
-  hourMax: number;
-  title: string;
-  description: string;
-}
-
-export const WITHDRAWAL_COMPLIANCE_STAGES: ComplianceStage[] = [
-  { stage: 1, hourMin: 0, hourMax: 12, title: "Payment Details Review", description: "Verifying withdrawal request parameters and payout destination format." },
-  { stage: 2, hourMin: 12, hourMax: 24, title: "Customer Due Diligence", description: "Standard identity verification and customer due diligence check." },
-  { stage: 3, hourMin: 24, hourMax: 36, title: "Beneficiary Verification", description: "Validating recipient account details, routing data and account status." },
-  { stage: 4, hourMin: 36, hourMax: 48, title: "Transaction Monitoring", description: "Screening transaction patterns against risk and fraud guidelines." },
-  { stage: 5, hourMin: 48, hourMax: 60, title: "Source of Funds Review", description: "Internal balance audit and source of funds assessment." },
-  { stage: 6, hourMin: 60, hourMax: 72, title: "Risk Assessment", description: "Compliance risk review for outbound transaction allocation." },
-  { stage: 7, hourMin: 72, hourMax: 84, title: "Cross-Border Processing", description: "Currency conversion verification and corridor fee validation." },
-  { stage: 8, hourMin: 84, hourMax: 96, title: "Payout Processing", description: "Confirming outbound channel readiness and settlement preparation." },
-  { stage: 9, hourMin: 96, hourMax: 108, title: "Enhanced Due Diligence", description: "Secondary risk review and periodic transaction audit." },
-  { stage: 10, hourMin: 108, hourMax: 120, title: "Compliance Review", description: "Balance verification and settlement queue indexing." },
-  { stage: 11, hourMin: 120, hourMax: 132, title: "Payout Queue", description: "Queued for disbursement authorization." },
-  { stage: 12, hourMin: 132, hourMax: 144, title: "Manual Review", description: "Administrative review and compliance checklist verification." },
-  { stage: 13, hourMin: 144, hourMax: 156, title: "Final Review", description: "Pre-release audit and beneficiary confirmation." },
-  { stage: 14, hourMin: 156, hourMax: 168, title: "Hold Window", description: "Final review stage prior to administrative release." },
-];
-
-export function getWithdrawalComplianceInfo(createdAtStr: string, dbStatus: string) {
-  const createdDate = new Date(createdAtStr);
-  const now = new Date();
-  const elapsedMs = Math.max(0, now.getTime() - createdDate.getTime());
-  const elapsedHours = elapsedMs / (1000 * 60 * 60);
-  const totalMinutes = Math.floor(elapsedMs / (1000 * 60));
-  const displayHours = Math.floor(totalMinutes / 60);
-  const displayMinutes = totalMinutes % 60;
-
-  const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
-
-  // Finalized by admin
-  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED") {
-    return {
-      statusLabel: "SUCCESS",
-      stageTitle: "Payout Released",
-      description: "Withdrawal confirmed and released by Moonlight administration.",
-      isProcessing: false,
-      isHold: false,
-      isSuccess: true,
-      stageNumber: 14,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
-      nextReviewHours: 0,
-    };
-  }
-
-  if (upperStatus === "FAILED" || upperStatus === "REJECTED") {
-    return {
-      statusLabel: "FAILED",
-      stageTitle: "Withdrawal Halted",
-      description: "Request stopped during review. Funds returned to wallet balance.",
-      isProcessing: false,
-      isHold: false,
-      isSuccess: false,
-      stageNumber: 0,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
-      nextReviewHours: 0,
-    };
-  }
-
-  if (upperStatus === "CANCELLED") {
-    return {
-      statusLabel: "CANCELLED",
-      stageTitle: "Request Cancelled",
-      description: "Withdrawal was cancelled. Funds returned to available balance.",
-      isProcessing: false,
-      isHold: false,
-      isSuccess: false,
-      stageNumber: 0,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
-      nextReviewHours: 0,
-    };
-  }
-
-  // At >= 168 hours: ON HOLD
-  if (elapsedHours >= 168 || upperStatus === "ON HOLD" || upperStatus === "HOLD") {
-    return {
-      statusLabel: "ON HOLD",
-      stageTitle: "Compliance Hold",
-      description: "168-hour review completed. Final administrative sign-off required before release.",
-      isProcessing: true,
-      isHold: true,
-      isSuccess: false,
-      stageNumber: 14,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
-      nextReviewHours: 0,
-    };
-  }
-
-  // 0–168 hours: each 12-hour window is a distinct stage
-  const currentStageIndex = Math.min(13, Math.floor(elapsedHours / 12));
-  const stageObj = WITHDRAWAL_COMPLIANCE_STAGES[currentStageIndex]!;
-  const nextWindowHours = 12 - (elapsedHours % 12);
-
-  return {
-    statusLabel: "PROCESSING",
-    stageTitle: stageObj.title,
-    description: stageObj.description,
-    isProcessing: true,
-    isHold: false,
-    isSuccess: false,
-    stageNumber: currentStageIndex + 1,
-    totalStages: 14,
-    elapsedText: `${displayHours}h ${displayMinutes}m`,
-    nextReviewHours: Math.max(1, Math.ceil(nextWindowHours)),
-  };
-}
-
-/* ─── Compact timeline summary steps ─── */
-const TIMELINE_STEPS = [
-  { stageNum: 1, label: "Request received" },
-  { stageNum: 2, label: "Payment details review" },
-  { stageNum: 3, label: "Customer due diligence" },
-  { stageNum: 4, label: "Transaction monitoring" },
-  { stageNum: 6, label: "Source of funds review" },
-  { stageNum: 8, label: "Payout processing" },
-  { stageNum: 12, label: "Manual review" },
-  { stageNum: 14, label: "Final review" },
-];
+import {
+  getWithdrawalComplianceInfo,
+  TIMELINE_SUMMARY_STEPS as TIMELINE_STEPS,
+} from "@/lib/compliance";
 
 /* ─── Receipt Component ─── */
 
@@ -404,7 +278,8 @@ function Receipt() {
           </span>
           {currency !== recipientCurrency && rawData.fx_rate && (
             <p className="text-xs text-muted-foreground mt-1 font-mono">
-              ≈ {formatMoney(netAmount, recipientCurrency)} · Rate: {Number(rawData.fx_rate).toFixed(4)}
+              ≈ {formatMoney(netAmount, recipientCurrency)} · Rate:{" "}
+              {Number(rawData.fx_rate).toFixed(4)}
             </p>
           )}
         </div>
@@ -414,7 +289,10 @@ function Receipt() {
           <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-secondary/15 px-3 py-2.5">
             {paymentAsset.type === "gift" && paymentAsset.giftCard ? (
               <div className="w-10 shrink-0">
-                <GiftCardImage imageUrl={paymentAsset.giftCard.imageUrl} alt={paymentAsset.giftCard.brand} />
+                <GiftCardImage
+                  imageUrl={paymentAsset.giftCard.imageUrl}
+                  alt={paymentAsset.giftCard.brand}
+                />
               </div>
             ) : (
               <BrandAsset id={paymentAsset.id} size="xs" />
@@ -448,7 +326,9 @@ function Receipt() {
                 </span>
               </div>
               <div className="text-right text-[10px] text-muted-foreground">
-                <div>Elapsed: <strong className="text-foreground">{complianceInfo.elapsedText}</strong></div>
+                <div>
+                  Elapsed: <strong className="text-foreground">{complianceInfo.elapsedText}</strong>
+                </div>
                 {complianceInfo.nextReviewHours > 0 && (
                   <div>Next window: ≈{complianceInfo.nextReviewHours}h</div>
                 )}
@@ -476,8 +356,10 @@ function Receipt() {
             <div className="space-y-1.5">
               {TIMELINE_STEPS.map((step, idx) => {
                 const isHoldStep = idx === TIMELINE_STEPS.length - 1 && complianceInfo.isHold;
-                const isPassed = complianceInfo.stageNumber > step.stageNum || complianceInfo.isSuccess;
-                const isCurrent = complianceInfo.stageNumber === step.stageNum && !complianceInfo.isSuccess;
+                const isPassed =
+                  complianceInfo.stageNumber > step.stageNum || complianceInfo.isSuccess;
+                const isCurrent =
+                  complianceInfo.stageNumber === step.stageNum && !complianceInfo.isSuccess;
                 return (
                   <div key={idx} className="flex items-center gap-2 text-[11px]">
                     <div
@@ -503,9 +385,7 @@ function Receipt() {
                             : "text-muted-foreground/40",
                       )}
                     >
-                      {isHoldStep && complianceInfo.isHold
-                        ? "Compliance hold (168h)"
-                        : step.label}
+                      {isHoldStep && complianceInfo.isHold ? "Compliance hold (168h)" : step.label}
                     </span>
                   </div>
                 );
@@ -514,7 +394,8 @@ function Receipt() {
 
             {complianceInfo.isHold && (
               <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                7-day (168-hour) review window elapsed. Final administrative sign-off required before release.
+                7-day (168-hour) review window elapsed. Final administrative sign-off required
+                before release.
               </p>
             )}
           </div>
@@ -530,7 +411,11 @@ function Receipt() {
                 aria-label="Copy"
                 className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
               >
-                {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                {copied ? (
+                  <Check className="h-3 w-3 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
               </button>
             </span>
           </DetailRow>
