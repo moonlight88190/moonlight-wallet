@@ -8,9 +8,6 @@
     "binding": "ASSETS",
     "directory": ".output/public"
   },
-  "build": {
-    "command": "bun run build"
-  },
   "observability": {
     "enabled": true
   }
