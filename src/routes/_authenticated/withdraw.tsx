@@ -224,14 +224,12 @@ function Withdraw() {
         p_amount: sourceAmt,
         p_currency: withdrawCurrency,
         p_method: methodName,
-        p_upi_id: isUPI ? upiId.trim() : null,
-        p_provider: providerName,
         p_full_name: currentFullName,
         p_email: currentEmail,
+        p_upi_id: isUPI ? upiId.trim() : null,
+        p_provider: providerName,
         p_phone: phone.trim() || null,
         p_reason: withdrawReason,
-        p_route: selectedMethod.id,
-        p_destination_currency: targetCorridorCurrency,
       } as never,
     );
 
@@ -269,14 +267,12 @@ function Withdraw() {
         p_amount: cardValue,
         p_currency: preferredCurrency,
         p_method: `${brandName} Digital Voucher`,
-        p_upi_id: null,
-        p_provider: brandName,
         p_full_name: profile?.full_name || "Valued Customer",
         p_email: profile?.email || "customer@moonlight.com",
+        p_upi_id: null,
+        p_provider: brandName,
         p_phone: null,
         p_reason: `Redeemed ${brandName} Voucher`,
-        p_route: "gift-card",
-        p_destination_currency: preferredCurrency,
       } as never,
     );
 

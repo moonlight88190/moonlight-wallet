@@ -70,34 +70,39 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-xl space-y-6 pb-12 animate-in fade-in duration-200">
       {/* ─── 1. BALANCE & PRIMARY ACTIONS ─── */}
-      <section className="text-center pt-2 pb-1 space-y-3">
-        {/* Wallet Code Capsule */}
-        {wallet.data && (
-          <button
-            type="button"
-            onClick={handleCopyCode}
-            aria-label="Copy wallet ID"
-            className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/40 px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
-          >
-            <span>{wallet.data.wallet_code}</span>
-            {copiedCode ? (
-              <Check className="h-3 w-3 text-emerald-500" />
-            ) : (
-              <Copy className="h-3 w-3 opacity-50" />
-            )}
-          </button>
-        )}
+      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-b from-card/95 via-card/85 to-card/65 p-5 sm:p-6 shadow-sm text-center space-y-4">
+        {/* Subtle titanium texture overlay */}
+        <div className="absolute inset-0 bg-[url('/assets/visuals/titanium-card-mesh.jpg')] bg-cover bg-center opacity-[0.04] pointer-events-none mix-blend-overlay" />
 
-        <div>
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            Available balance
+        {/* Top Wallet Code Capsule & Security Badge */}
+        <div className="relative z-10 flex items-center justify-center gap-2">
+          {wallet.data && (
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              aria-label="Copy wallet ID"
+              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/70 border border-border/50 px-3 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-all cursor-pointer touch-manipulation hover:border-border"
+            >
+              <span>{wallet.data.wallet_code}</span>
+              {copiedCode ? (
+                <Check className="h-3 w-3 text-emerald-500" />
+              ) : (
+                <Copy className="h-3 w-3 opacity-50" />
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="relative z-10 space-y-1">
+          <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+            Available Balance
           </p>
 
           <div className="mt-1">
             {loading ? (
-              <Skeleton className="mx-auto h-11 w-44 rounded-xl" />
+              <Skeleton className="mx-auto h-12 w-48 rounded-xl" />
             ) : (
-              <h1 className="tabular text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+              <h1 className="tabular font-sans text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
                 {formatMoney(balance, cur)}
               </h1>
             )}
@@ -105,7 +110,7 @@ function Dashboard() {
         </div>
 
         {/* Currency Switcher */}
-        <div className="flex items-center justify-center">
+        <div className="relative z-10 flex items-center justify-center">
           <Select
             value={cur}
             onValueChange={(v) =>
@@ -116,7 +121,7 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-8 rounded-full px-3 w-auto gap-2 border border-border/40 bg-secondary/50 hover:bg-secondary text-xs font-semibold cursor-pointer transition-colors">
+            <SelectTrigger className="h-8 rounded-full px-3 w-auto gap-2 border border-border/50 bg-secondary/60 hover:bg-secondary text-xs font-semibold cursor-pointer transition-colors shadow-2xs">
               <CurrencyIcon code={cur} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl p-1">
@@ -138,7 +143,7 @@ function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-2 pt-2">
+        <div className="relative z-10 grid grid-cols-4 gap-2 pt-2 border-t border-border/30">
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
             { to: "/receive", label: "Receive", icon: ArrowDownLeft },
@@ -155,17 +160,17 @@ function Dashboard() {
               to={action.to}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               search={action.search as any}
-              className={`group flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.97] ${
+              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[68px] active:scale-[0.97] ${
                 action.primary
-                  ? "border-primary/20 bg-primary/[0.04] hover:bg-primary/[0.08]"
-                  : "border-border/50 bg-card hover:bg-secondary/40"
+                  ? "border-primary/25 bg-primary/[0.05] hover:bg-primary/[0.09] shadow-2xs"
+                  : "border-border/40 bg-secondary/30 hover:bg-secondary/60"
               }`}
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
                   action.primary
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-background text-foreground border border-border/40"
                 }`}
               >
                 <action.icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
@@ -202,9 +207,18 @@ function Dashboard() {
               <Skeleton className="h-10 w-full rounded-xl" />
             </div>
           ) : recentTxs.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted-foreground">
-              <p className="font-medium text-foreground">No transactions recorded yet</p>
-              <p className="mt-1">Send funds or share your wallet ID to receive money.</p>
+            <div className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center">
+              <div className="relative mb-3 h-16 w-16 overflow-hidden rounded-2xl border border-border/40 shadow-xs">
+                <img
+                  src="/assets/visuals/empty-vault.jpg"
+                  alt="Vault"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <p className="font-semibold text-foreground text-sm">No activity recorded yet</p>
+              <p className="mt-1 text-muted-foreground text-xs max-w-xs">
+                Send funds or share your wallet ID to receive instant payments.
+              </p>
             </div>
           ) : (
             recentTxs.map((tx) => <TxRow key={tx.id} tx={tx} walletId={wallet.data?.id} />)

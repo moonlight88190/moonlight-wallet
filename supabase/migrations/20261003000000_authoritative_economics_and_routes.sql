@@ -23,6 +23,8 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS geography_updated_at timestamptz;
 
 -- 4. Authoritative send_transfer function
+-- SEND ECONOMICS: 10% fee charged ON TOP of requested amount.
+-- User sends 500 -> fee = 50 -> recipient receives 500 (converted via FX) -> sender loses 550.
 CREATE OR REPLACE FUNCTION public.send_transfer(
   p_recipient_code text,
   p_amount numeric,
@@ -145,6 +147,9 @@ REVOKE ALL ON FUNCTION public.send_transfer(text, numeric, text, text) FROM PUBL
 GRANT EXECUTE ON FUNCTION public.send_transfer(text, numeric, text, text) TO authenticated;
 
 -- 5. Authoritative create_withdrawal function
+-- WITHDRAWAL ECONOMICS: 10% fee comes OUT OF requested amount.
+-- User withdraws 500 -> fee = 50 -> net payout = 450 -> wallet debit = 500.
+-- Server enforces 48-hour account clearance and $100 first-withdrawal limit.
 CREATE OR REPLACE FUNCTION public.create_withdrawal(
   p_amount NUMERIC,
   p_currency TEXT,
@@ -154,9 +159,7 @@ CREATE OR REPLACE FUNCTION public.create_withdrawal(
   p_upi_id TEXT DEFAULT NULL,
   p_provider TEXT DEFAULT NULL,
   p_phone TEXT DEFAULT NULL,
-  p_reason TEXT DEFAULT NULL,
-  p_destination_currency TEXT DEFAULT NULL,
-  p_route TEXT DEFAULT 'upi'
+  p_reason TEXT DEFAULT NULL
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -174,6 +177,7 @@ DECLARE
   net_source numeric;
   net_payout numeric;
   dest_currency text;
+  v_route text;
   tx_id uuid;
   wd_id uuid;
   ref text;
@@ -198,10 +202,18 @@ BEGIN
   IF upper(p_currency) = 'USD' THEN source_rate := 1; END IF;
   IF source_rate IS NULL OR source_rate <= 0 THEN RAISE EXCEPTION 'Unsupported source currency'; END IF;
 
-  dest_currency := COALESCE(NULLIF(upper(trim(p_destination_currency)), ''), upper(p_currency));
-  SELECT rate INTO dest_rate FROM public.exchange_rates WHERE quote = dest_currency;
-  IF dest_currency = 'USD' THEN dest_rate := 1; END IF;
-  IF dest_rate IS NULL OR dest_rate <= 0 THEN dest_rate := source_rate; END IF;
+  dest_currency := upper(p_currency);
+  dest_rate := source_rate;
+
+  -- Derive route from method / provider
+  v_route := CASE
+    WHEN lower(p_method) LIKE '%bank%' THEN 'bank'
+    WHEN lower(p_method) LIKE '%upi%' OR p_upi_id IS NOT NULL THEN 'upi'
+    WHEN lower(p_method) LIKE '%sepa%' THEN 'sepa'
+    WHEN lower(p_method) LIKE '%fast%' THEN 'fps'
+    WHEN lower(p_method) LIKE '%voucher%' OR lower(p_method) LIKE '%gift%' THEN 'gift-card'
+    ELSE 'external'
+  END;
 
   -- Convert requested source amount to USD for balance and limit verification
   amt_usd := round(p_amount / source_rate, 6);
@@ -250,7 +262,7 @@ BEGIN
   )
   VALUES (
     'withdrawal',
-    COALESCE(p_route, 'upi'),
+    v_route,
     'processing',
     w.id,
     wp.full_name,
@@ -261,7 +273,7 @@ BEGIN
     amt_usd,
     fee,
     fee_usd,
-    round(dest_rate / source_rate, 8),
+    source_rate,
     net_payout,
     dest_currency,
     left(p_method, 60),
@@ -311,7 +323,7 @@ BEGIN
     net_payout,
     dest_currency,
     left(p_method, 60),
-    COALESCE(p_route, 'upi'),
+    v_route,
     left(p_provider, 120),
     left(p_upi_id, 120),
     COALESCE(left(p_full_name, 120), ''),
@@ -324,10 +336,10 @@ BEGIN
   RETURNING id INTO wd_id;
 
   INSERT INTO public.audit_logs (user_id, event, details)
-  VALUES (auth.uid(), 'withdrawal_created', jsonb_build_object('withdrawal_id', wd_id, 'route', p_route, 'amount', p_amount, 'net_payout', net_payout));
+  VALUES (auth.uid(), 'withdrawal_created', jsonb_build_object('withdrawal_id', wd_id, 'route', v_route, 'amount', p_amount, 'net_payout', net_payout));
 
   RETURN wd_id;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.create_withdrawal(numeric, text, text, text, text, text, text, text, text, text, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.create_withdrawal(numeric, text, text, text, text, text, text, text, text, text, text) TO authenticated;
+REVOKE ALL ON FUNCTION public.create_withdrawal(numeric, text, text, text, text, text, text, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_withdrawal(numeric, text, text, text, text, text, text, text, text) TO authenticated;

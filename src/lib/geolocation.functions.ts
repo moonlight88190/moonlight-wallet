@@ -5,17 +5,31 @@ import { IpApiIsProvider, resolveAccountGeography, type NormalizedGeography } fr
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+interface ProfileGeographyRow {
+  country_code?: string | null;
+  city?: string | null;
+  timezone?: string | null;
+  region?: string | null;
+  geography_updated_at?: string | null;
+}
+
 export const syncAccountGeography = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<NormalizedGeography> => {
     const { supabase, userId } = context;
 
-    // 1. Fetch current profile geography
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("country_code, city, timezone, region, geography_updated_at")
-      .eq("id", userId)
-      .single();
+    // 1. Fetch current profile geography safely
+    let profile: ProfileGeographyRow | null = null;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("country_code, city, timezone, region, geography_updated_at")
+        .eq("id", userId)
+        .maybeSingle();
+      profile = data as ProfileGeographyRow | null;
+    } catch {
+      // Columns might not yet exist in un-migrated environments
+    }
 
     const lastUpdated = profile?.geography_updated_at
       ? new Date(profile.geography_updated_at).getTime()

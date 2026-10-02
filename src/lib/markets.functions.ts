@@ -388,7 +388,7 @@ export class YahooFinanceQuoteProvider implements MarketQuoteProvider {
 /**
  * Builds data-driven indices by combining official index configuration with live/cached quotes.
  */
-function buildIndicesWithData(instruments: MarketInstrument[]): IndexWithData[] {
+export function buildIndicesWithData(instruments: MarketInstrument[]): IndexWithData[] {
   const instMap = new Map(instruments.map((item) => [item.symbol, item]));
 
   return MAJOR_INDICES.map((idxDef: IndexDef): IndexWithData => {
@@ -429,6 +429,11 @@ function buildIndicesWithData(instruments: MarketInstrument[]): IndexWithData[] 
     };
   });
 }
+
+export const BASELINE_MARKETS_WITH_INDICES: MarketSnapshot = {
+  ...BASELINE_MARKETS,
+  indices: buildIndicesWithData(BASELINE_MARKETS.instruments),
+};
 
 // In-memory cache for fast sub-millisecond retrieval
 let memoryCache: MarketSnapshot = {

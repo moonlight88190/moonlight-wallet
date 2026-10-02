@@ -290,5 +290,23 @@
     "file_title": "TotalEnergies Corporate Mark",
     "url": "https://totalenergies.com/media/brand-identity",
     "downloaded_at": "2026-10-03"
+  },
+  "public/assets/visuals/titanium-card-mesh.jpg": {
+    "source": "Moonlight Design Studio — Bespoke Titanium Mesh Surface Asset",
+    "file_title": "Titanium Card Mesh Texture",
+    "url": "internal://moonlight/design-system/titanium-card-mesh",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/visuals/empty-vault.jpg": {
+    "source": "Moonlight Design Studio — Minimalist Wireframe Vault Asset",
+    "file_title": "Empty State Vault Artwork",
+    "url": "internal://moonlight/design-system/empty-vault",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/visuals/market-mesh.jpg": {
+    "source": "Moonlight Design Studio — Financial Matrix Surface Asset",
+    "file_title": "Market Terminal Mesh",
+    "url": "internal://moonlight/design-system/market-mesh",
+    "downloaded_at": "2026-10-03"
   }
 }
