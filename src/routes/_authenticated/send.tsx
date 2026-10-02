@@ -205,13 +205,9 @@ function Send() {
     }
 
     setTxId(res.data as string);
-
-    // Keep animation running for 6.0 seconds so user experiences full clearance sequence
-    setTimeout(() => {
-      setAnimState("completed");
-      qc.invalidateQueries({ queryKey: ["wallet"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-    }, 6000);
+    setAnimState("completed");
+    qc.invalidateQueries({ queryKey: ["wallet"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
   }
 
   const btn =
@@ -476,6 +472,8 @@ function Send() {
             sourceCurrency={cur}
             destinationAmount={recv}
             destinationCurrency={recvCur}
+            paymentMethodId={cur === "INR" || recvCur === "INR" ? "upi" : "moonlight"}
+            paymentMethodName={cur === "INR" || recvCur === "INR" ? "UPI Direct" : "Moonlight Wallet"}
             exchangeRate={rateRatio}
             fee={fee}
             errorMessage={errorMessage}

@@ -238,7 +238,18 @@ export function BrandAsset({
         alt={displayName}
         className={cn("object-contain object-center transition-transform", imgMaxDimensions, imgClassName)}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (resolvedUrl.endsWith(".svg") && !target.dataset.triedFallback) {
+            target.dataset.triedFallback = "true";
+            target.src = resolvedUrl.replace(".svg", ".png");
+          } else if (resolvedUrl.endsWith(".png") && !target.dataset.triedFallback) {
+            target.dataset.triedFallback = "true";
+            target.src = resolvedUrl.replace(".png", ".svg");
+          } else {
+            setFailed(true);
+          }
+        }}
       />
     </div>
   );
@@ -321,14 +332,19 @@ export function UPIProviderLogo({
 export function GiftCardImage({
   imageUrl,
   alt,
+  id,
   className,
   aspectRatio = "3/2",
 }: {
-  imageUrl: string;
-  alt: string;
+  imageUrl?: string;
+  alt?: string;
+  id?: string;
   className?: string;
   aspectRatio?: string;
 }) {
+  const meta = id ? GIFT_CARDS.find((g) => g.id === id) : undefined;
+  const resolvedUrl = imageUrl || meta?.imageUrl || "";
+  const resolvedAlt = alt || meta?.brand || "Gift Card";
   const [failed, setFailed] = React.useState(false);
 
   return (
@@ -336,10 +352,10 @@ export function GiftCardImage({
       className={cn("relative w-full overflow-hidden rounded-xl bg-card border border-border/40", className)}
       style={{ aspectRatio }}
     >
-      {!failed ? (
+      {!failed && resolvedUrl ? (
         <img
-          src={imageUrl}
-          alt={alt}
+          src={resolvedUrl}
+          alt={resolvedAlt}
           className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
           onError={() => setFailed(true)}
@@ -347,7 +363,7 @@ export function GiftCardImage({
       ) : (
         <div className="flex h-full flex-col items-center justify-center text-muted-foreground p-3 text-center">
           <Gift className="h-6 w-6 text-primary mb-1" />
-          <span className="text-xs font-semibold">{alt}</span>
+          <span className="text-xs font-semibold">{resolvedAlt}</span>
         </div>
       )}
     </div>
