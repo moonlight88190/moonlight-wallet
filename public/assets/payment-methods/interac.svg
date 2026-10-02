@@ -1,8 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
-  <rect width="200" height="60" rx="12" fill="#121212"/>
-  <path d="M38 12L58 30L38 48L18 30L38 12Z" fill="#FFC72C"/>
-  <path d="M38 18L52 30L38 42L24 30L38 18Z" fill="#121212"/>
-  <path d="M38 23L46 30L38 37L30 30L38 23Z" fill="#FFC72C"/>
-  <text x="68" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" letter-spacing="0.5">Interac</text>
-  <text x="68" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="700" fill="#FFC72C" letter-spacing="1">e-Transfer</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- Interac - Canada official red/gold -->
+  <rect width="200" height="80" rx="10" fill="#F0F4FF"/>
+  <!-- Interac logo: stylized "i" in circle + wordmark -->
+  <circle cx="32" cy="40" r="22" fill="#F5A623" stroke="none"/>
+  <circle cx="32" cy="33" r="3.5" fill="#FFFFFF"/>
+  <rect x="29" y="39" width="6" height="15" rx="3" fill="#FFFFFF"/>
+  <!-- Wordmark -->
+  <text x="64" y="37" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="18" fill="#1A1A2E">Interac</text>
+  <text x="64" y="54" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="500" font-size="11" fill="#444">e-Transfer</text>
+  <text x="64" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="400" font-size="10" fill="#888">CAD · Canada Instant</text>
 </svg>

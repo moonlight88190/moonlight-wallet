@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 50" fill="none">
+  <rect width="120" height="50" rx="8" fill="#FFFFFF"/>
+  <!-- Google G logo -->
+  <path d="M19 25c0-3.3 2.7-6 6-6 1.4 0 2.7.5 3.7 1.3L31 18c-1.6-1.5-3.8-2.4-6-2.4-5 0-9 4-9 9s4 9 9 9c4.8 0 8-3.2 8-7.7 0-.5 0-1-.1-1.4H25v2.6h5.4c-.3 1.6-1.6 2.9-5.4 2.9C21.7 30 19 27.3 19 25z" fill="#4285F4"/>
+  <path d="M19 25c0-3.3 2.7-6 6-6 1.4 0 2.7.5 3.7 1.3l2.3-2.3c-1.6-1.5-3.8-2.4-6-2.4-5 0-9 4-9 9" fill="#34A853" transform="rotate(0)"/>
+  <!-- Simplified: use text-based GPay wordmark -->
+  <text x="14" y="31" font-family="Google Sans, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="400" font-size="22" fill="#5F6368">G</text>
+  <text x="32" y="31" font-family="Google Sans, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="500" font-size="18" fill="#3C4043">Pay</text>
+  <!-- G with proper colors -->
+  <path d="M14 30.5 A9 9 0 1 1 18.5 21 L16.5 23 A6.5 6.5 0 1 0 20.5 28.5 H14 Z" fill="#4285F4"/>
+  <path d="M14 30.5 H20.5 V28.5 H14 Z" fill="#34A853"/>
+  <path d="M14 30.5 A9 9 0 0 1 8 22.5 L10.5 23.5 A6.5 6.5 0 0 0 14 30.5 Z" fill="#FBBC04"/>
+  <path d="M8 22.5 A9 9 0 0 1 14 14 L14 16.5 A6.5 6.5 0 0 0 10.5 21 Z" fill="#EA4335"/>
+</svg>

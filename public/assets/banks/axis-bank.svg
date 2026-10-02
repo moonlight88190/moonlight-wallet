@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" fill="none">
+  <!-- Axis Bank - burgundy/maroon brand -->
+  <rect width="240" height="80" rx="10" fill="#800000"/>
+  <!-- Axis logo: stylized A with rising bar -->
+  <g transform="translate(18, 12)">
+    <polygon points="24,50 4,50 14,10 34,10 44,50 24,50" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+    <line x1="8" y1="36" x2="40" y2="36" stroke="#FFFFFF" stroke-width="2.5"/>
+    <!-- Rising bar accent -->
+    <rect x="20" y="0" width="8" height="12" rx="2" fill="#F5A623"/>
+    <polygon points="16,4 24,0 32,4" fill="#F5A623"/>
+  </g>
+  <!-- Axis wordmark -->
+  <text x="72" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="22" fill="#FFFFFF" letter-spacing="2">Axis</text>
+  <text x="72" y="54" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="600" font-size="14" fill="rgba(255,255,255,0.9)">Bank</text>
+  <text x="72" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="400" font-size="10" fill="rgba(255,255,255,0.65)">Badhte Ka Naam Zindagi</text>
+</svg>

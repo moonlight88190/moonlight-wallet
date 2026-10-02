@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" fill="none">
+  <!-- YES BANK - royal blue and yellow -->
+  <rect width="240" height="80" rx="10" fill="#1B3FAB"/>
+  <!-- YES logo: Y shape -->
+  <g transform="translate(18, 14)">
+    <path d="M4 0 L20 24 L36 0" fill="none" stroke="#F5C518" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="20" y1="24" x2="20" y2="52" stroke="#F5C518" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- YES BANK wordmark -->
+  <text x="72" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="22" fill="#F5C518" letter-spacing="1">YES</text>
+  <text x="72" y="56" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="600" font-size="14" fill="#FFFFFF">BANK</text>
+  <text x="72" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="400" font-size="9" fill="rgba(255,255,255,0.65)">Experience our Expertise</text>
+</svg>

@@ -18,6 +18,10 @@ export interface BankMeta {
   id: string;
   name: string;
   logoUrl: string;
+  /** preferred object-fit mode for the logo container */
+  renderMode?: "contain" | "cover";
+  /** w:h ratio hint for the logo source */
+  sourceRatio?: "wide" | "square" | "tall";
 }
 
 export interface PaymentMethodMeta {
@@ -45,6 +49,10 @@ export interface GiftCardMeta {
   logoUrl?: string;
   description: string;
   popular?: boolean;
+  /** object-fit mode for the card image */
+  imageFit?: "cover" | "contain";
+  /** optional background color behind the card image */
+  imageBg?: string;
 }
 
 export interface InvestmentMeta {
@@ -54,6 +62,7 @@ export interface InvestmentMeta {
   subtitle: string;
   imageUrl: string;
   badge?: string;
+  imageFit?: "cover" | "contain";
 }
 
 export interface LuxuryBrandMeta {
@@ -62,6 +71,8 @@ export interface LuxuryBrandMeta {
   category: string;
   logoUrl: string;
   photoUrl?: string;
+  /** If true, logo has a colored/non-white background and should NOT be inverted in dark mode */
+  isColored?: boolean;
 }
 
 export const COUNTRIES: Record<string, CountryMeta> = {
@@ -299,7 +310,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "sepa",
     name: "SEPA Instant Transfer",
     description: "Eurozone instant bank payout (EUR)",
-    iconUrl: "/assets/payment-methods/sepa.png",
+    iconUrl: "/assets/payment-methods/sepa.svg",
     region: "Europe",
     speed: "Instant",
     badge: "Europe Primary",
@@ -326,7 +337,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "upi",
     name: "UPI Direct",
     description: "Instant payout via Virtual Payment Address (VPA / UPI ID)",
-    iconUrl: "/assets/payment-methods/upi.png",
+    iconUrl: "/assets/payment-methods/upi.svg",
     region: "India",
     speed: "Instant",
     badge: "UPI",
@@ -424,7 +435,7 @@ export const UPI_PROVIDERS: UPIProviderMeta[] = [
   {
     id: "google-pay",
     name: "Google Pay",
-    iconUrl: "/assets/payment-methods/google-pay.png",
+    iconUrl: "/assets/payment-methods/google-pay.svg",
     handles: ["@okaxis", "@okhdfcbank", "@okicici", "@oksbi", "@gpay"],
   },
   {
@@ -458,53 +469,60 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "amazon",
     brand: "Amazon",
     category: "Shopping",
+    // Source: Generated professional card render (amazon brand colors, teal/navy)
     imageUrl: "/assets/gift-cards/amazon.jpg",
-    logoUrl: "/assets/gift-cards/amazon.svg",
     description: "Digital voucher redeemable for millions of products worldwide",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "apple",
     brand: "Apple",
     category: "Entertainment",
+    // Source: Generated professional card render matching Apple's 2024 card design
     imageUrl: "/assets/gift-cards/apple.jpg",
-    logoUrl: "/assets/gift-cards/apple.svg",
     description: "Valid for App Store, Apple Music, iCloud & Apple Store products",
     popular: true,
+    imageFit: "cover",
+    imageBg: "#f5f5f7",
   },
   {
     id: "google-play",
     brand: "Google Play",
     category: "Entertainment",
+    // Source: Generated professional card render with Google Play brand colors
     imageUrl: "/assets/gift-cards/google-play.jpg",
-    logoUrl: "/assets/gift-cards/google-play.svg",
     description: "Apps, games, movies and digital content on Android",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "steam",
     brand: "Steam",
     category: "Gaming",
+    // Source: Original clean product render (kept, quality acceptable)
     imageUrl: "/assets/gift-cards/steam.jpg",
-    logoUrl: "/assets/gift-cards/steam.svg",
     description: "Steam Wallet credits for thousands of PC games and DLCs",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "playstation",
     brand: "PlayStation Store",
     category: "Gaming",
+    // Source: Original clean product render (kept, quality acceptable)
     imageUrl: "/assets/gift-cards/playstation.jpg",
-    logoUrl: "/assets/gift-cards/playstation.svg",
     description: "PSN funds for PlayStation consoles, subscriptions & games",
+    imageFit: "cover",
   },
   {
     id: "xbox",
     brand: "Xbox",
     category: "Gaming",
+    // Source: Generated professional card render with Xbox green branding
     imageUrl: "/assets/gift-cards/xbox.jpg",
-    logoUrl: "/assets/gift-cards/xbox.svg",
     description: "Xbox Game Pass, games and add-ons on console and PC",
+    imageFit: "cover",
   },
 ];
 
@@ -557,6 +575,7 @@ export const LUXURY_BRANDS: LuxuryBrandMeta[] = [
     category: "L'Art de Vivre",
     logoUrl: "/assets/luxury/brands/hermes.png",
     photoUrl: "/assets/luxury/photos/boutiques.jpg",
+    isColored: true, // Has distinctive orange background
   },
   {
     id: "tiffany",
@@ -648,27 +667,42 @@ export const INDIAN_BANKS: BankMeta[] = [
   {
     id: "sbi",
     name: "State Bank of India",
-    logoUrl: "/assets/banks/sbi.png",
+    // Source: Custom SVG based on official SBI brand colors (blue #22409A + keyhole logo)
+    logoUrl: "/assets/banks/sbi.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
   {
     id: "hdfc",
     name: "HDFC Bank",
-    logoUrl: "/assets/banks/hdfc-bank.png",
+    // Source: Downloaded from Wikimedia Commons (CC), official HDFC Bank vector
+    logoUrl: "/assets/banks/hdfc-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
   {
     id: "icici",
     name: "ICICI Bank",
-    logoUrl: "/assets/banks/icici-bank.png",
+    // Source: Custom SVG based on official ICICI orange/red brand colors
+    logoUrl: "/assets/banks/icici-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
   {
     id: "axis",
     name: "Axis Bank",
-    logoUrl: "/assets/banks/axis-bank.png",
+    // Source: Custom SVG based on official Axis Bank maroon brand colors
+    logoUrl: "/assets/banks/axis-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
   {
     id: "yes-bank",
     name: "YES BANK",
-    logoUrl: "/assets/banks/yes-bank.jpg",
+    // Source: Custom SVG based on official YES BANK blue and gold brand colors
+    logoUrl: "/assets/banks/yes-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
 ];
 
@@ -678,16 +712,20 @@ export const INVESTMENTS: InvestmentMeta[] = [
     title: "European & Global Markets",
     category: "Wealth Management",
     subtitle: "Track diversified indices, FX rates and market portfolios",
-    imageUrl: "/assets/investments/global-markets.svg",
+    // Source: Generated professional fintech card image (stock market data visualization)
+    imageUrl: "/assets/investments/global-markets.jpg",
     badge: "Yield & FX",
+    imageFit: "cover",
   },
   {
     id: "wealth-management",
     title: "Private Treasury & Allocation",
     category: "Financial Services",
     subtitle: "Automated multi-currency rebalancing with low friction",
-    imageUrl: "/assets/investments/wealth-management.svg",
+    // Source: Generated professional private banking card image
+    imageUrl: "/assets/investments/wealth-management.jpg",
     badge: "Private Standard",
+    imageFit: "cover",
   },
 ];
 

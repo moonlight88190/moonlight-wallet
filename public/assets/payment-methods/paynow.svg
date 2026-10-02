@@ -1,7 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
-  <rect width="200" height="60" rx="12" fill="#7C1C5C"/>
-  <path d="M22 18H38C43.5 18 47 21 47 25.5C47 30 43.5 33 38 33H29V42H22V18ZM29 27.5H37C39.5 27.5 40.8 26.5 40.8 25.5C40.8 24.5 39.5 23.5 37 23.5H29V27.5Z" fill="#FFFFFF"/>
-  <path d="M50 28C50 22.5 54 18 60 18C66 18 70 22.5 70 28V42H63V38.5C61.8 41 58.5 42.5 55 42.5C50 42.5 47 39 47 34.5C47 30 50.5 27 57 27H63V26.5C63 24 61.5 23 58.5 23C56 23 54.5 24 54 25.5H47.5C48 21.5 52.5 18 59 18ZM63 32H57C54.5 32 53 33 53 34.5C53 36 54.5 37 57 37C60.5 37 63 35 63 32.5V32Z" fill="#FFFFFF"/>
-  <text x="74" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="900" fill="#E6007E" letter-spacing="0.5">NOW</text>
-  <text x="125" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#FFFFFF" letter-spacing="1">SINGAPORE</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- PayNow Singapore - red/white -->
+  <rect width="200" height="80" rx="10" fill="#EF3340"/>
+  <!-- Singapore crescent and stars -->
+  <path d="M24 40 A14 14 0 1 1 24 40.01 Z" fill="none"/>
+  <circle cx="30" cy="40" r="14" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+  <circle cx="36" cy="40" r="10" fill="#EF3340"/>
+  <!-- Stars -->
+  <polygon points="24,28 25,31 28,31 26,33 27,36 24,34 21,36 22,33 20,31 23,31" fill="#FFFFFF"/>
+  <!-- PayNow text -->
+  <text x="52" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="18" fill="#FFFFFF">PayNow</text>
+  <text x="52" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="500" font-size="12" fill="rgba(255,255,255,0.85)">Singapore · Instant</text>
+  <text x="52" y="67" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="400" font-size="10" fill="rgba(255,255,255,0.7)">SGD · NRIC/FIN/Mobile</text>
 </svg>

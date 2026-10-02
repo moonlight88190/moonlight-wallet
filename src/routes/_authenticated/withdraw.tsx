@@ -706,11 +706,15 @@ export function Withdraw() {
                 }}
                 className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-3 text-center shadow-2xs transition-all hover:border-amber-500/40 cursor-pointer active:scale-[0.98]"
               >
-                <div className="relative flex h-10 w-full items-center justify-center p-1">
+                <div
+                  className={`relative flex h-10 w-full items-center justify-center rounded-lg p-1 ${brand.isColored ? "bg-transparent" : "bg-transparent"}`}
+                >
                   <img
                     src={brand.logoUrl}
                     alt={brand.name}
-                    className="max-h-full max-w-full object-contain filter dark:invert group-hover:scale-105 transition-transform"
+                    className={`max-h-full max-w-full object-contain transition-transform group-hover:scale-105 ${
+                      brand.isColored ? "" : "dark:invert"
+                    }`}
                   />
                 </div>
                 <div className="mt-1.5 w-full border-t border-border/40 pt-1.5">
