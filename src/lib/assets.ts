@@ -14,10 +14,27 @@ export interface CurrencyMeta {
   flagUrl: string;
 }
 
+export type AssetCategory = "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | "flag" | "investment";
+
+export interface BrandAssetMeta {
+  id: string;
+  name: string;
+  category: AssetCategory;
+  logoUrl: string;
+  sourceRatio?: "square" | "wide" | "ultra-wide" | "card";
+  renderMode?: "contain" | "cover";
+  opticalScale?: number;
+  badge?: string;
+}
+
 export interface BankMeta {
   id: string;
   name: string;
   logoUrl: string;
+  /** preferred object-fit mode for the logo container */
+  renderMode?: "contain" | "cover";
+  /** w:h ratio hint for optical logo sizing */
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface PaymentMethodMeta {
@@ -28,6 +45,7 @@ export interface PaymentMethodMeta {
   region: "Europe" | "India" | "Philippines" | "International";
   speed: string;
   badge?: string;
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface UPIProviderMeta {
@@ -35,6 +53,7 @@ export interface UPIProviderMeta {
   name: string;
   iconUrl: string;
   handles: string[];
+  sourceRatio?: "wide" | "square" | "ultra-wide";
 }
 
 export interface GiftCardMeta {
@@ -45,6 +64,10 @@ export interface GiftCardMeta {
   logoUrl?: string;
   description: string;
   popular?: boolean;
+  /** object-fit mode for the card image */
+  imageFit?: "cover" | "contain";
+  /** optional background color behind the card image */
+  imageBg?: string;
 }
 
 export interface InvestmentMeta {
@@ -54,6 +77,7 @@ export interface InvestmentMeta {
   subtitle: string;
   imageUrl: string;
   badge?: string;
+  imageFit?: "cover" | "contain";
 }
 
 export interface LuxuryBrandMeta {
@@ -62,6 +86,8 @@ export interface LuxuryBrandMeta {
   category: string;
   logoUrl: string;
   photoUrl?: string;
+  /** If true, logo has a colored/non-white background and should NOT be inverted in dark mode */
+  isColored?: boolean;
 }
 
 export const COUNTRIES: Record<string, CountryMeta> = {
@@ -299,10 +325,11 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     id: "sepa",
     name: "SEPA Instant Transfer",
     description: "Eurozone instant bank payout (EUR)",
-    iconUrl: "/assets/payment-methods/sepa.png",
+    iconUrl: "/assets/payment-methods/sepa.svg",
     region: "Europe",
     speed: "Instant",
     badge: "Europe Primary",
+    sourceRatio: "wide",
   },
   {
     id: "cz-bank",
@@ -312,6 +339,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "Europe",
     speed: "Instant / Same-day",
     badge: "Czech Republic",
+    sourceRatio: "wide",
   },
   {
     id: "faster-payments",
@@ -321,15 +349,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "Europe",
     speed: "Instant",
     badge: "Faster Payments",
+    sourceRatio: "wide",
   },
   {
     id: "upi",
     name: "UPI Direct",
     description: "Instant payout via Virtual Payment Address (VPA / UPI ID)",
-    iconUrl: "/assets/payment-methods/upi.png",
+    iconUrl: "/assets/payment-methods/upi.svg",
     region: "India",
     speed: "Instant",
     badge: "UPI",
+    sourceRatio: "wide",
   },
   {
     id: "upi-qr",
@@ -338,6 +368,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/upi-qr.svg",
     region: "India",
     speed: "Instant",
+    sourceRatio: "square",
   },
   {
     id: "in-bank",
@@ -346,15 +377,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/in-bank.svg",
     region: "India",
     speed: "Instant (IMPS)",
+    sourceRatio: "wide",
   },
   {
     id: "gcash",
     name: "GCash Wallet",
     description: "Instant payout to GCash Mobile Wallet",
-    iconUrl: "/assets/payment-methods/gcash.png",
+    iconUrl: "/assets/payment-methods/gcash.svg",
     region: "Philippines",
     speed: "Instant",
     badge: "Official",
+    sourceRatio: "wide",
   },
   {
     id: "ph-bank",
@@ -363,15 +396,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     iconUrl: "/assets/payment-methods/ph-bank.svg",
     region: "Philippines",
     speed: "Instant (InstaPay)",
+    sourceRatio: "wide",
   },
   {
     id: "paynow",
     name: "Singapore PayNow",
     description: "Instant payout via NRIC/FIN or Mobile (SGD)",
-    iconUrl: "/assets/payment-methods/paynow.svg",
+    iconUrl: "/assets/payment-methods/paynow.png",
     region: "International",
     speed: "Instant",
     badge: "Singapore Official",
+    sourceRatio: "wide",
   },
   {
     id: "pix",
@@ -381,6 +416,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant",
     badge: "PIX",
+    sourceRatio: "wide",
   },
   {
     id: "interac",
@@ -390,6 +426,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant",
     badge: "Interac Official",
+    sourceRatio: "wide",
   },
   {
     id: "jp-bank",
@@ -399,15 +436,17 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "Instant / Same-day",
     badge: "Zengin Rail",
+    sourceRatio: "wide",
   },
   {
     id: "aani",
     name: "UAE Aani Instant Payout",
     description: "Instant UAE payment via Al Etihad Payments (AED)",
-    iconUrl: "/assets/payment-methods/aani.svg",
+    iconUrl: "/assets/payment-methods/aani.png",
     region: "International",
     speed: "Instant",
     badge: "UAE Official",
+    sourceRatio: "wide",
   },
   {
     id: "int-bank",
@@ -417,6 +456,7 @@ export const PAYMENT_METHODS: PaymentMethodMeta[] = [
     region: "International",
     speed: "1-2 business days",
     badge: "Global Payout",
+    sourceRatio: "wide",
   },
 ];
 
@@ -424,32 +464,37 @@ export const UPI_PROVIDERS: UPIProviderMeta[] = [
   {
     id: "google-pay",
     name: "Google Pay",
-    iconUrl: "/assets/payment-methods/google-pay.png",
+    iconUrl: "/assets/payment-methods/google-pay.svg",
     handles: ["@okaxis", "@okhdfcbank", "@okicici", "@oksbi", "@gpay"],
+    sourceRatio: "wide",
   },
   {
     id: "phonepe",
     name: "PhonePe",
-    iconUrl: "/assets/payment-methods/phonepe.png",
+    iconUrl: "/assets/payment-methods/phonepe.svg",
     handles: ["@ybl", "@ibl", "@axl"],
+    sourceRatio: "wide",
   },
   {
     id: "paytm",
     name: "Paytm",
-    iconUrl: "/assets/payment-methods/paytm.png",
+    iconUrl: "/assets/payment-methods/paytm.svg",
     handles: ["@paytm", "@paytmqr"],
+    sourceRatio: "wide",
   },
   {
     id: "bhim",
     name: "BHIM UPI",
-    iconUrl: "/assets/payment-methods/bhim.png",
+    iconUrl: "/assets/payment-methods/bhim.svg",
     handles: ["@upi", "@bhim"],
+    sourceRatio: "wide",
   },
   {
     id: "amazon-pay",
     name: "Amazon Pay",
-    iconUrl: "/assets/payment-methods/amazon-pay.png",
+    iconUrl: "/assets/payment-methods/amazon-pay.svg",
     handles: ["@apl", "@amazon"],
+    sourceRatio: "ultra-wide",
   },
 ];
 
@@ -458,53 +503,60 @@ export const GIFT_CARDS: GiftCardMeta[] = [
     id: "amazon",
     brand: "Amazon",
     category: "Shopping",
+    // Source: Generated professional card render (amazon brand colors, teal/navy)
     imageUrl: "/assets/gift-cards/amazon.jpg",
-    logoUrl: "/assets/gift-cards/amazon.svg",
     description: "Digital voucher redeemable for millions of products worldwide",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "apple",
     brand: "Apple",
     category: "Entertainment",
+    // Source: Generated professional card render matching Apple's 2024 card design
     imageUrl: "/assets/gift-cards/apple.jpg",
-    logoUrl: "/assets/gift-cards/apple.svg",
     description: "Valid for App Store, Apple Music, iCloud & Apple Store products",
     popular: true,
+    imageFit: "cover",
+    imageBg: "#f5f5f7",
   },
   {
     id: "google-play",
     brand: "Google Play",
     category: "Entertainment",
+    // Source: Generated professional card render with Google Play brand colors
     imageUrl: "/assets/gift-cards/google-play.jpg",
-    logoUrl: "/assets/gift-cards/google-play.svg",
     description: "Apps, games, movies and digital content on Android",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "steam",
     brand: "Steam",
     category: "Gaming",
+    // Source: Original clean product render (kept, quality acceptable)
     imageUrl: "/assets/gift-cards/steam.jpg",
-    logoUrl: "/assets/gift-cards/steam.svg",
     description: "Steam Wallet credits for thousands of PC games and DLCs",
     popular: true,
+    imageFit: "cover",
   },
   {
     id: "playstation",
     brand: "PlayStation Store",
     category: "Gaming",
+    // Source: Original clean product render (kept, quality acceptable)
     imageUrl: "/assets/gift-cards/playstation.jpg",
-    logoUrl: "/assets/gift-cards/playstation.svg",
     description: "PSN funds for PlayStation consoles, subscriptions & games",
+    imageFit: "cover",
   },
   {
     id: "xbox",
     brand: "Xbox",
     category: "Gaming",
+    // Source: Generated professional card render with Xbox green branding
     imageUrl: "/assets/gift-cards/xbox.jpg",
-    logoUrl: "/assets/gift-cards/xbox.svg",
     description: "Xbox Game Pass, games and add-ons on console and PC",
+    imageFit: "cover",
   },
 ];
 
@@ -557,6 +609,7 @@ export const LUXURY_BRANDS: LuxuryBrandMeta[] = [
     category: "L'Art de Vivre",
     logoUrl: "/assets/luxury/brands/hermes.png",
     photoUrl: "/assets/luxury/photos/boutiques.jpg",
+    isColored: true, // Has distinctive orange background
   },
   {
     id: "tiffany",
@@ -648,27 +701,42 @@ export const INDIAN_BANKS: BankMeta[] = [
   {
     id: "sbi",
     name: "State Bank of India",
+    // Source: Official State Bank of India brand emblem (transparent high-res)
     logoUrl: "/assets/banks/sbi.png",
+    renderMode: "contain",
+    sourceRatio: "square",
   },
   {
     id: "hdfc",
     name: "HDFC Bank",
-    logoUrl: "/assets/banks/hdfc-bank.png",
+    // Source: Official HDFC Bank vector (Wikimedia Commons)
+    logoUrl: "/assets/banks/hdfc-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "icici",
     name: "ICICI Bank",
-    logoUrl: "/assets/banks/icici-bank.png",
+    // Source: Official ICICI Bank vector (Wikimedia Commons)
+    logoUrl: "/assets/banks/icici-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "axis",
     name: "Axis Bank",
-    logoUrl: "/assets/banks/axis-bank.png",
+    // Source: Official Axis Bank vector (Wikimedia Commons)
+    logoUrl: "/assets/banks/axis-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "ultra-wide",
   },
   {
     id: "yes-bank",
     name: "YES BANK",
-    logoUrl: "/assets/banks/yes-bank.jpg",
+    // Source: Official YES Bank vector (Wikimedia Commons)
+    logoUrl: "/assets/banks/yes-bank.svg",
+    renderMode: "contain",
+    sourceRatio: "wide",
   },
 ];
 
@@ -678,16 +746,20 @@ export const INVESTMENTS: InvestmentMeta[] = [
     title: "European & Global Markets",
     category: "Wealth Management",
     subtitle: "Track diversified indices, FX rates and market portfolios",
-    imageUrl: "/assets/investments/global-markets.svg",
+    // Source: Generated professional fintech card image (stock market data visualization)
+    imageUrl: "/assets/investments/global-markets.jpg",
     badge: "Yield & FX",
+    imageFit: "cover",
   },
   {
     id: "wealth-management",
     title: "Private Treasury & Allocation",
     category: "Financial Services",
     subtitle: "Automated multi-currency rebalancing with low friction",
-    imageUrl: "/assets/investments/wealth-management.svg",
+    // Source: Generated professional private banking card image
+    imageUrl: "/assets/investments/wealth-management.jpg",
     badge: "Private Standard",
+    imageFit: "cover",
   },
 ];
 

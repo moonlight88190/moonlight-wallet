@@ -1,19 +1,23 @@
 import React from "react";
-import { Landmark, Gift } from "lucide-react";
+import { Landmark, Gift, Building2, CreditCard } from "lucide-react";
 import {
   COUNTRIES,
   CURRENCIES_META,
   GIFT_CARDS,
+  INDIAN_BANKS,
   PAYMENT_METHODS,
   UPI_PROVIDERS,
   type CountryMeta,
   type GiftCardMeta,
   type PaymentMethodMeta,
-  type UPIProviderMeta,
 } from "@/lib/assets";
 import { cn } from "@/lib/utils";
 
-interface CountryFlagProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+// ─────────────────────────────────────────────
+// Country flags
+// ─────────────────────────────────────────────
+
+export interface CountryFlagProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   code: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   circle?: boolean;
@@ -62,6 +66,7 @@ export function CountryFlag({
         src={flagUrl}
         alt={alt || country?.name || `${code} flag`}
         className="h-full w-full object-cover"
+        loading="lazy"
         onError={(e) => {
           (e.currentTarget as HTMLElement).style.display = "none";
         }}
@@ -115,6 +120,134 @@ export function CurrencyIcon({
   );
 }
 
+// ─────────────────────────────────────────────
+// Base BrandAsset — Optically-Sized Presentation
+// ─────────────────────────────────────────────
+
+export interface BrandAssetProps {
+  id: string;
+  name?: string | undefined;
+  category?: "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | undefined;
+  iconUrl?: string | undefined;
+  size?: "xs" | "sm" | "md" | "lg" | undefined;
+  sourceRatio?: "square" | "wide" | "ultra-wide" | "card" | undefined;
+  className?: string | undefined;
+  imgClassName?: string | undefined;
+}
+
+export function BrandAsset({
+  id,
+  name,
+  iconUrl: customUrl,
+  size = "md",
+  sourceRatio,
+  className,
+  imgClassName,
+}: BrandAssetProps) {
+  const cleanId = id
+    .toLowerCase()
+    .replace(/.*[/\\]/, "")
+    .replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
+
+  const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
+  const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
+  const bank = INDIAN_BANKS.find((b) => b.id === cleanId || b.id === id);
+
+  const resolvedUrl =
+    customUrl ||
+    method?.iconUrl ||
+    provider?.iconUrl ||
+    bank?.logoUrl ||
+    `/assets/payment-methods/${cleanId}.svg`;
+
+  const displayName = name || method?.name || provider?.name || bank?.name || cleanId;
+  const ratio =
+    sourceRatio ||
+    method?.sourceRatio ||
+    provider?.sourceRatio ||
+    bank?.sourceRatio ||
+    (cleanId === "sbi" || cleanId.includes("qr") ? "square" : "wide");
+
+  const [failed, setFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    setFailed(false);
+  }, [resolvedUrl]);
+
+  // Optical container sizing
+  let containerDimensions = "";
+  let imgMaxDimensions = "";
+
+  if (ratio === "square") {
+    containerDimensions =
+      size === "xs"
+        ? "h-6 w-6"
+        : size === "sm"
+          ? "h-8 w-8"
+          : size === "lg"
+            ? "h-12 w-12"
+            : "h-10 w-10";
+    imgMaxDimensions = "max-h-full max-w-full";
+  } else if (ratio === "ultra-wide") {
+    containerDimensions =
+      size === "xs"
+        ? "h-5 w-auto min-w-[50px] max-w-[80px]"
+        : size === "sm"
+          ? "h-7 w-auto min-w-[70px] max-w-[110px]"
+          : size === "lg"
+            ? "h-10 w-auto min-w-[110px] max-w-[160px]"
+            : "h-8 w-auto min-w-[90px] max-w-[135px]";
+    imgMaxDimensions = "h-full w-auto object-contain";
+  } else {
+    // Standard wide wordmark or badge
+    containerDimensions =
+      size === "xs"
+        ? "h-5 w-auto min-w-[40px] max-w-[70px]"
+        : size === "sm"
+          ? "h-7 w-auto min-w-[55px] max-w-[95px]"
+          : size === "lg"
+            ? "h-10 w-auto min-w-[85px] max-w-[140px]"
+            : "h-8 w-auto min-w-[70px] max-w-[115px]";
+    imgMaxDimensions = "h-full w-auto object-contain";
+  }
+
+  if (failed) {
+    return (
+      <div
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center rounded-lg bg-secondary/60 text-muted-foreground px-2 text-[10px] font-semibold",
+          containerDimensions,
+          className,
+        )}
+      >
+        <Building2 className="h-4 w-4" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden transition-opacity",
+        containerDimensions,
+        className,
+      )}
+    >
+      <img
+        src={resolvedUrl}
+        alt={displayName}
+        className={cn("object-contain object-center transition-transform", imgMaxDimensions, imgClassName)}
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Payment method icon
+// ─────────────────────────────────────────────
+
 export function PaymentMethodIcon({
   id,
   className,
@@ -122,118 +255,108 @@ export function PaymentMethodIcon({
 }: {
   id: string;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }) {
-  const cleanId = id
-    .toLowerCase()
-    .replace(/.*[/\\]/, "")
-    .replace(/\.(png|jpg|jpeg|svg|webp)$/, "");
-  const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
-  const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
+  return <BrandAsset id={id} category="payment-method" size={size} className={className} />;
+}
 
-  let iconUrl = method?.iconUrl || provider?.iconUrl;
-  if (!iconUrl) {
-    if (id.startsWith("/") || id.startsWith("assets/")) {
-      iconUrl = id.startsWith("/") ? id : `/${id}`;
-    } else if (cleanId === "yes-bank") {
-      iconUrl = "/assets/banks/yes-bank.jpg";
-    } else if (["sbi", "hdfc-bank", "icici-bank", "axis-bank"].includes(cleanId)) {
-      iconUrl = `/assets/banks/${cleanId}.png`;
-    } else {
-      iconUrl = `/assets/payment-methods/${cleanId}.png`;
-    }
-  }
+// ─────────────────────────────────────────────
+// Bank logo component
+// ─────────────────────────────────────────────
 
-  const name = method?.name || provider?.name || `${cleanId} payment method`;
+export function BankLogo({
+  bankId,
+  className,
+  size = "md",
+}: {
+  bankId: string;
+  className?: string;
+  size?: "xs" | "sm" | "md" | "lg";
+}) {
+  const bank = INDIAN_BANKS.find((b) => b.id === bankId);
+  return (
+    <BrandAsset
+      id={bankId}
+      name={bank?.name}
+      iconUrl={bank?.logoUrl}
+      category="bank"
+      sourceRatio={bank?.sourceRatio}
+      size={size}
+      className={className}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// UPI Provider Logo
+// ─────────────────────────────────────────────
+
+export function UPIProviderLogo({
+  providerId,
+  className,
+  size = "md",
+}: {
+  providerId: string;
+  className?: string;
+  size?: "xs" | "sm" | "md" | "lg";
+}) {
+  const provider = UPI_PROVIDERS.find((p) => p.id === providerId);
+  return (
+    <BrandAsset
+      id={providerId}
+      name={provider?.name}
+      iconUrl={provider?.iconUrl}
+      category="upi"
+      sourceRatio={provider?.sourceRatio}
+      size={size}
+      className={className}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// Gift card image component (3:2 Aspect Ratio)
+// ─────────────────────────────────────────────
+
+export function GiftCardImage({
+  imageUrl,
+  alt,
+  className,
+  aspectRatio = "3/2",
+}: {
+  imageUrl: string;
+  alt: string;
+  className?: string;
+  aspectRatio?: string;
+}) {
   const [failed, setFailed] = React.useState(false);
 
-  React.useEffect(() => {
-    setFailed(false);
-  }, [iconUrl]);
-
-  // CATEGORIZATION BY NATIVE ASPECT RATIO
-  const SQUARE_IDS = [
-    "upi",
-    "sepa",
-    "sbi",
-    "gcash",
-    "upi-qr",
-    "cz-bank",
-    "in-bank",
-    "ph-bank",
-    "int-bank",
-    "pix",
-    "whatsapp",
-    "steam",
-    "moonlight-logo",
-    "moonlight-emblem",
-  ];
-  const ULTRA_WIDE_IDS = [
-    "hdfc-bank",
-    "icici-bank",
-    "axis-bank",
-    "airtel-payments-bank",
-    "amazon-pay",
-    "xbox",
-  ];
-
-  const isSquare = SQUARE_IDS.includes(cleanId);
-  const isUltraWide = ULTRA_WIDE_IDS.includes(cleanId);
-
-  let containerDims = "";
-  if (isSquare) {
-    containerDims =
-      size === "sm"
-        ? "h-8 w-8 p-1"
-        : size === "lg"
-          ? "h-12 w-12 sm:h-14 sm:w-14 p-2"
-          : "h-10 w-10 sm:h-11 sm:w-11 p-1.5";
-  } else if (isUltraWide) {
-    containerDims =
-      size === "sm"
-        ? "h-7 px-2 py-0.5 w-auto min-w-[70px] max-w-[100px]"
-        : size === "lg"
-          ? "h-11 sm:h-12 px-3.5 py-1.5 w-auto min-w-[110px] max-w-[150px]"
-          : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[85px] max-w-[130px]";
-  } else {
-    // Standard horizontal wordmark (UPI, GPay, PhonePe, Paytm, BHIM, Yes Bank, etc.)
-    containerDims =
-      size === "sm"
-        ? "h-8 px-2 py-0.5 w-auto min-w-[60px] max-w-[90px]"
-        : size === "lg"
-          ? "h-11 sm:h-12 px-3 py-1 w-auto min-w-[95px] max-w-[130px]"
-          : "h-9 sm:h-10 px-2.5 py-1 w-auto min-w-[75px] max-w-[115px]";
-  }
-
-  const baseContainer =
-    "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-slate-900/90 shadow-2xs transition-all hover:border-primary/40";
-
-  if (failed) {
-    return (
-      <div
-        className={cn(
-          baseContainer,
-          containerDims,
-          "bg-secondary text-muted-foreground",
-          className,
-        )}
-      >
-        <Landmark className="h-4 w-4" />
-      </div>
-    );
-  }
-
   return (
-    <div className={cn(baseContainer, containerDims, className)}>
-      <img
-        src={iconUrl}
-        alt={name}
-        className="max-h-full max-w-full object-contain object-center transition-transform group-hover:scale-105"
-        onError={() => setFailed(true)}
-      />
+    <div
+      className={cn("relative w-full overflow-hidden rounded-xl bg-card border border-border/40", className)}
+      style={{ aspectRatio }}
+    >
+      {!failed ? (
+        <img
+          src={imageUrl}
+          alt={alt}
+          className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center text-muted-foreground p-3 text-center">
+          <Gift className="h-6 w-6 text-primary mb-1" />
+          <span className="text-xs font-semibold">{alt}</span>
+        </div>
+      )}
     </div>
   );
 }
+
+// ─────────────────────────────────────────────
+// Gift card interactive card brand component
+// ─────────────────────────────────────────────
 
 export function GiftCardBrand({
   card,
@@ -247,52 +370,33 @@ export function GiftCardBrand({
   onClick?: () => void;
 }) {
   const cardData = card || GIFT_CARDS.find((g) => g.id === cardId) || GIFT_CARDS[0]!;
-  const [imgFailed, setImgFailed] = React.useState(false);
-
-  React.useEffect(() => {
-    setImgFailed(false);
-  }, [cardData.imageUrl, cardData.logoUrl]);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-2.5 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
+        "group relative flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-2 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 active:scale-[0.98] cursor-pointer touch-manipulation",
         className,
       )}
     >
-      <div className="bg-slate-900/90 rounded-xl overflow-hidden aspect-[1.5/1] flex items-center justify-center p-2 relative w-full">
-        {!imgFailed ? (
-          <img
-            src={cardData.imageUrl}
-            alt={cardData.brand}
-            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-white font-bold text-sm p-2">
-            <Gift className="h-6 w-6 text-amber-400 mb-1" />
-            <span>{cardData.brand}</span>
-          </div>
-        )}
-        {cardData.logoUrl && !imgFailed && (
-          <div className="absolute top-2 left-2 h-6 w-6 rounded-lg bg-black/60 backdrop-blur-md p-1 border border-white/20 flex items-center justify-center shadow-xs">
-            <img src={cardData.logoUrl} alt="" className="h-full w-full object-contain" />
-          </div>
-        )}
+      {/* Card image area — genuine 3:2 digital voucher render */}
+      <div className="relative w-full overflow-hidden rounded-xl">
+        <GiftCardImage imageUrl={cardData.imageUrl} alt={cardData.brand} />
         {cardData.popular && (
           <span className="absolute top-2 right-2 rounded-full bg-primary/95 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold tracking-wider text-primary-foreground uppercase shadow-xs z-10">
             POPULAR
           </span>
         )}
       </div>
-      <div className="mt-2 px-0.5 min-w-0">
+
+      {/* Card metadata row */}
+      <div className="mt-2 px-1 min-w-0">
         <div className="flex items-center justify-between gap-1 min-w-0">
           <h3 className="font-semibold text-foreground text-xs sm:text-sm tracking-tight truncate min-w-0 flex-1">
             {cardData.brand}
           </h3>
-          <span className="text-[10px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-full shrink-0">
+          <span className="text-[10px] font-semibold text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full shrink-0">
             {cardData.category}
           </span>
         </div>
@@ -303,6 +407,10 @@ export function GiftCardBrand({
     </button>
   );
 }
+
+// ─────────────────────────────────────────────
+// Transfer method card
+// ─────────────────────────────────────────────
 
 export function TransferMethodCard({
   method,

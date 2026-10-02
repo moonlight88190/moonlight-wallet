@@ -1,7 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
-  <rect width="200" height="60" rx="12" fill="#0F172A"/>
-  <circle cx="34" cy="30" r="16" fill="#DC2626"/>
-  <path d="M28 23L34 33L40 23M28 29H40M28 33H40" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="60" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" letter-spacing="0.5">ZENGIN RAIL</text>
-  <text x="60" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="600" fill="#94A3B8" letter-spacing="0.5">JAPANESE BANK TRANSFER (JPY)</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- Japan Zengin bank - Rising Sun red/white -->
+  <rect width="200" height="80" rx="10" fill="#FFFFFF" stroke="#E8E8E8" stroke-width="1"/>
+  <!-- Rising sun circle (Japan flag motif) -->
+  <circle cx="34" cy="40" r="18" fill="#BC002D"/>
+  <!-- Bank Building -->
+  <rect x="12" y="52" width="20" height="2" rx="1" fill="#BC002D"/>
+  <rect x="14" y="32" width="16" height="3" rx="1" fill="#BC002D"/>
+  <rect x="14.5" y="35" width="3" height="17" rx="1" fill="#BC002D"/>
+  <rect x="19.5" y="35" width="3" height="17" rx="1" fill="#BC002D"/>
+  <rect x="24.5" y="35" width="3" height="17" rx="1" fill="#BC002D"/>
+  <!-- Text -->
+  <text x="60" y="33" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="14" fill="#1A1A1A">Japanese Bank</text>
+  <text x="60" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="600" font-size="12" fill="#BC002D">Zengin System</text>
+  <text x="60" y="66" font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" font-weight="400" font-size="10" fill="#888">JPY · Instant / Same-day</text>
 </svg>
