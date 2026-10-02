@@ -153,16 +153,48 @@ export function BrandAsset({
   const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
   const bank = INDIAN_BANKS.find((b) => b.id === cleanId || b.id === id);
 
+  const MARKET_ASSETS: Record<string, string> = {
+    "nifty-50": "/assets/markets/nifty-50.svg",
+    "sp-500": "/assets/markets/sp-500.svg",
+    "nasdaq-100": "/assets/markets/nasdaq-100.svg",
+    "euro-stoxx-50": "/assets/markets/euro-stoxx-50.svg",
+    dax: "/assets/markets/dax.svg",
+    "dax-40": "/assets/markets/dax.svg",
+    "ftse-100": "/assets/markets/ftse-100.svg",
+    apple: "/assets/markets/apple.svg",
+    microsoft: "/assets/markets/microsoft.svg",
+    nvidia: "/assets/markets/nvidia.svg",
+    amazon: "/assets/markets/amazon.svg",
+    alphabet: "/assets/markets/alphabet.svg",
+    meta: "/assets/markets/meta.svg",
+    broadcom: "/assets/markets/broadcom.svg",
+    reliance: "/assets/markets/reliance.svg",
+    tcs: "/assets/markets/tcs.svg",
+    infosys: "/assets/markets/infosys.svg",
+    airtel: "/assets/markets/airtel.svg",
+    asml: "/assets/markets/asml.svg",
+    sap: "/assets/markets/sap.svg",
+    siemens: "/assets/markets/siemens.svg",
+    santander: "/assets/markets/santander.svg",
+    schneider: "/assets/markets/schneider.svg",
+    allianz: "/assets/markets/allianz.svg",
+    totalenergies: "/assets/markets/totalenergies.svg",
+    moonlight: "/assets/brand/moonlight-emblem.png",
+  };
+
   const resolvedUrl =
     customUrl ||
     method?.iconUrl ||
     provider?.iconUrl ||
     bank?.logoUrl ||
+    MARKET_ASSETS[cleanId] ||
     `/assets/payment-methods/${cleanId}.svg`;
 
   const displayName = name || method?.name || provider?.name || bank?.name || cleanId;
+  const isMarketAsset = Boolean(MARKET_ASSETS[cleanId]);
   const ratio =
     sourceRatio ||
+    (isMarketAsset ? "square" : undefined) ||
     method?.sourceRatio ||
     provider?.sourceRatio ||
     bank?.sourceRatio ||

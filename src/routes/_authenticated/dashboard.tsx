@@ -1,24 +1,43 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Landmark, ScanLine, Copy, Check } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Landmark,
+  ScanLine,
+  Copy,
+  Check,
+  ChevronRight,
+  Clock,
+  Gift,
+} from "lucide-react";
 import { toast } from "sonner";
-import { useProfile, useRates, useSetPreferredCurrency, useWallet } from "@/hooks/use-wallet";
+import {
+  useProfile,
+  useRates,
+  useSetPreferredCurrency,
+  useWallet,
+  useTransactions,
+} from "@/hooks/use-wallet";
 import { CURRENCIES, formatMoney } from "@/lib/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
-import { MarketMiniWidget } from "@/components/MarketMiniWidget";
+import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComponents";
+import { TxRow } from "@/components/TxRow";
+import { HomeMarketSection } from "@/components/HomeMarketSection";
+import { GIFT_CARDS } from "@/lib/assets";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Moonlight Wallet" },
+      { title: "Moonlight Wallet" },
       {
         name: "description",
-        content: "Your Moonlight Wallet balance, quick actions and global markets.",
+        content:
+          "Private financial ledger, instant transfers, global payout corridors and markets.",
       },
       { property: "og:title", content: "Moonlight Wallet" },
-      { property: "og:description", content: "Your balance and market performance." },
+      { property: "og:description", content: "Private financial ledger and global corridors." },
     ],
   }),
   component: Dashboard,
@@ -29,6 +48,7 @@ function Dashboard() {
   const profile = useProfile();
   const wallet = useWallet();
   const rates = useRates();
+  const transactions = useTransactions(3);
   const setCur = useSetPreferredCurrency();
   const [copiedCode, setCopiedCode] = useState(false);
 
@@ -45,17 +65,19 @@ function Dashboard() {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  const recentTxs = (transactions.data ?? []).slice(0, 3);
+
   return (
-    <div className="mx-auto max-w-xl space-y-6 animate-in fade-in duration-200">
-      {/* ─── Balance ─── */}
-      <section className="text-center pt-2 pb-1">
-        {/* Wallet code */}
+    <div className="mx-auto max-w-xl space-y-6 pb-12 animate-in fade-in duration-200">
+      {/* ─── 1. BALANCE & PRIMARY ACTIONS ─── */}
+      <section className="text-center pt-2 pb-1 space-y-3">
+        {/* Wallet Code Capsule */}
         {wallet.data && (
           <button
             type="button"
             onClick={handleCopyCode}
             aria-label="Copy wallet ID"
-            className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/40 px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation mb-3"
+            className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/40 px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
           >
             <span>{wallet.data.wallet_code}</span>
             {copiedCode ? (
@@ -66,22 +88,24 @@ function Dashboard() {
           </button>
         )}
 
-        <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-          Available balance
-        </p>
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+            Available balance
+          </p>
 
-        <div className="mt-1.5">
-          {loading ? (
-            <Skeleton className="mx-auto h-11 w-44 rounded-xl" />
-          ) : (
-            <h1 className="tabular text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
-              {formatMoney(balance, cur)}
-            </h1>
-          )}
+          <div className="mt-1">
+            {loading ? (
+              <Skeleton className="mx-auto h-11 w-44 rounded-xl" />
+            ) : (
+              <h1 className="tabular text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
+                {formatMoney(balance, cur)}
+              </h1>
+            )}
+          </div>
         </div>
 
         {/* Currency Switcher */}
-        <div className="mt-3 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <Select
             value={cur}
             onValueChange={(v) =>
@@ -112,11 +136,9 @@ function Dashboard() {
             </SelectContent>
           </Select>
         </div>
-      </section>
 
-      {/* ─── Quick Actions ─── */}
-      <section aria-label="Quick Actions">
-        <div className="grid grid-cols-4 gap-2">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-4 gap-2 pt-2">
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
             { to: "/receive", label: "Receive", icon: ArrowDownLeft },
@@ -156,9 +178,74 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* ─── Markets Preview ─── */}
-      <section aria-label="Markets Preview">
-        <MarketMiniWidget />
+      {/* ─── 2. FIRST 3 RECENT ACTIVITIES ─── */}
+      <section aria-label="Recent Activity" className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+              Recent Activity
+            </h2>
+          </div>
+          <Link
+            to="/transactions"
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline touch-manipulation min-h-[32px]"
+          >
+            See all <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="divide-y divide-border/30 rounded-3xl border border-border/50 bg-card/80 overflow-hidden shadow-xs">
+          {transactions.isLoading ? (
+            <div className="p-4 space-y-3">
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+            </div>
+          ) : recentTxs.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">No transactions recorded yet</p>
+              <p className="mt-1">Send funds or share your wallet ID to receive money.</p>
+            </div>
+          ) : (
+            recentTxs.map((tx) => <TxRow key={tx.id} tx={tx} walletId={wallet.data?.id} />)
+          )}
+        </div>
+      </section>
+
+      {/* ─── 3 & 4. MARKETS & INDEX CONSTITUENTS ─── */}
+      <section aria-label="Global Markets">
+        <HomeMarketSection />
+      </section>
+
+      {/* ─── 5. GIFT CARDS & DIGITAL VOUCHERS ─── */}
+      <section aria-label="Digital Vouchers" className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5">
+            <Gift className="h-4 w-4 text-primary" />
+            <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+              Digital Vouchers
+            </h2>
+          </div>
+          <Link
+            to="/withdraw"
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline touch-manipulation min-h-[32px]"
+          >
+            Browse all <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+          {GIFT_CARDS.slice(0, 5).map((card) => (
+            <div key={card.id} className="w-[180px] shrink-0">
+              <GiftCardBrand
+                card={card}
+                onClick={() => {
+                  navigate({ to: "/withdraw" });
+                }}
+              />
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );

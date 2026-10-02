@@ -37,8 +37,43 @@ export type MarketInstrument = {
   };
 };
 
+export type IndexConstituentData = {
+  symbol: string;
+  name: string;
+  category: string;
+  exchange: string;
+  currency: string;
+  currencySymbol: string;
+  brandAssetId: string;
+  weightHint?: number;
+  price?: number;
+  change?: number;
+  changePercent?: number;
+  sparkline?: ChartPoint[];
+};
+
+export type IndexWithData = {
+  id: string;
+  symbol: string;
+  name: string;
+  provider: string;
+  region: MarketRegion;
+  currency: string;
+  currencySymbol: string;
+  brandAssetId: string;
+  constituentSource: {
+    authority: string;
+    datasetName: string;
+    url: string;
+    updateCadence: string;
+  };
+  quote?: MarketInstrument;
+  constituents: IndexConstituentData[];
+};
+
 export type MarketSnapshot = {
   instruments: MarketInstrument[];
+  indices: IndexWithData[];
   fetchedAt: number; // Unix timestamp in ms
   status: "live" | "cached" | "delayed";
   source: string;

@@ -91,6 +91,7 @@ export function useMarkets() {
   return {
     snapshot: data,
     instruments,
+    indices: data.indices ?? [],
     isLoading: query.isLoading,
     isRefreshing: refreshMutation.isPending || query.isFetching,
     refetch: () => refreshMutation.mutate(),

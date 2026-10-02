@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- NSE NIFTY 50 Official Mark -->
+  <rect width="100" height="100" rx="20" fill="#0C2340"/>
+  <!-- Dynamic N-swirl NSE colors -->
+  <path d="M22 68 L22 32 L36 32 L58 58 L58 32 L72 32 L72 68 L58 68 L36 42 L36 68 Z" fill="#FFFFFF"/>
+  <circle cx="72" cy="24" r="6" fill="#F26522"/>
+  <path d="M36 68 L58 68 L58 62 L36 62 Z" fill="#00A651"/>
+  <text x="50" y="86" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="12" fill="#F26522" letter-spacing="1">NIFTY 50</text>
+</svg>
