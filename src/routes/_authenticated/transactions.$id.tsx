@@ -208,7 +208,7 @@ export function getWithdrawalComplianceInfo(createdAtStr: string, dbStatus: stri
 
   return {
     statusLabel: "PROCESSING",
-    reason: stageObj.reason,
+    reason: stageObj?.reason ?? "International settlement and regulatory clearing.",
     isProcessing: true,
     isHold: false,
     stageNumber: currentStageIndex + 1,
@@ -305,7 +305,8 @@ function Receipt() {
   const verified = isEuropeanVerified(profile.data?.email);
 
   if (isWithdrawal) {
-    const wd = tx.data.data as Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wd = tx.data.data as any;
     const d = new Date(wd.created_at as string);
 
     const handleCopyRef = () => {
@@ -566,7 +567,8 @@ function Receipt() {
   }
 
   // DISTINCT NORMAL SEND TRANSFER RECEIPT (Indigo/Violet Wallet Transfer Theme)
-  const t = tx.data.data as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const t = tx.data.data as any;
   const v = txView(t as Parameters<typeof txView>[0], wallet.data?.id);
   const d = new Date(t.created_at as string);
 

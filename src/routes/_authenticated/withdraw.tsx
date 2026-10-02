@@ -150,7 +150,9 @@ export function Withdraw() {
   const defaultMethod = PAYMENT_METHODS.find((m) => m.id === "upi") || PAYMENT_METHODS[0];
 
   // Selected state
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(defaultMethod);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta | null>(
+    defaultMethod ?? null,
+  );
   const [selectedCard, setSelectedCard] = useState<GiftCardMeta | null>(null);
   const [selectedLuxury, setSelectedLuxury] = useState<LuxuryBrandMeta | null>(null);
   const [cardValue, setCardValue] = useState<number>(100);

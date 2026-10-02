@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TxRow, groupByPeriod } from "@/components/TxRow";
 import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComponents";
 import { GIFT_CARDS } from "@/lib/assets";
+import { MarketIndices } from "@/components/MarketIndices";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -166,6 +167,7 @@ function Dashboard() {
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
             { to: "/receive", label: "Receive", icon: ArrowDownLeft, primary: false },
+            { to: "/markets", label: "Markets", icon: TrendingUp, primary: false },
             {
               to: "/send",
               search: { scan: "true" },
@@ -174,13 +176,13 @@ function Dashboard() {
               primary: false,
             },
             { to: "/withdraw", label: "Withdraw", icon: Landmark, primary: false },
-            { to: "/withdraw", label: "Gift Cards", icon: Gift, primary: false },
             { to: "/transactions", label: "Activity", icon: History, primary: false },
           ].map((a, idx) => (
             <Link
               key={`${a.to}-${idx}`}
               to={a.to}
-              search={a.search}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              search={a.search as any}
               className="group flex flex-col items-center justify-center gap-1.5 p-3 min-h-[72px] rounded-2xl border border-border/60 bg-card hover:border-primary/40 hover:bg-accent/40 touch-manipulation active:scale-[0.96] transition-transform shadow-2xs"
             >
               <span
@@ -290,16 +292,16 @@ function Dashboard() {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-border/50 bg-secondary/40 p-3 text-xs">
-                <span className="text-muted-foreground font-medium">Converts to:</span>
-                <span className="font-semibold text-sm text-foreground">
-                  {formatMoney(convertedVal, calcTo)}
-                </span>
-              </div>
-
-              <div className="flex justify-end">
+              {/* Converted Result Bar with Target Selector */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between rounded-xl border border-border/50 bg-secondary/40 p-2.5 gap-2 text-xs">
+                <div className="flex items-center justify-between sm:justify-start gap-2 px-1">
+                  <span className="text-muted-foreground font-medium">Converts to:</span>
+                  <span className="font-semibold text-sm text-foreground tabular-nums">
+                    {formatMoney(convertedVal, calcTo)}
+                  </span>
+                </div>
                 <Select value={calcTo} onValueChange={setCalcTo}>
-                  <SelectTrigger className="h-12 w-full sm:w-32 rounded-xl border text-xs font-semibold">
+                  <SelectTrigger className="h-10 w-full sm:w-32 rounded-lg border text-xs font-semibold bg-background">
                     <CurrencyIcon code={calcTo} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl p-1">
@@ -347,6 +349,31 @@ function Dashboard() {
             </div>
           </div>
         </aside>
+      </section>
+
+      {/* Stock Markets & Global Indices Section */}
+      <section className="space-y-4 pt-4 border-t border-border/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-500" />
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                Stock Markets &amp; Global Indices
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Daily benchmark performance across European, US and Indian financial exchanges.
+            </p>
+          </div>
+          <Link
+            to="/markets"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline min-h-[44px] px-2 py-1"
+          >
+            Explore all instruments <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <MarketIndices showHeader={false} />
       </section>
 
       {/* Digital Gift Cards Marketplace Section */}

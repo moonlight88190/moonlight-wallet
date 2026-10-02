@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin-access'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedMarketsRouteImport } from './routes/_authenticated/markets'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedRedeemRouteImport } from './routes/_authenticated/redeem'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
@@ -76,6 +77,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketsRoute = AuthenticatedMarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReceiveRoute = AuthenticatedReceiveRouteImport.update({
   id: '/receive',
   path: '/receive',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-access': typeof AuthenticatedAdminAccessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/markets': typeof AuthenticatedMarketsRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
   '/send': typeof AuthenticatedSendRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-access': typeof AuthenticatedAdminAccessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/markets': typeof AuthenticatedMarketsRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
   '/send': typeof AuthenticatedSendRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/markets': typeof AuthenticatedMarketsRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/redeem': typeof AuthenticatedRedeemRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-access'
     | '/dashboard'
+    | '/markets'
     | '/receive'
     | '/redeem'
     | '/send'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-access'
     | '/dashboard'
+    | '/markets'
     | '/receive'
     | '/redeem'
     | '/send'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/admin-access'
     | '/_authenticated/dashboard'
+    | '/_authenticated/markets'
     | '/_authenticated/receive'
     | '/_authenticated/redeem'
     | '/_authenticated/send'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/markets': {
+      id: '/_authenticated/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof AuthenticatedMarketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/receive': {
       id: '/_authenticated/receive'
       path: '/receive'
@@ -348,6 +367,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMarketsRoute: typeof AuthenticatedMarketsRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedRedeemRoute: typeof AuthenticatedRedeemRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
@@ -360,6 +380,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMarketsRoute: AuthenticatedMarketsRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedRedeemRoute: AuthenticatedRedeemRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
