@@ -16,6 +16,8 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
     tx.recipient_wallet_code?.includes("@") ? tx.recipient_wallet_code : undefined,
     undefined,
     tx.currency,
+    tx.route,
+    tx.kind,
   );
   const showBrand = paymentAsset.id !== "moonlight" && tx.kind !== "admin_credit";
 

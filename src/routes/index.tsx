@@ -448,7 +448,7 @@ function Landing() {
             <h3 className="font-semibold text-foreground text-base">Luxury &amp; Digital Assets</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Instantly convert wallet balances into official global e-vouchers, luxury brand cards,
-              and verified cryptographic digital ledger receipts.
+              and verified official transaction receipts.
             </p>
           </div>
         </div>

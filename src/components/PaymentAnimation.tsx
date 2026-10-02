@@ -37,20 +37,36 @@ interface StageConfig {
 
 function getTransferStages(providerLabel: string): StageConfig[] {
   return [
-    { title: "Reviewing details", description: "Verifying payment details and balance" },
-    { title: "Payment method", description: `Routing via ${providerLabel}` },
-    { title: "Processing", description: "Securing transaction parameters" },
-    { title: "Verification", description: "Updating wallet ledger" },
-    { title: "Complete", description: "Payment processed successfully" },
+    { title: "Verifying Account", description: "Checking recipient identity and balance" },
+    { title: "Transfer Authorization", description: `Authorizing Moonlight internal transfer` },
+    { title: "Direct Settlement", description: "Processing transfer between Moonlight accounts" },
+    { title: "Updating Balance", description: "Recording debit and credit entries" },
+    { title: "Transfer Complete", description: "Funds delivered to recipient wallet" },
   ];
 }
 
-function getWithdrawalStages(providerLabel: string): StageConfig[] {
+function getWithdrawalStages(providerLabel: string, routeId?: string): StageConfig[] {
+  if (routeId === "upi" || providerLabel.toLowerCase().includes("upi")) {
+    return [
+      { title: "Verifying Details", description: "Validating UPI VPA and mobile phone number" },
+      { title: "Routing Payout", description: `Directing instruction via ${providerLabel}` },
+      { title: "Processing Queue", description: "Queued for settlement preparation" },
+      { title: "Payout Confirmed", description: "Withdrawal request recorded successfully" },
+    ];
+  }
+  if (routeId === "in-bank" || providerLabel.toLowerCase().includes("bank")) {
+    return [
+      { title: "Beneficiary Check", description: "Validating bank account and IFSC code" },
+      { title: "Banking Rail", description: `Routing to ${providerLabel} via IMPS` },
+      { title: "Processing Queue", description: "Queued for settlement authorization" },
+      { title: "Payout Confirmed", description: "Bank withdrawal instruction recorded" },
+    ];
+  }
   return [
-    { title: "Eligibility check", description: "Verifying balance and account status" },
-    { title: "Payout method", description: `Authorizing via ${providerLabel}` },
-    { title: "Recording", description: "Logging beneficiary and compliance details" },
-    { title: "Queued", description: "Withdrawal request queued for review" },
+    { title: "Eligibility Check", description: "Verifying balance and account parameters" },
+    { title: "Routing Channel", description: `Connecting to ${providerLabel}` },
+    { title: "Processing Queue", description: "Instruction queued for payout release" },
+    { title: "Request Confirmed", description: "Withdrawal request recorded successfully" },
   ];
 }
 
@@ -82,16 +98,18 @@ export function PaymentAnimation({
   const isCancelled = state === "cancelled";
   const isCrossCurrency = sourceCurrency !== destinationCurrency;
 
-  // Resolve payment provider asset
+  // Resolve payment provider asset authoritatively
   const paymentAsset = resolvePaymentAsset(
     paymentMethodName || paymentMethodId,
     recipientCode.includes("@") ? recipientCode : undefined,
     paymentMethodName,
     destinationCurrency,
+    isWithdrawal ? paymentMethodId || "withdrawal" : "moonlight",
+    isWithdrawal ? "withdrawal" : "transfer",
   );
 
   const stages = isWithdrawal
-    ? getWithdrawalStages(paymentAsset.label)
+    ? getWithdrawalStages(paymentAsset.label, paymentMethodId)
     : getTransferStages(paymentAsset.label);
 
   const totalStages = stages.length;
@@ -102,7 +120,7 @@ export function PaymentAnimation({
   const backendDoneRef = useRef(isBackendDone);
   backendDoneRef.current = isBackendDone;
 
-  // Step intervals: transfer ~1.2s per step, withdrawal ~0.9s per step
+  // Step intervals: internal transfer ~1.2s per step (total 5-6s), withdrawal ~0.9s per step (total 3.5s)
   const stepMs = isWithdrawal ? 900 : 1200;
 
   useEffect(() => {

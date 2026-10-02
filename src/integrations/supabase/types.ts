@@ -151,6 +151,10 @@ export type Database = {
           id: string;
           preferred_currency: string;
           region: string;
+          country_code: string | null;
+          city: string | null;
+          timezone: string | null;
+          geography_updated_at: string | null;
           updated_at: string;
         };
         Insert: {
@@ -160,6 +164,10 @@ export type Database = {
           id: string;
           preferred_currency?: string;
           region?: string;
+          country_code?: string | null;
+          city?: string | null;
+          timezone?: string | null;
+          geography_updated_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -169,6 +177,10 @@ export type Database = {
           id?: string;
           preferred_currency?: string;
           region?: string;
+          country_code?: string | null;
+          city?: string | null;
+          timezone?: string | null;
+          geography_updated_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -185,6 +197,7 @@ export type Database = {
           id: string;
           kind: string;
           method: string;
+          route: string;
           note: string | null;
           recipient_amount: number | null;
           recipient_currency: string | null;
@@ -192,6 +205,7 @@ export type Database = {
           recipient_wallet_code: string | null;
           recipient_wallet_id: string | null;
           reference: string;
+          sender_debit: number | null;
           sender_name: string | null;
           sender_wallet_code: string | null;
           sender_wallet_id: string | null;
@@ -208,6 +222,7 @@ export type Database = {
           id?: string;
           kind: string;
           method?: string;
+          route?: string;
           note?: string | null;
           recipient_amount?: number | null;
           recipient_currency?: string | null;
@@ -215,6 +230,7 @@ export type Database = {
           recipient_wallet_code?: string | null;
           recipient_wallet_id?: string | null;
           reference?: string;
+          sender_debit?: number | null;
           sender_name?: string | null;
           sender_wallet_code?: string | null;
           sender_wallet_id?: string | null;
@@ -231,6 +247,7 @@ export type Database = {
           id?: string;
           kind?: string;
           method?: string;
+          route?: string;
           note?: string | null;
           recipient_amount?: number | null;
           recipient_currency?: string | null;
@@ -238,6 +255,7 @@ export type Database = {
           recipient_wallet_code?: string | null;
           recipient_wallet_id?: string | null;
           reference?: string;
+          sender_debit?: number | null;
           sender_name?: string | null;
           sender_wallet_code?: string | null;
           sender_wallet_id?: string | null;
@@ -298,6 +316,10 @@ export type Database = {
           full_name: string;
           id: string;
           method: string;
+          route: string;
+          fee: number | null;
+          recipient_amount: number | null;
+          recipient_currency: string | null;
           phone: string | null;
           provider: string | null;
           reason: string | null;
@@ -316,9 +338,13 @@ export type Database = {
           currency?: string;
           email: string;
           fee_usd?: number;
+          fee?: number | null;
+          recipient_amount?: number | null;
+          recipient_currency?: string | null;
           full_name: string;
           id?: string;
           method: string;
+          route?: string;
           phone?: string | null;
           provider?: string | null;
           reason?: string | null;
@@ -337,9 +363,13 @@ export type Database = {
           currency?: string;
           email?: string;
           fee_usd?: number;
+          fee?: number | null;
+          recipient_amount?: number | null;
+          recipient_currency?: string | null;
           full_name?: string;
           id?: string;
           method?: string;
+          route?: string;
           phone?: string | null;
           provider?: string | null;
           reason?: string | null;
@@ -422,9 +452,11 @@ export type Database = {
           p_email: string;
           p_full_name: string;
           p_method: string;
+          p_destination_currency?: string;
           p_phone?: string;
           p_provider?: string;
           p_reason?: string;
+          p_route?: string;
           p_upi_id?: string;
         };
         Returns: string;

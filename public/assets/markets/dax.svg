@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Deutsche Börse DAX 40 Official Vector -->
+  <rect width="100" height="100" rx="20" fill="#0F172A"/>
+  <!-- DAX dynamic chevron triangles -->
+  <polygon points="24,65 50,25 76,65 58,65 50,48 42,65" fill="#F97316"/>
+  <text x="50" y="84" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="14" fill="#FFFFFF" letter-spacing="1">DAX 40</text>
+</svg>

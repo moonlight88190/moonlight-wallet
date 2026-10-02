@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import {
   useProfile,
   useWallet,
-  getAccountStatusLabel,
-  isEuropeanVerified,
+  useAccountGeography,
+  getAccountRegionLabel,
 } from "@/hooks/use-wallet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -34,6 +34,7 @@ const qrPayload = (code: string) => `moonlight:${code}`;
 function Receive() {
   const wallet = useWallet();
   const profile = useProfile();
+  const geography = useAccountGeography();
   const [copied, setCopied] = useState(false);
   const [big, setBig] = useState(false);
   const code = wallet.data?.wallet_code ?? "";
@@ -69,12 +70,12 @@ function Receive() {
 
       <div className="rounded-3xl sm:rounded-[2.5rem] border border-border/60 bg-card/80 p-5 sm:p-8 shadow-soft space-y-5 sm:space-y-6">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-          {isEuropeanVerified(profile.data?.email) ? (
+          {geography.data?.isIndia || geography.data?.isEurope ? (
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
           ) : (
             <Globe className="h-3.5 w-3.5 text-blue-500" />
           )}
-          <span>{getAccountStatusLabel(profile.data?.email)}</span>
+          <span>{getAccountRegionLabel(geography.data)}</span>
         </div>
 
         {wallet.isLoading ? (

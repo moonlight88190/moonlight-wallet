@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Broadcom Official Red Wave Vector -->
+  <rect width="100" height="100" rx="20" fill="#FFFFFF"/>
+  <path d="M20 54 L20 62 L32 62 L32 44 L44 44 L44 68 L56 68 L56 36 L68 36 L68 76 L80 76 L80 28" stroke="#CC092F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="50" y="88" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="11" fill="#CC092F" letter-spacing="0.5">BROADCOM</text>
+</svg>

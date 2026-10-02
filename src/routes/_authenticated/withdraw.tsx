@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile, useWallet, useRates } from "@/hooks/use-wallet";
+import { useProfile, useWallet, useRates, useAccountGeography } from "@/hooks/use-wallet";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -173,6 +173,10 @@ function Withdraw() {
         toast.error("Please enter a valid UPI VPA (e.g. username@okhdfcbank).");
         return;
       }
+      if (!phone.trim() || phone.trim().length < 8) {
+        toast.error("Please enter a valid beneficiary phone number for UPI verification.");
+        return;
+      }
     }
 
     if (isIndianBank) {
@@ -211,14 +215,14 @@ function Withdraw() {
     const withdrawReason = isIndianBank
       ? `Transfer to ${selectedBank?.name || "Indian Bank"} A/C ••••${accountNumber.slice(-4)} (IFSC: ${ifscCode.toUpperCase()})`
       : isUPI
-        ? `UPI Payout to ${upiId.trim()} via ${providerName}`
+        ? `UPI Payout to ${upiId.trim()} (${phone.trim()}) via ${providerName}`
         : `Transfer to ${selectedMethod.name}`;
 
     const { data: wdId, error } = await supabase.rpc(
       "create_withdrawal" as never,
       {
-        p_amount: convertedTargetAmt,
-        p_currency: targetCorridorCurrency,
+        p_amount: sourceAmt,
+        p_currency: withdrawCurrency,
         p_method: methodName,
         p_upi_id: isUPI ? upiId.trim() : null,
         p_provider: providerName,
@@ -226,6 +230,8 @@ function Withdraw() {
         p_email: currentEmail,
         p_phone: phone.trim() || null,
         p_reason: withdrawReason,
+        p_route: selectedMethod.id,
+        p_destination_currency: targetCorridorCurrency,
       } as never,
     );
 
@@ -262,13 +268,15 @@ function Withdraw() {
       {
         p_amount: cardValue,
         p_currency: preferredCurrency,
-        p_method: "Digital Voucher Pass",
+        p_method: `${brandName} Digital Voucher`,
         p_upi_id: null,
         p_provider: brandName,
         p_full_name: profile?.full_name || "Valued Customer",
         p_email: profile?.email || "customer@moonlight.com",
         p_phone: null,
         p_reason: `Redeemed ${brandName} Voucher`,
+        p_route: "gift-card",
+        p_destination_currency: preferredCurrency,
       } as never,
     );
 
@@ -539,26 +547,47 @@ function Withdraw() {
 
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
-              <div className="space-y-1.5">
-                <Input
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  placeholder={
-                    selectedUPIApp?.id === "google-pay"
-                      ? "username@okhdfcbank"
-                      : selectedUPIApp?.id === "phonepe"
-                        ? "username@ybl"
-                        : selectedUPIApp?.id === "paytm"
-                          ? "mobilenumber@paytm"
-                          : "username@bank"
-                  }
-                  className="rounded-xl h-11 text-sm font-mono"
-                />
-                {upiId.trim() && upiDetection.isVPA && (
-                  <p className="text-[11px] text-primary font-medium px-1">
-                    {upiDetection.providerName}
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                    UPI ID / VPA
+                  </label>
+                  <Input
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder={
+                      selectedUPIApp?.id === "google-pay"
+                        ? "username@okhdfcbank"
+                        : selectedUPIApp?.id === "phonepe"
+                          ? "username@ybl"
+                          : selectedUPIApp?.id === "paytm"
+                            ? "mobilenumber@paytm"
+                            : "username@bank"
+                    }
+                    className="rounded-xl h-11 text-sm font-mono"
+                  />
+                  {upiId.trim() && upiDetection.isVPA && (
+                    <p className="text-[11px] text-primary font-medium px-1">
+                      {upiDetection.providerName}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                    Registered Mobile Number
+                  </label>
+                  <Input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="rounded-xl h-11 text-sm font-mono"
+                  />
+                  <p className="text-[10px] text-muted-foreground px-1">
+                    Required for UPI beneficiary validation and settlement confirmation.
                   </p>
-                )}
+                </div>
               </div>
             )}
 
@@ -732,18 +761,30 @@ function Withdraw() {
                   : upiId.trim() || profile?.email}
               </span>
             </div>
+            {phone.trim() && (
+              <div className="flex justify-between border-b border-border/30 pb-2">
+                <span className="text-muted-foreground">Mobile Phone</span>
+                <span className="font-mono font-medium text-foreground">{phone.trim()}</span>
+              </div>
+            )}
             <div className="flex justify-between border-b border-border/30 pb-2">
-              <span className="text-muted-foreground">Amount</span>
+              <span className="text-muted-foreground">Requested Amount</span>
               <span className="font-mono font-semibold">
                 {formatMoney(sourceAmt, withdrawCurrency)}
               </span>
             </div>
             <div className="flex justify-between border-b border-border/30 pb-2">
-              <span className="text-muted-foreground">Fee (10%)</span>
+              <span className="text-muted-foreground">Processing Fee (10%)</span>
               <span className="font-mono">{formatMoney(feeAmount, withdrawCurrency)}</span>
             </div>
+            <div className="flex justify-between border-b border-border/30 pb-2">
+              <span className="text-muted-foreground">Wallet Debit</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatMoney(sourceAmt, withdrawCurrency)}
+              </span>
+            </div>
             <div className="flex justify-between font-semibold text-foreground">
-              <span>You receive</span>
+              <span>Net Payout</span>
               <span className="font-mono text-emerald-600 dark:text-emerald-400">
                 {formatMoney(netReceivedAmt, targetCorridorCurrency)}
               </span>

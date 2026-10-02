@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, getAccountStatusLabel, isEuropeanVerified } from "@/hooks/use-wallet";
+import { useProfile, useAccountGeography, getAccountRegionLabel } from "@/hooks/use-wallet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: profile } = useProfile();
+  const geography = useAccountGeography();
 
   async function signOut() {
     await qc.cancelQueries();
@@ -104,14 +105,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <div className="text-sm font-semibold text-foreground">{profile?.full_name}</div>
                   <div className="truncate text-xs text-muted-foreground">{profile?.email}</div>
                   <div
-                    className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${isEuropeanVerified(profile?.email) ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
+                    className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${geography.data?.isIndia || geography.data?.isEurope ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
                   >
-                    {isEuropeanVerified(profile?.email) ? (
+                    {geography.data?.isIndia || geography.data?.isEurope ? (
                       <ShieldCheck className="h-3 w-3 text-emerald-500" />
                     ) : (
                       <Globe className="h-3 w-3 text-blue-500" />
                     )}
-                    <span>{getAccountStatusLabel(profile?.email)}</span>
+                    <span>{getAccountRegionLabel(geography.data)}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

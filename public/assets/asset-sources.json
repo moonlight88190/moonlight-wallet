@@ -146,5 +146,149 @@
     "file_title": "Aani Instant Payments Platform Logo",
     "url": "https://aep.ae/media/wczftgc4/aani-1320x763.png",
     "downloaded_at": "2026-10-02"
+  },
+  "public/assets/markets/nifty-50.svg": {
+    "source": "National Stock Exchange of India (NSE) / Nifty Indices",
+    "file_title": "NIFTY 50 Official Index Mark",
+    "url": "https://www.niftyindices.com/indices/equity/broad-based-indices/NIFTY-50",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/sp-500.svg": {
+    "source": "S&P Dow Jones Indices (S&P Global)",
+    "file_title": "S&P 500 Official Index Mark",
+    "url": "https://www.spglobal.com/spdji/en/indices/equity/sp-500/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/nasdaq-100.svg": {
+    "source": "Nasdaq Global Indexes / Index Services",
+    "file_title": "Nasdaq-100 Official Index Mark",
+    "url": "https://indexes.nasdaqomx.com/Index/Overview/NDX",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/euro-stoxx-50.svg": {
+    "source": "STOXX Ltd. / Deutsche Börse Group",
+    "file_title": "EURO STOXX 50 Official Index Mark",
+    "url": "https://www.stoxx.com/index-details?symbol=SX5E",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/dax.svg": {
+    "source": "Deutsche Börse AG / XETRA",
+    "file_title": "DAX 40 Official Benchmark Mark",
+    "url": "https://www.boerse-frankfurt.de/indices/dax",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/ftse-100.svg": {
+    "source": "FTSE Russell / London Stock Exchange Group",
+    "file_title": "FTSE 100 Official Index Mark",
+    "url": "https://www.lseg.com/en/ftse-russell/indices/ftse-uk",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/apple.svg": {
+    "source": "Apple Inc. Official Brand Resources",
+    "file_title": "Apple Inc. Vector Silhouette",
+    "url": "https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/microsoft.svg": {
+    "source": "Microsoft Brand Center",
+    "file_title": "Microsoft Corporate Logo",
+    "url": "https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/nvidia.svg": {
+    "source": "NVIDIA Corporation Brand Resources",
+    "file_title": "NVIDIA Logo Mark",
+    "url": "https://www.nvidia.com/en-us/about-nvidia/legal-info/logo-brand-usage/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/amazon.svg": {
+    "source": "Amazon.com Brand Center",
+    "file_title": "Amazon Brand Mark",
+    "url": "https://brand.amazon.com/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/alphabet.svg": {
+    "source": "Google Brand Resource Center",
+    "file_title": "Google / Alphabet 4-Color Mark",
+    "url": "https://about.google/brand-resource-center/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/meta.svg": {
+    "source": "Meta Brand Resource Center",
+    "file_title": "Meta Infinity Mark",
+    "url": "https://about.meta.com/brand/resources/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/broadcom.svg": {
+    "source": "Broadcom Inc. Media Kit",
+    "file_title": "Broadcom Corporate Mark",
+    "url": "https://www.broadcom.com/company/news/media-kit",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/reliance.svg": {
+    "source": "Reliance Industries Limited Corporate Portal",
+    "file_title": "Reliance Industries Emblem",
+    "url": "https://www.ril.com/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/tcs.svg": {
+    "source": "Tata Consultancy Services Brand Hub",
+    "file_title": "TCS Brand Mark",
+    "url": "https://www.tcs.com/who-we-are/brand-hub",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/infosys.svg": {
+    "source": "Infosys Brand Guidelines Portal",
+    "file_title": "Infosys Official Wordmark",
+    "url": "https://www.infosys.com/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/airtel.svg": {
+    "source": "Bharti Airtel Media Kit",
+    "file_title": "Bharti Airtel Official Logo",
+    "url": "https://www.airtel.in/about-bharti/media",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/asml.svg": {
+    "source": "ASML Holding Corporate Press Kit",
+    "file_title": "ASML Official Wordmark",
+    "url": "https://www.asml.com/en/news/press-kits",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/sap.svg": {
+    "source": "SAP Brand Center",
+    "file_title": "SAP Corporate Mark",
+    "url": "https://www.sap.com/about/company/brand.html",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/siemens.svg": {
+    "source": "Siemens AG Brand Portal",
+    "file_title": "Siemens Corporate Wordmark",
+    "url": "https://www.siemens.com/global/en/company/about/brand.html",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/santander.svg": {
+    "source": "Banco Santander Corporate Brand Identity",
+    "file_title": "Santander Flame Mark",
+    "url": "https://www.santander.com/en/about-us/brand",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/schneider.svg": {
+    "source": "Schneider Electric Brand Center",
+    "file_title": "Schneider Electric Life Is On Mark",
+    "url": "https://www.se.com/ww/en/about-us/brand/",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/allianz.svg": {
+    "source": "Allianz SE Brand Hub",
+    "file_title": "Allianz Corporate Mark",
+    "url": "https://www.allianz.com/en/about-us/brand.html",
+    "downloaded_at": "2026-10-03"
+  },
+  "public/assets/markets/totalenergies.svg": {
+    "source": "TotalEnergies Brand Resource Center",
+    "file_title": "TotalEnergies Corporate Mark",
+    "url": "https://totalenergies.com/media/brand-identity",
+    "downloaded_at": "2026-10-03"
   }
 }

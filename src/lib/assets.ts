@@ -802,15 +802,22 @@ export function resolvePaymentAsset(
   upiId?: string,
   providerName?: string,
   currency?: string,
+  route?: string,
+  kind?: string,
 ): ResolvedPaymentAsset {
   const m = (methodName || "").toLowerCase();
   const u = (upiId || "").toLowerCase();
   const p = (providerName || "").toLowerCase();
-  const c = (currency || "").toUpperCase();
+  const r = (route || "").toLowerCase();
+  const k = (kind || "").toLowerCase();
 
   // 1. Gift card match
   const matchedGift = GIFT_CARDS.find(
-    (g) => m.includes(g.id) || m.includes(g.brand.toLowerCase()) || p.includes(g.id),
+    (g) =>
+      m.includes(g.id) ||
+      m.includes(g.brand.toLowerCase()) ||
+      p.includes(g.id) ||
+      r === "gift-card",
   );
   if (matchedGift) {
     return {
@@ -823,117 +830,53 @@ export function resolvePaymentAsset(
     };
   }
 
-  // 2. UPI Provider match (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)
-  const upiMatch = UPI_PROVIDERS.find(
-    (prov) =>
-      p.includes(prov.id) ||
-      p.includes(prov.name.toLowerCase()) ||
-      m.includes(prov.id) ||
-      m.includes(prov.name.toLowerCase()) ||
-      prov.handles.some((h) => u.includes(h)),
-  );
-  if (upiMatch) {
+  // 2. Internal Moonlight transfers ALWAYS resolve to Moonlight
+  // Currency NEVER turns an internal transfer into an external rail.
+  const isInternal =
+    r === "moonlight" ||
+    k === "transfer" ||
+    k === "admin_credit" ||
+    m.includes("moonlight") ||
+    m.includes("internal") ||
+    (!r &&
+      k !== "withdrawal" &&
+      !u &&
+      !m.includes("bank") &&
+      !m.includes("upi") &&
+      !m.includes("sepa") &&
+      !m.includes("faster") &&
+      !m.includes("gcash") &&
+      !m.includes("pix"));
+
+  if (isInternal && k !== "withdrawal") {
     return {
-      type: "upi",
-      id: upiMatch.id,
-      label: upiMatch.name,
-      subtitle: "Unified Payments Interface (UPI)",
-      sourceRatio: upiMatch.sourceRatio || "wide",
+      type: "method",
+      id: "moonlight",
+      label: "Moonlight Transfer",
+      subtitle: "Private Peer-to-Peer Transfer",
+      sourceRatio: "square",
     };
   }
 
-  // 3. Indian Bank match (SBI, HDFC, ICICI, Axis, YES Bank)
-  const bankMatch = INDIAN_BANKS.find(
-    (b) =>
-      m.includes(b.id) ||
-      m.includes(b.name.toLowerCase()) ||
-      p.includes(b.id) ||
-      p.includes(b.name.toLowerCase()),
-  );
-  if (bankMatch) {
-    return {
-      type: "bank",
-      id: bankMatch.id,
-      label: bankMatch.name,
-      subtitle: "Direct Bank Transfer (IMPS/NEFT)",
-      sourceRatio: bankMatch.sourceRatio || "ultra-wide",
-    };
-  }
-
-  // 4. Specific payment rails
-  if (m.includes("gcash") || c === "PHP") {
-    return {
-      type: "method",
-      id: "gcash",
-      label: "GCash Wallet",
-      subtitle: "Mobile Wallet Payout",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("paynow") || c === "SGD") {
-    return {
-      type: "method",
-      id: "paynow",
-      label: "Singapore PayNow",
-      subtitle: "National Instant Payout",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("pix") || c === "BRL") {
-    return {
-      type: "method",
-      id: "pix",
-      label: "Pix Instant",
-      subtitle: "Central Bank of Brazil Rail",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("sepa") || c === "EUR") {
-    return {
-      type: "method",
-      id: "sepa",
-      label: "SEPA Instant",
-      subtitle: "Eurozone Interbank Network",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("faster") || c === "GBP") {
-    return {
-      type: "method",
-      id: "faster-payments",
-      label: "Faster Payments",
-      subtitle: "UK Instant Bank Rail",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("interac") || c === "CAD") {
-    return {
-      type: "method",
-      id: "interac",
-      label: "Interac e-Transfer",
-      subtitle: "Canadian Electronic Clearing",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("aani") || c === "AED") {
-    return {
-      type: "method",
-      id: "aani",
-      label: "Aani Instant",
-      subtitle: "UAE National Payment Platform",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("cz") || c === "CZK") {
-    return {
-      type: "method",
-      id: "cz-bank",
-      label: "Czech Bank Transfer",
-      subtitle: "QR Platba / Local Clearing",
-      sourceRatio: "wide",
-    };
-  }
-  if (m.includes("upi") || c === "INR" || u.length > 0) {
+  // 3. UPI Provider match (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)
+  if (r === "upi" || m.includes("upi") || u.length > 0) {
+    const upiMatch = UPI_PROVIDERS.find(
+      (prov) =>
+        p.includes(prov.id) ||
+        p.includes(prov.name.toLowerCase()) ||
+        m.includes(prov.id) ||
+        m.includes(prov.name.toLowerCase()) ||
+        prov.handles.some((h) => u.includes(h)),
+    );
+    if (upiMatch) {
+      return {
+        type: "upi",
+        id: upiMatch.id,
+        label: upiMatch.name,
+        subtitle: "Unified Payments Interface (UPI)",
+        sourceRatio: upiMatch.sourceRatio || "wide",
+      };
+    }
     return {
       type: "upi",
       id: "upi",
@@ -943,9 +886,110 @@ export function resolvePaymentAsset(
     };
   }
 
-  // 5. General payment method match
+  // 4. Indian Bank match (SBI, HDFC, ICICI, Axis, YES Bank)
+  if (r === "in-bank" || m.includes("bank") || m.includes("imps") || m.includes("neft")) {
+    const bankMatch = INDIAN_BANKS.find(
+      (b) =>
+        m.includes(b.id) ||
+        m.includes(b.name.toLowerCase()) ||
+        p.includes(b.id) ||
+        p.includes(b.name.toLowerCase()),
+    );
+    if (bankMatch) {
+      return {
+        type: "bank",
+        id: bankMatch.id,
+        label: bankMatch.name,
+        subtitle: "Direct Bank Transfer (IMPS/NEFT)",
+        sourceRatio: bankMatch.sourceRatio || "ultra-wide",
+      };
+    }
+    return {
+      type: "bank",
+      id: "sbi",
+      label: "Indian Bank Transfer",
+      subtitle: "Direct Bank Transfer (IMPS/NEFT)",
+      sourceRatio: "ultra-wide",
+    };
+  }
+
+  // 5. Specific external payment rails (explicit by route or method name)
+  if (r === "gcash" || m.includes("gcash")) {
+    return {
+      type: "method",
+      id: "gcash",
+      label: "GCash Wallet",
+      subtitle: "Mobile Wallet Payout",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "paynow" || m.includes("paynow")) {
+    return {
+      type: "method",
+      id: "paynow",
+      label: "Singapore PayNow",
+      subtitle: "National Instant Payout",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "pix" || m.includes("pix")) {
+    return {
+      type: "method",
+      id: "pix",
+      label: "Pix Instant",
+      subtitle: "Central Bank of Brazil Rail",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "sepa" || m.includes("sepa")) {
+    return {
+      type: "method",
+      id: "sepa",
+      label: "SEPA Instant",
+      subtitle: "Eurozone Interbank Network",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "faster-payments" || m.includes("faster") || m.includes("fps")) {
+    return {
+      type: "method",
+      id: "faster-payments",
+      label: "Faster Payments",
+      subtitle: "UK Instant Bank Rail",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "interac" || m.includes("interac")) {
+    return {
+      type: "method",
+      id: "interac",
+      label: "Interac e-Transfer",
+      subtitle: "Canadian Electronic Clearing",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "aani" || m.includes("aani")) {
+    return {
+      type: "method",
+      id: "aani",
+      label: "Aani Instant",
+      subtitle: "UAE National Payment Platform",
+      sourceRatio: "wide",
+    };
+  }
+  if (r === "cz-bank" || m.includes("cz") || m.includes("czech")) {
+    return {
+      type: "method",
+      id: "cz-bank",
+      label: "Czech Bank Transfer",
+      subtitle: "QR Platba / Local Clearing",
+      sourceRatio: "wide",
+    };
+  }
+
+  // 6. General payment method match
   const pm = PAYMENT_METHODS.find(
-    (item) => m.includes(item.id) || m.includes(item.name.toLowerCase()),
+    (item) => m.includes(item.id) || m.includes(item.name.toLowerCase()) || r === item.id,
   );
   if (pm) {
     return {
@@ -960,7 +1004,7 @@ export function resolvePaymentAsset(
   return {
     type: "method",
     id: "moonlight",
-    label: methodName || "Moonlight Ledger",
+    label: methodName || "Moonlight Transfer",
     subtitle: "Internal Wallet Settlement",
     sourceRatio: "square",
   };
