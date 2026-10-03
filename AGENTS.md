@@ -21,6 +21,7 @@
 - Closed-loop simulation: never connect balances to real payout rails.
 
 ## Development Authentication
+
 - In local development (`import.meta.env.DEV`), the `/login` route renders a "Local Dev Helper" panel.
 - Default dev credentials: `lucianfereldenlord@gmail.com` / `12345678` (configurable via `VITE_DEV_LOGIN_EMAIL` and `VITE_DEV_LOGIN_PASSWORD`).
 - Automated agents and Playwright tests can click "1-Tap Dev Sign In" or fill these credentials directly.

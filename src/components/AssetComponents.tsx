@@ -125,7 +125,7 @@ export function CurrencyIcon({
 // ─────────────────────────────────────────────
 
 export interface BrandAssetProps {
-  id: string;
+  id?: string | undefined;
   name?: string | undefined;
   category?: "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | undefined;
   iconUrl?: string | undefined;
@@ -136,7 +136,7 @@ export interface BrandAssetProps {
 }
 
 export function BrandAsset({
-  id,
+  id = "",
   name,
   iconUrl: customUrl,
   size = "md",
@@ -144,7 +144,7 @@ export function BrandAsset({
   className,
   imgClassName,
 }: BrandAssetProps) {
-  const cleanId = id
+  const cleanId = (id || "")
     .toLowerCase()
     .replace(/.*[/\\]/, "")
     .replace(/\.(png|jpg|jpeg|svg|webp)$/, "");

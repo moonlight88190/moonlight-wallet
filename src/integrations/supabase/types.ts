@@ -145,30 +145,42 @@ export type Database = {
       };
       profiles: {
         Row: {
+          city: string | null;
+          country_code: string | null;
           created_at: string;
           email: string;
           full_name: string;
+          geography_updated_at: string | null;
           id: string;
           preferred_currency: string;
           region: string;
+          timezone: string | null;
           updated_at: string;
         };
         Insert: {
+          city?: string | null;
+          country_code?: string | null;
           created_at?: string;
           email?: string;
           full_name?: string;
+          geography_updated_at?: string | null;
           id: string;
           preferred_currency?: string;
           region?: string;
+          timezone?: string | null;
           updated_at?: string;
         };
         Update: {
+          city?: string | null;
+          country_code?: string | null;
           created_at?: string;
           email?: string;
           full_name?: string;
+          geography_updated_at?: string | null;
           id?: string;
           preferred_currency?: string;
           region?: string;
+          timezone?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -192,6 +204,8 @@ export type Database = {
           recipient_wallet_code: string | null;
           recipient_wallet_id: string | null;
           reference: string;
+          route: string;
+          sender_debit: number | null;
           sender_name: string | null;
           sender_wallet_code: string | null;
           sender_wallet_id: string | null;
@@ -215,6 +229,8 @@ export type Database = {
           recipient_wallet_code?: string | null;
           recipient_wallet_id?: string | null;
           reference?: string;
+          route?: string;
+          sender_debit?: number | null;
           sender_name?: string | null;
           sender_wallet_code?: string | null;
           sender_wallet_id?: string | null;
@@ -238,127 +254,13 @@ export type Database = {
           recipient_wallet_code?: string | null;
           recipient_wallet_id?: string | null;
           reference?: string;
+          route?: string;
+          sender_debit?: number | null;
           sender_name?: string | null;
           sender_wallet_code?: string | null;
           sender_wallet_id?: string | null;
           status?: string;
         };
-          city: string | null
-          country_code: string | null
-          created_at: string
-          email: string
-          full_name: string
-          geography_updated_at: string | null
-          id: string
-          preferred_currency: string
-          region: string
-          timezone: string | null
-          updated_at: string
-        }
-        Insert: {
-          city?: string | null
-          country_code?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          geography_updated_at?: string | null
-          id: string
-          preferred_currency?: string
-          region?: string
-          timezone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          city?: string | null
-          country_code?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          geography_updated_at?: string | null
-          id?: string
-          preferred_currency?: string
-          region?: string
-          timezone?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          amount: number
-          amount_usd: number
-          created_at: string
-          currency: string
-          fee: number
-          fee_usd: number
-          fx_rate: number | null
-          id: string
-          kind: string
-          method: string
-          note: string | null
-          recipient_amount: number | null
-          recipient_currency: string | null
-          recipient_name: string | null
-          recipient_wallet_code: string | null
-          recipient_wallet_id: string | null
-          reference: string
-          route: string
-          sender_debit: number | null
-          sender_name: string | null
-          sender_wallet_code: string | null
-          sender_wallet_id: string | null
-          status: string
-        }
-        Insert: {
-          amount: number
-          amount_usd: number
-          created_at?: string
-          currency: string
-          fee?: number
-          fee_usd?: number
-          fx_rate?: number | null
-          id?: string
-          kind: string
-          method?: string
-          note?: string | null
-          recipient_amount?: number | null
-          recipient_currency?: string | null
-          recipient_name?: string | null
-          recipient_wallet_code?: string | null
-          recipient_wallet_id?: string | null
-          reference?: string
-          route?: string
-          sender_debit?: number | null
-          sender_name?: string | null
-          sender_wallet_code?: string | null
-          sender_wallet_id?: string | null
-          status?: string
-        }
-        Update: {
-          amount?: number
-          amount_usd?: number
-          created_at?: string
-          currency?: string
-          fee?: number
-          fee_usd?: number
-          fx_rate?: number | null
-          id?: string
-          kind?: string
-          method?: string
-          note?: string | null
-          recipient_amount?: number | null
-          recipient_currency?: string | null
-          recipient_name?: string | null
-          recipient_wallet_code?: string | null
-          recipient_wallet_id?: string | null
-          reference?: string
-          route?: string
-          sender_debit?: number | null
-          sender_name?: string | null
-          sender_wallet_code?: string | null
-          sender_wallet_id?: string | null
-          status?: string
-        }
         Relationships: [
           {
             foreignKeyName: "transactions_recipient_wallet_id_fkey";
@@ -376,44 +278,6 @@ export type Database = {
           },
         ];
       };
-        ]
-      }
-      vouchers: {
-        Row: {
-          amount: number
-          code: string
-          created_at: string
-          currency: string
-          expires_at: string | null
-          id: string
-          redeemed_at: string | null
-          redeemed_by: string | null
-          status: string
-        }
-        Insert: {
-          amount: number
-          code: string
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          redeemed_at?: string | null
-          redeemed_by?: string | null
-          status?: string
-        }
-        Update: {
-          amount?: number
-          code?: string
-          created_at?: string
-          currency?: string
-          expires_at?: string | null
-          id?: string
-          redeemed_at?: string | null
-          redeemed_by?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
       wallets: {
         Row: {
           balance_usd: number;
@@ -448,6 +312,7 @@ export type Database = {
           created_at: string;
           currency: string;
           email: string;
+          fee: number;
           fee_usd: number;
           full_name: string;
           id: string;
@@ -455,7 +320,10 @@ export type Database = {
           phone: string | null;
           provider: string | null;
           reason: string | null;
+          recipient_amount: number | null;
+          recipient_currency: string | null;
           reference: string;
+          route: string;
           status: string;
           transaction_id: string | null;
           updated_at: string;
@@ -469,6 +337,7 @@ export type Database = {
           created_at?: string;
           currency?: string;
           email: string;
+          fee?: number;
           fee_usd?: number;
           full_name: string;
           id?: string;
@@ -476,7 +345,10 @@ export type Database = {
           phone?: string | null;
           provider?: string | null;
           reason?: string | null;
+          recipient_amount?: number | null;
+          recipient_currency?: string | null;
           reference?: string;
+          route?: string;
           status?: string;
           transaction_id?: string | null;
           updated_at?: string;
@@ -490,6 +362,7 @@ export type Database = {
           created_at?: string;
           currency?: string;
           email?: string;
+          fee?: number;
           fee_usd?: number;
           full_name?: string;
           id?: string;
@@ -497,7 +370,10 @@ export type Database = {
           phone?: string | null;
           provider?: string | null;
           reason?: string | null;
+          recipient_amount?: number | null;
+          recipient_currency?: string | null;
           reference?: string;
+          route?: string;
           status?: string;
           transaction_id?: string | null;
           updated_at?: string;
@@ -505,80 +381,6 @@ export type Database = {
           user_id?: string;
           wallet_id?: string;
         };
-          amount: number
-          amount_usd: number
-          created_at: string
-          currency: string
-          email: string
-          fee: number
-          fee_usd: number
-          full_name: string
-          id: string
-          method: string
-          phone: string | null
-          provider: string | null
-          reason: string | null
-          recipient_amount: number | null
-          recipient_currency: string | null
-          reference: string
-          route: string
-          status: string
-          transaction_id: string | null
-          updated_at: string
-          upi_id: string | null
-          user_id: string
-          wallet_id: string
-        }
-        Insert: {
-          amount: number
-          amount_usd: number
-          created_at?: string
-          currency?: string
-          email: string
-          fee?: number
-          fee_usd?: number
-          full_name: string
-          id?: string
-          method: string
-          phone?: string | null
-          provider?: string | null
-          reason?: string | null
-          recipient_amount?: number | null
-          recipient_currency?: string | null
-          reference?: string
-          route?: string
-          status?: string
-          transaction_id?: string | null
-          updated_at?: string
-          upi_id?: string | null
-          user_id: string
-          wallet_id: string
-        }
-        Update: {
-          amount?: number
-          amount_usd?: number
-          created_at?: string
-          currency?: string
-          email?: string
-          fee?: number
-          fee_usd?: number
-          full_name?: string
-          id?: string
-          method?: string
-          phone?: string | null
-          provider?: string | null
-          reason?: string | null
-          recipient_amount?: number | null
-          recipient_currency?: string | null
-          reference?: string
-          route?: string
-          status?: string
-          transaction_id?: string | null
-          updated_at?: string
-          upi_id?: string | null
-          user_id?: string
-          wallet_id?: string
-        }
         Relationships: [
           {
             foreignKeyName: "withdrawals_transaction_id_fkey";
@@ -633,9 +435,6 @@ export type Database = {
         Relationships: [];
       };
     };
-        ]
-      }
-    }
     Views: {
       [_ in never]: never;
     };
@@ -721,22 +520,6 @@ export type Database = {
         Returns: Json;
       };
     };
-          full_name: string
-          preferred_currency: string
-          wallet_code: string
-        }[]
-      }
-      redeem_voucher: { Args: { p_code: string }; Returns: Json }
-      send_transfer: {
-        Args: {
-          p_amount: number
-          p_currency: string
-          p_note?: string
-          p_recipient_code: string
-        }
-        Returns: string
-      }
-    }
     Enums: {
       [_ in never]: never;
     };
