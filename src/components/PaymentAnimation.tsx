@@ -185,14 +185,33 @@ function WithdrawalAnimationView({
 
   const totalStages = withdrawalStages.length;
   const [visualStage, setVisualStage] = useState(0);
-  const [progressPercent, setProgressPercent] = useState(15);
+  const [progressPercent, setProgressPercent] = useState(14);
   const [showComplete, setShowComplete] = useState(false);
   const backendDoneRef = useRef(isBackendDone);
   backendDoneRef.current = isBackendDone;
 
-  // Realistic stage pacing: 1400ms, 1500ms, 1500ms, 1500ms, 1300ms (~7.2 seconds total)
-  const stageDurations = [1400, 1500, 1500, 1500, 1300];
+  // Authentic randomized stage delays generated uniquely per clearance session
+  // Simulates real-time network negotiation, TLS handshake, beneficiary route lookup, and batch allocation
+  const stageDurationsRef = useRef<number[]>([]);
+  if (stageDurationsRef.current.length === 0) {
+    stageDurationsRef.current = [
+      1250 + Math.floor(Math.random() * 550), // Stage 0: 1250–1800ms (Ledger signature)
+      1450 + Math.floor(Math.random() * 650), // Stage 1: 1450–2100ms (Gateway TLS handshake)
+      1600 + Math.floor(Math.random() * 750), // Stage 2: 1600–2350ms (Beneficiary validation)
+      1350 + Math.floor(Math.random() * 600), // Stage 3: 1350–1950ms (Batch allocation)
+      1200 + Math.floor(Math.random() * 500), // Stage 4: 1200–1700ms (Settlement reference)
+    ];
+  }
 
+  // Institutional telemetry metrics generated per session for authentic banking credibility
+  const telemetryRef = useRef({
+    batchId: `BATCH-${Math.floor(1000 + Math.random() * 9000)}-${destinationCurrency}`,
+    gatewayLatency: Math.floor(46 + Math.random() * 62),
+    tlsCipher: "TLS_1.3_AES_256_GCM",
+    sessionHash: `0x${Math.random().toString(16).substring(2, 8).toUpperCase()}...${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
+  });
+
+  // Stage transition management with dynamic timings
   useEffect(() => {
     if (isFailed || isCancelled) return;
 
@@ -201,15 +220,12 @@ function WithdrawalAnimationView({
 
     const scheduleNext = (index: number) => {
       if (index >= totalStages - 1) {
-        // At final stage, advance progress to 96% and wait for backend completion
-        setProgressPercent(96);
         return;
       }
-      const dur = stageDurations[index] || 1500;
+      const dur = stageDurationsRef.current[index] || 1500;
       const t = setTimeout(() => {
         current = index + 1;
         setVisualStage(current);
-        setProgressPercent(withdrawalStages[current]?.progress || 90);
         scheduleNext(current);
       }, dur);
       timeouts.push(t);
@@ -222,11 +238,35 @@ function WithdrawalAnimationView({
     };
   }, [isFailed, isCancelled, totalStages]);
 
-  // When backend is completed and we've reached stage 4, transition to complete
+  // Organic smooth micro-progress ticker simulating high-frequency interbank data streaming
+  useEffect(() => {
+    if (isFailed || isCancelled) return;
+
+    const targetProgress = isBackendDone && visualStage >= totalStages - 1
+      ? 100
+      : visualStage >= totalStages - 1
+        ? 95
+        : withdrawalStages[visualStage]?.progress || 20;
+
+    const interval = setInterval(() => {
+      setProgressPercent((prev) => {
+        if (prev >= targetProgress) return prev;
+        const diff = targetProgress - prev;
+        // Natural micro-jitter: increments smoothly between 0.5% and 2.5%
+        const step = Math.max(1, Math.min(diff, Math.floor(Math.random() * 3) + 1));
+        return Math.min(targetProgress, prev + step);
+      });
+    }, 90);
+
+    return () => clearInterval(interval);
+  }, [visualStage, isBackendDone, totalStages, isFailed, isCancelled, withdrawalStages]);
+
+  // When backend is completed and we've reached stage 4, transition to complete with natural seal delay
   useEffect(() => {
     if (isBackendDone && visualStage >= totalStages - 1) {
       setProgressPercent(100);
-      const t = setTimeout(() => setShowComplete(true), 500);
+      const sealDelay = 450 + Math.floor(Math.random() * 300);
+      const t = setTimeout(() => setShowComplete(true), sealDelay);
       return () => clearTimeout(t);
     }
     return undefined;
@@ -473,6 +513,19 @@ function WithdrawalAnimationView({
           </span>
         </div>
 
+        {/* ─── Institutional Telemetry Strip ─── */}
+        <div className="rounded-xl border border-border/40 bg-secondary/30 px-3 py-2 flex items-center justify-between text-[10px] font-mono">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-foreground font-semibold truncate">{telemetryRef.current.batchId}</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-muted-foreground shrink-0 text-[9px]">
+            <span>Ping: {telemetryRef.current.gatewayLatency}ms</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <span className="hidden sm:inline">{telemetryRef.current.tlsCipher}</span>
+          </div>
+        </div>
+
         {/* ─── Beneficiary & Payout Account Details ─── */}
         <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border/30">
           <div className="rounded-xl bg-muted/30 border border-border/30 p-2.5">
@@ -596,40 +649,89 @@ function TransferAnimationView({
   const totalStages = stages.length;
 
   const [visualStage, setVisualStage] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(16);
   const [showComplete, setShowComplete] = useState(false);
   const backendDoneRef = useRef(isBackendDone);
   backendDoneRef.current = isBackendDone;
 
+  // Natural randomized delays per stage (avoids static fixed intervals)
+  // Simulates real-time cryptographic signature verification, ledger write, and balance confirmation
+  const transferStageDurationsRef = useRef<number[]>([]);
+  if (transferStageDurationsRef.current.length === 0) {
+    transferStageDurationsRef.current = [
+      950 + Math.floor(Math.random() * 450),  // Stage 0: 950–1400ms (Verifying recipient)
+      1350 + Math.floor(Math.random() * 600), // Stage 1: 1350–1950ms (Transfer auth & signature)
+      1200 + Math.floor(Math.random() * 550), // Stage 2: 1200–1750ms (Direct settlement)
+      1050 + Math.floor(Math.random() * 450), // Stage 3: 1050–1500ms (Updating ledger balance)
+      900 + Math.floor(Math.random() * 400),  // Stage 4: 900–1300ms (Transfer complete)
+    ];
+  }
+
+  // Session-unique cryptographic verification telemetry
+  const transferTelemetryRef = useRef({
+    txNonce: `0x${Math.random().toString(16).substring(2, 8).toUpperCase()}${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
+    ledgerPing: Math.floor(24 + Math.random() * 38),
+    cipherSuite: "ECDSA_P256_SHA256",
+  });
+
+  // Stage transition management with dynamic timings
   useEffect(() => {
     if (isFailed || isCancelled) return;
 
-    let mounted = true;
-    const timer = setInterval(() => {
-      if (!mounted) return;
-      setVisualStage((prev) => {
-        const nextStage = prev + 1;
-        if (nextStage >= totalStages - 1) {
-          if (backendDoneRef.current) {
-            return totalStages - 1;
-          }
-          return Math.min(prev, totalStages - 2);
-        }
-        return nextStage;
-      });
-    }, 1200);
+    let current = 0;
+    const timeouts: NodeJS.Timeout[] = [];
+
+    const scheduleNext = (index: number) => {
+      if (index >= totalStages - 1) {
+        return;
+      }
+      const dur = transferStageDurationsRef.current[index] || 1200;
+      const t = setTimeout(() => {
+        current = index + 1;
+        setVisualStage(current);
+        scheduleNext(current);
+      }, dur);
+      timeouts.push(t);
+    };
+
+    scheduleNext(0);
 
     return () => {
-      mounted = false;
-      clearInterval(timer);
+      timeouts.forEach(clearTimeout);
     };
   }, [isFailed, isCancelled, totalStages]);
 
+  // Smooth micro-progress ticker simulating continuous ledger streaming
+  useEffect(() => {
+    if (isFailed || isCancelled) return;
+
+    const stageTargets = [24, 48, 72, 92, 100];
+    const targetProgress = isBackendDone && visualStage >= totalStages - 1
+      ? 100
+      : visualStage >= totalStages - 1
+        ? 94
+        : stageTargets[visualStage] || 20;
+
+    const interval = setInterval(() => {
+      setProgressPercent((prev) => {
+        if (prev >= targetProgress) return prev;
+        const diff = targetProgress - prev;
+        const step = Math.max(1, Math.min(diff, Math.floor(Math.random() * 3) + 1));
+        return Math.min(targetProgress, prev + step);
+      });
+    }, 85);
+
+    return () => clearInterval(interval);
+  }, [visualStage, isBackendDone, totalStages, isFailed, isCancelled]);
+
   useEffect(() => {
     if (isBackendDone && visualStage >= totalStages - 2) {
+      const sealDelay = 400 + Math.floor(Math.random() * 250);
       const t = setTimeout(() => {
         setVisualStage(totalStages - 1);
+        setProgressPercent(100);
         setShowComplete(true);
-      }, 400);
+      }, sealDelay);
       return () => clearTimeout(t);
     }
     return undefined;
@@ -637,6 +739,7 @@ function TransferAnimationView({
 
   useEffect(() => {
     if (visualStage === totalStages - 1 && isBackendDone) {
+      setProgressPercent(100);
       setShowComplete(true);
     }
   }, [visualStage, totalStages, isBackendDone]);
@@ -867,13 +970,26 @@ function TransferAnimationView({
         )}
       </div>
 
-      {/* Progress Bar (non-terminal only) */}
+      {/* Dynamic Progress Gauge & Telemetry (non-terminal only) */}
       {!isTerminal && (
-        <div className="mt-3 h-1 rounded-full bg-secondary overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-            style={{ width: `${((visualStage + 1) / totalStages) * 100}%` }}
-          />
+        <div className="mt-3.5 space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-mono">
+            <span className="text-muted-foreground flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span>{stages[Math.min(visualStage, totalStages - 1)]?.title}</span>
+            </span>
+            <span className="font-bold text-primary tabular-nums">{progressPercent}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-secondary overflow-hidden p-0.5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-300 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[9px] font-mono text-muted-foreground/70 px-0.5 pt-0.5">
+            <span>Nonce: {transferTelemetryRef.current.txNonce}</span>
+            <span>Ping: {transferTelemetryRef.current.ledgerPing}ms</span>
+          </div>
         </div>
       )}
 
