@@ -13,6 +13,11 @@ interface ProfileGeographyRow {
   geography_updated_at?: string | null;
 }
 
+/**
+ * Resolves geography for the authenticated account, honoring explicit region overrides
+ * and cached results younger than 30 days. Otherwise uses IP lookup, the country
+ * header, or an India fallback and attempts to persist the detected geography.
+ */
 export const syncAccountGeography = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<NormalizedGeography> => {

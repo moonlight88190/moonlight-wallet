@@ -112,24 +112,73 @@ export const WITHDRAWAL_COMPLIANCE_STAGES: ComplianceStage[] = [
   },
 ];
 
+export function addBusinessDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  let count = 0;
+  while (count < days) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6) {
+      count++;
+    }
+  }
+  return result;
+}
+
+export function formatEstimatedArrival(createdAtStr: string): {
+  rangeText: string;
+  expectedDateText: string;
+  daysText: string;
+} {
+  const createdDate = new Date(createdAtStr);
+  const minDate = addBusinessDays(createdDate, 5);
+  const maxDate = addBusinessDays(createdDate, 7);
+
+  const monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+
+  const minMonth = monthNames[minDate.getMonth()];
+  const maxMonth = monthNames[maxDate.getMonth()];
+  const minDay = minDate.getDate();
+  const maxDay = maxDate.getDate();
+  const year = maxDate.getFullYear();
+
+  const rangeText =
+    minMonth === maxMonth
+      ? `${minMonth} ${minDay} – ${maxDay}, ${year}`
+      : `${minMonth} ${minDay} – ${maxMonth} ${maxDay}, ${year}`;
+
+  return {
+    rangeText,
+    expectedDateText: `Expected by ${maxMonth} ${maxDay}, ${year}`,
+    daysText: "5–7 business days",
+  };
+}
+
 export const TIMELINE_SUMMARY_STEPS = [
-  { stageNum: 1, label: "Request received" },
-  { stageNum: 2, label: "Payment details review" },
-  { stageNum: 3, label: "Customer due diligence" },
-  { stageNum: 4, label: "Transaction monitoring" },
-  { stageNum: 6, label: "Source of funds review" },
-  { stageNum: 8, label: "Payout processing" },
-  { stageNum: 12, label: "Manual review" },
-  { stageNum: 14, label: "Final review" },
+  { stepNum: 1, label: "Request submitted & verified", timeWindow: "Day 1" },
+  { stepNum: 2, label: "Interbank clearance & transmission", timeWindow: "Days 2–3" },
+  { stepNum: 3, label: "Beneficiary bank processing", timeWindow: "Days 4–5" },
+  { stepNum: 4, label: "Final settlement & credited", timeWindow: "Days 5–7" },
 ];
 
 export interface WithdrawalComplianceResult {
   statusLabel: string;
   stageTitle: string;
   description: string;
+  currentStep: string;
+  currentStepDescription: string;
+  nextStep: string;
+  nextStepDescription: string;
+  estimatedArrivalDate: string;
+  estimatedDaysText: string;
+  progressPercent: number;
   isProcessing: boolean;
   isHold: boolean;
   isSuccess: boolean;
+  isFailed: boolean;
   stageNumber: number;
   totalStages: number;
   elapsedText: string;
@@ -139,6 +188,7 @@ export interface WithdrawalComplianceResult {
 export function getWithdrawalComplianceInfo(
   createdAtStr: string,
   dbStatus: string,
+  options?: { isUPI?: boolean; method?: string; route?: string },
 ): WithdrawalComplianceResult {
   const createdDate = new Date(createdAtStr);
   const now = new Date();
@@ -147,21 +197,36 @@ export function getWithdrawalComplianceInfo(
   const totalMinutes = Math.floor(elapsedMs / (1000 * 60));
   const displayHours = Math.floor(totalMinutes / 60);
   const displayMinutes = totalMinutes % 60;
+  const elapsedText = `${displayHours}h ${displayMinutes}m`;
 
+  const arrival = formatEstimatedArrival(createdAtStr);
   const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
+
+  const isUPI =
+    Boolean(options?.isUPI) ||
+    options?.method?.toLowerCase().includes("upi") ||
+    options?.route?.toLowerCase() === "upi";
 
   // Finalized by admin
   if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED") {
     return {
       statusLabel: "SUCCESS",
-      stageTitle: "Payout Released",
-      description: "Withdrawal confirmed and released by Moonlight administration.",
+      stageTitle: "Payout Settled",
+      description: "Withdrawal confirmed and funds dispatched to recipient account.",
+      currentStep: "Dispatched & Credited",
+      currentStepDescription: "Funds have been successfully dispatched and credited to the beneficiary account.",
+      nextStep: "Transfer Completed",
+      nextStepDescription: "The withdrawal has arrived at the receiving destination.",
+      estimatedArrivalDate: "Completed",
+      estimatedDaysText: "Settled",
+      progressPercent: 100,
       isProcessing: false,
       isHold: false,
       isSuccess: true,
-      stageNumber: 14,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
+      isFailed: false,
+      stageNumber: 4,
+      totalStages: 4,
+      elapsedText,
       nextReviewHours: 0,
     };
   }
@@ -169,14 +234,22 @@ export function getWithdrawalComplianceInfo(
   if (upperStatus === "FAILED" || upperStatus === "REJECTED") {
     return {
       statusLabel: "FAILED",
-      stageTitle: "Withdrawal Halted",
-      description: "Request stopped during review. Funds returned to wallet balance.",
+      stageTitle: "Withdrawal Cancelled",
+      description: "Request stopped during review. Full funds returned to your Moonlight balance.",
+      currentStep: "Transfer Cancelled",
+      currentStepDescription: "Withdrawal halted. Amount has been restored to your available wallet balance.",
+      nextStep: "None",
+      nextStepDescription: "No further processing action required.",
+      estimatedArrivalDate: "Cancelled",
+      estimatedDaysText: "Refunded to Wallet",
+      progressPercent: 0,
       isProcessing: false,
       isHold: false,
       isSuccess: false,
+      isFailed: true,
       stageNumber: 0,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
+      totalStages: 4,
+      elapsedText,
       nextReviewHours: 0,
     };
   }
@@ -185,50 +258,152 @@ export function getWithdrawalComplianceInfo(
     return {
       statusLabel: "CANCELLED",
       stageTitle: "Request Cancelled",
-      description: "Withdrawal was cancelled. Funds returned to available balance.",
+      description: "Withdrawal was cancelled. Funds returned to your available balance.",
+      currentStep: "Request Cancelled",
+      currentStepDescription: "Request was cancelled. Funds returned to your Moonlight Wallet balance.",
+      nextStep: "None",
+      nextStepDescription: "No further action required.",
+      estimatedArrivalDate: "Cancelled",
+      estimatedDaysText: "Refunded to Wallet",
+      progressPercent: 0,
       isProcessing: false,
       isHold: false,
       isSuccess: false,
+      isFailed: true,
       stageNumber: 0,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
+      totalStages: 4,
+      elapsedText,
       nextReviewHours: 0,
     };
   }
 
-  // At >= 168 hours: ON HOLD
+  // At >= 168 hours or explicit HOLD:
   if (elapsedHours >= 168 || upperStatus === "ON HOLD" || upperStatus === "HOLD") {
     return {
       statusLabel: "ON HOLD",
       stageTitle: "Compliance Hold",
       description:
         "168-hour review completed. Final administrative sign-off required before release.",
+      currentStep: "Settlement Clearance Review",
+      currentStepDescription:
+        "Periodic clearing review in progress. Delivery remains expected within 5–7 business days.",
+      nextStep: "Administrative Clearance Release",
+      nextStepDescription: "Final sign-off prior to outward rail dispatch.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: arrival.daysText,
+      progressPercent: 65,
       isProcessing: true,
       isHold: true,
       isSuccess: false,
-      stageNumber: 14,
-      totalStages: 14,
-      elapsedText: `${displayHours}h ${displayMinutes}m`,
+      isFailed: false,
+      stageNumber: 3,
+      totalStages: 4,
+      elapsedText,
       nextReviewHours: 0,
     };
   }
 
-  // 0–168 hours: each 12-hour window is a distinct stage
-  const currentStageIndex = Math.min(13, Math.floor(elapsedHours / 12));
-  const stageObj = WITHDRAWAL_COMPLIANCE_STAGES[currentStageIndex]!;
-  const nextWindowHours = 12 - (elapsedHours % 12);
+  // Active Processing 0–168 hours across standard 5–7 business days milestones:
+  if (elapsedHours < 24) {
+    // Day 1: Verification & Authorization
+    const nextWindow = Math.max(1, Math.ceil(24 - elapsedHours));
+    return {
+      statusLabel: "PROCESSING",
+      stageTitle: "Payment Details Review",
+      description: "Verifying withdrawal request parameters and payout destination format.",
+      currentStep: "Payment Verification & Authorization",
+      currentStepDescription:
+        "Withdrawal request authorized and queued for domestic clearing transmission.",
+      nextStep: "Interbank Rail Transmission",
+      nextStepDescription: "Dispatch to the national payment clearance network.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: arrival.daysText,
+      progressPercent: 25,
+      isProcessing: true,
+      isHold: false,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 1,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: nextWindow,
+    };
+  }
 
+  if (elapsedHours < 72) {
+    // Days 2–3: Interbank Rail Clearance
+    const nextWindow = Math.max(1, Math.ceil(72 - elapsedHours));
+    return {
+      statusLabel: "PROCESSING",
+      stageTitle: "Interbank Clearance",
+      description: "Routing through domestic banking clearance network.",
+      currentStep: "Interbank Clearance & Routing",
+      currentStepDescription:
+        "Transaction is in transit through the domestic payment clearing house to the beneficiary bank.",
+      nextStep: "Beneficiary Bank Inward Verification",
+      nextStepDescription: "Recipient bank verifying destination account credentials.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: arrival.daysText,
+      progressPercent: 50,
+      isProcessing: true,
+      isHold: false,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 2,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: nextWindow,
+    };
+  }
+
+  if (elapsedHours < 120) {
+    // Days 4–5: Beneficiary Bank Processing
+    const nextWindow = Math.max(1, Math.ceil(120 - elapsedHours));
+    return {
+      statusLabel: "PROCESSING",
+      stageTitle: "Beneficiary Bank Processing",
+      description: "Transferred to recipient banking institution for inward ledger allocation.",
+      currentStep: "Beneficiary Bank Processing",
+      currentStepDescription:
+        "Funds received by destination institution. Awaiting inward ledger allocation.",
+      nextStep: "Account Statement Posting",
+      nextStepDescription: "Final account balance credit by beneficiary institution.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: arrival.daysText,
+      progressPercent: 75,
+      isProcessing: true,
+      isHold: false,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 3,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: nextWindow,
+    };
+  }
+
+  // Days 6–7: Final Settlement & Credit
+  const nextWindow = Math.max(1, Math.ceil(168 - elapsedHours));
   return {
     statusLabel: "PROCESSING",
-    stageTitle: stageObj.title,
-    description: stageObj.description,
+    stageTitle: "Final Settlement",
+    description: "Final review stage prior to administrative release.",
+    currentStep: "Final Settlement & Credit",
+    currentStepDescription:
+      "Final clearing window. Transaction being posted to recipient statement.",
+    nextStep: "Funds Available in Account",
+    nextStepDescription: "Transfer completed and available in beneficiary account.",
+    estimatedArrivalDate: arrival.rangeText,
+    estimatedDaysText: arrival.daysText,
+    progressPercent: 90,
     isProcessing: true,
     isHold: false,
     isSuccess: false,
-    stageNumber: currentStageIndex + 1,
-    totalStages: 14,
-    elapsedText: `${displayHours}h ${displayMinutes}m`,
-    nextReviewHours: Math.max(1, Math.ceil(nextWindowHours)),
+    isFailed: false,
+    stageNumber: 4,
+    totalStages: 4,
+    elapsedText,
+    nextReviewHours: nextWindow,
   };
 }
 

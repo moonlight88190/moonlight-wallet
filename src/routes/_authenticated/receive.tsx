@@ -12,7 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
-import { PaymentMethodIcon } from "@/components/AssetComponents";
+import { PaymentMethodIcon, BrandAsset } from "@/components/AssetComponents";
 
 export const Route = createFileRoute("/_authenticated/receive")({
   head: () => ({
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/receive")({
       { title: "Receive Money — Moonlight Wallet" },
       {
         name: "description",
-        content: "Share your Moonlight ID or QR code to receive money globally.",
+        content: "Share your Moonlight ID or QR code to receive money.",
       },
       { property: "og:title", content: "Receive Money — Moonlight Wallet" },
       { property: "og:description", content: "Share your Moonlight ID or QR code." },
@@ -31,6 +31,10 @@ export const Route = createFileRoute("/_authenticated/receive")({
 
 const qrPayload = (code: string) => `moonlight:${code}`;
 
+/**
+ * Renders the wallet ID and Moonlight QR code with copy, share, and enlarged QR actions.
+ * Displays payment methods based on the account geography and capabilities.
+ */
 function Receive() {
   const wallet = useWallet();
   const profile = useProfile();
@@ -38,6 +42,10 @@ function Receive() {
   const [copied, setCopied] = useState(false);
   const [big, setBig] = useState(false);
   const code = wallet.data?.wallet_code ?? "";
+
+  const isIndianAccount = Boolean(
+    geography.data?.isIndia || geography.data?.capabilities?.supportsUPI,
+  );
 
   async function copy() {
     if (!code) return;
@@ -65,7 +73,7 @@ function Receive() {
   return (
     <div className="mx-auto max-w-md text-center space-y-5 sm:space-y-6 animate-fade-up">
       <PageTitle eyebrow="RECEIVE" title="Receive Money">
-        Anyone on Moonlight or supported payout rails can send money using this ID or QR.
+        Anyone on Moonlight or supported payout rails can send money using this ID or QR code.
       </PageTitle>
 
       {/* ─── Identity Card ─── */}
@@ -73,7 +81,7 @@ function Receive() {
         {/* Region Badge */}
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/30 bg-secondary/50 px-3 py-1 text-[10px] font-semibold text-muted-foreground">
           {geography.data?.isIndia || geography.data?.isEurope ? (
-            <ShieldCheck className="h-3 w-3 text-success" />
+            <ShieldCheck className="h-3 w-3 text-emerald-500" />
           ) : (
             <Globe className="h-3 w-3 text-primary" />
           )}
@@ -110,31 +118,119 @@ function Receive() {
           )}
         </div>
 
-        {/* Supported Corridors */}
-        <div className="border-t border-border/30 pt-4 space-y-2">
-          <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-[0.1em] uppercase">
-            Compatible Payout Infrastructure
-          </p>
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <PaymentMethodIcon id="sepa" size="sm" />
-            <PaymentMethodIcon id="faster-payments" size="sm" />
-            <PaymentMethodIcon id="upi-qr" size="sm" />
-            <PaymentMethodIcon id="gcash" size="sm" />
-            <PaymentMethodIcon id="paynow" size="sm" />
-            <PaymentMethodIcon id="pix" size="sm" />
+        {/* ─── Supported Settlement Rails (Filtered by Account Geography) ─── */}
+        {isIndianAccount ? (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Zero Surcharge
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="upi" size="sm" />
+              <BrandAsset id="google-pay" size="sm" />
+              <BrandAsset id="phonepe" size="sm" />
+              <BrandAsset id="paytm" size="sm" />
+              <BrandAsset id="bhim" size="sm" />
+              <PaymentMethodIcon id="in-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance settlement supported via UPI, verified mobile payment handles, and IMPS domestic banking rails.
+            </p>
           </div>
-        </div>
+        ) : geography.data?.isEurope || geography.data?.capabilities?.supportsSEPA ? (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                SEPA Network
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="sepa" size="sm" />
+              {geography.data?.countryCode === "CZ" && (
+                <PaymentMethodIcon id="cz-bank" size="sm" />
+              )}
+              <PaymentMethodIcon id="int-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance transfers supported via Single Euro Payments Area (SEPA Credit Transfer).
+            </p>
+          </div>
+        ) : geography.data?.isUK || geography.data?.capabilities?.supportsFasterPayments ? (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Faster Payments
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="faster-payments" size="sm" />
+              <PaymentMethodIcon id="int-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance settlement supported via the UK Faster Payments Service and interbank network.
+            </p>
+          </div>
+        ) : geography.data?.capabilities?.supportsGCash ? (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="gcash" size="sm" />
+              <PaymentMethodIcon id="ph-bank" size="sm" />
+              <PaymentMethodIcon id="int-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance transfers supported via GCash and Philippine domestic interbank rails.
+            </p>
+          </div>
+        ) : geography.data?.capabilities?.supportsPix ? (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="pix" size="sm" />
+              <PaymentMethodIcon id="int-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance settlement supported via Pix instant settlement network.
+            </p>
+          </div>
+        ) : (
+          <div className="border-t border-border/30 pt-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Settlement Rails
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="int-bank" size="sm" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance transfers supported via international wire and SWIFT interbank network.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* ─── Action Buttons ─── */}
+      {/* ─── Action Buttons (Clean 3-column grid, no duplicate buttons) ─── */}
       <div className="grid grid-cols-3 gap-2.5">
         {[
-          {
-            label: copied ? "Copied!" : "Copy ID",
-            icon: copied ? Check : Copy,
-            onClick: copy,
-            isCopied: copied,
-          },
           {
             label: copied ? "Copied!" : "Copy ID",
             icon: copied ? Check : Copy,
@@ -169,7 +265,7 @@ function Receive() {
           <DialogTitle className="text-center font-mono text-[14px] font-semibold">
             {code}
           </DialogTitle>
-          <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm">
+          <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm border border-border/10">
             <QRCodeSVG
               value={qrPayload(code)}
               size={220}

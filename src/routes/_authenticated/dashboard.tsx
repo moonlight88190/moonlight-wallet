@@ -11,10 +11,9 @@ import {
   Clock,
   Gift,
   ShieldCheck,
-  Sparkles,
   Zap,
-  Lock,
-  Wifi,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -50,6 +49,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
+/**
+ * Renders the signed-in wallet overview with display-currency balances,
+ * account geography, regional payment methods, and recent transactions.
+ */
 function Dashboard() {
   const navigate = useNavigate();
   const profile = useProfile();
@@ -59,6 +62,7 @@ function Dashboard() {
   const transactions = useTransactions(4);
   const setCur = useSetPreferredCurrency();
   const [copiedCode, setCopiedCode] = useState(false);
+  const [showBalance, setShowBalance] = useState(true);
 
   const cur = profile.data?.preferred_currency ?? "EUR";
   const rate = rates.data?.rates[cur] ?? 1;
@@ -76,7 +80,7 @@ function Dashboard() {
   const recentTxs = (transactions.data ?? []).slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 pb-12 animate-fade-up">
+    <div className="mx-auto max-w-xl space-y-5 pb-2 animate-fade-up">
       {/* ═══════════════════════════════════════
            1. MODERN ACCOUNT & BALANCE CARD
          ═══════════════════════════════════════ */}
@@ -121,17 +125,25 @@ function Dashboard() {
         </div>
 
         {/* Balance Hero Section */}
-        <div className="relative z-10 space-y-2 text-center py-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Available Balance
-          </p>
+        <div className="relative z-10 space-y-2 text-center py-1">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <span>Available Balance</span>
+            <button
+              type="button"
+              onClick={() => setShowBalance(!showBalance)}
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
+              className="p-1 rounded-full text-muted-foreground/80 hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer"
+            >
+              {showBalance ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </button>
+          </div>
 
           <div>
             {loading ? (
               <Skeleton className="mx-auto h-12 w-56 rounded-2xl" />
             ) : (
               <h1 className="tabular font-sans text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-none">
-                {formatMoney(balance, cur)}
+                {showBalance ? formatMoney(balance, cur) : "••••••••"}
               </h1>
             )}
           </div>
@@ -239,36 +251,40 @@ function Dashboard() {
       {/* ═══════════════════════════════════════
            2. OPERATIONAL STATUS CARDS
          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-3 gap-2 px-0.5">
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-            <ShieldCheck className="h-4 w-4" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 px-0.5">
+        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-xs shadow-2xs hover:border-border transition-colors">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <ShieldCheck className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Account Active</div>
-            <div className="text-[10px] text-muted-foreground truncate">Identity verified</div>
+            <div className="font-semibold text-foreground truncate">Account Verified</div>
+            <div className="text-[11px] text-muted-foreground truncate">Statutory KYC compliant</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
-            <Zap className="h-4 w-4" />
+        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-xs shadow-2xs hover:border-border transition-colors">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+            <Zap className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Transfers</div>
-            <div className="text-[10px] text-muted-foreground truncate">Instant &amp; zero fee</div>
+            <div className="font-semibold text-foreground truncate">Instant Transfers</div>
+            <div className="text-[11px] text-muted-foreground truncate">0% peer-to-peer fee</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-            <Landmark className="h-4 w-4" />
+        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-xs shadow-2xs hover:border-border transition-colors">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+            <Landmark className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Withdrawals</div>
-            <div className="text-[10px] text-muted-foreground truncate">
-              {geography.data?.isIndia ? "UPI & Bank rails" : "Local bank payouts"}
+            <div className="font-semibold text-foreground truncate">
+              {geography.data?.isIndia
+                ? "UPI & IMPS Rails"
+                : geography.data?.isEurope
+                  ? "SEPA Instant Rails"
+                  : "Domestic Clearing"}
             </div>
+            <div className="text-[11px] text-muted-foreground truncate">Direct bank settlement</div>
           </div>
         </div>
       </div>

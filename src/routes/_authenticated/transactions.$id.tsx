@@ -203,7 +203,17 @@ function Receipt() {
 
   // Authoritative stored economics
   const grossAmount = Number(rawData.amount) || 0;
-  const currency = (rawData.currency as string) || "EUR";
+  const isIndianRail =
+    isWithdrawal &&
+    (rawData.route === "upi" ||
+      rawData.method?.toLowerCase().includes("upi") ||
+      rawData.method?.toLowerCase().includes("in-bank") ||
+      rawData.method?.toLowerCase().includes("bank") ||
+      rawData.method?.toLowerCase().includes("imps"));
+  const currency =
+    isIndianRail && rawData.currency === "EUR"
+      ? "INR"
+      : (rawData.currency as string) || "EUR";
   const feeAmount = rawData.fee != null ? Number(rawData.fee) : 0;
   const netAmount =
     rawData.recipient_amount != null
@@ -219,13 +229,23 @@ function Receipt() {
         ? grossAmount
         : grossAmount + feeAmount;
 
+  const isUPI =
+    rawData.route?.toLowerCase() === "upi" ||
+    rawData.recipient_name?.toLowerCase().includes("upi") ||
+    (rawData.recipient_name && rawData.recipient_name.includes("@")) ||
+    paymentAsset.id?.toLowerCase().includes("upi");
+
   // Compliance info for withdrawals
   const complianceInfo = isWithdrawal
-    ? getWithdrawalComplianceInfo(rawData.created_at, rawData.status)
+    ? getWithdrawalComplianceInfo(rawData.created_at, rawData.status, {
+        isUPI,
+        method: rawData.recipient_name || rawData.route || undefined,
+        route: rawData.route || undefined,
+      })
     : null;
 
   return (
-    <div className="mx-auto max-w-sm sm:max-w-md px-2 sm:px-4 space-y-4 pb-20 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-sm sm:max-w-md px-2 sm:px-4 space-y-4 pb-2 animate-in fade-in duration-200">
       {/* Navigation & Actions */}
       <div className="flex items-center justify-between py-1 no-print">
         <Link
@@ -329,7 +349,14 @@ function Receipt() {
                 />
               </div>
             ) : (
-              <BrandAsset id={paymentAsset.id} size="sm" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-2xs p-1.5 overflow-hidden">
+                <BrandAsset
+                  id={paymentAsset.id}
+                  size="fit"
+                  className="h-full w-full"
+                  imgClassName="max-h-full max-w-full object-contain object-center"
+                />
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <span className="text-xs font-bold text-foreground block truncate">
@@ -342,22 +369,22 @@ function Receipt() {
           </div>
         </div>
 
-        {/* ─── Multi-Day Withdrawal Lifecycle (168h) ─── */}
+        {/* ─── Payout Progress & 5–7 Business Days Timeline ─── */}
         {isWithdrawal && complianceInfo && (
-          <div className="mx-5 sm:mx-6 mb-4 rounded-2xl border border-border/40 bg-secondary/10 p-3.5 space-y-3">
+          <div className="mx-5 sm:mx-6 mb-4 rounded-2xl border border-border/40 bg-muted/30 p-3.5 space-y-3">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                  Processing Lifecycle
+                  Payout Timeline
                 </span>
-                <span className="text-xs font-semibold text-foreground">
-                  {complianceInfo.statusLabel} · Stage {complianceInfo.stageNumber} of 14
+                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  {complianceInfo.isSuccess ? "Settled" : complianceInfo.estimatedDaysText}
                 </span>
               </div>
               <div className="text-right text-[10px] text-muted-foreground">
                 <div>
-                  Elapsed: <strong className="text-foreground">{complianceInfo.elapsedText}</strong>
+                  Expected: <strong className="text-foreground">{complianceInfo.estimatedArrivalDate}</strong>
                 </div>
                 {complianceInfo.nextReviewHours > 0 && (
                   <div>Next window: ≈{complianceInfo.nextReviewHours}h</div>
@@ -365,7 +392,7 @@ function Receipt() {
               </div>
             </div>
 
-            {/* Current Stage Banner */}
+            {/* Current Step Banner */}
             <div className="rounded-xl border border-border/30 bg-card px-3 py-2 text-xs">
               <div className="flex items-center gap-1.5 font-semibold text-foreground">
                 {complianceInfo.isHold ? (
@@ -375,49 +402,49 @@ function Receipt() {
                 ) : (
                   <span className="h-2 w-2 rounded-full bg-primary anim-subtle-pulse shrink-0" />
                 )}
-                <span>{complianceInfo.stageTitle}</span>
+                <span>{complianceInfo.currentStep}</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5 pl-5 leading-relaxed">
-                {complianceInfo.description}
+                {complianceInfo.currentStepDescription}
               </p>
             </div>
 
             {/* Visual Step Progression */}
             <div className="space-y-1.5 pt-1">
               {TIMELINE_STEPS.map((step, idx) => {
-                const isHoldStep = idx === TIMELINE_STEPS.length - 1 && complianceInfo.isHold;
                 const isPassed =
-                  complianceInfo.stageNumber > step.stageNum || complianceInfo.isSuccess;
+                  complianceInfo.stageNumber > step.stepNum || complianceInfo.isSuccess;
                 const isCurrent =
-                  complianceInfo.stageNumber === step.stageNum && !complianceInfo.isSuccess;
+                  complianceInfo.stageNumber === step.stepNum && !complianceInfo.isSuccess;
                 return (
-                  <div key={idx} className="flex items-center gap-2 text-[11px]">
-                    <div
-                      className={cn(
-                        "flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold",
-                        isPassed
-                          ? "bg-emerald-500 text-white"
-                          : isCurrent
-                            ? isHoldStep
-                              ? "bg-amber-500 text-white"
-                              : "bg-primary text-primary-foreground ring-1 ring-primary/20"
-                            : "bg-muted text-muted-foreground/50",
-                      )}
-                    >
-                      {isPassed ? <Check className="h-2.5 w-2.5 stroke-[3]" /> : null}
+                  <div key={idx} className="flex items-center justify-between gap-2 text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold",
+                          isPassed
+                            ? "bg-emerald-500 text-white"
+                            : isCurrent
+                              ? "bg-primary text-primary-foreground ring-1 ring-primary/20"
+                              : "bg-muted text-muted-foreground/50",
+                        )}
+                      >
+                        {isPassed ? <Check className="h-2.5 w-2.5 stroke-[3]" /> : null}
+                      </div>
+                      <span
+                        className={cn(
+                          isCurrent
+                            ? "font-semibold text-foreground"
+                            : isPassed
+                              ? "text-muted-foreground"
+                              : "text-muted-foreground/40",
+                        )}
+                      >
+                        {step.label}
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        isCurrent
-                          ? "font-semibold text-foreground"
-                          : isPassed
-                            ? "text-muted-foreground"
-                            : "text-muted-foreground/40",
-                      )}
-                    >
-                      {isHoldStep && complianceInfo.isHold
-                        ? "Settlement verification (168h)"
-                        : step.label}
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {step.timeWindow}
                     </span>
                   </div>
                 );
@@ -426,8 +453,7 @@ function Receipt() {
 
             {complianceInfo.isHold && (
               <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                Standard 7-day (168-hour) operational review period elapsed. Final administrative
-                clearance required prior to settlement release.
+                Standard operational clearing review in progress. Delivery remains expected within 5–7 business days.
               </p>
             )}
           </div>

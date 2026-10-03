@@ -130,7 +130,7 @@ function RedeemPage() {
     "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shadow-md touch-manipulation cursor-pointer";
 
   return (
-    <div className="mx-auto max-w-md space-y-6 pb-20 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-md space-y-6 pb-4 animate-in fade-in duration-200">
       {/* ─── Header ─── */}
       <div className="flex items-center justify-between">
         <Link
@@ -223,7 +223,7 @@ function RedeemPage() {
                   onClick={handlePaste}
                   className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
                 >
-                  Paste code
+                  Paste from clipboard
                 </button>
               </div>
 
@@ -239,8 +239,16 @@ function RedeemPage() {
                   autoComplete="off"
                   autoCapitalize="characters"
                   spellCheck="false"
-                  className="h-14 rounded-2xl border-border/60 bg-background text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+                  className="h-14 rounded-2xl border-border/60 bg-background text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20 pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={handlePaste}
+                  title="Paste from clipboard"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
               </div>
             </div>
 

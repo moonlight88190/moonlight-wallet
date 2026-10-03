@@ -142,6 +142,10 @@ const PRODUCT_CAPABILITIES = [
   },
 ];
 
+/**
+ * Renders the public wallet landing page with account entry points,
+ * market benchmarks, supported payment methods, and product capabilities.
+ */
 function Landing() {
   const navigate = useNavigate();
   const [signedIn, setSignedIn] = useState(false);

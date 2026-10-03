@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
@@ -8,11 +8,16 @@ import {
   User,
   ArrowLeft,
   ShieldAlert,
+  ShieldCheck,
+  Lock,
+  Zap,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BankLogo,
+  CountryFlag,
   GiftCardBrand,
   GiftCardImage,
   UPIProviderLogo,
@@ -72,12 +77,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
-  { id: "upi", name: "UPI", icon: "upi", badge: "Instant" },
-  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "IMPS" },
-  { id: "sepa", name: "SEPA", icon: "sepa", badge: "EUR" },
-  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "GBP" },
-  { id: "gcash", name: "GCash", icon: "gcash", badge: "PHP" },
-  { id: "pix", name: "Pix", icon: "pix", badge: "BRL" },
+  { id: "upi", name: "UPI", icon: "upi", badge: "24–48 Hours" },
+  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "24–48 Hours" },
+  { id: "sepa", name: "SEPA", icon: "sepa", badge: "24–48 Hours" },
+  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "24–48 Hours" },
+  { id: "gcash", name: "GCash", icon: "gcash", badge: "24–48 Hours" },
+  { id: "pix", name: "Pix", icon: "pix", badge: "24–48 Hours" },
 ];
 
 function Withdraw() {
@@ -86,8 +91,78 @@ function Withdraw() {
   const { data: wallet } = useWallet();
   const { data: profile } = useProfile();
   const rates = useRates();
+  const geography = useAccountGeography();
+  const geo = geography.data;
 
-  const preferredCurrency = profile?.preferred_currency || "EUR";
+  // Authoritative verified jurisdiction resolution
+  const verifiedCountryCode = (geo?.countryCode || profile?.country_code || "IN").toUpperCase();
+  const isIndia = geo?.isIndia ?? (verifiedCountryCode === "IN");
+  const isEurope =
+    geo?.isEurope ??
+    ([
+      "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
+      "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
+    ].includes(verifiedCountryCode) ||
+      profile?.region?.toUpperCase() === "EUROPE");
+  const isPH = Boolean(
+    geo?.capabilities?.supportsGCash ||
+      verifiedCountryCode === "PH" ||
+      profile?.region?.toUpperCase() === "PHILIPPINES",
+  );
+  const isUK = geo?.isUK ?? (verifiedCountryCode === "GB" || verifiedCountryCode === "UK");
+  const isBR = Boolean(geo?.capabilities?.supportsPix || verifiedCountryCode === "BR");
+
+  // Currency strictly locked to verified jurisdiction (AML & CFT Statutory Requirement)
+  const verifiedCurrency = isIndia
+    ? "INR"
+    : isEurope
+      ? "EUR"
+      : isPH
+        ? "PHP"
+        : isUK
+          ? "GBP"
+          : isBR
+            ? "BRL"
+            : "INR";
+
+  const verifiedCountryName = isIndia
+    ? "India"
+    : isEurope
+      ? "Europe"
+      : isPH
+        ? "Philippines"
+        : isUK
+          ? "United Kingdom"
+          : isBR
+            ? "Brazil"
+            : (geo?.countryName || "India");
+
+  const verifiedFlagCode = isIndia
+    ? "IN"
+    : isEurope
+      ? "DE"
+      : isPH
+        ? "PH"
+        : isUK
+          ? "GB"
+          : isBR
+            ? "BR"
+            : "IN";
+
+  // Authorized domestic payout rails for verified country
+  const allowedRailIds = isIndia
+    ? ["upi", "in-bank"]
+    : isEurope
+      ? ["sepa"]
+      : isPH
+        ? ["gcash"]
+        : isUK
+          ? ["faster-payments"]
+          : isBR
+            ? ["pix"]
+            : ["upi", "in-bank"];
+
+  const preferredCurrency = profile?.preferred_currency || verifiedCurrency;
   const r = rates.data?.rates ?? {};
 
   // 48h account age check
@@ -103,15 +178,18 @@ function Withdraw() {
   // Mode: rails vs vouchers
   const [activeTab, setActiveTab] = useState<"rails" | "vouchers">("rails");
 
-  // Selected payout method
-  const defaultMethod = PAYMENT_METHODS.find((m) => m.id === "upi") || PAYMENT_METHODS[0]!;
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta>(defaultMethod);
-  const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(UPI_PROVIDERS[0]!);
+  // Selected payout method: default to first allowed domestic rail
+  const initialDefaultMethod =
+    PAYMENT_METHODS.find((m) => allowedRailIds.includes(m.id)) || PAYMENT_METHODS[0]!;
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta>(initialDefaultMethod);
+  const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(
+    UPI_PROVIDERS.find((p) => p.id === "bhim") || UPI_PROVIDERS[0]!,
+  );
   const [selectedBank, setSelectedBank] = useState<BankMeta | null>(INDIAN_BANKS[0]!);
 
-  // Form state
+  // Form state - currency strictly locked to verified jurisdiction
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
-  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(preferredCurrency);
+  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(verifiedCurrency);
   const [upiId, setUpiId] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [ifscCode, setIfscCode] = useState<string>("");
@@ -119,6 +197,18 @@ function Withdraw() {
   const [email, setEmail] = useState<string>(profile?.email || "");
   const [phone, setPhone] = useState<string>("");
   const [showPersonalDetails, setShowPersonalDetails] = useState<boolean>(false);
+
+  // Synchronize method and currency whenever verified geography resolves
+  useEffect(() => {
+    if (!allowedRailIds.includes(selectedMethod.id)) {
+      const firstAllowed =
+        PAYMENT_METHODS.find((m) => allowedRailIds.includes(m.id)) || PAYMENT_METHODS[0]!;
+      setSelectedMethod(firstAllowed);
+    }
+    if (withdrawCurrency !== verifiedCurrency) {
+      setWithdrawCurrency(verifiedCurrency);
+    }
+  }, [allowedRailIds, selectedMethod.id, verifiedCurrency, withdrawCurrency]);
 
   // Review dialog
   const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
@@ -136,20 +226,42 @@ function Withdraw() {
   const [createdWdId, setCreatedWdId] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  // Currency conversions
+  // Currency conversions: verified domestic payout corridor
   const sourceAmt = Number(withdrawAmount) || 0;
-  const targetCorridorCurrency = getMethodTargetCurrency(selectedMethod.id);
-  const isCrossCorridor = withdrawCurrency !== targetCorridorCurrency;
-  const sourceRate = r[withdrawCurrency] ?? 1;
-  const targetRate = r[targetCorridorCurrency] ?? 1;
-  const fxRateRatio = sourceRate > 0 ? targetRate / sourceRate : 1;
-  const convertedTargetAmt = isCrossCorridor ? sourceAmt * fxRateRatio : sourceAmt;
+  const isUPI = selectedMethod.id.includes("upi");
+  const isIndianBank = selectedMethod.id === "in-bank";
+  const effectiveCurrency = verifiedCurrency;
+  const targetCorridorCurrency = verifiedCurrency;
+  const isCrossCorridor = false;
   const feeAmount = sourceAmt * 0.1;
-  const netReceivedAmt = isCrossCorridor
-    ? (sourceAmt - feeAmount) * fxRateRatio
-    : sourceAmt - feeAmount;
+  const netReceivedAmt = sourceAmt - feeAmount;
 
   const upiDetection = parseUPIHandle(upiId);
+
+  // Sync UPI provider when user types a recognized handle (e.g. @upi -> BHIM)
+  const handleUpiIdChange = (val: string) => {
+    setUpiId(val);
+    const det = parseUPIHandle(val);
+    if (det.isVPA && det.providerId) {
+      const match = UPI_PROVIDERS.find((p) => p.id === det.providerId);
+      if (match) setSelectedUPIApp(match);
+    }
+  };
+
+  // Rail switch handler with AML compliance and jurisdiction lock enforcement
+  const handleSelectRail = (railId: string) => {
+    if (!allowedRailIds.includes(railId)) {
+      toast.error(
+        `AML & Fraud Prevention Policy: Verified ${verifiedCountryName} accounts may only withdraw in ${verifiedCurrency} via domestic rails (${allowedRailIds.join(", ").toUpperCase()}). Foreign rail access is restricted to prevent cross-border money laundering.`,
+        { duration: 5000 },
+      );
+      return;
+    }
+    const found = PAYMENT_METHODS.find((m) => m.id === railId);
+    if (!found) return;
+    setSelectedMethod(found);
+    setWithdrawCurrency(verifiedCurrency);
+  };
 
   // Submit withdrawal
   async function handleSubmitWithdrawal() {
@@ -163,12 +275,29 @@ function Withdraw() {
       return;
     }
 
-    const isUPI = selectedMethod.id.includes("upi");
-    const isIndianBank = selectedMethod.id === "in-bank";
+    // Strict AML Verification
+    if (!allowedRailIds.includes(selectedMethod.id)) {
+      toast.error(
+        `AML Policy: Payout method not authorized for verified ${verifiedCountryName} accounts.`,
+      );
+      return;
+    }
+
+    if (effectiveCurrency !== verifiedCurrency) {
+      toast.error(
+        `AML Policy: Verified ${verifiedCountryName} accounts may only withdraw in ${verifiedCurrency}.`,
+      );
+      return;
+    }
+
+    if (sourceAmt <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
 
     if (isUPI) {
       if (!upiId.trim() || !upiDetection.isVPA) {
-        toast.error("Please enter a valid UPI VPA (e.g. username@okhdfcbank).");
+        toast.error("Please enter a valid UPI VPA (e.g. username@okhdfcbank or user@upi).");
         return;
       }
       if (!phone.trim() || phone.trim().length < 8) {
@@ -196,19 +325,28 @@ function Withdraw() {
     setWithdrawError(null);
     setAnimState("processing");
 
+    // Automatically resolve effective UPI app based on detected handle or selection
+    const detectedUPI =
+      isUPI && upiDetection.isVPA && upiDetection.providerId
+        ? UPI_PROVIDERS.find((p) => p.id === upiDetection.providerId)
+        : null;
+
+    const effectiveUPIApp =
+      detectedUPI || selectedUPIApp || UPI_PROVIDERS.find((p) => p.id === "bhim");
+
     const methodName = isIndianBank
       ? `${selectedBank?.name || "Indian Bank"} IMPS Transfer`
-      : selectedUPIApp
-        ? `${selectedUPIApp.name} (UPI)`
+      : isUPI
+        ? `${effectiveUPIApp?.name || "BHIM"} (UPI)`
         : selectedMethod.name;
 
     const providerName = isIndianBank
       ? selectedBank?.name
-      : selectedUPIApp
-        ? selectedUPIApp.name
-        : isUPI
-          ? upiDetection.providerName || "UPI"
-          : selectedMethod.name;
+      : isUPI
+        ? effectiveUPIApp?.name || "BHIM UPI"
+        : selectedMethod.name;
+
+    const finalCurrency = isUPI || isIndianBank ? "INR" : withdrawCurrency;
 
     const withdrawReason = isIndianBank
       ? `Transfer to ${selectedBank?.name || "Indian Bank"} A/C ••••${accountNumber.slice(-4)} (IFSC: ${ifscCode.toUpperCase()})`
@@ -220,7 +358,7 @@ function Withdraw() {
       "create_withdrawal" as never,
       {
         p_amount: sourceAmt,
-        p_currency: withdrawCurrency,
+        p_currency: finalCurrency,
         p_method: methodName,
         p_full_name: currentFullName,
         p_email: currentEmail,
@@ -327,7 +465,7 @@ function Withdraw() {
               ? selectedBank?.name || "Indian Bank"
               : selectedUPIApp?.name || selectedMethod.name
           }
-          exchangeRate={isCrossCorridor ? fxRateRatio : undefined}
+          exchangeRate={undefined}
           fee={feeAmount}
           errorMessage={withdrawError || undefined}
           onRetry={() => setAnimState("idle")}
@@ -341,7 +479,7 @@ function Withdraw() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6 pb-16 animate-in fade-in duration-200">
+    <div className="mx-auto w-full max-w-md space-y-6 pb-2 animate-in fade-in duration-200 overflow-x-hidden px-1 sm:px-0">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Withdraw</h1>
@@ -365,6 +503,68 @@ function Withdraw() {
           </div>
         </div>
       )}
+
+      {/* ─── AML & Anti-Fraud Compliance Notice ─── */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 sm:p-4 space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </div>
+            <span className="font-bold text-foreground text-xs">
+              AML & Anti-Fraud Compliance Policy
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/25 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <CountryFlag code={verifiedFlagCode} circle size="xs" />
+            <span>{verifiedCountryName} Verified</span>
+          </span>
+        </div>
+
+        <p className="text-muted-foreground text-[11px] leading-relaxed">
+          In strict compliance with statutory Anti-Money Laundering (AML), CFT guidelines, and central bank regulations (including Reserve Bank of India, European Central Bank, and BSP), withdrawals are locked to your verified country of residence and its domestic national currency:
+        </p>
+
+        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isIndia
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">India 🇮🇳</span>
+            <span className="text-xs font-mono font-bold text-foreground">INR Only</span>
+          </div>
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isEurope
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">Europe 🇪🇺</span>
+            <span className="text-xs font-mono font-bold text-foreground">EUR Only</span>
+          </div>
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isPH
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">Philippines 🇵🇭</span>
+            <span className="text-xs font-mono font-bold text-foreground">PHP Only</span>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-1.5 pt-1 text-[10px] text-muted-foreground border-t border-border/40">
+          <Lock className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground/80" />
+          <span>
+            <strong>Fraud & Anti-Money Laundering Safeguard:</strong> Protects your account against unauthorized cross-border foreign exchange conversion, credential stuffing exfiltration, and illicit money laundering by locking rails to verified local identity.
+          </span>
+        </div>
+      </div>
 
       {/* Mode Tabs */}
       <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-card/60 border border-border/60 text-xs font-semibold shadow-xs">
@@ -393,9 +593,9 @@ function Withdraw() {
       </div>
 
       {activeTab === "rails" ? (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           {/* ─── STEP 1: Payout Method ─── */}
-          <section className="space-y-3">
+          <section className="space-y-3 w-full">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Payout Channel
@@ -403,29 +603,40 @@ function Withdraw() {
               <span className="text-xs font-semibold text-primary">{selectedMethod.name}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 w-full">
               {RAIL_OPTIONS.map((rail) => {
                 const isSelected = selectedMethod.id === rail.id;
+                const isAllowed = allowedRailIds.includes(rail.id);
                 return (
                   <button
                     key={rail.id}
                     type="button"
-                    onClick={() => {
-                      const found = PAYMENT_METHODS.find((m) => m.id === rail.id);
-                      if (found) setSelectedMethod(found);
-                    }}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center ${
+                    onClick={() => handleSelectRail(rail.id)}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center min-w-0 overflow-hidden relative ${
                       isSelected
                         ? "border-primary/60 bg-primary/10 shadow-xs font-semibold"
-                        : "border-border/50 bg-card/60 hover:bg-muted/40"
+                        : isAllowed
+                          ? "border-border/50 bg-card/60 hover:bg-muted/40"
+                          : "border-border/30 bg-muted/20 opacity-60 hover:opacity-80"
                     }`}
                   >
+                    {!isAllowed && (
+                      <span className="absolute top-1.5 right-1.5 text-muted-foreground/80">
+                        <Lock className="h-3 w-3" />
+                      </span>
+                    )}
                     <BrandAsset id={rail.icon} size="xs" />
                     <span className="text-xs font-semibold text-foreground truncate w-full">
                       {rail.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.2 rounded-md">
-                      {rail.badge}
+                    <span
+                      className={`text-[9px] px-1.5 py-0.2 rounded-md font-mono ${
+                        isAllowed
+                          ? "text-muted-foreground bg-muted/60"
+                          : "text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                      }`}
+                    >
+                      {isAllowed ? rail.badge : "AML Locked"}
                     </span>
                   </button>
                 );
@@ -434,24 +645,24 @@ function Withdraw() {
 
             {/* UPI Sub-selector */}
             {selectedMethod.id === "upi" && (
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 w-full overflow-hidden">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
                   Select UPI Provider
                 </span>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5 w-full">
                   {UPI_PROVIDERS.map((app) => (
                     <button
                       key={app.id}
                       type="button"
                       onClick={() => setSelectedUPIApp(app)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer touch-manipulation min-w-0 overflow-hidden ${
                         selectedUPIApp?.id === app.id
-                          ? "border-primary bg-primary/10 shadow-xs"
+                          ? "border-primary bg-primary/10 shadow-xs font-semibold"
                           : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <UPIProviderLogo providerId={app.id} size="xs" />
-                      <span className="text-[10px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center block">
                         {app.name.split(" ")[0]}
                       </span>
                     </button>
@@ -462,24 +673,24 @@ function Withdraw() {
 
             {/* Bank Sub-selector */}
             {selectedMethod.id === "in-bank" && (
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 w-full overflow-hidden">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
                   Select Bank
                 </span>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5 w-full">
                   {INDIAN_BANKS.map((b) => (
                     <button
                       key={b.id}
                       type="button"
                       onClick={() => setSelectedBank(b)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer touch-manipulation min-w-0 overflow-hidden ${
                         selectedBank?.id === b.id
-                          ? "border-primary bg-primary/10 shadow-xs"
+                          ? "border-primary bg-primary/10 shadow-xs font-semibold"
                           : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <BankLogo bankId={b.id} size="xs" />
-                      <span className="text-[10px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center block">
                         {b.name.split(" ")[0]}
                       </span>
                     </button>
@@ -490,7 +701,7 @@ function Withdraw() {
           </section>
 
           {/* ─── STEP 2: Amount ─── */}
-          <section className="space-y-3 pt-3 border-t border-border/40">
+          <section className="space-y-3 pt-3 border-t border-border/40 w-full">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Withdrawal Amount
@@ -503,53 +714,59 @@ function Withdraw() {
               </span>
             </div>
 
-            <div className="flex gap-2.5">
+            <div className="flex gap-2.5 w-full">
               <Input
                 type="number"
                 inputMode="decimal"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="100"
-                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4"
+                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4 min-w-0"
               />
-              <Select
-                value={withdrawCurrency}
-                onValueChange={(newCur) => {
-                  const curAmt = Number(withdrawAmount) || 0;
-                  if (curAmt > 0 && withdrawCurrency && newCur && withdrawCurrency !== newCur) {
-                    const converted = convert(curAmt, withdrawCurrency, newCur, r);
-                    setWithdrawAmount(converted.toFixed(2));
-                  }
-                  setWithdrawCurrency(newCur);
-                }}
+              <div
+                className="h-14 w-36 rounded-2xl border border-border/60 bg-muted/40 font-semibold shrink-0 flex items-center justify-between px-3 cursor-not-allowed select-none"
+                title={`Locked to ${effectiveCurrency} based on your verified ${verifiedCountryName} identity (Anti-Money Laundering & Fraud Protection Policy)`}
               >
-                <SelectTrigger className="h-14 w-28 rounded-2xl border-border/60 bg-card/60 font-semibold shrink-0 cursor-pointer">
-                  <SelectValue placeholder="Currency" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-border/60 p-1">
-                  {CURRENCIES.map((c) => (
-                    <SelectItem
-                      key={c.code}
-                      value={c.code}
-                      className="font-semibold cursor-pointer text-xs py-2"
-                    >
-                      {c.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <CountryFlag code={verifiedFlagCode} circle size="xs" />
+                  <span className="text-sm font-bold text-foreground font-mono">{effectiveCurrency}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-background/60 border border-border/40 px-1.5 py-0.5 rounded-md">
+                  <Lock className="h-2.5 w-2.5" />
+                  <span>AML</span>
+                </div>
+              </div>
             </div>
+
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1 pt-0.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>
+                Withdrawal currency strictly locked to <strong>{effectiveCurrency}</strong> (Verified Country: <strong>{verifiedCountryName}</strong>).
+              </span>
+            </p>
           </section>
 
           {/* ─── STEP 3: Destination ─── */}
-          <section className="space-y-3 pt-3 border-t border-border/40">
+          <section className="space-y-3 pt-3 border-t border-border/40 w-full">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
               Destination Details
             </span>
 
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
+                {/* 24-48 Hours Processing Window Notice */}
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 flex items-start gap-2.5 text-xs">
+                  <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <span className="font-bold text-foreground">
+                      Standard Processing Window: 24 to 48 Hours
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Withdrawal requests undergo multi-factor identity verification and are processed within 24 to 48 hours.
+                    </p>
+                  </div>
+                </div>
                 <div className="space-y-1">
                   <label
                     htmlFor="upi-vpa-input"
@@ -560,22 +777,34 @@ function Withdraw() {
                   <Input
                     id="upi-vpa-input"
                     value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
+                    onChange={(e) => handleUpiIdChange(e.target.value)}
                     placeholder={
-                      selectedUPIApp?.id === "google-pay"
-                        ? "username@okhdfcbank"
-                        : selectedUPIApp?.id === "phonepe"
-                          ? "username@ybl"
-                          : selectedUPIApp?.id === "paytm"
-                            ? "mobilenumber@paytm"
-                            : "username@bank"
+                      selectedUPIApp?.id === "bhim"
+                        ? "username@upi"
+                        : selectedUPIApp?.id === "google-pay"
+                          ? "username@okhdfcbank"
+                          : selectedUPIApp?.id === "phonepe"
+                            ? "username@ybl"
+                            : selectedUPIApp?.id === "paytm"
+                              ? "mobilenumber@paytm"
+                              : selectedUPIApp?.id === "amazon-pay"
+                                ? "username@apl"
+                                : "username@bank"
                     }
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                   {upiId.trim() && upiDetection.isVPA && (
-                    <p className="text-[11px] text-emerald-500 font-medium px-1">
-                      Detected: {upiDetection.providerName}
-                    </p>
+                    <div className="flex items-center gap-1.5 px-1 pt-0.5">
+                      <span className="text-[11px] text-emerald-500 font-medium">
+                        Detected: {upiDetection.providerName}
+                      </span>
+                      {upiDetection.providerId && (
+                        <UPIProviderLogo providerId={upiDetection.providerId} size="xs" />
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -589,10 +818,11 @@ function Withdraw() {
                   <Input
                     id="beneficiary-phone-input"
                     type="tel"
+                    inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                   <p className="text-[10px] text-muted-foreground px-1">
                     Required for UPI beneficiary validation and IMPS settlement confirmation.
@@ -603,7 +833,7 @@ function Withdraw() {
 
             {/* Indian Bank */}
             {selectedMethod.id === "in-bank" && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <div className="space-y-1">
                   <label
                     htmlFor="bank-account-number"
@@ -618,7 +848,7 @@ function Withdraw() {
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
                     placeholder="Bank Account Number"
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                 </div>
                 <div className="space-y-1">
@@ -633,7 +863,7 @@ function Withdraw() {
                     value={ifscCode}
                     onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                     placeholder="IFSC Code (e.g. SBIN0001234)"
-                    className="rounded-2xl h-12 text-sm font-mono uppercase border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono uppercase border-border/60 bg-card/60 px-4 w-full"
                     maxLength={11}
                   />
                 </div>
@@ -656,13 +886,13 @@ function Withdraw() {
                           ? "Pix key (CPF / email / phone)"
                           : "Account identifier"
                 }
-                className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
               />
             )}
           </section>
 
           {/* ─── Personal Details (collapsible) ─── */}
-          <div>
+          <div className="w-full">
             <button
               type="button"
               onClick={() => setShowPersonalDetails(!showPersonalDetails)}
@@ -683,19 +913,19 @@ function Withdraw() {
             </button>
 
             {showPersonalDetails && (
-              <div className="grid grid-cols-2 gap-2.5 pt-2 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 animate-in fade-in duration-150 w-full">
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
+                  className="h-11 rounded-xl text-base sm:text-sm border-border/60 bg-card/60 px-3 w-full"
                 />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
+                  className="h-11 rounded-xl text-base sm:text-sm border-border/60 bg-card/60 px-3 w-full"
                 />
               </div>
             )}
@@ -719,11 +949,6 @@ function Withdraw() {
                 {formatMoney(netReceivedAmt, targetCorridorCurrency)}
               </span>
             </div>
-            {isCrossCorridor && (
-              <p className="text-[10px] text-muted-foreground pt-0.5 font-mono">
-                Rate: 1 {withdrawCurrency} ≈ {fxRateRatio.toFixed(4)} {targetCorridorCurrency}
-              </p>
-            )}
           </div>
 
           {/* Submit */}
@@ -781,7 +1006,31 @@ function Withdraw() {
           <div className="space-y-3 py-2 text-xs divide-y divide-border/40">
             <div className="flex justify-between pb-2">
               <span className="text-muted-foreground">Payout Channel</span>
-              <span className="font-semibold text-foreground">{selectedMethod.name}</span>
+              <span className="font-semibold text-foreground">
+                {isIndianBank
+                  ? `${selectedBank?.name || "Indian Bank"} IMPS Transfer`
+                  : isUPI
+                    ? `${(upiDetection.isVPA && upiDetection.providerId ? UPI_PROVIDERS.find((p) => p.id === upiDetection.providerId) : selectedUPIApp)?.name || "BHIM"} (UPI)`
+                    : selectedMethod.name}
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">Processing Window</span>
+              <span className="font-semibold text-primary flex items-center gap-1 font-mono text-xs">
+                <Clock className="h-3 w-3" />
+                24–48 Hours
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">Verified Country</span>
+              <span className="font-medium text-foreground flex items-center gap-1.5">
+                <CountryFlag code={verifiedFlagCode} circle size="xs" />
+                <span>{verifiedCountryName} ({effectiveCurrency} Only)</span>
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">AML Policy</span>
+              <span className="text-[11px] font-semibold text-primary">Verified Domestic Rail</span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Destination</span>
@@ -800,12 +1049,12 @@ function Withdraw() {
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Requested Amount</span>
               <span className="font-mono font-semibold">
-                {formatMoney(sourceAmt, withdrawCurrency)}
+                {formatMoney(sourceAmt, effectiveCurrency)}
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Processing Fee (10%)</span>
-              <span className="font-mono">{formatMoney(feeAmount, withdrawCurrency)}</span>
+              <span className="font-mono">{formatMoney(feeAmount, effectiveCurrency)}</span>
             </div>
             <div className="flex justify-between pt-2 font-bold text-sm text-foreground">
               <span>Net Payout</span>

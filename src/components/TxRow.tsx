@@ -1,27 +1,41 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import { CountryFlag, BrandAsset } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
 
+/**
+ * Renders a linked transaction summary relative to the supplied wallet.
+ * Displays the resolved payment brand with a secondary currency flag.
+ */
 export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
-  const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
 
+  const isExternal = tx.kind === "withdrawal";
+  const isIndianRail =
+    tx.route === "upi" ||
+    tx.method?.toLowerCase().includes("upi") ||
+    tx.method?.toLowerCase().includes("in-bank") ||
+    tx.method?.toLowerCase().includes("bank") ||
+    tx.method?.toLowerCase().includes("imps");
+
+  const upiOrMask = isExternal && isIndianRail
+    ? (tx as { upi_id?: string }).upi_id || tx.recipient_name || undefined
+    : undefined;
+
   const paymentAsset = resolvePaymentAsset(
-    tx.kind === "withdrawal"
-      ? tx.method || "Payout Rail"
-      : tx.method || tx.recipient_name || undefined,
-    tx.recipient_wallet_code?.includes("@") ? tx.recipient_wallet_code : undefined,
-    undefined,
+    isExternal ? tx.method || "Payout Rail" : undefined,
+    upiOrMask,
+    isExternal ? (tx as { provider?: string }).provider || undefined : undefined,
     tx.currency,
     tx.route,
     tx.kind,
   );
-  const showBrand = paymentAsset.id !== "moonlight" && tx.kind !== "admin_credit";
+
+  const flagCode = isIndianRail ? "IN" : v.currency;
+  const displayCurrency = isIndianRail && v.currency === "EUR" ? "INR" : v.currency;
 
   return (
     <Link
@@ -29,15 +43,18 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       params={{ id: tx.id }}
       className="flex items-center gap-3 py-3.5 px-3.5 sm:px-4 min-h-[56px] transition-colors hover:bg-accent/30 touch-manipulation cursor-pointer group"
     >
-      {/* Transaction Icon */}
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 overflow-hidden border border-border/20">
-        {showBrand ? (
-          <BrandAsset id={paymentAsset.id} size="xs" />
-        ) : (
-          <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        )}
-        <div className="absolute -bottom-0.5 -right-0.5">
-          <CountryFlag code={v.currency} circle size="xs" />
+      {/* Transaction Icon with secondary currency badge */}
+      <div className="relative shrink-0">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-2xs p-1.5 overflow-hidden">
+          <BrandAsset
+            id={paymentAsset.id}
+            size="fit"
+            className="h-full w-full"
+            imgClassName="max-h-full max-w-full object-contain object-center"
+          />
+        </div>
+        <div className="absolute -bottom-1 -right-1 ring-2 ring-background rounded-full pointer-events-none shadow-xs">
+          <CountryFlag code={flagCode} circle size="xs" />
         </div>
       </div>
 
@@ -60,7 +77,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
           !v.outgoing && "text-success",
         )}
       >
-        {formatMoney(v.amount, v.currency, { sign: true })}
+        {formatMoney(v.amount, displayCurrency, { sign: true })}
       </div>
     </Link>
   );

@@ -164,14 +164,7 @@ function WithdrawalReceipt() {
     );
   }
 
-  const compliance = getWithdrawalComplianceInfo(wd.created_at, wd.status);
   const statusUpper = (wd.status || "PROCESSING").toUpperCase().replace(/_/g, " ");
-
-  // Fee and settlement economics
-  const grossAmount = Number(wd.amount);
-  const feeAmount = Number(wd.fee ?? Math.round(grossAmount * 0.1));
-  const netSettlement = Number(wd.recipient_amount ?? grossAmount - feeAmount);
-  const payoutCurrency = wd.recipient_currency || wd.currency;
 
   const isUPI =
     wd.method?.toLowerCase().includes("upi") || wd.route?.toLowerCase() === "upi" || !!wd.upi_id;
@@ -180,11 +173,38 @@ function WithdrawalReceipt() {
     wd.method?.toLowerCase().includes("imps") ||
     wd.route?.toLowerCase() === "in-bank";
 
+  const compliance = getWithdrawalComplianceInfo(wd.created_at, wd.status, {
+    isUPI,
+    method: wd.method,
+    route: wd.route,
+  });
+
+  // Fee and settlement economics
+  const grossAmount = Number(wd.amount);
+  const feeAmount = Number(wd.fee ?? Math.round(grossAmount * 0.1));
+  const netSettlement = Number(wd.recipient_amount ?? grossAmount - feeAmount);
+  const payoutCurrency = wd.recipient_currency || wd.currency;
+
+  const isIndianRail = isUPI || isIndianBank;
+  const displayCurrency =
+    isIndianRail && (wd.currency === "EUR" || wd.currency === "USD") ? "INR" : wd.currency;
+  const displayFlag = isIndianRail ? "IN" : displayCurrency;
+  const displayPayoutCurrency =
+    isIndianRail && (payoutCurrency === "EUR" || payoutCurrency === "USD")
+      ? "INR"
+      : payoutCurrency;
+  const displayMethod =
+    isUPI &&
+    (wd.upi_id?.includes("@upi") || wd.upi_id?.includes("@bhim")) &&
+    wd.method?.includes("Google Pay")
+      ? "BHIM UPI (UPI)"
+      : wd.method;
+
   const paymentAsset = resolvePaymentAsset(
-    wd.provider || wd.method,
+    wd.provider || displayMethod,
     wd.upi_id || undefined,
     undefined,
-    wd.currency,
+    displayCurrency,
     wd.route,
     "withdrawal",
   );
@@ -195,7 +215,7 @@ function WithdrawalReceipt() {
   });
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 px-3 sm:px-4 py-4 sm:py-6 pb-28 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-lg space-y-5 px-3 sm:px-4 py-4 sm:py-6 pb-2 animate-in fade-in duration-200">
       {/* ─── Top Bar: Back & Utility Actions ─── */}
       <div className="flex items-center justify-between">
         <Link
@@ -226,9 +246,9 @@ function WithdrawalReceipt() {
       </div>
 
       {/* ─── Main Settlement Slip Card ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#2A3241] bg-[#10141D] p-5 sm:p-6 shadow-xl space-y-6">
-        {/* Specular lighting line */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card p-5 sm:p-6 shadow-card space-y-6">
+        {/* Subtle accent highlight */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         {/* Brand Header */}
         <div className="flex items-center justify-between border-b border-border/40 pb-4">
@@ -244,9 +264,9 @@ function WithdrawalReceipt() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <CountryFlag code={wd.currency} circle size="sm" />
+            <CountryFlag code={displayFlag} circle size="sm" />
             <span className="text-xs font-mono font-semibold text-muted-foreground">
-              {wd.currency}
+              {displayCurrency}
             </span>
           </div>
         </div>
@@ -256,12 +276,12 @@ function WithdrawalReceipt() {
           className={cn(
             "flex items-center justify-between rounded-2xl px-4 py-3 border text-xs font-semibold tracking-wide",
             compliance.isSuccess
-              ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+              ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
               : statusUpper === "FAILED" || statusUpper === "CANCELLED"
-                ? "bg-rose-500/10 border-rose-500/25 text-rose-400"
+                ? "bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-400"
                 : compliance.isHold
-                  ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
-                  : "bg-blue-500/10 border-blue-500/25 text-blue-400",
+                  ? "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
+                  : "bg-blue-500/10 border-blue-500/25 text-blue-700 dark:text-blue-400",
           )}
         >
           <div className="flex items-center gap-2">
@@ -276,8 +296,8 @@ function WithdrawalReceipt() {
             )}
             <span className="uppercase">{statusUpper}</span>
           </div>
-          <span className="text-[11px] opacity-80 font-normal">
-            Stage {compliance.stageNumber} of {compliance.totalStages}
+          <span className="text-[11px] font-medium opacity-90">
+            {compliance.isSuccess ? "Settled" : compliance.estimatedDaysText}
           </span>
         </div>
 
@@ -287,35 +307,35 @@ function WithdrawalReceipt() {
             Total Withdrawn
           </p>
           <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-mono">
-            {formatMoney(grossAmount, wd.currency)}
+            {formatMoney(grossAmount, displayCurrency)}
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-secondary/60 border border-border/40 px-3 py-1 mt-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-secondary/70 border border-border/50 px-3 py-1 mt-2">
             <PaymentMethodIcon id={paymentAsset.id} size="xs" />
-            <span className="text-xs font-medium text-foreground">{wd.method}</span>
+            <span className="text-xs font-medium text-foreground">{displayMethod}</span>
           </div>
         </div>
 
-        {/* Authoritative Settlement Breakdown */}
-        <div className="rounded-2xl bg-secondary/30 border border-border/40 p-4 space-y-2.5 text-xs">
+        {/* Settlement Breakdown */}
+        <div className="rounded-2xl bg-muted/40 border border-border/50 p-4 space-y-2.5 text-xs">
           <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pb-1 border-b border-border/30">
-            Authoritative Settlement Breakdown
+            Settlement Breakdown
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Requested Payout</span>
             <span className="font-mono font-medium text-foreground">
-              {formatMoney(grossAmount, wd.currency)}
+              {formatMoney(grossAmount, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Processing Fee (10% standard)</span>
             <span className="font-mono font-medium text-muted-foreground">
-              -{formatMoney(feeAmount, wd.currency)}
+              -{formatMoney(feeAmount, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-border/30">
             <span className="font-semibold text-foreground">Net Dispatched Amount</span>
-            <span className="font-mono font-bold text-sm text-emerald-400">
-              {formatMoney(netSettlement, payoutCurrency)}
+            <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
+              {formatMoney(netSettlement, displayPayoutCurrency)}
             </span>
           </div>
         </div>
@@ -326,18 +346,18 @@ function WithdrawalReceipt() {
             Beneficiary & Rail Details
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl bg-secondary/20 border border-border/30">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border/40">
               <span className="text-[10px] text-muted-foreground uppercase">Beneficiary</span>
               <p className="font-semibold text-foreground truncate mt-0.5">{wd.full_name}</p>
             </div>
-            <div className="p-3 rounded-xl bg-secondary/20 border border-border/30">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border/40">
               <span className="text-[10px] text-muted-foreground uppercase">Payout Rail</span>
               <p className="font-semibold text-foreground truncate mt-0.5">
                 {wd.provider || wd.method}
               </p>
             </div>
             {wd.upi_id && (
-              <div className="p-3 rounded-xl bg-secondary/20 border border-border/30 col-span-2">
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/40 col-span-2">
                 <span className="text-[10px] text-muted-foreground uppercase">
                   Virtual Payment Address (UPI)
                 </span>
@@ -347,14 +367,14 @@ function WithdrawalReceipt() {
               </div>
             )}
             {wd.phone && (
-              <div className="p-3 rounded-xl bg-secondary/20 border border-border/30">
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/40">
                 <span className="text-[10px] text-muted-foreground uppercase">
                   Registered Phone
                 </span>
                 <p className="font-mono font-medium text-foreground mt-0.5">{wd.phone}</p>
               </div>
             )}
-            <div className="p-3 rounded-xl bg-secondary/20 border border-border/30">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border/40">
               <span className="text-[10px] text-muted-foreground uppercase">Submission Date</span>
               <p className="font-medium text-foreground mt-0.5 text-[11px]">{formattedDate}</p>
             </div>
@@ -363,7 +383,7 @@ function WithdrawalReceipt() {
 
         {/* Indian Bank & UPI Rail Strip (When Applicable) */}
         {(isUPI || isIndianBank) && (
-          <div className="rounded-2xl border border-border/40 bg-secondary/20 p-3.5 space-y-2">
+          <div className="rounded-2xl border border-border/50 bg-muted/30 p-3.5 space-y-2">
             <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               <span>National Unified Payment Network</span>
               <span className="text-[10px] text-primary font-mono">IMPS / NPCI UPI</span>
@@ -372,66 +392,99 @@ function WithdrawalReceipt() {
               {INDIAN_BANKS.slice(0, 5).map((bank) => (
                 <div
                   key={bank.id}
-                  className="flex items-center justify-center p-2 rounded-xl bg-card/60 border border-border/30 shrink-0"
+                  className="flex items-center justify-center p-2 rounded-xl bg-card border border-border/40 shrink-0 shadow-sm"
                   title={bank.name}
                 >
                   <BankLogo bankId={bank.id} size="xs" />
                 </div>
               ))}
-              <div className="flex items-center justify-center px-2 py-1 rounded-xl bg-card/60 border border-border/30 shrink-0 text-[10px] font-bold text-muted-foreground">
+              <div className="flex items-center justify-center px-2 py-1 rounded-xl bg-card border border-border/40 shrink-0 text-[10px] font-bold text-muted-foreground shadow-sm">
                 UPI
               </div>
             </div>
           </div>
         )}
 
-        {/* Compliance & AML Settlement Timeline */}
-        <div className="rounded-2xl border border-border/40 bg-secondary/20 p-4 space-y-3">
+        {/* Payout Progress & 5–7 Business Days Timeline */}
+        <div className="rounded-2xl border border-border/50 bg-muted/30 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              <span>Compliance & FATF Review</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+              <Clock className="h-4 w-4 text-primary" />
+              <span>Payout Timeline</span>
             </div>
-            <span className="text-[10px] font-mono text-muted-foreground">
-              Stage {compliance.stageNumber} of 14
+            <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+              5–7 Business Days
             </span>
           </div>
 
-          {/* Progress track */}
-          <div className="h-1.5 w-full rounded-full bg-secondary/60 overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                compliance.isSuccess
-                  ? "bg-emerald-500 w-full"
-                  : compliance.isHold
-                    ? "bg-amber-500 w-full"
-                    : "bg-primary",
-              )}
-              style={{
-                width:
-                  compliance.isSuccess || compliance.isHold
-                    ? "100%"
-                    : `${Math.max(7, (compliance.stageNumber / 14) * 100)}%`,
-              }}
-            />
+          {/* Progress bar */}
+          <div className="space-y-1.5">
+            <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-700",
+                  compliance.isSuccess
+                    ? "bg-emerald-500"
+                    : compliance.isFailed
+                      ? "bg-rose-500"
+                      : "bg-primary",
+                )}
+                style={{ width: `${compliance.progressPercent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
+              <span>Initiated</span>
+              <span className="font-semibold text-foreground">
+                Expected: {compliance.estimatedArrivalDate}
+              </span>
+              <span>Credited</span>
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-foreground">{compliance.stageTitle}</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {compliance.description}
-            </p>
-          </div>
+          {/* Current Step and Next Expected Step Cards */}
+          <div className="space-y-2.5 pt-1">
+            {/* Current Step */}
+            <div className="rounded-xl border border-border/40 bg-card p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  Current Step
+                </span>
+                <span className="text-[10px] text-muted-foreground">In Progress</span>
+              </div>
+              <p className="text-xs font-semibold text-foreground">{compliance.currentStep}</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {compliance.currentStepDescription}
+              </p>
+            </div>
 
-          {compliance.nextReviewHours > 0 && (
-            <div className="pt-2 border-t border-border/30 flex justify-between items-center text-[10px] text-muted-foreground font-mono">
-              <span>Next Window Check</span>
-              <span>
-                In ~{compliance.nextReviewHours} hour{compliance.nextReviewHours > 1 ? "s" : ""}
+            {/* Next Expected Step */}
+            {!compliance.isSuccess && !compliance.isFailed && (
+              <div className="rounded-xl border border-border/30 bg-muted/40 p-3 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Next Expected Step
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {compliance.nextReviewHours > 0 ? `~${compliance.nextReviewHours}h` : "Queued"}
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-foreground">{compliance.nextStep}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {compliance.nextStepDescription}
+                </p>
+              </div>
+            )}
+
+            {/* Estimated Completion Time Banner */}
+            <div className="flex items-center justify-between rounded-xl bg-primary/5 border border-primary/15 px-3 py-2 text-xs">
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Estimated Delivery Window
+              </span>
+              <span className="font-semibold text-primary text-[11px]">
+                {compliance.estimatedArrivalDate}
               </span>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Reference Code & Verification */}
@@ -448,7 +501,7 @@ function WithdrawalReceipt() {
             className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors cursor-pointer"
           >
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-emerald-400" />
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
             ) : (
               <Copy className="h-3.5 w-3.5" />
             )}
@@ -457,24 +510,22 @@ function WithdrawalReceipt() {
         </div>
       </div>
 
-      {/* ─── Sticky Mobile Bottom Bar ─── */}
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border/40 bg-background/95 backdrop-blur-md p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-lg flex gap-3">
-          <Link
-            to="/transactions"
-            className="flex-1 inline-flex items-center justify-center rounded-full bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
-          >
-            Back to Activity
-          </Link>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
-          >
-            <Printer className="h-3.5 w-3.5" />
-            <span>Download Record</span>
-          </button>
-        </div>
+      {/* ─── Action Buttons ─── */}
+      <div className="flex gap-3 pt-1 no-print">
+        <Link
+          to="/transactions"
+          className="flex-1 inline-flex items-center justify-center rounded-2xl bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
+        >
+          Back to Activity
+        </Link>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
+        >
+          <Printer className="h-3.5 w-3.5" />
+          <span>Download Record</span>
+        </button>
       </div>
     </div>
   );

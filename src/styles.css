@@ -729,3 +729,18 @@
     color: black !important;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE VIEWPORT & INPUT AUTO-ZOOM PREVENTION
+   ═══════════════════════════════════════════════ */
+
+/* iOS Safari auto-zooms if input font-size is < 16px */
+@media screen and (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+

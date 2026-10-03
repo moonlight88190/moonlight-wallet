@@ -14,52 +14,52 @@ export function AuthLayout({
   footer?: ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 bg-background text-foreground overflow-x-hidden">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:py-12 bg-background text-foreground overflow-x-hidden">
       {/* Premium ambient background lighting */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 h-[600px] w-[600px] rounded-full bg-primary/[0.07] blur-[120px]" />
         <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 h-[400px] w-[400px] rounded-full bg-gold/[0.04] blur-[100px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[420px] animate-fade-up">
+      <div className="relative z-10 w-full max-w-[440px] animate-fade-up">
         {/* Auth card with premium surface */}
-        <div className="rounded-3xl border border-border/50 bg-card/80 p-7 sm:p-10 backdrop-blur-2xl shadow-card">
+        <div className="rounded-3xl border border-border/50 bg-card/80 p-6 sm:p-8 backdrop-blur-2xl shadow-card">
           {/* Logo & Brand */}
-          <Link to="/" className="mx-auto mb-10 flex w-fit flex-col items-center gap-3 group">
-            <LogoMark className="h-14 w-14 group-hover:scale-105 transition-transform duration-300" />
+          <Link to="/" className="mx-auto mb-5 flex w-fit flex-col items-center gap-2 group">
+            <LogoMark className="h-11 w-11 group-hover:scale-105 transition-transform duration-300" />
             <div className="flex flex-col items-center text-center">
-              <span className="text-[13px] font-semibold tracking-[0.3em] text-foreground">
+              <span className="text-[12px] font-semibold tracking-[0.28em] text-foreground">
                 MOONLIGHT
               </span>
-              <span className="text-[9px] font-medium tracking-[0.2em] text-muted-foreground uppercase mt-0.5">
+              <span className="text-[8.5px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
                 Financial Technology
               </span>
             </div>
           </Link>
 
           {/* Heading */}
-          <h1 className="text-center text-[22px] sm:text-[26px] font-semibold tracking-tight text-foreground leading-tight">
+          <h1 className="text-center text-[22px] sm:text-[24px] font-semibold tracking-tight text-foreground leading-tight">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-2.5 text-center text-[13px] text-muted-foreground leading-relaxed max-w-[280px] mx-auto">
+            <p className="mt-1.5 text-center text-[13px] text-muted-foreground leading-relaxed max-w-[320px] mx-auto">
               {subtitle}
             </p>
           )}
 
           {/* Content */}
-          <div className="mt-8">{children}</div>
+          <div className="mt-5">{children}</div>
 
           {/* Footer */}
           {footer && (
-            <div className="mt-8 text-center text-[13px] text-muted-foreground pt-5 border-t border-border/40">
+            <div className="mt-5 text-center text-[13px] text-muted-foreground pt-3.5 border-t border-border/40">
               {footer}
             </div>
           )}
         </div>
 
         {/* Security badge footer */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/60 uppercase">
+        <div className="mt-4 flex items-center justify-center gap-2 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/60 uppercase">
           <span className="flex items-center gap-1">
             <svg className="h-3 w-3 text-emerald-500/70" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 0a4 4 0 0 0-4 4v2H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4zm2 6V4a2 2 0 1 0-4 0v2h4z" />
