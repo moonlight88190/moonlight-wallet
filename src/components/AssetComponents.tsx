@@ -129,7 +129,7 @@ export interface BrandAssetProps {
   name?: string | undefined;
   category?: "payment-method" | "bank" | "upi" | "gift-card" | "luxury" | undefined;
   iconUrl?: string | undefined;
-  size?: "xs" | "sm" | "md" | "lg" | undefined;
+  size?: "xs" | "sm" | "md" | "lg" | "fit" | undefined;
   sourceRatio?: "square" | "wide" | "ultra-wide" | "card" | undefined;
   className?: string | undefined;
   imgClassName?: string | undefined;
@@ -162,6 +162,7 @@ export function BrandAsset({
       cleanId.startsWith(b.id) ||
       b.id.startsWith(cleanId),
   );
+  const gift = GIFT_CARDS.find((g) => g.id === cleanId || g.id === id);
 
   const MARKET_ASSETS: Record<string, string> = {
     "nifty-50": "/assets/markets/nifty-50.svg",
@@ -205,10 +206,11 @@ export function BrandAsset({
     method?.iconUrl ||
     provider?.iconUrl ||
     bank?.logoUrl ||
+    gift?.imageUrl ||
     MARKET_ASSETS[cleanId] ||
     `/assets/payment-methods/${cleanId}.svg`;
 
-  const displayName = name || method?.name || provider?.name || bank?.name || cleanId;
+  const displayName = name || method?.name || provider?.name || bank?.name || gift?.brand || cleanId;
   const isMarketAsset = Boolean(MARKET_ASSETS[cleanId]);
   const ratio =
     sourceRatio ||
@@ -216,6 +218,7 @@ export function BrandAsset({
     method?.sourceRatio ||
     provider?.sourceRatio ||
     bank?.sourceRatio ||
+    (gift ? "card" : undefined) ||
     (cleanId === "sbi" || cleanId.includes("qr") ? "square" : "wide");
 
   const [failed, setFailed] = React.useState(false);
@@ -226,9 +229,11 @@ export function BrandAsset({
 
   // Optical container sizing
   let containerDimensions = "";
-  let imgMaxDimensions = "";
+  const imgMaxDimensions = "max-h-full max-w-full object-contain object-center";
 
-  if (ratio === "square") {
+  if (size === "fit") {
+    containerDimensions = "h-full w-full max-h-full max-w-full flex items-center justify-center";
+  } else if (ratio === "square") {
     containerDimensions =
       size === "xs"
         ? "h-6 w-6"
@@ -237,28 +242,34 @@ export function BrandAsset({
           : size === "lg"
             ? "h-12 w-12"
             : "h-10 w-10";
-    imgMaxDimensions = "max-h-full max-w-full";
   } else if (ratio === "ultra-wide") {
     containerDimensions =
       size === "xs"
-        ? "h-5 w-auto min-w-[50px] max-w-[80px]"
+        ? "h-5 w-auto min-w-[36px] max-w-[64px]"
         : size === "sm"
-          ? "h-7 w-auto min-w-[70px] max-w-[110px]"
+          ? "h-7 w-auto min-w-[55px] max-w-[95px]"
           : size === "lg"
-            ? "h-10 w-auto min-w-[110px] max-w-[160px]"
-            : "h-8 w-auto min-w-[90px] max-w-[135px]";
-    imgMaxDimensions = "h-full w-auto object-contain";
+            ? "h-10 w-auto min-w-[100px] max-w-[150px]"
+            : "h-8 w-auto min-w-[75px] max-w-[120px]";
+  } else if (ratio === "card") {
+    containerDimensions =
+      size === "xs"
+        ? "h-5 w-auto aspect-[3/2]"
+        : size === "sm"
+          ? "h-7 w-auto aspect-[3/2]"
+          : size === "lg"
+            ? "h-10 w-auto aspect-[3/2]"
+            : "h-8 w-auto aspect-[3/2]";
   } else {
     // Standard wide wordmark or badge
     containerDimensions =
       size === "xs"
-        ? "h-5 w-auto min-w-[40px] max-w-[70px]"
+        ? "h-5 w-auto min-w-[36px] max-w-[60px]"
         : size === "sm"
-          ? "h-7 w-auto min-w-[55px] max-w-[95px]"
+          ? "h-7 w-auto min-w-[50px] max-w-[85px]"
           : size === "lg"
-            ? "h-10 w-auto min-w-[85px] max-w-[140px]"
-            : "h-8 w-auto min-w-[70px] max-w-[115px]";
-    imgMaxDimensions = "h-full w-auto object-contain";
+            ? "h-10 w-auto min-w-[80px] max-w-[130px]"
+            : "h-8 w-auto min-w-[65px] max-w-[105px]";
   }
 
   if (failed) {
@@ -320,7 +331,7 @@ export function PaymentMethodIcon({
 }: {
   id: string;
   className?: string;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "fit";
 }) {
   return <BrandAsset id={id} category="payment-method" size={size} className={className} />;
 }
@@ -336,7 +347,7 @@ export function BankLogo({
 }: {
   bankId: string;
   className?: string;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "fit";
 }) {
   const bank = INDIAN_BANKS.find((b) => b.id === bankId);
   return (
@@ -363,7 +374,7 @@ export function UPIProviderLogo({
 }: {
   providerId: string;
   className?: string;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "fit";
 }) {
   const provider = UPI_PROVIDERS.find((p) => p.id === providerId);
   return (

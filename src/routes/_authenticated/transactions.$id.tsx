@@ -339,7 +339,14 @@ function Receipt() {
                 />
               </div>
             ) : (
-              <BrandAsset id={paymentAsset.id} size="sm" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-2xs p-1.5 overflow-hidden">
+                <BrandAsset
+                  id={paymentAsset.id}
+                  size="fit"
+                  className="h-full w-full"
+                  imgClassName="max-h-full max-w-full object-contain object-center"
+                />
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <span className="text-xs font-bold text-foreground block truncate">

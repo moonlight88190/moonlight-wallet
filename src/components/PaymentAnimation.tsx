@@ -318,13 +318,18 @@ function WithdrawalAnimationView({
             <div className="flex flex-col items-center gap-1.5 flex-1 text-center">
               <div
                 className={cn(
-                  "relative flex h-12 w-12 items-center justify-center rounded-2xl bg-card border shadow-sm transition-all duration-300",
+                  "relative flex h-12 w-12 items-center justify-center rounded-2xl bg-card border shadow-sm transition-all duration-300 p-2 overflow-hidden",
                   isComplete
                     ? "border-emerald-500/50 ring-2 ring-emerald-500/20"
                     : "border-border/60",
                 )}
               >
-                <BrandAsset id={paymentAsset.id} size="sm" />
+                <BrandAsset
+                  id={paymentAsset.id}
+                  size="fit"
+                  className="h-full w-full"
+                  imgClassName="max-h-full max-w-full object-contain object-center"
+                />
                 {isComplete && (
                   <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-bold anim-success-scale">
                     ✓

@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,6 @@ import { resolvePaymentAsset } from "@/lib/assets";
  */
 export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
-  const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
 
   const isExternal = tx.kind === "withdrawal";
@@ -46,9 +44,16 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       className="flex items-center gap-3 py-3.5 px-3.5 sm:px-4 min-h-[56px] transition-colors hover:bg-accent/30 touch-manipulation cursor-pointer group"
     >
       {/* Transaction Icon with secondary currency badge */}
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 overflow-hidden border border-border/20">
-        <BrandAsset id={paymentAsset.id} size="xs" />
-        <div className="absolute -bottom-0.5 -right-0.5">
+      <div className="relative shrink-0">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-2xs p-1.5 overflow-hidden">
+          <BrandAsset
+            id={paymentAsset.id}
+            size="fit"
+            className="h-full w-full"
+            imgClassName="max-h-full max-w-full object-contain object-center"
+          />
+        </div>
+        <div className="absolute -bottom-1 -right-1 ring-2 ring-background rounded-full pointer-events-none shadow-xs">
           <CountryFlag code={flagCode} circle size="xs" />
         </div>
       </div>
