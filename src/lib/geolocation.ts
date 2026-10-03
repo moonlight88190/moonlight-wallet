@@ -152,10 +152,10 @@ export function resolveAccountGeography(
  */
 export interface GeolocationProviderResult {
   countryCode: string;
-  countryName?: string;
-  city?: string;
-  region?: string;
-  timezone?: string;
+  countryName?: string | undefined;
+  city?: string | undefined;
+  region?: string | undefined;
+  timezone?: string | undefined;
   provider: string;
 }
 

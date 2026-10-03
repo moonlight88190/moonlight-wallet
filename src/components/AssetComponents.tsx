@@ -276,11 +276,11 @@ export function BrandAsset({
         loading="lazy"
         onError={(e) => {
           const target = e.currentTarget;
-          if (resolvedUrl.endsWith(".svg") && !target.dataset.triedFallback) {
-            target.dataset.triedFallback = "true";
+          if (resolvedUrl.endsWith(".svg") && !target.dataset["triedFallback"]) {
+            target.dataset["triedFallback"] = "true";
             target.src = resolvedUrl.replace(".svg", ".png");
-          } else if (resolvedUrl.endsWith(".png") && !target.dataset.triedFallback) {
-            target.dataset.triedFallback = "true";
+          } else if (resolvedUrl.endsWith(".png") && !target.dataset["triedFallback"]) {
+            target.dataset["triedFallback"] = "true";
             target.src = resolvedUrl.replace(".png", ".svg");
           } else {
             setFailed(true);
