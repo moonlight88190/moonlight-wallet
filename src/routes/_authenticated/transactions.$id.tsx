@@ -235,7 +235,7 @@ function Receipt() {
     : null;
 
   return (
-    <div className="mx-auto max-w-sm sm:max-w-md px-2 sm:px-4 space-y-4 pb-20 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-sm sm:max-w-md px-2 sm:px-4 space-y-4 pb-2 animate-in fade-in duration-200">
       {/* Navigation & Actions */}
       <div className="flex items-center justify-between py-1 no-print">
         <Link

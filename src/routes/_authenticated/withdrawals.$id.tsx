@@ -210,7 +210,7 @@ function WithdrawalReceipt() {
   });
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 px-3 sm:px-4 py-4 sm:py-6 pb-28 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-lg space-y-5 px-3 sm:px-4 py-4 sm:py-6 pb-2 animate-in fade-in duration-200">
       {/* ─── Top Bar: Back & Utility Actions ─── */}
       <div className="flex items-center justify-between">
         <Link
@@ -505,24 +505,22 @@ function WithdrawalReceipt() {
         </div>
       </div>
 
-      {/* ─── Sticky Mobile Bottom Bar ─── */}
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border/40 bg-background/95 backdrop-blur-md p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-lg flex gap-3">
-          <Link
-            to="/transactions"
-            className="flex-1 inline-flex items-center justify-center rounded-full bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
-          >
-            Back to Activity
-          </Link>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
-          >
-            <Printer className="h-3.5 w-3.5" />
-            <span>Download Record</span>
-          </button>
-        </div>
+      {/* ─── Action Buttons ─── */}
+      <div className="flex gap-3 pt-1 no-print">
+        <Link
+          to="/transactions"
+          className="flex-1 inline-flex items-center justify-center rounded-2xl bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
+        >
+          Back to Activity
+        </Link>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
+        >
+          <Printer className="h-3.5 w-3.5" />
+          <span>Download Record</span>
+        </button>
       </div>
     </div>
   );

@@ -379,7 +379,7 @@ function Withdraw() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-6 pb-16 animate-in fade-in duration-200 overflow-x-hidden px-1 sm:px-0">
+    <div className="mx-auto w-full max-w-md space-y-6 pb-2 animate-in fade-in duration-200 overflow-x-hidden px-1 sm:px-0">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Withdraw</h1>

@@ -80,7 +80,7 @@ function Dashboard() {
   const recentTxs = (transactions.data ?? []).slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 pb-12 animate-fade-up">
+    <div className="mx-auto max-w-xl space-y-6 pb-2 animate-fade-up">
       {/* ═══════════════════════════════════════
            1. MODERN ACCOUNT & BALANCE CARD
          ═══════════════════════════════════════ */}
