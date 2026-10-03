@@ -43,7 +43,6 @@ type RedemptionResult = {
 };
 
 function formatVoucherInput(val: string): string {
-  // Uppercase and strip unwanted characters except hyphens and alphanumeric
   const clean = val.toUpperCase().replace(/[^A-Z0-9-]/g, "");
   return clean;
 }
@@ -108,7 +107,6 @@ function RedeemPage() {
       setResult(res);
       toast.success("Voucher redeemed successfully!");
 
-      // Invalidate relevant queries
       qc.invalidateQueries({ queryKey: ["wallet"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
@@ -128,18 +126,21 @@ function RedeemPage() {
     setResult(null);
   }
 
+  const primaryBtn =
+    "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shadow-md touch-manipulation cursor-pointer";
+
   return (
-    <div className="mx-auto max-w-md space-y-6 px-3 sm:px-4 py-4 sm:py-6 pb-20 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-md space-y-6 pb-20 animate-in fade-in duration-200">
       {/* ─── Header ─── */}
       <div className="flex items-center justify-between">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-2 touch-manipulation"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span>Home</span>
+          <span>Dashboard</span>
         </Link>
-        <div className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted/60 px-3 py-1 rounded-xl border border-border/40">
           <Wallet className="h-3.5 w-3.5 text-primary" />
           <span>Balance: {formatMoney(wallet.data?.balance_usd || 0, "USD")}</span>
         </div>
@@ -148,24 +149,22 @@ function RedeemPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Redeem Voucher</h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Apply a Moonlight gift card, promotional code, or partner voucher directly to your
-          balance.
+          Apply a Moonlight gift card, promotional code, or partner voucher directly to your balance.
         </p>
       </div>
 
       {/* ─── Success Card ─── */}
       {result ? (
-        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 shadow-xl space-y-5 text-center">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-6 shadow-soft space-y-5 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-500">
             <Sparkles className="h-7 w-7" />
           </div>
 
           <div className="space-y-1">
-            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
               Credit Applied Successfully
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground tracking-tight">
+            <div className="text-3xl font-extrabold font-mono text-foreground tracking-tight">
               +{formatMoney(result.amount, result.currency)}
             </div>
             {result.currency.toUpperCase() !== "USD" && (
@@ -175,7 +174,7 @@ function RedeemPage() {
             )}
           </div>
 
-          <div className="rounded-2xl bg-secondary/40 border border-border/40 p-4 text-xs space-y-2 text-left">
+          <div className="rounded-2xl bg-card/60 border border-border/60 p-4 text-xs space-y-2.5 text-left">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Voucher Code</span>
               <span className="font-mono font-bold text-foreground">{code.toUpperCase()}</span>
@@ -188,14 +187,14 @@ function RedeemPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Status</span>
-              <span className="font-semibold text-emerald-400 uppercase">COMPLETED</span>
+              <span className="font-bold text-emerald-500 uppercase">COMPLETED</span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
             <Link
               to="/transactions"
-              className="flex-1 inline-flex items-center justify-center rounded-full bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity"
+              className={`${primaryBtn} flex-1 h-11 text-xs`}
             >
               View in Activity
             </Link>
@@ -203,7 +202,7 @@ function RedeemPage() {
               type="button"
               variant="outline"
               onClick={handleReset}
-              className="flex-1 rounded-full h-11 text-xs font-semibold border-border/50 hover:bg-secondary cursor-pointer"
+              className="flex-1 rounded-2xl h-11 text-xs font-semibold border-border/60 hover:bg-muted cursor-pointer"
             >
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Redeem Another
             </Button>
@@ -211,15 +210,13 @@ function RedeemPage() {
         </div>
       ) : (
         /* ─── Input Form ─── */
-        <div className="relative overflow-hidden rounded-3xl border border-[#2A3241] bg-[#10141D] p-5 sm:p-6 shadow-xl space-y-5">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-
+        <div className="rounded-3xl border border-border/60 bg-card/60 p-6 shadow-soft space-y-6">
           <form onSubmit={handleRedeem} className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="voucher-code-input"
-                  className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
+                  className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"
                 >
                   Voucher or Gift Code
                 </label>
@@ -244,22 +241,22 @@ function RedeemPage() {
                   autoComplete="off"
                   autoCapitalize="characters"
                   spellCheck="false"
-                  className="h-13 rounded-2xl bg-secondary/30 border-border/50 text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-primary/40"
+                  className="h-14 rounded-2xl border-border/60 bg-background text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20"
                 />
               </div>
             </div>
 
             {errorMsg && (
-              <div className="flex items-start gap-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 p-3.5 text-xs text-rose-400">
+              <div className="flex items-start gap-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 p-3.5 text-xs text-rose-600 dark:text-rose-400">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                 <p className="flex-1 font-medium">{errorMsg}</p>
               </div>
             )}
 
-            <Button
+            <button
               type="submit"
               disabled={busy || !code.trim()}
-              className="w-full rounded-full h-12 text-xs font-semibold tracking-wide shadow-md active:scale-[0.99] cursor-pointer transition-all"
+              className={primaryBtn}
             >
               {busy ? (
                 <span>Validating & Crediting...</span>
@@ -268,11 +265,11 @@ function RedeemPage() {
                   Redeem to Wallet <ArrowRight className="h-4 w-4" />
                 </span>
               )}
-            </Button>
+            </button>
           </form>
 
           {/* Redemption Rules Information */}
-          <div className="rounded-2xl bg-secondary/20 border border-border/30 p-4 space-y-2 text-xs text-muted-foreground">
+          <div className="rounded-2xl bg-muted/40 border border-border/40 p-4 space-y-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5 font-semibold text-foreground text-[11px] uppercase tracking-wider">
               <ShieldCheck className="h-4 w-4 text-primary" />
               <span>Redemption Terms</span>

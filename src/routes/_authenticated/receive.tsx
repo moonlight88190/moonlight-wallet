@@ -63,52 +63,56 @@ function Receive() {
   }
 
   return (
-    <div className="mx-auto max-w-md text-center space-y-6 sm:space-y-8">
+    <div className="mx-auto max-w-md text-center space-y-5 sm:space-y-6 animate-fade-up">
       <PageTitle eyebrow="RECEIVE" title="Receive Money">
         Anyone on Moonlight or supported payout rails can send money using this ID or QR.
       </PageTitle>
 
-      <div className="rounded-3xl sm:rounded-[2.5rem] border border-border/60 bg-card/80 p-5 sm:p-8 shadow-soft space-y-5 sm:space-y-6">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-secondary/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
+      {/* ─── Identity Card ─── */}
+      <div className="rounded-2xl border border-border/40 bg-card p-5 sm:p-7 shadow-card space-y-5">
+        {/* Region Badge */}
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/30 bg-secondary/50 px-3 py-1 text-[10px] font-semibold text-muted-foreground">
           {geography.data?.isIndia || geography.data?.isEurope ? (
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <ShieldCheck className="h-3 w-3 text-success" />
           ) : (
-            <Globe className="h-3.5 w-3.5 text-blue-500" />
+            <Globe className="h-3 w-3 text-primary" />
           )}
           <span>{getAccountRegionLabel(geography.data)}</span>
         </div>
 
+        {/* QR Code */}
         {wallet.isLoading ? (
           <Skeleton className="mx-auto h-44 w-44 sm:h-52 sm:w-52 rounded-2xl" />
         ) : (
-          <div className="mx-auto w-fit rounded-2xl bg-white p-3.5 sm:p-4 shadow-sm border border-border/20">
+          <div className="mx-auto w-fit rounded-2xl bg-white p-4 shadow-sm border border-border/10">
             <QRCodeSVG
               value={qrPayload(code)}
               size={180}
               className="w-[180px] h-[180px] sm:w-[200px] sm:h-[200px]"
-              fgColor="#1b2b45"
+              fgColor="#0f172a"
               level="M"
             />
           </div>
         )}
 
+        {/* Wallet ID */}
         <div>
-          <p className="text-[11px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
-            YOUR MOONLIGHT WALLET ID
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+            Your Moonlight Wallet ID
           </p>
-          <p className="mt-1 font-mono text-xl sm:text-2xl font-semibold tracking-wider text-foreground">
+          <p className="mt-1.5 font-mono text-[20px] sm:text-[24px] font-semibold tracking-wider text-foreground">
             {code || "—"}
           </p>
           {profile.data && (
-            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
+            <p className="mt-1 text-[12px] font-medium text-muted-foreground">
               {profile.data.full_name}
             </p>
           )}
         </div>
 
-        {/* Supported Corridor Badges */}
-        <div className="border-t border-border/50 pt-4 space-y-2.5">
-          <p className="text-[11px] font-semibold text-muted-foreground tracking-wide uppercase">
+        {/* Supported Corridors */}
+        <div className="border-t border-border/30 pt-4 space-y-2">
+          <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-[0.1em] uppercase">
             Compatible Payout Infrastructure
           </p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -122,7 +126,8 @@ function Receive() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+      {/* ─── Action Buttons ─── */}
+      <div className="grid grid-cols-3 gap-2.5">
         {[
           { label: copied ? "Copied!" : "Copy ID", icon: copied ? Check : Copy, onClick: copy },
           { label: "Share", icon: Share, onClick: share },
@@ -132,27 +137,28 @@ function Receive() {
             key={b.label}
             onClick={b.onClick}
             disabled={!code}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-card min-h-[52px] py-3 text-xs font-semibold transition-all hover:bg-accent hover:border-primary/40 active:scale-[0.97] shadow-2xs disabled:opacity-50 cursor-pointer touch-manipulation"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation"
           >
-            <b.icon className="h-5 w-5" strokeWidth={1.75} />
+            <b.icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
             {b.label}
           </button>
         ))}
       </div>
 
+      {/* ─── Full-Screen QR Dialog ─── */}
       <Dialog open={big} onOpenChange={setBig}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl text-center p-5 sm:p-6">
-          <DialogTitle className="text-center font-mono text-base">{code}</DialogTitle>
-          <div className="mx-auto mt-2 w-fit rounded-2xl bg-white p-4 sm:p-5">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-2xl text-center p-5 sm:p-6">
+          <DialogTitle className="text-center font-mono text-[14px] font-semibold">{code}</DialogTitle>
+          <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm">
             <QRCodeSVG
               value={qrPayload(code)}
               size={220}
               className="w-[220px] h-[220px] sm:w-[250px] sm:h-[250px]"
-              fgColor="#1b2b45"
+              fgColor="#0f172a"
               level="M"
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-[11px] text-muted-foreground mt-3">
             Scan with Moonlight mobile camera or QR reader
           </p>
         </DialogContent>

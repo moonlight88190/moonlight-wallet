@@ -25,30 +25,37 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
     <Link
       to={tx.kind === "withdrawal" ? "/withdrawals/$id" : "/transactions/$id"}
       params={{ id: tx.id }}
-      className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:px-4 min-h-[52px] transition-opacity hover:opacity-70 touch-manipulation cursor-pointer"
+      className="flex items-center gap-3 py-3.5 px-3.5 sm:px-4 min-h-[56px] transition-colors hover:bg-accent/30 touch-manipulation cursor-pointer group"
     >
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary overflow-hidden">
+      {/* Transaction Icon */}
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 overflow-hidden border border-border/20">
         {showBrand ? (
           <BrandAsset id={paymentAsset.id} size="xs" />
         ) : (
-          <Icon className="h-4 w-4" strokeWidth={1.5} />
+          <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
         )}
-        <div className="absolute -bottom-1 -right-1">
+        <div className="absolute -bottom-0.5 -right-0.5">
           <CountryFlag code={v.currency} circle size="xs" />
         </div>
       </div>
+
+      {/* Transaction Details */}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[15px] font-medium">{v.title}</div>
-        <div className="text-xs text-muted-foreground">
+        <div className="truncate text-[13px] font-medium text-foreground">{v.title}</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5">
           {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
           {d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
-          {tx.status !== "completed" && <span className="ml-2 capitalize">· {tx.status}</span>}
+          {tx.status !== "completed" && (
+            <span className="ml-1.5 capitalize text-gold">· {tx.status}</span>
+          )}
         </div>
       </div>
+
+      {/* Amount */}
       <div
         className={cn(
-          "tabular text-[15px] font-medium shrink-0 text-right",
-          !v.outgoing && "text-emerald-600 dark:text-emerald-400",
+          "tabular text-[13px] font-semibold shrink-0 text-right",
+          !v.outgoing && "text-success",
         )}
       >
         {formatMoney(v.amount, v.currency, { sign: true })}

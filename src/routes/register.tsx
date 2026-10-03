@@ -71,15 +71,17 @@ function Register() {
         title="Check your email"
         subtitle={`We sent a confirmation link to ${form.email}.`}
         footer={
-          <Link to="/login" className="font-medium text-foreground">
+          <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
             Back to sign in
           </Link>
         }
       >
-        <div className="flex justify-center">
-          <MailCheck className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} />
+        <div className="flex justify-center py-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success/8">
+            <MailCheck className="h-8 w-8 text-success" strokeWidth={1.25} />
+          </div>
         </div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-4 text-center text-[13px] text-muted-foreground leading-relaxed">
           Once confirmed, your wallet ID and QR code will be ready on your dashboard.
         </p>
       </AuthLayout>
@@ -93,28 +95,33 @@ function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-foreground">
+          <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
             Sign in
           </Link>
         </>
       }
     >
+      {/* Google */}
       <button
         onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-        className="flex w-full items-center justify-center gap-2.5 rounded-full border bg-card px-6 py-3 text-[15px] font-medium transition-colors hover:bg-accent"
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border/60 bg-card/60 px-6 py-3.5 text-[13px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.99] cursor-pointer touch-manipulation shadow-soft"
       >
         <GoogleIcon /> Continue with Google
       </button>
-      <div className="my-8 flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
+
+      {/* Divider */}
+      <div className="my-7 flex items-center gap-4 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.2em]">
+        <div className="h-px flex-1 bg-border/50" /> or <div className="h-px flex-1 bg-border/50" />
       </div>
+
+      {/* Form */}
       <form onSubmit={submit} className="space-y-3">
         <Input
           placeholder="Full name"
           autoComplete="name"
           value={form.fullName}
           onChange={set("fullName")}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
         />
         <Input
           type="email"
@@ -122,7 +129,7 @@ function Register() {
           autoComplete="email"
           value={form.email}
           onChange={set("email")}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
         />
         <Input
           type="password"
@@ -130,7 +137,7 @@ function Register() {
           autoComplete="new-password"
           value={form.password}
           onChange={set("password")}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
         />
         <Input
           type="password"
@@ -138,11 +145,11 @@ function Register() {
           autoComplete="new-password"
           value={form.confirm}
           onChange={set("confirm")}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
         />
         <button
           disabled={busy}
-          className="mt-2 flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft cursor-pointer touch-manipulation mt-1"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
         </button>

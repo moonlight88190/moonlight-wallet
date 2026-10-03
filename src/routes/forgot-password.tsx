@@ -47,10 +47,10 @@ function Forgot() {
       subtitle={
         sent
           ? `If an account exists for ${email}, a reset link is on its way.`
-          : "We'll email you a link to reset it."
+          : "We\u2019ll email you a link to reset it."
       }
       footer={
-        <Link to="/login" className="font-medium text-foreground">
+        <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
           Back to sign in
         </Link>
       }
@@ -59,14 +59,14 @@ function Forgot() {
         <form onSubmit={submit} className="space-y-3">
           <Input
             type="email"
-            placeholder="Email"
+            placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl"
+            className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
           />
           <button
             disabled={busy}
-            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft cursor-pointer touch-manipulation"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send reset link"}
           </button>

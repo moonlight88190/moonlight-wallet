@@ -7,6 +7,7 @@ import {
   ArrowRight,
   User,
   ArrowLeft,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -101,9 +102,6 @@ function Withdraw() {
 
   // Mode: rails vs vouchers
   const [activeTab, setActiveTab] = useState<"rails" | "vouchers">("rails");
-
-  // Progressive disclosure step
-  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Selected payout method
   const defaultMethod = PAYMENT_METHODS.find((m) => m.id === "upi") || PAYMENT_METHODS[0]!;
@@ -293,6 +291,9 @@ function Withdraw() {
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
   }
 
+  const primaryBtn =
+    "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shadow-md touch-manipulation cursor-pointer";
+
   // Animation state: render cinematic payment journey
   if (animState !== "idle") {
     return (
@@ -340,38 +341,38 @@ function Withdraw() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-5 pb-16 animate-in fade-in duration-200">
+    <div className="mx-auto max-w-md space-y-6 pb-16 animate-in fade-in duration-200">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Withdraw</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Transfer funds to payout rails or redeem vouchers.
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Withdraw</h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          Transfer funds to bank payout rails or redeem digital gift vouchers.
         </p>
       </div>
 
       {/* Eligibility */}
       {!isEligible48h && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2.5 text-xs">
-          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <div>
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-xs">
+          <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
             <p className="font-semibold text-amber-700 dark:text-amber-400">
-              48-hour clearance window
+              48-Hour Security Clearance Active
             </p>
-            <p className="text-muted-foreground mt-0.5">
-              Withdrawals unlock 48 hours after account creation.
+            <p className="text-muted-foreground leading-relaxed">
+              Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers.
             </p>
           </div>
         </div>
       )}
 
       {/* Mode Tabs */}
-      <div className="grid grid-cols-2 p-1 rounded-xl bg-secondary/50 border border-border/30 text-xs font-semibold">
+      <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-card/60 border border-border/60 text-xs font-semibold shadow-xs">
         <button
           type="button"
           onClick={() => setActiveTab("rails")}
-          className={`py-2 rounded-lg transition-all cursor-pointer ${
+          className={`py-2.5 rounded-xl transition-all cursor-pointer ${
             activeTab === "rails"
-              ? "bg-card text-foreground shadow-xs"
+              ? "bg-primary text-primary-foreground shadow-xs font-bold"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -380,28 +381,28 @@ function Withdraw() {
         <button
           type="button"
           onClick={() => setActiveTab("vouchers")}
-          className={`py-2 rounded-lg transition-all cursor-pointer ${
+          className={`py-2.5 rounded-xl transition-all cursor-pointer ${
             activeTab === "vouchers"
-              ? "bg-card text-foreground shadow-xs"
+              ? "bg-primary text-primary-foreground shadow-xs font-bold"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Vouchers
+          Gift Vouchers
         </button>
       </div>
 
       {activeTab === "rails" ? (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* ─── STEP 1: Payout Method ─── */}
-          <section className="space-y-2">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                Payout method
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Payout Channel
               </span>
-              <span className="text-[10px] font-semibold text-primary">{selectedMethod.name}</span>
+              <span className="text-xs font-semibold text-primary">{selectedMethod.name}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {RAIL_OPTIONS.map((rail) => {
                 const isSelected = selectedMethod.id === rail.id;
                 return (
@@ -412,17 +413,19 @@ function Withdraw() {
                       const found = PAYMENT_METHODS.find((m) => m.id === rail.id);
                       if (found) setSelectedMethod(found);
                     }}
-                    className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border transition-all cursor-pointer touch-manipulation text-center ${
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center ${
                       isSelected
-                        ? "border-primary bg-primary/5 font-semibold"
-                        : "border-border/40 bg-card hover:bg-secondary/30"
+                        ? "border-primary/60 bg-primary/10 shadow-xs font-semibold"
+                        : "border-border/50 bg-card/60 hover:bg-muted/40"
                     }`}
                   >
                     <BrandAsset id={rail.icon} size="xs" />
-                    <span className="text-[11px] font-semibold text-foreground truncate w-full">
+                    <span className="text-xs font-semibold text-foreground truncate w-full">
                       {rail.name}
                     </span>
-                    <span className="text-[9px] text-muted-foreground">{rail.badge}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.2 rounded-md">
+                      {rail.badge}
+                    </span>
                   </button>
                 );
               })}
@@ -430,24 +433,24 @@ function Withdraw() {
 
             {/* UPI Sub-selector */}
             {selectedMethod.id === "upi" && (
-              <div className="rounded-xl border border-border/40 bg-secondary/20 p-2 space-y-1">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 block">
-                  UPI App
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
+                  Select UPI Provider
                 </span>
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-5 gap-1.5">
                   {UPI_PROVIDERS.map((app) => (
                     <button
                       key={app.id}
                       type="button"
                       onClick={() => setSelectedUPIApp(app)}
-                      className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
                         selectedUPIApp?.id === app.id
-                          ? "border-primary bg-primary/10"
-                          : "border-transparent hover:bg-secondary/50"
+                          ? "border-primary bg-primary/10 shadow-xs"
+                          : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <UPIProviderLogo providerId={app.id} size="xs" />
-                      <span className="text-[9px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center">
                         {app.name.split(" ")[0]}
                       </span>
                     </button>
@@ -458,24 +461,24 @@ function Withdraw() {
 
             {/* Bank Sub-selector */}
             {selectedMethod.id === "in-bank" && (
-              <div className="rounded-xl border border-border/40 bg-secondary/20 p-2 space-y-1">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 block">
-                  Bank
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
+                  Select Bank
                 </span>
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-5 gap-1.5">
                   {INDIAN_BANKS.map((b) => (
                     <button
                       key={b.id}
                       type="button"
                       onClick={() => setSelectedBank(b)}
-                      className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
                         selectedBank?.id === b.id
-                          ? "border-primary bg-primary/10"
-                          : "border-transparent hover:bg-secondary/50"
+                          ? "border-primary bg-primary/10 shadow-xs"
+                          : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <BankLogo bankId={b.id} size="xs" />
-                      <span className="text-[9px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center">
                         {b.name.split(" ")[0]}
                       </span>
                     </button>
@@ -486,25 +489,27 @@ function Withdraw() {
           </section>
 
           {/* ─── STEP 2: Amount ─── */}
-          <section className="space-y-2 pt-2 border-t border-border/30">
+          <section className="space-y-3 pt-3 border-t border-border/40">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                Amount
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Withdrawal Amount
               </span>
-              <span className="text-[11px] font-mono text-muted-foreground">
-                Balance:{" "}
-                {formatMoney(Number(wallet?.balance_usd || 0) * userRate, preferredCurrency)}
+              <span className="text-xs font-medium text-muted-foreground">
+                Available:{" "}
+                <strong className="text-foreground">
+                  {formatMoney(Number(wallet?.balance_usd || 0) * userRate, preferredCurrency)}
+                </strong>
               </span>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <Input
                 type="number"
                 inputMode="decimal"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="100"
-                className="h-12 text-xl font-bold rounded-xl flex-1"
+                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4"
               />
               <Select
                 value={withdrawCurrency}
@@ -517,15 +522,15 @@ function Withdraw() {
                   setWithdrawCurrency(newCur);
                 }}
               >
-                <SelectTrigger className="h-12 w-24 rounded-xl border font-semibold shrink-0 cursor-pointer">
+                <SelectTrigger className="h-14 w-28 rounded-2xl border-border/60 bg-card/60 font-semibold shrink-0 cursor-pointer">
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl">
+                <SelectContent className="rounded-2xl border-border/60 p-1">
                   {CURRENCIES.map((c) => (
                     <SelectItem
                       key={c.code}
                       value={c.code}
-                      className="font-semibold cursor-pointer"
+                      className="font-semibold cursor-pointer text-xs py-2"
                     >
                       {c.code}
                     </SelectItem>
@@ -536,9 +541,9 @@ function Withdraw() {
           </section>
 
           {/* ─── STEP 3: Destination ─── */}
-          <section className="space-y-2 pt-2 border-t border-border/30">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Destination
+          <section className="space-y-3 pt-3 border-t border-border/40">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+              Destination Details
             </span>
 
             {/* UPI */}
@@ -560,11 +565,11 @@ function Withdraw() {
                             ? "mobilenumber@paytm"
                             : "username@bank"
                     }
-                    className="rounded-xl h-11 text-sm font-mono"
+                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
                   />
                   {upiId.trim() && upiDetection.isVPA && (
-                    <p className="text-[11px] text-primary font-medium px-1">
-                      {upiDetection.providerName}
+                    <p className="text-[11px] text-emerald-500 font-medium px-1">
+                      Detected: {upiDetection.providerName}
                     </p>
                   )}
                 </div>
@@ -578,10 +583,10 @@ function Withdraw() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="rounded-xl h-11 text-sm font-mono"
+                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
                   />
                   <p className="text-[10px] text-muted-foreground px-1">
-                    Required for UPI beneficiary validation and settlement confirmation.
+                    Required for UPI beneficiary validation and IMPS settlement confirmation.
                   </p>
                 </div>
               </div>
@@ -589,20 +594,20 @@ function Withdraw() {
 
             {/* Indian Bank */}
             {selectedMethod.id === "in-bank" && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Input
                   type="text"
                   inputMode="numeric"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="Account number"
-                  className="rounded-xl h-11 text-sm font-mono"
+                  placeholder="Bank Account Number"
+                  className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
                 />
                 <Input
                   value={ifscCode}
                   onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                  placeholder="IFSC code"
-                  className="rounded-xl h-11 text-sm font-mono uppercase"
+                  placeholder="IFSC Code (e.g. SBIN0001234)"
+                  className="rounded-2xl h-12 text-sm font-mono uppercase border-border/60 bg-card/60 px-4"
                   maxLength={11}
                 />
               </div>
@@ -624,12 +629,12 @@ function Withdraw() {
                           ? "Pix key (CPF / email / phone)"
                           : "Account identifier"
                 }
-                className="rounded-xl h-11 text-sm font-mono"
+                className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
               />
             )}
           </section>
 
-          {/* ─── Personal Details (collapsible, pre-filled) ─── */}
+          {/* ─── Personal Details (collapsible) ─── */}
           <div>
             <button
               type="button"
@@ -637,7 +642,7 @@ function Withdraw() {
               className="flex items-center justify-between w-full text-xs text-muted-foreground hover:text-foreground py-1 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5" />
+                <User className="h-3.5 w-3.5 text-primary" />
                 <span>
                   Profile:{" "}
                   <strong className="text-foreground">{fullName || profile?.full_name}</strong>
@@ -651,26 +656,26 @@ function Withdraw() {
             </button>
 
             {showPersonalDetails && (
-              <div className="grid grid-cols-2 gap-2 pt-2 animate-in fade-in duration-150">
+              <div className="grid grid-cols-2 gap-2.5 pt-2 animate-in fade-in duration-150">
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="h-9 rounded-xl text-xs"
+                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
                 />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="h-9 rounded-xl text-xs"
+                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
                 />
               </div>
             )}
           </div>
 
           {/* ─── Fee Summary ─── */}
-          <div className="rounded-xl border border-border/40 bg-secondary/15 p-3 space-y-1.5 text-xs">
+          <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-2 text-xs shadow-xs">
             <div className="flex justify-between text-muted-foreground">
               <span>You send</span>
               <span className="font-mono font-semibold text-foreground">
@@ -681,28 +686,28 @@ function Withdraw() {
               <span>Fee (10%)</span>
               <span className="font-mono">{formatMoney(feeAmount, withdrawCurrency)}</span>
             </div>
-            <div className="flex justify-between font-semibold text-foreground border-t border-border/30 pt-1.5">
-              <span>You receive</span>
-              <span className="font-mono text-emerald-600 dark:text-emerald-400">
+            <div className="flex justify-between font-semibold text-foreground border-t border-border/40 pt-2">
+              <span>Net payout</span>
+              <span className="font-mono text-emerald-500 font-bold text-sm">
                 {formatMoney(netReceivedAmt, targetCorridorCurrency)}
               </span>
             </div>
             {isCrossCorridor && (
-              <p className="text-[10px] text-muted-foreground pt-0.5">
+              <p className="text-[10px] text-muted-foreground pt-0.5 font-mono">
                 Rate: 1 {withdrawCurrency} ≈ {fxRateRatio.toFixed(4)} {targetCorridorCurrency}
               </p>
             )}
           </div>
 
           {/* Submit */}
-          <Button
+          <button
             type="button"
             disabled={busy || !isEligible48h || sourceAmt <= 0}
             onClick={() => setIsReviewOpen(true)}
-            className="w-full rounded-full h-12 text-sm font-semibold shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
+            className={primaryBtn}
           >
-            Review withdrawal <ArrowRight className="ml-1.5 h-4 w-4" />
-          </Button>
+            Review Withdrawal <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       ) : (
         /* ─── Vouchers ─── */
@@ -713,10 +718,10 @@ function Withdraw() {
                 key={cat}
                 type="button"
                 onClick={() => setActiveCardCategory(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer shrink-0 transition-colors ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer shrink-0 transition-colors ${
                   activeCardCategory === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-card border border-border/60 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {cat}
@@ -724,7 +729,7 @@ function Withdraw() {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {GIFT_CARDS.filter(
               (c) => activeCardCategory === "All" || c.category === activeCardCategory,
             ).map((card) => (
@@ -736,20 +741,20 @@ function Withdraw() {
 
       {/* ─── Review Dialog ─── */}
       <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-        <DialogContent className="max-w-sm rounded-2xl p-5">
+        <DialogContent className="max-w-sm rounded-3xl border border-border/60 bg-card p-6 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Confirm withdrawal</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Verify your payout details before submitting.
+            <DialogTitle className="text-base font-bold text-center">Confirm Withdrawal</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground text-center">
+              Verify your payout details before submitting to processing.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2.5 py-2 text-xs">
-            <div className="flex justify-between border-b border-border/30 pb-2">
-              <span className="text-muted-foreground">Method</span>
+          <div className="space-y-3 py-2 text-xs divide-y divide-border/40">
+            <div className="flex justify-between pb-2">
+              <span className="text-muted-foreground">Payout Channel</span>
               <span className="font-semibold text-foreground">{selectedMethod.name}</span>
             </div>
-            <div className="flex justify-between border-b border-border/30 pb-2">
+            <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Destination</span>
               <span className="font-mono font-medium text-foreground truncate max-w-[180px]">
                 {selectedMethod.id === "in-bank"
@@ -758,84 +763,78 @@ function Withdraw() {
               </span>
             </div>
             {phone.trim() && (
-              <div className="flex justify-between border-b border-border/30 pb-2">
+              <div className="flex justify-between pt-2 pb-2">
                 <span className="text-muted-foreground">Mobile Phone</span>
                 <span className="font-mono font-medium text-foreground">{phone.trim()}</span>
               </div>
             )}
-            <div className="flex justify-between border-b border-border/30 pb-2">
+            <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Requested Amount</span>
               <span className="font-mono font-semibold">
                 {formatMoney(sourceAmt, withdrawCurrency)}
               </span>
             </div>
-            <div className="flex justify-between border-b border-border/30 pb-2">
+            <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Processing Fee (10%)</span>
               <span className="font-mono">{formatMoney(feeAmount, withdrawCurrency)}</span>
             </div>
-            <div className="flex justify-between border-b border-border/30 pb-2">
-              <span className="text-muted-foreground">Wallet Debit</span>
-              <span className="font-mono font-semibold text-foreground">
-                {formatMoney(sourceAmt, withdrawCurrency)}
-              </span>
-            </div>
-            <div className="flex justify-between font-semibold text-foreground">
+            <div className="flex justify-between pt-2 font-bold text-sm text-foreground">
               <span>Net Payout</span>
-              <span className="font-mono text-emerald-600 dark:text-emerald-400">
+              <span className="font-mono text-emerald-500">
                 {formatMoney(netReceivedAmt, targetCorridorCurrency)}
               </span>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2.5 pt-2">
             <Button
               variant="outline"
               onClick={() => setIsReviewOpen(false)}
-              className="flex-1 rounded-full text-xs h-10 cursor-pointer"
+              className="flex-1 rounded-2xl text-xs h-11 border-border/60 cursor-pointer font-semibold"
             >
               Edit
             </Button>
-            <Button
+            <button
               disabled={busy}
               onClick={handleSubmitWithdrawal}
-              className="flex-1 rounded-full text-xs h-10 font-semibold cursor-pointer"
+              className={`${primaryBtn} flex-1 h-11 text-xs`}
             >
               Submit
-            </Button>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* ─── Voucher Redeem Dialog ─── */}
       <Dialog open={!!selectedCard} onOpenChange={(open) => !open && setSelectedCard(null)}>
-        <DialogContent className="max-w-sm rounded-2xl p-5">
+        <DialogContent className="max-w-sm rounded-3xl border border-border/60 bg-card p-6 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">
+            <DialogTitle className="text-base font-bold text-center">
               Redeem {selectedCard?.brand}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Voucher code issued upon wallet balance deduction.
+            <DialogDescription className="text-xs text-muted-foreground text-center">
+              Voucher code issued instantly upon wallet balance deduction.
             </DialogDescription>
           </DialogHeader>
 
           {selectedCard && (
-            <div className="space-y-3 py-1">
-              <div className="aspect-[16/9] w-full rounded-xl overflow-hidden">
+            <div className="space-y-4 py-1">
+              <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden border border-border/60 shadow-xs">
                 <GiftCardImage imageUrl={selectedCard.imageUrl} alt={selectedCard.brand} />
               </div>
 
-              <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-muted-foreground">Denomination</span>
-                <div className="grid grid-cols-4 gap-1.5">
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-muted-foreground">Select Denomination</span>
+                <div className="grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setCardValue(val)}
-                      className={`py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                         cardValue === val
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border/40 bg-secondary/30 text-foreground"
+                          ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                          : "border-border/50 bg-card/60 text-foreground hover:bg-muted/40"
                       }`}
                     >
                       {formatMoney(val, preferredCurrency)}
@@ -844,13 +843,13 @@ function Withdraw() {
                 </div>
               </div>
 
-              <Button
+              <button
                 disabled={busy || !isEligible48h}
                 onClick={handleRedeemVoucher}
-                className="w-full rounded-full h-10 text-xs font-semibold cursor-pointer"
+                className={primaryBtn}
               >
-                Confirm
-              </Button>
+                Confirm Redemption
+              </button>
             </div>
           )}
         </DialogContent>
