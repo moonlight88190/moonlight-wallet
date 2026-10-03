@@ -1304,11 +1304,11 @@ type GlobalSearchTransaction = {
 };
 
 type AdminActivityItem = {
-  id?: string | number;
+  id: string | number | undefined;
   type: "audit" | "action";
   title: string;
-  user_id?: string | null;
-  details?: unknown;
+  user_id: string | null | undefined;
+  details: unknown;
   created_at: string;
 };
 
@@ -1600,7 +1600,7 @@ function ActivitySection({ token }: { token: string }) {
                   <span className="text-[11px] font-mono text-muted-foreground">{dateStr}</span>
                 </div>
 
-                {item.details && (
+                {item.details != null && (
                   <pre className="p-2 rounded-xl bg-secondary/50 font-mono text-[10px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-32">
                     {typeof item.details === "string"
                       ? item.details

@@ -18,14 +18,14 @@ export interface PaymentAnimationProps {
   sourceCurrency: string;
   destinationAmount: number;
   destinationCurrency: string;
-  paymentMethodId?: string;
-  paymentMethodName?: string;
-  exchangeRate?: number;
-  fee?: number;
-  errorMessage?: string;
-  onRetry?: () => void;
-  onViewReceipt?: () => void;
-  onCancel?: () => void;
+  paymentMethodId?: string | undefined;
+  paymentMethodName?: string | undefined;
+  exchangeRate?: number | undefined;
+  fee?: number | undefined;
+  errorMessage?: string | undefined;
+  onRetry?: (() => void) | undefined;
+  onViewReceipt?: (() => void) | undefined;
+  onCancel?: (() => void) | undefined;
 }
 
 /* ─── Stage definitions ─── */
@@ -158,6 +158,7 @@ export function PaymentAnimation({
       }, 400);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [isBackendDone, visualStage, totalStages]);
 
   // Mark complete when visual reaches final stage AND backend is done

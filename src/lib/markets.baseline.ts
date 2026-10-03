@@ -19814,6 +19814,7 @@ export const BASELINE_MARKETS: MarketSnapshot = {
       }
     }
   ],
+  "indices": [],
   "fetchedAt": 1790952309340,
   "status": "cached",
   "source": "European & Global Market Reference Feed",
