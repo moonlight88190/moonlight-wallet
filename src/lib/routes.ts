@@ -135,24 +135,45 @@ export function resolveTransactionRoute(params: RouteResolutionParams): Resolved
     let resolvedUpiProvider = "upi";
     let providerLabel = "UPI Payout";
 
-    if (provider.includes("google") || upiId.includes("@ok") || upiId.includes("@gpay")) {
+    if (
+      upiId.includes("@upi") ||
+      upiId.includes("@bhim") ||
+      upiId.includes("@npci") ||
+      provider.includes("bhim") ||
+      method.includes("bhim")
+    ) {
+      resolvedUpiProvider = "bhim";
+      providerLabel = "BHIM UPI";
+    } else if (
+      provider.includes("google") ||
+      upiId.includes("@ok") ||
+      upiId.includes("@gpay") ||
+      method.includes("google")
+    ) {
       resolvedUpiProvider = "google-pay";
       providerLabel = "Google Pay";
     } else if (
       provider.includes("phonepe") ||
       upiId.includes("@ybl") ||
       upiId.includes("@ibl") ||
-      upiId.includes("@axl")
+      upiId.includes("@axl") ||
+      method.includes("phonepe")
     ) {
       resolvedUpiProvider = "phonepe";
       providerLabel = "PhonePe";
-    } else if (provider.includes("paytm") || upiId.includes("@paytm")) {
+    } else if (
+      provider.includes("paytm") ||
+      upiId.includes("@paytm") ||
+      method.includes("paytm")
+    ) {
       resolvedUpiProvider = "paytm";
       providerLabel = "Paytm";
-    } else if (provider.includes("bhim") || upiId.includes("@bhim") || upiId.includes("@upi")) {
-      resolvedUpiProvider = "bhim";
-      providerLabel = "BHIM UPI";
-    } else if (provider.includes("amazon") || upiId.includes("@apl")) {
+    } else if (
+      provider.includes("amazon") ||
+      upiId.includes("@apl") ||
+      upiId.includes("@amazon") ||
+      method.includes("amazon")
+    ) {
       resolvedUpiProvider = "amazon-pay";
       providerLabel = "Amazon Pay";
     }

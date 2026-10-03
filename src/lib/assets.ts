@@ -487,7 +487,7 @@ export const UPI_PROVIDERS: UPIProviderMeta[] = [
     id: "bhim",
     name: "BHIM UPI",
     iconUrl: "/assets/payment-methods/bhim.svg",
-    handles: ["@upi", "@bhim"],
+    handles: ["@upi", "@bhim", "@npci"],
     sourceRatio: "wide",
   },
   {
@@ -857,16 +857,22 @@ export function resolvePaymentAsset(
     }
   }
 
-  // 3. UPI Provider match (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)
+  // 3. UPI Provider match (BHIM, Google Pay, PhonePe, Paytm, Amazon Pay)
   if (r === "upi" || m.includes("upi") || u.length > 0) {
-    const upiMatch = UPI_PROVIDERS.find(
-      (prov) =>
-        p.includes(prov.id) ||
-        p.includes(prov.name.toLowerCase()) ||
-        m.includes(prov.id) ||
-        m.includes(prov.name.toLowerCase()) ||
-        prov.handles.some((h) => u.includes(h)),
-    );
+    // If handle is present in UPI ID (e.g. @upi -> BHIM, @okhdfcbank -> Google Pay), prioritize handle match!
+    const handleMatch = u.length > 0
+      ? UPI_PROVIDERS.find((prov) => prov.handles.some((h) => u.includes(h)))
+      : null;
+
+    const upiMatch =
+      handleMatch ||
+      UPI_PROVIDERS.find(
+        (prov) =>
+          p.includes(prov.id) ||
+          p.includes(prov.name.toLowerCase()) ||
+          m.includes(prov.id) ||
+          m.includes(prov.name.toLowerCase()),
+      );
     if (upiMatch) {
       return {
         type: "upi",
@@ -878,8 +884,8 @@ export function resolvePaymentAsset(
     }
     return {
       type: "upi",
-      id: "upi",
-      label: "UPI Direct",
+      id: "bhim",
+      label: "BHIM / UPI Direct",
       subtitle: "Unified Payments Interface",
       sourceRatio: "wide",
     };

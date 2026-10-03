@@ -16,14 +16,28 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
   const d = new Date(tx.created_at);
 
   const isExternal = tx.kind === "withdrawal";
+  const isIndianRail =
+    tx.route === "upi" ||
+    tx.method?.toLowerCase().includes("upi") ||
+    tx.method?.toLowerCase().includes("in-bank") ||
+    tx.method?.toLowerCase().includes("bank") ||
+    tx.method?.toLowerCase().includes("imps");
+
+  const upiOrMask = isExternal && isIndianRail
+    ? (tx as { upi_id?: string }).upi_id || tx.recipient_name || undefined
+    : undefined;
+
   const paymentAsset = resolvePaymentAsset(
     isExternal ? tx.method || "Payout Rail" : undefined,
-    isExternal && tx.method?.toLowerCase().includes("upi") ? tx.recipient_wallet_code || undefined : undefined,
+    upiOrMask,
     isExternal ? (tx as { provider?: string }).provider || undefined : undefined,
     tx.currency,
     tx.route,
     tx.kind,
   );
+
+  const flagCode = isIndianRail ? "IN" : v.currency;
+  const displayCurrency = isIndianRail && v.currency === "EUR" ? "INR" : v.currency;
 
   return (
     <Link
@@ -35,7 +49,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 overflow-hidden border border-border/20">
         <BrandAsset id={paymentAsset.id} size="xs" />
         <div className="absolute -bottom-0.5 -right-0.5">
-          <CountryFlag code={v.currency} circle size="xs" />
+          <CountryFlag code={flagCode} circle size="xs" />
         </div>
       </div>
 
@@ -58,7 +72,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
           !v.outgoing && "text-success",
         )}
       >
-        {formatMoney(v.amount, v.currency, { sign: true })}
+        {formatMoney(v.amount, displayCurrency, { sign: true })}
       </div>
     </Link>
   );

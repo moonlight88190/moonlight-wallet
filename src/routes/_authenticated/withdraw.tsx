@@ -106,12 +106,16 @@ function Withdraw() {
   // Selected payout method
   const defaultMethod = PAYMENT_METHODS.find((m) => m.id === "upi") || PAYMENT_METHODS[0]!;
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta>(defaultMethod);
-  const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(UPI_PROVIDERS[0]!);
+  const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(
+    UPI_PROVIDERS.find((p) => p.id === "bhim") || UPI_PROVIDERS[0]!,
+  );
   const [selectedBank, setSelectedBank] = useState<BankMeta | null>(INDIAN_BANKS[0]!);
 
   // Form state
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
-  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(preferredCurrency);
+  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(
+    getMethodTargetCurrency(defaultMethod.id),
+  );
   const [upiId, setUpiId] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [ifscCode, setIfscCode] = useState<string>("");
@@ -137,10 +141,12 @@ function Withdraw() {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   // Currency conversions
-  const sourceAmt = Number(withdrawAmount) || 0;
+  const isUPI = selectedMethod.id.includes("upi");
+  const isIndianBank = selectedMethod.id === "in-bank";
   const targetCorridorCurrency = getMethodTargetCurrency(selectedMethod.id);
-  const isCrossCorridor = withdrawCurrency !== targetCorridorCurrency;
-  const sourceRate = r[withdrawCurrency] ?? 1;
+  const effectiveCurrency = isUPI || isIndianBank ? "INR" : withdrawCurrency;
+  const isCrossCorridor = effectiveCurrency !== targetCorridorCurrency;
+  const sourceRate = r[effectiveCurrency] ?? 1;
   const targetRate = r[targetCorridorCurrency] ?? 1;
   const fxRateRatio = sourceRate > 0 ? targetRate / sourceRate : 1;
   const convertedTargetAmt = isCrossCorridor ? sourceAmt * fxRateRatio : sourceAmt;
@@ -150,6 +156,30 @@ function Withdraw() {
     : sourceAmt - feeAmount;
 
   const upiDetection = parseUPIHandle(upiId);
+
+  // Sync UPI provider when user types a recognized handle (e.g. @upi -> BHIM)
+  const handleUpiIdChange = (val: string) => {
+    setUpiId(val);
+    const det = parseUPIHandle(val);
+    if (det.isVPA && det.providerId) {
+      const match = UPI_PROVIDERS.find((p) => p.id === det.providerId);
+      if (match) setSelectedUPIApp(match);
+    }
+  };
+
+  // Rail switch handler with currency corridor synchronization
+  const handleSelectRail = (railId: string) => {
+    const found = PAYMENT_METHODS.find((m) => m.id === railId);
+    if (!found) return;
+    setSelectedMethod(found);
+    const newCorridor = getMethodTargetCurrency(found.id);
+    const curAmt = Number(withdrawAmount) || 0;
+    if (curAmt > 0 && withdrawCurrency && newCorridor && withdrawCurrency !== newCorridor) {
+      const converted = convert(curAmt, withdrawCurrency, newCorridor, r);
+      setWithdrawAmount(converted.toFixed(2));
+    }
+    setWithdrawCurrency(newCorridor);
+  };
 
   // Submit withdrawal
   async function handleSubmitWithdrawal() {
@@ -163,12 +193,9 @@ function Withdraw() {
       return;
     }
 
-    const isUPI = selectedMethod.id.includes("upi");
-    const isIndianBank = selectedMethod.id === "in-bank";
-
     if (isUPI) {
       if (!upiId.trim() || !upiDetection.isVPA) {
-        toast.error("Please enter a valid UPI VPA (e.g. username@okhdfcbank).");
+        toast.error("Please enter a valid UPI VPA (e.g. username@okhdfcbank or user@upi).");
         return;
       }
       if (!phone.trim() || phone.trim().length < 8) {
@@ -196,19 +223,28 @@ function Withdraw() {
     setWithdrawError(null);
     setAnimState("processing");
 
+    // Automatically resolve effective UPI app based on detected handle or selection
+    const detectedUPI =
+      isUPI && upiDetection.isVPA && upiDetection.providerId
+        ? UPI_PROVIDERS.find((p) => p.id === upiDetection.providerId)
+        : null;
+
+    const effectiveUPIApp =
+      detectedUPI || selectedUPIApp || UPI_PROVIDERS.find((p) => p.id === "bhim");
+
     const methodName = isIndianBank
       ? `${selectedBank?.name || "Indian Bank"} IMPS Transfer`
-      : selectedUPIApp
-        ? `${selectedUPIApp.name} (UPI)`
+      : isUPI
+        ? `${effectiveUPIApp?.name || "BHIM"} (UPI)`
         : selectedMethod.name;
 
     const providerName = isIndianBank
       ? selectedBank?.name
-      : selectedUPIApp
-        ? selectedUPIApp.name
-        : isUPI
-          ? upiDetection.providerName || "UPI"
-          : selectedMethod.name;
+      : isUPI
+        ? effectiveUPIApp?.name || "BHIM UPI"
+        : selectedMethod.name;
+
+    const finalCurrency = isUPI || isIndianBank ? "INR" : withdrawCurrency;
 
     const withdrawReason = isIndianBank
       ? `Transfer to ${selectedBank?.name || "Indian Bank"} A/C ••••${accountNumber.slice(-4)} (IFSC: ${ifscCode.toUpperCase()})`
@@ -220,7 +256,7 @@ function Withdraw() {
       "create_withdrawal" as never,
       {
         p_amount: sourceAmt,
-        p_currency: withdrawCurrency,
+        p_currency: finalCurrency,
         p_method: methodName,
         p_full_name: currentFullName,
         p_email: currentEmail,
@@ -341,7 +377,7 @@ function Withdraw() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6 pb-16 animate-in fade-in duration-200">
+    <div className="mx-auto w-full max-w-md space-y-6 pb-16 animate-in fade-in duration-200 overflow-x-hidden px-1 sm:px-0">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Withdraw</h1>
@@ -393,9 +429,9 @@ function Withdraw() {
       </div>
 
       {activeTab === "rails" ? (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           {/* ─── STEP 1: Payout Method ─── */}
-          <section className="space-y-3">
+          <section className="space-y-3 w-full">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Payout Channel
@@ -403,18 +439,15 @@ function Withdraw() {
               <span className="text-xs font-semibold text-primary">{selectedMethod.name}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 w-full">
               {RAIL_OPTIONS.map((rail) => {
                 const isSelected = selectedMethod.id === rail.id;
                 return (
                   <button
                     key={rail.id}
                     type="button"
-                    onClick={() => {
-                      const found = PAYMENT_METHODS.find((m) => m.id === rail.id);
-                      if (found) setSelectedMethod(found);
-                    }}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center ${
+                    onClick={() => handleSelectRail(rail.id)}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center min-w-0 overflow-hidden ${
                       isSelected
                         ? "border-primary/60 bg-primary/10 shadow-xs font-semibold"
                         : "border-border/50 bg-card/60 hover:bg-muted/40"
@@ -434,24 +467,24 @@ function Withdraw() {
 
             {/* UPI Sub-selector */}
             {selectedMethod.id === "upi" && (
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 w-full overflow-hidden">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
                   Select UPI Provider
                 </span>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5 w-full">
                   {UPI_PROVIDERS.map((app) => (
                     <button
                       key={app.id}
                       type="button"
                       onClick={() => setSelectedUPIApp(app)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer touch-manipulation min-w-0 overflow-hidden ${
                         selectedUPIApp?.id === app.id
-                          ? "border-primary bg-primary/10 shadow-xs"
+                          ? "border-primary bg-primary/10 shadow-xs font-semibold"
                           : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <UPIProviderLogo providerId={app.id} size="xs" />
-                      <span className="text-[10px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center block">
                         {app.name.split(" ")[0]}
                       </span>
                     </button>
@@ -462,24 +495,24 @@ function Withdraw() {
 
             {/* Bank Sub-selector */}
             {selectedMethod.id === "in-bank" && (
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2">
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-3 space-y-2 w-full overflow-hidden">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 block">
                   Select Bank
                 </span>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5 w-full">
                   {INDIAN_BANKS.map((b) => (
                     <button
                       key={b.id}
                       type="button"
                       onClick={() => setSelectedBank(b)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer touch-manipulation ${
+                      className={`flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer touch-manipulation min-w-0 overflow-hidden ${
                         selectedBank?.id === b.id
-                          ? "border-primary bg-primary/10 shadow-xs"
+                          ? "border-primary bg-primary/10 shadow-xs font-semibold"
                           : "border-transparent hover:bg-muted/40"
                       }`}
                     >
                       <BankLogo bankId={b.id} size="xs" />
-                      <span className="text-[10px] font-medium truncate w-full text-center">
+                      <span className="text-[10px] font-medium truncate w-full text-center block">
                         {b.name.split(" ")[0]}
                       </span>
                     </button>
@@ -490,7 +523,7 @@ function Withdraw() {
           </section>
 
           {/* ─── STEP 2: Amount ─── */}
-          <section className="space-y-3 pt-3 border-t border-border/40">
+          <section className="space-y-3 pt-3 border-t border-border/40 w-full">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Withdrawal Amount
@@ -503,27 +536,29 @@ function Withdraw() {
               </span>
             </div>
 
-            <div className="flex gap-2.5">
+            <div className="flex gap-2.5 w-full">
               <Input
                 type="number"
                 inputMode="decimal"
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="100"
-                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4"
+                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4 min-w-0"
               />
               <Select
-                value={withdrawCurrency}
+                value={effectiveCurrency}
                 onValueChange={(newCur) => {
                   const curAmt = Number(withdrawAmount) || 0;
-                  if (curAmt > 0 && withdrawCurrency && newCur && withdrawCurrency !== newCur) {
-                    const converted = convert(curAmt, withdrawCurrency, newCur, r);
+                  if (curAmt > 0 && effectiveCurrency && newCur && effectiveCurrency !== newCur) {
+                    const converted = convert(curAmt, effectiveCurrency, newCur, r);
                     setWithdrawAmount(converted.toFixed(2));
                   }
                   setWithdrawCurrency(newCur);
                 }}
+                disabled={isUPI || isIndianBank}
               >
-                <SelectTrigger className="h-14 w-28 rounded-2xl border-border/60 bg-card/60 font-semibold shrink-0 cursor-pointer">
+                <SelectTrigger className="h-14 w-32 rounded-2xl border-border/60 bg-card/60 font-semibold shrink-0 cursor-pointer flex items-center gap-1.5 px-3">
+                  <CountryFlag code={effectiveCurrency} circle size="xs" />
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-border/60 p-1">
@@ -533,7 +568,10 @@ function Withdraw() {
                       value={c.code}
                       className="font-semibold cursor-pointer text-xs py-2"
                     >
-                      {c.code}
+                      <div className="flex items-center gap-2">
+                        <CountryFlag code={c.code} circle size="xs" />
+                        <span>{c.code}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -542,14 +580,14 @@ function Withdraw() {
           </section>
 
           {/* ─── STEP 3: Destination ─── */}
-          <section className="space-y-3 pt-3 border-t border-border/40">
+          <section className="space-y-3 pt-3 border-t border-border/40 w-full">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
               Destination Details
             </span>
 
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <div className="space-y-1">
                   <label
                     htmlFor="upi-vpa-input"
@@ -560,22 +598,34 @@ function Withdraw() {
                   <Input
                     id="upi-vpa-input"
                     value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
+                    onChange={(e) => handleUpiIdChange(e.target.value)}
                     placeholder={
-                      selectedUPIApp?.id === "google-pay"
-                        ? "username@okhdfcbank"
-                        : selectedUPIApp?.id === "phonepe"
-                          ? "username@ybl"
-                          : selectedUPIApp?.id === "paytm"
-                            ? "mobilenumber@paytm"
-                            : "username@bank"
+                      selectedUPIApp?.id === "bhim"
+                        ? "username@upi"
+                        : selectedUPIApp?.id === "google-pay"
+                          ? "username@okhdfcbank"
+                          : selectedUPIApp?.id === "phonepe"
+                            ? "username@ybl"
+                            : selectedUPIApp?.id === "paytm"
+                              ? "mobilenumber@paytm"
+                              : selectedUPIApp?.id === "amazon-pay"
+                                ? "username@apl"
+                                : "username@bank"
                     }
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                   {upiId.trim() && upiDetection.isVPA && (
-                    <p className="text-[11px] text-emerald-500 font-medium px-1">
-                      Detected: {upiDetection.providerName}
-                    </p>
+                    <div className="flex items-center gap-1.5 px-1 pt-0.5">
+                      <span className="text-[11px] text-emerald-500 font-medium">
+                        Detected: {upiDetection.providerName}
+                      </span>
+                      {upiDetection.providerId && (
+                        <UPIProviderLogo providerId={upiDetection.providerId} size="xs" />
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -589,10 +639,11 @@ function Withdraw() {
                   <Input
                     id="beneficiary-phone-input"
                     type="tel"
+                    inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                   <p className="text-[10px] text-muted-foreground px-1">
                     Required for UPI beneficiary validation and IMPS settlement confirmation.
@@ -603,7 +654,7 @@ function Withdraw() {
 
             {/* Indian Bank */}
             {selectedMethod.id === "in-bank" && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <div className="space-y-1">
                   <label
                     htmlFor="bank-account-number"
@@ -618,7 +669,7 @@ function Withdraw() {
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
                     placeholder="Bank Account Number"
-                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
                   />
                 </div>
                 <div className="space-y-1">
@@ -633,7 +684,7 @@ function Withdraw() {
                     value={ifscCode}
                     onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                     placeholder="IFSC Code (e.g. SBIN0001234)"
-                    className="rounded-2xl h-12 text-sm font-mono uppercase border-border/60 bg-card/60 px-4"
+                    className="rounded-2xl h-12 text-base sm:text-sm font-mono uppercase border-border/60 bg-card/60 px-4 w-full"
                     maxLength={11}
                   />
                 </div>
@@ -656,13 +707,13 @@ function Withdraw() {
                           ? "Pix key (CPF / email / phone)"
                           : "Account identifier"
                 }
-                className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                className="rounded-2xl h-12 text-base sm:text-sm font-mono border-border/60 bg-card/60 px-4 w-full"
               />
             )}
           </section>
 
           {/* ─── Personal Details (collapsible) ─── */}
-          <div>
+          <div className="w-full">
             <button
               type="button"
               onClick={() => setShowPersonalDetails(!showPersonalDetails)}
@@ -683,19 +734,19 @@ function Withdraw() {
             </button>
 
             {showPersonalDetails && (
-              <div className="grid grid-cols-2 gap-2.5 pt-2 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 animate-in fade-in duration-150 w-full">
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
+                  className="h-11 rounded-xl text-base sm:text-sm border-border/60 bg-card/60 px-3 w-full"
                 />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
-                  className="h-10 rounded-xl text-xs border-border/60 bg-card/60 px-3"
+                  className="h-11 rounded-xl text-base sm:text-sm border-border/60 bg-card/60 px-3 w-full"
                 />
               </div>
             )}
@@ -781,7 +832,13 @@ function Withdraw() {
           <div className="space-y-3 py-2 text-xs divide-y divide-border/40">
             <div className="flex justify-between pb-2">
               <span className="text-muted-foreground">Payout Channel</span>
-              <span className="font-semibold text-foreground">{selectedMethod.name}</span>
+              <span className="font-semibold text-foreground">
+                {isIndianBank
+                  ? `${selectedBank?.name || "Indian Bank"} IMPS Transfer`
+                  : isUPI
+                    ? `${(upiDetection.isVPA && upiDetection.providerId ? UPI_PROVIDERS.find((p) => p.id === upiDetection.providerId) : selectedUPIApp)?.name || "BHIM"} (UPI)`
+                    : selectedMethod.name}
+              </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Destination</span>
@@ -800,12 +857,12 @@ function Withdraw() {
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Requested Amount</span>
               <span className="font-mono font-semibold">
-                {formatMoney(sourceAmt, withdrawCurrency)}
+                {formatMoney(sourceAmt, effectiveCurrency)}
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Processing Fee (10%)</span>
-              <span className="font-mono">{formatMoney(feeAmount, withdrawCurrency)}</span>
+              <span className="font-mono">{formatMoney(feeAmount, effectiveCurrency)}</span>
             </div>
             <div className="flex justify-between pt-2 font-bold text-sm text-foreground">
               <span>Net Payout</span>

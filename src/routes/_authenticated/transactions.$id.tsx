@@ -203,7 +203,17 @@ function Receipt() {
 
   // Authoritative stored economics
   const grossAmount = Number(rawData.amount) || 0;
-  const currency = (rawData.currency as string) || "EUR";
+  const isIndianRail =
+    isWithdrawal &&
+    (rawData.route === "upi" ||
+      rawData.method?.toLowerCase().includes("upi") ||
+      rawData.method?.toLowerCase().includes("in-bank") ||
+      rawData.method?.toLowerCase().includes("bank") ||
+      rawData.method?.toLowerCase().includes("imps"));
+  const currency =
+    isIndianRail && rawData.currency === "EUR"
+      ? "INR"
+      : (rawData.currency as string) || "EUR";
   const feeAmount = rawData.fee != null ? Number(rawData.fee) : 0;
   const netAmount =
     rawData.recipient_amount != null

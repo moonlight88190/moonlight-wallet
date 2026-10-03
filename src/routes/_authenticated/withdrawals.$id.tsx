@@ -180,11 +180,26 @@ function WithdrawalReceipt() {
     wd.method?.toLowerCase().includes("imps") ||
     wd.route?.toLowerCase() === "in-bank";
 
+  const isIndianRail = isUPI || isIndianBank;
+  const displayCurrency =
+    isIndianRail && (wd.currency === "EUR" || wd.currency === "USD") ? "INR" : wd.currency;
+  const displayFlag = isIndianRail ? "IN" : displayCurrency;
+  const displayPayoutCurrency =
+    isIndianRail && (payoutCurrency === "EUR" || payoutCurrency === "USD")
+      ? "INR"
+      : payoutCurrency;
+  const displayMethod =
+    isUPI &&
+    (wd.upi_id?.includes("@upi") || wd.upi_id?.includes("@bhim")) &&
+    wd.method?.includes("Google Pay")
+      ? "BHIM UPI (UPI)"
+      : wd.method;
+
   const paymentAsset = resolvePaymentAsset(
-    wd.provider || wd.method,
+    wd.provider || displayMethod,
     wd.upi_id || undefined,
     undefined,
-    wd.currency,
+    displayCurrency,
     wd.route,
     "withdrawal",
   );
@@ -244,9 +259,9 @@ function WithdrawalReceipt() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <CountryFlag code={wd.currency} circle size="sm" />
+            <CountryFlag code={displayFlag} circle size="sm" />
             <span className="text-xs font-mono font-semibold text-muted-foreground">
-              {wd.currency}
+              {displayCurrency}
             </span>
           </div>
         </div>
@@ -287,11 +302,11 @@ function WithdrawalReceipt() {
             Total Withdrawn
           </p>
           <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-mono">
-            {formatMoney(grossAmount, wd.currency)}
+            {formatMoney(grossAmount, displayCurrency)}
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-secondary/70 border border-border/50 px-3 py-1 mt-2">
             <PaymentMethodIcon id={paymentAsset.id} size="xs" />
-            <span className="text-xs font-medium text-foreground">{wd.method}</span>
+            <span className="text-xs font-medium text-foreground">{displayMethod}</span>
           </div>
         </div>
 
@@ -303,19 +318,19 @@ function WithdrawalReceipt() {
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Requested Payout</span>
             <span className="font-mono font-medium text-foreground">
-              {formatMoney(grossAmount, wd.currency)}
+              {formatMoney(grossAmount, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Processing Fee (10% standard)</span>
             <span className="font-mono font-medium text-muted-foreground">
-              -{formatMoney(feeAmount, wd.currency)}
+              -{formatMoney(feeAmount, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-border/30">
             <span className="font-semibold text-foreground">Net Dispatched Amount</span>
             <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-              {formatMoney(netSettlement, payoutCurrency)}
+              {formatMoney(netSettlement, displayPayoutCurrency)}
             </span>
           </div>
         </div>
