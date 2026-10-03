@@ -151,7 +151,13 @@ export function BrandAsset({
 
   const method = PAYMENT_METHODS.find((m) => m.id === cleanId || m.id === id);
   const provider = UPI_PROVIDERS.find((p) => p.id === cleanId || p.id === id);
-  const bank = INDIAN_BANKS.find((b) => b.id === cleanId || b.id === id);
+  const bank = INDIAN_BANKS.find(
+    (b) =>
+      b.id === cleanId ||
+      b.id === id ||
+      cleanId.startsWith(b.id) ||
+      b.id.startsWith(cleanId),
+  );
 
   const MARKET_ASSETS: Record<string, string> = {
     "nifty-50": "/assets/markets/nifty-50.svg",
@@ -172,6 +178,14 @@ export function BrandAsset({
     tcs: "/assets/markets/tcs.svg",
     infosys: "/assets/markets/infosys.svg",
     airtel: "/assets/markets/airtel.svg",
+    hdfc: "/assets/markets/hdfc-bank.svg",
+    "hdfc-bank": "/assets/markets/hdfc-bank.svg",
+    hdfcbank: "/assets/markets/hdfc-bank.svg",
+    "hdfcbank.ns": "/assets/markets/hdfc-bank.svg",
+    icici: "/assets/markets/icici-bank.svg",
+    "icici-bank": "/assets/markets/icici-bank.svg",
+    icicibank: "/assets/markets/icici-bank.svg",
+    "icicibank.ns": "/assets/markets/icici-bank.svg",
     asml: "/assets/markets/asml.svg",
     sap: "/assets/markets/sap.svg",
     siemens: "/assets/markets/siemens.svg",
