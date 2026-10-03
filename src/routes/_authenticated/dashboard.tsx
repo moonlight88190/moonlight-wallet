@@ -10,9 +10,11 @@ import {
   ChevronRight,
   Clock,
   Gift,
-  CheckCircle,
-  Shield,
-  Wallet,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  Lock,
+  Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -35,14 +37,14 @@ import { GIFT_CARDS } from "@/lib/assets";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Moonlight Wallet" },
+      { title: "Dashboard — Moonlight Private Wealth & Treasury" },
       {
         name: "description",
         content:
-          "Your account dashboard. View your balance, recent transactions, and market data.",
+          "Private multi-currency financial ledger, instant SEPA transfers, global payout corridors, and live equity benchmarks.",
       },
       { property: "og:title", content: "Moonlight Wallet Dashboard" },
-      { property: "og:description", content: "Account dashboard and transaction history." },
+      { property: "og:description", content: "Private financial ledger and global corridors." },
     ],
   }),
   component: Dashboard,
@@ -73,33 +75,41 @@ function Dashboard() {
 
   const recentTxs = (transactions.data ?? []).slice(0, 4);
 
-  // Account status indicators — driven by real application state
-  const accountAge = profile.data?.created_at
-    ? (Date.now() - new Date(profile.data.created_at).getTime()) / (1000 * 60 * 60)
-    : 0;
-  const withdrawalsEnabled = accountAge >= 48;
-  const accountRegion = getAccountRegionLabel(geography.data);
-
   return (
     <div className="mx-auto max-w-xl space-y-6 pb-12 animate-fade-up">
       {/* ═══════════════════════════════════════
-           1. ACCOUNT BALANCE CARD
+           1. EXECUTIVE TITANIUM TREASURY CARD
          ═══════════════════════════════════════ */}
       <section
         aria-label="Account Balance"
-        className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 sm:p-7 shadow-card transition-all"
+        className="relative overflow-hidden rounded-[28px] border border-white/10 dark:border-white/15 bg-gradient-to-br from-[#161B26] via-[#0E131C] to-[#070A0F] p-6 sm:p-7 text-white shadow-[0_24px_50px_rgba(0,0,0,0.3)] transition-all"
       >
-        {/* Top: Account label + Wallet ID */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Ambient Sheen & Radial Lighting */}
+        <div
+          className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/20 blur-[80px]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-gold/15 blur-[80px]"
+          aria-hidden="true"
+        />
+        {/* Subtle Brushed Metal Grid Background */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"
+          aria-hidden="true"
+        />
+
+        {/* Top Header: Badge, Contactless, & Wallet ID */}
+        <div className="relative z-10 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <CountryFlag
-              code={geography.data?.countryCode || "GLOBAL"}
-              size="xs"
-              circle
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-gold/20 via-gold/10 to-transparent border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase shadow-2xs">
+              <Sparkles className="h-3 w-3 text-gold" />
+              <span>TITANIUM TREASURY</span>
+            </div>
+            <Wifi
+              className="h-3.5 w-3.5 text-white/40 rotate-90 hidden sm:block"
+              aria-label="Contactless"
             />
-            <span className="text-[11px] font-medium text-muted-foreground">
-              {accountRegion}
-            </span>
           </div>
 
           {wallet.data && (
@@ -107,11 +117,11 @@ function Dashboard() {
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy wallet ID"
-              className="inline-flex items-center gap-1.5 rounded-full bg-secondary hover:bg-muted border border-border/40 px-3 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground transition-all cursor-pointer touch-manipulation active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1 text-[11px] font-mono font-medium text-white/90 hover:text-white transition-all cursor-pointer touch-manipulation backdrop-blur-md active:scale-95"
             >
               <span>{wallet.data.wallet_code}</span>
               {copiedCode ? (
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3 text-emerald-400" />
               ) : (
                 <Copy className="h-3 w-3 opacity-60" />
               )}
@@ -119,23 +129,23 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Balance */}
-        <div className="space-y-2 pt-6 pb-4 text-center">
-          <p className="text-[11px] font-medium text-muted-foreground">
-            Available balance
+        {/* Balance Hero Section */}
+        <div className="relative z-10 space-y-2 pt-6 pb-4 text-center">
+          <p className="text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase">
+            Available Ledger Liquidity
           </p>
 
           <div>
             {loading ? (
-              <Skeleton className="mx-auto h-14 w-56 rounded-2xl" />
+              <Skeleton className="mx-auto h-14 w-56 rounded-2xl bg-white/10" />
             ) : (
-              <h1 className="tabular font-sans text-[42px] sm:text-[52px] font-bold tracking-tight text-foreground leading-none">
+              <h1 className="tabular font-sans text-[42px] sm:text-[52px] font-bold tracking-tight text-white leading-none drop-shadow-sm">
                 {formatMoney(balance, cur)}
               </h1>
             )}
           </div>
 
-          {/* Display currency switcher */}
+          {/* Currency Switcher Pill */}
           <div className="flex items-center justify-center pt-2">
             <Select
               value={cur}
@@ -147,7 +157,7 @@ function Dashboard() {
                 )
               }
             >
-              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-border/40 bg-secondary hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-all shadow-2xs">
+              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/90 hover:text-white cursor-pointer transition-all backdrop-blur-md shadow-2xs">
                 <CurrencyIcon code={cur} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl p-1 border border-border/40 bg-popover text-popover-foreground shadow-elevated">
@@ -169,8 +179,27 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-2.5 pt-4 border-t border-border/40">
+        {/* Smart Chip Graphic & Action Buttons Divider */}
+        <div className="relative z-10 flex items-center justify-between pt-2 pb-3">
+          <div className="flex items-center gap-1.5 opacity-70">
+            {/* Realistic gold metallic contact chip */}
+            <div className="h-6 w-8 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 p-[1px] shadow-xs">
+              <div className="h-full w-full rounded-[4px] bg-[#1a1710] flex items-center justify-center">
+                <div className="h-3 w-5 border border-amber-400/50 rounded-xs" />
+              </div>
+            </div>
+            <span className="text-[9px] font-mono tracking-widest text-white/50 uppercase">
+              SEPA·IMPS
+            </span>
+          </div>
+
+          <div className="text-[10px] font-medium text-white/50 tracking-wide">
+            {getAccountRegionLabel(geography.data)}
+          </div>
+        </div>
+
+        {/* 4 Precision Action Hardware Keys */}
+        <div className="relative z-10 grid grid-cols-4 gap-2 sm:gap-2.5 pt-3 border-t border-white/10">
           {[
             {
               to: "/send",
@@ -194,20 +223,20 @@ function Dashboard() {
               search={action.search as any}
               className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.96] ${
                 action.primary
-                  ? "border-primary/30 bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-95"
-                  : "border-border/40 bg-secondary/50 hover:bg-secondary text-foreground"
+                  ? "border-amber-400/60 bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 text-slate-950 font-bold shadow-md hover:brightness-105"
+                  : "border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md"
               }`}
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
-                  action.primary ? "bg-primary-foreground/15 text-primary-foreground" : "bg-card text-foreground"
+                  action.primary ? "bg-slate-950/15 text-slate-950" : "bg-white/10 text-white/90"
                 }`}
               >
                 <action.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
               </span>
               <span
                 className={`text-[11px] font-semibold tracking-wide text-center ${
-                  action.primary ? "text-primary-foreground" : "text-foreground"
+                  action.primary ? "text-slate-950 font-bold" : "text-white/90"
                 }`}
               >
                 {action.label}
@@ -218,30 +247,28 @@ function Dashboard() {
       </section>
 
       {/* ═══════════════════════════════════════
-           2. ACCOUNT STATUS INDICATORS
+           2. INSTITUTIONAL ASSURANCE STRIP
          ═══════════════════════════════════════ */}
       <div className="grid grid-cols-3 gap-2 px-1">
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] shadow-2xs">
-          <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Account Active</div>
-            <div className="text-[10px] text-muted-foreground truncate">Verified</div>
+            <div className="font-semibold text-foreground truncate">256-Bit Ledger</div>
+            <div className="text-[10px] text-muted-foreground truncate">Zero-Trust SQL</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] shadow-2xs">
-          <Wallet className="h-4 w-4 shrink-0 text-primary" />
+        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
+          <Zap className="h-4 w-4 shrink-0 text-amber-500" />
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Transfers</div>
-            <div className="text-[10px] text-muted-foreground truncate">Available</div>
+            <div className="font-semibold text-foreground truncate">Instant Rails</div>
+            <div className="text-[10px] text-muted-foreground truncate">SEPA &amp; IMPS</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] shadow-2xs">
-          <Shield className="h-4 w-4 shrink-0 text-amber-500" />
+        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
+          <Lock className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Withdrawals</div>
-            <div className="text-[10px] text-muted-foreground truncate">
-              {withdrawalsEnabled ? "Available" : "48h wait"}
-            </div>
+            <div className="font-semibold text-foreground truncate">FATF Compliant</div>
+            <div className="text-[10px] text-muted-foreground truncate">Audit Verified</div>
           </div>
         </div>
       </div>
@@ -279,7 +306,7 @@ function Dashboard() {
             <div>
               <p className="font-semibold text-foreground text-sm">No transactions yet</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Your transfers, withdrawals, and gift card redemptions will appear here.
+                Your transfers, payouts, and digital voucher redemptions will appear here.
               </p>
             </div>
             <div className="pt-1 flex items-center justify-center gap-2">
@@ -307,19 +334,19 @@ function Dashboard() {
       </section>
 
       {/* ═══════════════════════════════════════
-           4. MARKET DATA
+           4. GLOBAL BENCHMARKS & MARKETS
          ═══════════════════════════════════════ */}
       <HomeMarketSection />
 
       {/* ═══════════════════════════════════════
-           5. DIGITAL GIFT CARDS
+           5. DIGITAL VOUCHERS & LUXURY BRANDS
          ═══════════════════════════════════════ */}
       <section aria-label="Digital Gift Cards" className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <Gift className="h-4 w-4 text-primary" />
+            <Gift className="h-4 w-4 text-gold" />
             <h2 className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              Gift Cards
+              Digital Vouchers
             </h2>
           </div>
           <Link

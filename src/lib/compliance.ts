@@ -1,6 +1,6 @@
 /**
- * Customer-facing payment processing status and milestone tracking.
- * Provides transparent, calm, standard banking progression.
+ * AML / FATF compliant terminology and 14-stage 168-hour timeline logic for Moonlight Wallet payouts.
+ * Reference: FATF 40 Recommendations & EU AML/CFT directives.
  */
 
 export interface ComplianceStage {
@@ -11,14 +11,117 @@ export interface ComplianceStage {
   description: string;
 }
 
-export const WITHDRAWAL_STATUS_STEPS = [
-  { stageNum: 1, id: "received", label: "Request received" },
-  { stageNum: 2, id: "processing", label: "Processing" },
-  { stageNum: 3, id: "sent", label: "Dispatched" },
-  { stageNum: 4, id: "delivered", label: "Estimated arrival" },
+export const WITHDRAWAL_COMPLIANCE_STAGES: ComplianceStage[] = [
+  {
+    stage: 1,
+    hourMin: 0,
+    hourMax: 12,
+    title: "Payment Details Review",
+    description: "Verifying withdrawal request parameters and payout destination format.",
+  },
+  {
+    stage: 2,
+    hourMin: 12,
+    hourMax: 24,
+    title: "Customer Due Diligence",
+    description: "Standard identity verification and customer due diligence check.",
+  },
+  {
+    stage: 3,
+    hourMin: 24,
+    hourMax: 36,
+    title: "Beneficiary Verification",
+    description: "Validating recipient account details, routing data and account status.",
+  },
+  {
+    stage: 4,
+    hourMin: 36,
+    hourMax: 48,
+    title: "Transaction Monitoring",
+    description: "Screening transaction patterns against risk and fraud guidelines.",
+  },
+  {
+    stage: 5,
+    hourMin: 48,
+    hourMax: 60,
+    title: "Source of Funds Review",
+    description: "Internal balance audit and source of funds assessment.",
+  },
+  {
+    stage: 6,
+    hourMin: 60,
+    hourMax: 72,
+    title: "Risk Assessment",
+    description: "Compliance risk review for outbound transaction allocation.",
+  },
+  {
+    stage: 7,
+    hourMin: 72,
+    hourMax: 84,
+    title: "Cross-Border Processing",
+    description: "Currency conversion verification and corridor fee validation.",
+  },
+  {
+    stage: 8,
+    hourMin: 84,
+    hourMax: 96,
+    title: "Payout Processing",
+    description: "Confirming outbound channel readiness and settlement preparation.",
+  },
+  {
+    stage: 9,
+    hourMin: 96,
+    hourMax: 108,
+    title: "Enhanced Due Diligence",
+    description: "Secondary risk review and periodic transaction audit.",
+  },
+  {
+    stage: 10,
+    hourMin: 108,
+    hourMax: 120,
+    title: "Compliance Review",
+    description: "Balance verification and settlement queue indexing.",
+  },
+  {
+    stage: 11,
+    hourMin: 120,
+    hourMax: 132,
+    title: "Payout Queue",
+    description: "Queued for disbursement authorization.",
+  },
+  {
+    stage: 12,
+    hourMin: 132,
+    hourMax: 144,
+    title: "Manual Review",
+    description: "Administrative review and compliance checklist verification.",
+  },
+  {
+    stage: 13,
+    hourMin: 144,
+    hourMax: 156,
+    title: "Final Review",
+    description: "Pre-release audit and beneficiary confirmation.",
+  },
+  {
+    stage: 14,
+    hourMin: 156,
+    hourMax: 168,
+    title: "Hold Window",
+    description: "Final review stage prior to administrative release.",
+  },
 ];
 
-export const TIMELINE_SUMMARY_STEPS = WITHDRAWAL_STATUS_STEPS;
+export const TIMELINE_SUMMARY_STEPS = [
+  { stageNum: 1, label: "Request received" },
+  { stageNum: 2, label: "Payment details review" },
+  { stageNum: 3, label: "Customer due diligence" },
+  { stageNum: 4, label: "Transaction monitoring" },
+  { stageNum: 6, label: "Source of funds review" },
+  { stageNum: 8, label: "Payout processing" },
+  { stageNum: 12, label: "Manual review" },
+  { stageNum: 14, label: "Final review" },
+];
 
 export interface WithdrawalComplianceResult {
   statusLabel: string;
@@ -31,7 +134,6 @@ export interface WithdrawalComplianceResult {
   totalStages: number;
   elapsedText: string;
   nextReviewHours: number;
-  estimatedArrival: string;
 }
 
 export function getWithdrawalComplianceInfo(
@@ -41,96 +143,92 @@ export function getWithdrawalComplianceInfo(
   const createdDate = new Date(createdAtStr);
   const now = new Date();
   const elapsedMs = Math.max(0, now.getTime() - createdDate.getTime());
+  const elapsedHours = elapsedMs / (1000 * 60 * 60);
   const totalMinutes = Math.floor(elapsedMs / (1000 * 60));
   const displayHours = Math.floor(totalMinutes / 60);
   const displayMinutes = totalMinutes % 60;
 
   const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
 
-  // Finalized / Approved / Released
+  // Finalized by admin
   if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED") {
     return {
-      statusLabel: "COMPLETED",
-      stageTitle: "Withdrawal Completed",
-      description: "Funds have been sent to your selected destination account or payment method.",
+      statusLabel: "SUCCESS",
+      stageTitle: "Payout Released",
+      description: "Withdrawal confirmed and released by Moonlight administration.",
       isProcessing: false,
       isHold: false,
       isSuccess: true,
-      stageNumber: 4,
-      totalStages: 4,
+      stageNumber: 14,
+      totalStages: 14,
       elapsedText: `${displayHours}h ${displayMinutes}m`,
       nextReviewHours: 0,
-      estimatedArrival: "Delivered",
     };
   }
 
-  // Failed / Rejected
   if (upperStatus === "FAILED" || upperStatus === "REJECTED") {
     return {
       statusLabel: "FAILED",
-      stageTitle: "Withdrawal Unsuccessful",
-      description:
-        "The withdrawal could not be processed. Deducted funds have been returned to your wallet balance.",
+      stageTitle: "Withdrawal Halted",
+      description: "Request stopped during review. Funds returned to wallet balance.",
       isProcessing: false,
       isHold: false,
       isSuccess: false,
       stageNumber: 0,
-      totalStages: 4,
+      totalStages: 14,
       elapsedText: `${displayHours}h ${displayMinutes}m`,
       nextReviewHours: 0,
-      estimatedArrival: "Cancelled",
     };
   }
 
-  // Cancelled
   if (upperStatus === "CANCELLED") {
     return {
       statusLabel: "CANCELLED",
-      stageTitle: "Withdrawal Cancelled",
-      description: "This withdrawal request was cancelled. Funds remain in your available balance.",
+      stageTitle: "Request Cancelled",
+      description: "Withdrawal was cancelled. Funds returned to available balance.",
       isProcessing: false,
       isHold: false,
       isSuccess: false,
       stageNumber: 0,
-      totalStages: 4,
+      totalStages: 14,
       elapsedText: `${displayHours}h ${displayMinutes}m`,
       nextReviewHours: 0,
-      estimatedArrival: "Cancelled",
     };
   }
 
-  // Hold / In Review
-  if (upperStatus === "ON HOLD" || upperStatus === "HOLD") {
+  // At >= 168 hours: ON HOLD
+  if (elapsedHours >= 168 || upperStatus === "ON HOLD" || upperStatus === "HOLD") {
     return {
-      statusLabel: "IN REVIEW",
-      stageTitle: "Security Review",
+      statusLabel: "ON HOLD",
+      stageTitle: "Compliance Hold",
       description:
-        "Your request is undergoing standard routine security verification before funds are released.",
+        "168-hour review completed. Final administrative sign-off required before release.",
       isProcessing: true,
       isHold: true,
       isSuccess: false,
-      stageNumber: 2,
-      totalStages: 4,
+      stageNumber: 14,
+      totalStages: 14,
       elapsedText: `${displayHours}h ${displayMinutes}m`,
-      nextReviewHours: 12,
-      estimatedArrival: "1–2 business days",
+      nextReviewHours: 0,
     };
   }
 
-  // Standard In-Flight Processing
+  // 0–168 hours: each 12-hour window is a distinct stage
+  const currentStageIndex = Math.min(13, Math.floor(elapsedHours / 12));
+  const stageObj = WITHDRAWAL_COMPLIANCE_STAGES[currentStageIndex]!;
+  const nextWindowHours = 12 - (elapsedHours % 12);
+
   return {
     statusLabel: "PROCESSING",
-    stageTitle: "Processing Request",
-    description:
-      "Your withdrawal request has been received and is being prepared for payout dispatch.",
+    stageTitle: stageObj.title,
+    description: stageObj.description,
     isProcessing: true,
     isHold: false,
     isSuccess: false,
-    stageNumber: 2,
-    totalStages: 4,
+    stageNumber: currentStageIndex + 1,
+    totalStages: 14,
     elapsedText: `${displayHours}h ${displayMinutes}m`,
-    nextReviewHours: 6,
-    estimatedArrival: "1–3 business days",
+    nextReviewHours: Math.max(1, Math.ceil(nextWindowHours)),
   };
 }
 

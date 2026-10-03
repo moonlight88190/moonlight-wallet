@@ -70,7 +70,8 @@ function AdminAccess() {
             Administrative Access
           </h1>
           <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-            Enter the administrator access code to manage accounts, balances, and region settings.
+            Enter the institutional security clearance code to open the internal treasury ledger
+            terminal.
           </p>
         </div>
 
