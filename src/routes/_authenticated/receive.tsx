@@ -113,7 +113,7 @@ function Receive() {
     <div className="mx-auto max-w-md text-center space-y-5 sm:space-y-6 animate-fade-up">
       <PageTitle eyebrow="RECEIVE" title="Receive Money">
         {isIndianAccount
-          ? "Anyone can send money via UPI QR, UPI ID, or your Moonlight Wallet ID."
+          ? "Anyone can send money via UPI, instant bank transfer, or your Moonlight Wallet ID."
           : "Anyone on Moonlight or supported payout rails can send money using this ID or QR code."}
       </PageTitle>
 
@@ -130,7 +130,7 @@ function Receive() {
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
-            <span>UPI QR (Scan & Pay)</span>
+            <span>UPI (Scan & Pay)</span>
           </button>
           <button
             type="button"
@@ -284,7 +284,6 @@ function Receive() {
               </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
-              <PaymentMethodIcon id="upi-qr" size="sm" />
               <PaymentMethodIcon id="upi" size="sm" />
               <BrandAsset id="google-pay" size="sm" />
               <BrandAsset id="phonepe" size="sm" />
