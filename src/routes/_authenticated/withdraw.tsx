@@ -94,23 +94,38 @@ function Withdraw() {
   const geography = useAccountGeography();
   const geo = geography.data;
 
-  // Authoritative verified jurisdiction resolution
-  const verifiedCountryCode = (geo?.countryCode || profile?.country_code || "IN").toUpperCase();
-  const isIndia = geo?.isIndia ?? (verifiedCountryCode === "IN");
+  // Authoritative verified jurisdiction resolution (Indian by default; changed via admin panel only)
+  const verifiedCountryCode = (
+    geo?.countryCode ||
+    (profile?.admin_region_override ? profile?.country_code : "IN") ||
+    "IN"
+  ).toUpperCase();
   const isEurope =
     geo?.isEurope ??
-    ([
-      "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
-      "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
-    ].includes(verifiedCountryCode) ||
-      profile?.region?.toUpperCase() === "EUROPE");
+    Boolean(
+      profile?.admin_region_override &&
+        ([
+          "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
+          "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
+        ].includes(verifiedCountryCode) ||
+          profile?.region?.toUpperCase() === "EUROPE"),
+    );
   const isPH = Boolean(
     geo?.capabilities?.supportsGCash ||
-      verifiedCountryCode === "PH" ||
-      profile?.region?.toUpperCase() === "PHILIPPINES",
+      (profile?.admin_region_override &&
+        (verifiedCountryCode === "PH" ||
+          profile?.region?.toUpperCase() === "PHILIPPINES")),
   );
-  const isUK = geo?.isUK ?? (verifiedCountryCode === "GB" || verifiedCountryCode === "UK");
-  const isBR = Boolean(geo?.capabilities?.supportsPix || verifiedCountryCode === "BR");
+  const isIndia = geo?.isIndia ?? (!isEurope && !isPH);
+  const isUK = Boolean(
+    geo?.isUK ??
+      (profile?.admin_region_override &&
+        (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
+  );
+  const isBR = Boolean(
+    geo?.capabilities?.supportsPix ||
+      (profile?.admin_region_override && verifiedCountryCode === "BR"),
+  );
 
   // Currency strictly locked to verified jurisdiction (AML & CFT Statutory Requirement)
   const verifiedCurrency = isIndia

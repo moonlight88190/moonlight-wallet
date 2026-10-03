@@ -197,7 +197,7 @@ export const adminSetRegion = createServerFn({ method: "POST" })
           ? "DE"
           : data.region === "PHILIPPINES"
             ? "PH"
-            : null;
+            : "IN";
 
     const { data: w } = await supabaseAdmin
       .from("wallets")
@@ -209,7 +209,9 @@ export const adminSetRegion = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("profiles")
         .update({
+          region: data.region,
           country_code: countryCode,
+          admin_region_override: true,
           geography_updated_at: new Date().toISOString(),
         })
         .eq("id", w.user_id);
@@ -233,7 +235,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, region, created_at");
+      .select("id, full_name, email, region, created_at, admin_region_override");
     if (pErr) throw new Error(pErr.message);
 
     const { data: txs } = await supabaseAdmin
@@ -251,6 +253,9 @@ export const adminListUsers = createServerFn({ method: "POST" })
       const ageHours = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60)));
       const ageDays = Math.floor(ageHours / 24);
 
+      const isExplicitOverride = Boolean((p as any)?.admin_region_override);
+      const displayRegion = isExplicitOverride ? (p?.region || "INDIA") : "INDIA";
+
       return {
         id: w.id,
         user_id: w.user_id,
@@ -260,7 +265,8 @@ export const adminListUsers = createServerFn({ method: "POST" })
         is_frozen: w.status === "frozen",
         full_name: p?.full_name || "N/A",
         email: p?.email || "N/A",
-        region: p?.region || "GLOBAL",
+        region: displayRegion,
+        is_admin_region: isExplicitOverride,
         created_at: userCreatedAt,
         account_age_hours: ageHours,
         account_age_days: ageDays,

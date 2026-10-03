@@ -68,7 +68,7 @@ const ADMIN_CURRENCIES = [
   "JPY",
   "CHF",
 ] as const;
-const REGIONS = ["GLOBAL", "EUROPE", "INDIA", "PHILIPPINES"] as const;
+const REGIONS = ["INDIA", "EUROPE", "PHILIPPINES", "GLOBAL"] as const;
 type Section =
   | "overview"
   | "withdrawals"
@@ -100,6 +100,7 @@ type AdminUser = {
   full_name: string;
   email: string;
   region: string;
+  is_admin_region?: boolean;
   created_at: string;
   account_age_hours: number;
   account_age_days: number;
@@ -872,8 +873,16 @@ function UsersSection({
                 <p className="mt-0.5 font-mono text-xs text-muted-foreground">{u.wallet_code}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs sm:justify-end">
-                <span className="rounded-full bg-secondary px-2.5 py-1 font-medium">
-                  {u.region}
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 font-medium text-xs",
+                    u.is_admin_region
+                      ? "border border-primary/30 bg-primary/10 text-primary"
+                      : "bg-secondary text-secondary-foreground",
+                  )}
+                >
+                  {u.region || "INDIA"}
+                  {u.is_admin_region ? " • Admin Override" : ""}
                 </span>
                 <span
                   className={cn(
@@ -1022,7 +1031,13 @@ function ControlsSection({
             {user.is_frozen ? "Unfreeze wallet" : "Freeze wallet"}
           </button>
           <div className="space-y-1.5 pt-2">
-            <label className="text-xs text-muted-foreground">Account region</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Account region</label>
+              <span className="text-[11px] font-mono text-muted-foreground">
+                Current: <span className="font-semibold text-foreground">{user.region || "INDIA"}</span>
+                {user.is_admin_region ? " (Admin Override)" : " (Default: India)"}
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {REGIONS.map((r) => (
                 <button
@@ -1035,12 +1050,16 @@ function ControlsSection({
                     )
                   }
                   className={cn(
-                    "h-11 rounded-xl border text-sm capitalize",
+                    "h-11 rounded-xl border text-sm capitalize flex items-center justify-center gap-1.5 font-medium cursor-pointer transition-all",
                     user.region === r
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-secondary",
+                      ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
+                      : "border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
                   )}
                 >
+                  {r === "INDIA" && "🇮🇳 "}
+                  {r === "EUROPE" && "🇪🇺 "}
+                  {r === "PHILIPPINES" && "🇵🇭 "}
+                  {r === "GLOBAL" && "🌐 "}
                   {r.toLowerCase()}
                 </button>
               ))}
