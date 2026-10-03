@@ -148,7 +148,7 @@ function Landing() {
               MOONLIGHT
             </span>
             <span className="text-[9px] font-semibold tracking-[0.16em] text-muted-foreground uppercase -mt-0.5">
-              European Financial Infrastructure
+              Multi-Currency Financial Wallet
             </span>
           </div>
         </Link>
@@ -186,7 +186,7 @@ function Landing() {
           <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-4 py-1.5 backdrop-blur-xl shadow-2xs">
             <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
             <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              EUROPEAN-FIRST GLOBAL SETTLEMENT INFRASTRUCTURE
+              SECURE MULTI-CURRENCY DIGITAL WALLET
             </span>
           </div>
 
@@ -198,8 +198,8 @@ function Landing() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed px-2 font-normal">
-            An official European-first multi-currency digital wallet built for high-velocity
-            cross-border settlement, SEPA Instant clearing, and multi-asset treasury management.
+            A modern multi-currency wallet engineered for instant transfers, real-time FX
+            conversions, global benchmark market tracking, and flexible payout rails.
           </p>
 
           {/* Global Connectivity Ticker / Currency Corridor */}
@@ -223,7 +223,7 @@ function Landing() {
             </div>
             <p className="mt-3.5 text-[11px] font-semibold text-muted-foreground/80 tracking-widest uppercase flex flex-wrap items-center justify-center gap-2 text-center px-2">
               <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
-              Prague (HQ) • London • Frankfurt • New York • Dubai • Singapore • Tokyo • Mumbai
+              Real-time FX Rates · Instant Wallet Settlement · 10+ Global Currencies
             </p>
           </div>
 
@@ -494,7 +494,7 @@ function Landing() {
         <div className="flex items-center gap-2">
           <LogoMark className="h-5 w-5" />
           <span className="font-semibold text-foreground">Moonlight Wallet</span>
-          <span>· European Financial Infrastructure</span>
+          <span>· Multi-Currency Financial Wallet</span>
         </div>
         <div className="flex items-center gap-6">
           <Link to="/about" className="hover:text-foreground transition-colors">

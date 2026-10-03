@@ -27,7 +27,7 @@ export function AuthLayout({
                 MOONLIGHT
               </span>
               <span className="text-[9px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                European Financial Infrastructure
+                Multi-Currency Financial Wallet
               </span>
             </div>
           </Link>

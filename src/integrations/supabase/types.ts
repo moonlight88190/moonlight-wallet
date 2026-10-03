@@ -452,12 +452,10 @@ export type Database = {
           p_email: string;
           p_full_name: string;
           p_method: string;
-          p_destination_currency?: string;
-          p_phone?: string;
-          p_provider?: string;
-          p_reason?: string;
-          p_route?: string;
-          p_upi_id?: string;
+          p_phone?: string | null;
+          p_provider?: string | null;
+          p_reason?: string | null;
+          p_upi_id?: string | null;
         };
         Returns: string;
       };

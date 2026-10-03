@@ -1,8 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getMarkets } from "@/lib/markets.functions";
-import { BASELINE_MARKETS } from "@/lib/markets.baseline";
+import {
+  getMarkets,
+  BASELINE_MARKETS_WITH_INDICES,
+  buildIndicesWithData,
+} from "@/lib/markets.functions";
 import type { MarketFilter, MarketInstrument, MarketSnapshot } from "@/lib/markets.types";
 
 export function useMarkets() {
@@ -13,7 +16,7 @@ export function useMarkets() {
     queryKey: ["market-snapshot"],
     queryFn: async () => {
       const data = await fetchMarkets({ data: { force: false } });
-      return data ?? BASELINE_MARKETS;
+      return data ?? BASELINE_MARKETS_WITH_INDICES;
     },
     // Keep data fresh on client for 1 hour to prevent unnecessary network calls
     staleTime: 60 * 60 * 1000,
@@ -22,13 +25,13 @@ export function useMarkets() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
-    initialData: BASELINE_MARKETS,
+    initialData: BASELINE_MARKETS_WITH_INDICES,
   });
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
       const updated = await fetchMarkets({ data: { force: true } });
-      return updated ?? BASELINE_MARKETS;
+      return updated ?? BASELINE_MARKETS_WITH_INDICES;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["market-snapshot"], data);
@@ -44,8 +47,10 @@ export function useMarkets() {
     },
   });
 
-  const data = query.data ?? BASELINE_MARKETS;
+  const data = query.data ?? BASELINE_MARKETS_WITH_INDICES;
   const instruments = data.instruments ?? [];
+  const indices =
+    data.indices && data.indices.length > 0 ? data.indices : buildIndicesWithData(instruments);
 
   const filterInstruments = (filter: MarketFilter, searchQuery: string): MarketInstrument[] => {
     let result = instruments;

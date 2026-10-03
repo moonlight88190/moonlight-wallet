@@ -51,7 +51,14 @@ export function HomeMarketSection() {
     );
   }
 
-  if (!activeIndex) return null;
+  if (!activeIndex) {
+    return (
+      <div className="rounded-3xl border border-border/50 bg-card/60 p-4 space-y-3">
+        <Skeleton className="h-6 w-36 rounded-lg" />
+        <Skeleton className="h-44 w-full rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-3xl border border-border/60 bg-card/70 p-4 sm:p-5 shadow-xs space-y-4">
@@ -125,8 +132,9 @@ export function HomeMarketSection() {
       </div>
 
       {/* ─── Active Index Performance Card ─── */}
-      <div className="rounded-2xl border border-border/40 bg-secondary/15 p-3.5 space-y-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-secondary/15 p-3.5 space-y-3">
+        <div className="absolute inset-0 bg-[url('/assets/visuals/market-mesh.jpg')] bg-cover bg-center opacity-[0.06] pointer-events-none mix-blend-screen" />
+        <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2.5">
             <BrandAsset id={activeIndex.brandAssetId} size="sm" />
             <div>
