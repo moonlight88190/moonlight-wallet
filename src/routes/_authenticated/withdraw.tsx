@@ -331,7 +331,7 @@ function Withdraw() {
           errorMessage={withdrawError || undefined}
           onRetry={() => setAnimState("idle")}
           onViewReceipt={() => {
-            if (createdWdId) navigate({ to: "/transactions/$id", params: { id: createdWdId } });
+            if (createdWdId) navigate({ to: "/withdrawals/$id", params: { id: createdWdId } });
           }}
           onCancel={() => setAnimState("idle")}
         />

@@ -26,6 +26,7 @@ import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedWithdrawRouteImport } from './routes/_authenticated/withdraw'
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions.index'
 import { Route as AuthenticatedTransactionsIdRouteImport } from './routes/_authenticated/transactions.$id'
+import { Route as AuthenticatedWithdrawalsIdRouteImport } from './routes/_authenticated/withdrawals.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -114,6 +115,12 @@ const AuthenticatedTransactionsIdRoute =
     path: '/transactions/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWithdrawalsIdRoute =
+  AuthenticatedWithdrawalsIdRouteImport.update({
+    id: '/withdrawals/$id',
+    path: '/withdrawals/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/send': typeof AuthenticatedSendRoute
   '/withdraw': typeof AuthenticatedWithdrawRoute
   '/transactions/$id': typeof AuthenticatedTransactionsIdRoute
+  '/withdrawals/$id': typeof AuthenticatedWithdrawalsIdRoute
   '/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +157,7 @@ export interface FileRoutesByTo {
   '/send': typeof AuthenticatedSendRoute
   '/withdraw': typeof AuthenticatedWithdrawRoute
   '/transactions/$id': typeof AuthenticatedTransactionsIdRoute
+  '/withdrawals/$id': typeof AuthenticatedWithdrawalsIdRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
 }
 export interface FileRoutesById {
@@ -169,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/withdraw': typeof AuthenticatedWithdrawRoute
   '/_authenticated/transactions/$id': typeof AuthenticatedTransactionsIdRoute
+  '/_authenticated/withdrawals/$id': typeof AuthenticatedWithdrawalsIdRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
 export interface FileRouteTypes {
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/withdraw'
     | '/transactions/$id'
+    | '/withdrawals/$id'
     | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/withdraw'
     | '/transactions/$id'
+    | '/withdrawals/$id'
     | '/transactions'
   id:
     | '__root__'
@@ -226,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated/send'
     | '/_authenticated/withdraw'
     | '/_authenticated/transactions/$id'
+    | '/_authenticated/withdrawals/$id'
     | '/_authenticated/transactions/'
   fileRoutesById: FileRoutesById
 }
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/withdrawals/$id': {
+      id: '/_authenticated/withdrawals/$id'
+      path: '/withdrawals/$id'
+      fullPath: '/withdrawals/$id'
+      preLoaderRoute: typeof AuthenticatedWithdrawalsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -373,6 +393,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedWithdrawRoute: typeof AuthenticatedWithdrawRoute
   AuthenticatedTransactionsIdRoute: typeof AuthenticatedTransactionsIdRoute
+  AuthenticatedWithdrawalsIdRoute: typeof AuthenticatedWithdrawalsIdRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
 }
 
@@ -386,6 +407,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedWithdrawRoute: AuthenticatedWithdrawRoute,
   AuthenticatedTransactionsIdRoute: AuthenticatedTransactionsIdRoute,
+  AuthenticatedWithdrawalsIdRoute: AuthenticatedWithdrawalsIdRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
 }
 

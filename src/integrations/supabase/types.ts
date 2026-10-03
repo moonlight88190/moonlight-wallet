@@ -372,6 +372,45 @@ export type Database = {
             referencedRelation: "wallets"
             referencedColumns: ["id"]
           },
+        ];
+      };
+      vouchers: {
+        Row: {
+          amount: number;
+          code: string;
+          created_at: string;
+          currency: string;
+          expires_at: string | null;
+          id: string;
+          redeemed_at: string | null;
+          redeemed_by: string | null;
+          status: string;
+        };
+        Insert: {
+          amount: number;
+          code: string;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          redeemed_at?: string | null;
+          redeemed_by?: string | null;
+          status?: string;
+        };
+        Update: {
+          amount?: number;
+          code?: string;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          redeemed_at?: string | null;
+          redeemed_by?: string | null;
+          status?: string;
+        };
+        Relationships: [];
+      };
+    };
         ]
       }
     }
@@ -446,6 +485,20 @@ export type Database = {
       }
       send_transfer: {
         Args: {
+          p_amount: number;
+          p_currency: string;
+          p_note?: string;
+          p_recipient_code: string;
+        };
+        Returns: string;
+      };
+      redeem_voucher: {
+        Args: {
+          p_code: string;
+        };
+        Returns: Json;
+      };
+    };
           p_amount: number
           p_currency: string
           p_note?: string

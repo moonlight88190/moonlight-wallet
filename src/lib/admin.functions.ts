@@ -377,3 +377,177 @@ export const adminOverview = createServerFn({ method: "POST" })
       recentActions: acts.data || [],
     };
   });
+
+export const adminListTransactions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        kind: z.string().optional(),
+        status: z.string().optional(),
+        search: z.string().optional(),
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(25),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let query = supabaseAdmin
+      .from("transactions")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false });
+
+    if (data.kind && data.kind !== "all") {
+      query = query.eq("kind", data.kind);
+    }
+    if (data.status && data.status !== "all") {
+      query = query.eq("status", data.status);
+    }
+    if (data.search && data.search.trim()) {
+      const q = `%${data.search.trim()}%`;
+      query = query.or(
+        `reference.ilike.${q},sender_name.ilike.${q},recipient_name.ilike.${q},note.ilike.${q},recipient_wallet_code.ilike.${q}`,
+      );
+    }
+
+    const from = (data.page - 1) * data.pageSize;
+    const to = from + data.pageSize - 1;
+    const { data: rows, count, error } = await query.range(from, to);
+
+    if (error) {
+      console.warn("adminListTransactions error:", error.message);
+      return { transactions: [], count: 0 };
+    }
+
+    return { transactions: rows || [], count: count ?? 0 };
+  });
+
+export const adminGlobalSearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        query: z.string().trim().min(1).max(100),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const raw = data.query.trim();
+    const pattern = `%${raw}%`;
+
+    const [profilesRes, walletsRes, withdrawalsRes, transactionsRes] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email, preferred_currency, region, created_at")
+        .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
+        .limit(10),
+      supabaseAdmin
+        .from("wallets")
+        .select("id, user_id, wallet_code, balance_usd, status")
+        .ilike("wallet_code", pattern)
+        .limit(10),
+      supabaseAdmin
+        .from("withdrawals")
+        .select("*")
+        .or(
+          `reference.ilike.${pattern},full_name.ilike.${pattern},upi_id.ilike.${pattern},email.ilike.${pattern}`,
+        )
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabaseAdmin
+        .from("transactions")
+        .select("*")
+        .or(
+          `reference.ilike.${pattern},recipient_name.ilike.${pattern},sender_name.ilike.${pattern},note.ilike.${pattern}`,
+        )
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    type SearchUser = {
+      id: string;
+      full_name?: string;
+      email?: string;
+      preferred_currency?: string;
+      region?: string;
+      created_at?: string;
+      wallet_code?: string;
+      balance_usd?: number;
+      status?: string;
+    };
+
+    const userMap = new Map<string, SearchUser>();
+    (profilesRes.data || []).forEach((p) => {
+      userMap.set(p.id, { ...p });
+    });
+    (walletsRes.data || []).forEach((w) => {
+      const existing = userMap.get(w.user_id);
+      if (!existing) {
+        userMap.set(w.user_id, {
+          id: w.user_id,
+          wallet_code: w.wallet_code,
+          balance_usd: w.balance_usd,
+          status: w.status,
+        });
+      } else {
+        userMap.set(w.user_id, {
+          ...existing,
+          wallet_code: w.wallet_code,
+          balance_usd: w.balance_usd,
+          status: w.status,
+        });
+      }
+    });
+
+    return {
+      users: Array.from(userMap.values()),
+      withdrawals: withdrawalsRes.data || [],
+      transactions: transactionsRes.data || [],
+    };
+  });
+
+export const adminListAuditLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        limit: z.number().int().min(1).max(200).default(50),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [auditRes, adminActionsRes] = await Promise.all([
+      supabaseAdmin
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(data.limit),
+      supabaseAdmin
+        .from("admin_actions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(data.limit),
+    ]);
+
+    return {
+      auditLogs: auditRes.data || [],
+      adminActions: adminActionsRes.data || [],
+    };
+  });

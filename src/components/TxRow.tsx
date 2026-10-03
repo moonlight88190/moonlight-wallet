@@ -23,7 +23,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
 
   return (
     <Link
-      to="/transactions/$id"
+      to={tx.kind === "withdrawal" ? "/withdrawals/$id" : "/transactions/$id"}
       params={{ id: tx.id }}
       className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:px-4 min-h-[52px] transition-opacity hover:opacity-70 touch-manipulation cursor-pointer"
     >
