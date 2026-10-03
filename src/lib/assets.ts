@@ -754,12 +754,12 @@ export const INVESTMENTS: InvestmentMeta[] = [
   },
   {
     id: "wealth-management",
-    title: "Private Treasury & Allocation",
+    title: "Multi-Currency Accounts",
     category: "Financial Services",
-    subtitle: "Automated multi-currency rebalancing with low friction",
-    // Source: Generated professional private banking card image
+    subtitle: "Hold, manage, and exchange multiple currencies with transparent rates",
+    // Source: Generated professional banking card image
     imageUrl: "/assets/investments/wealth-management.jpg",
-    badge: "Private Standard",
+    badge: "Available",
     imageFit: "cover",
   },
 ];

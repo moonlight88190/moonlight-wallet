@@ -91,9 +91,19 @@ export function resolveAccountGeography(
   timezone?: string | null,
   rawRegion?: string | null,
 ): NormalizedGeography {
-  const code = (countryCode || "").trim().toUpperCase();
+  const adminOverride = (rawRegion || "").trim().toUpperCase();
+  let code = (countryCode || "").trim().toUpperCase();
+
+  if (adminOverride === "INDIA") {
+    code = "IN";
+  } else if (adminOverride === "PHILIPPINES") {
+    code = "PH";
+  } else if (adminOverride === "EUROPE" && !EU_COUNTRY_CODES.has(code)) {
+    code = "DE";
+  }
+
   const isIndia = code === "IN";
-  const isEurope = EU_COUNTRY_CODES.has(code) || (rawRegion || "").toLowerCase().includes("europe");
+  const isEurope = EU_COUNTRY_CODES.has(code) || adminOverride === "EUROPE";
   const isUK = code === "GB" || code === "UK";
   const isUS = code === "US";
   const isPH = code === "PH";
