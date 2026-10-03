@@ -19,3 +19,5 @@
 - Admin access: code in `ADMIN_ACCESS_CODE` secret, verified server-side in `src/lib/admin.functions.ts`, which issues a short-lived HMAC token (`ADMIN_SESSION_SECRET`); failed attempts rate-limited via `audit_logs`.
 - QR payload format is `moonlight:<WALLET_CODE>`.
 - Closed-loop simulation: never connect balances to real payout rails.
+
+- Dev/test sign-in credentials live only in the DEV_LOGIN_EMAIL / DEV_LOGIN_PASSWORD secrets — never commit them to code or GitHub, because the repo and bundle are public.
