@@ -12,6 +12,7 @@ import {
   Lock,
   Zap,
   Clock,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -180,10 +181,24 @@ function Withdraw() {
   const preferredCurrency = profile?.preferred_currency || verifiedCurrency;
   const r = rates.data?.rates ?? {};
 
-  // 48h account age check
+  // 48h account age check & real-time countdown calculation
+  const [now, setNow] = useState<number>(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   const createdAt = profile?.created_at ? new Date(profile.created_at) : new Date();
-  const accountAgeHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+  const unlockTime = new Date(createdAt.getTime() + 48 * 60 * 60 * 1000);
+  const accountAgeHours = Math.max(0, (now - createdAt.getTime()) / (1000 * 60 * 60));
   const isEligible48h = accountAgeHours >= 48;
+  const remainingMs = Math.max(0, unlockTime.getTime() - now);
+  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const progressPercent = Math.min(100, Math.max(0, Math.round((accountAgeHours / 48) * 100)));
+
+  // Security lock explanation popup
+  const [isSecurityLockOpen, setIsSecurityLockOpen] = useState<boolean>(false);
 
   // $100 USD max limit
   const usdRate = r["USD"] ?? 1;
@@ -281,7 +296,8 @@ function Withdraw() {
   // Submit withdrawal
   async function handleSubmitWithdrawal() {
     if (!isEligible48h) {
-      toast.error("Withdrawals unlock 48 hours after account creation.");
+      setIsReviewOpen(false);
+      setIsSecurityLockOpen(true);
       return;
     }
 
@@ -403,7 +419,8 @@ function Withdraw() {
   // Voucher redemption
   async function handleRedeemVoucher() {
     if (!isEligible48h) {
-      toast.error("Withdrawals unlock 48 hours after account creation.");
+      setSelectedCard(null);
+      setIsSecurityLockOpen(true);
       return;
     }
 
@@ -505,17 +522,29 @@ function Withdraw() {
 
       {/* Eligibility */}
       {!isEligible48h && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-xs">
-          <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <p className="font-semibold text-amber-700 dark:text-amber-400">
-              48-Hour Security Clearance Active
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              Withdrawal operations unlock 48 hours after account creation to protect against
-              unauthorized transfers.
-            </p>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setIsSecurityLockOpen(true)}
+          className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start justify-between gap-3 text-xs cursor-pointer hover:bg-amber-500/15 transition-all group shadow-2xs"
+        >
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 flex-wrap">
+                <span>48-Hour Security Clearance Active</span>
+                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300">
+                  {remainingHours}h {remainingMinutes}m remaining
+                </span>
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers. Tap to view clearance details & unlock schedule.
+              </p>
+            </div>
           </div>
+          <span className="shrink-0 text-[11px] font-semibold text-amber-600 dark:text-amber-400 underline underline-offset-2 group-hover:text-amber-500 mt-0.5">
+            View Details
+          </span>
         </div>
       )}
 
@@ -969,8 +998,14 @@ function Withdraw() {
           {/* Submit */}
           <button
             type="button"
-            disabled={busy || !isEligible48h || sourceAmt <= 0}
-            onClick={() => setIsReviewOpen(true)}
+            disabled={busy || sourceAmt <= 0}
+            onClick={() => {
+              if (!isEligible48h) {
+                setIsSecurityLockOpen(true);
+                return;
+              }
+              setIsReviewOpen(true);
+            }}
             className={primaryBtn}
           >
             Review Withdrawal <ArrowRight className="h-4 w-4" />
@@ -1139,14 +1174,123 @@ function Withdraw() {
               </div>
 
               <button
-                disabled={busy || !isEligible48h}
-                onClick={handleRedeemVoucher}
+                disabled={busy}
+                onClick={() => {
+                  if (!isEligible48h) {
+                    setIsSecurityLockOpen(true);
+                    return;
+                  }
+                  handleRedeemVoucher();
+                }}
                 className={primaryBtn}
               >
                 Confirm Redemption
               </button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── 48-Hour Security Clearance Explanation Modal ─── */}
+      <Dialog open={isSecurityLockOpen} onOpenChange={setIsSecurityLockOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-6 sm:p-7 border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl">
+          <DialogHeader className="space-y-3 text-center sm:text-left">
+            <div className="mx-auto sm:mx-0 flex h-13 w-13 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/25 text-amber-500 shadow-inner">
+              <Lock className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-bold text-foreground tracking-tight">
+                Withdrawals Temporarily Locked
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
+                48-Hour Mandatory Cooling-Off &amp; Anti-Fraud Clearance
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            {/* Live Countdown & Unlock Schedule Card */}
+            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Clock className="h-3.5 w-3.5" /> Time Until Unlock
+                </span>
+                <span className="rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 font-mono font-bold text-xs px-2.5 py-0.5 border border-amber-500/30">
+                  {remainingHours}h {remainingMinutes}m remaining
+                </span>
+              </div>
+
+              {/* Clearance Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="h-2.5 w-full rounded-full bg-secondary/80 overflow-hidden p-0.5 border border-border/30">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                  <span>Account Created</span>
+                  <span>{progressPercent}% Complete (48h target)</span>
+                </div>
+              </div>
+
+              {/* Exact Unlock Date & Time */}
+              <div className="border-t border-amber-500/15 pt-2 flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-amber-500" /> Unlocks on:
+                </span>
+                <span className="font-semibold text-foreground font-mono">
+                  {unlockTime.toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}{" "}
+                  at{" "}
+                  {unlockTime.toLocaleTimeString(undefined, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Why Can't You Withdraw Right Now */}
+            <div className="space-y-2.5 text-muted-foreground leading-relaxed">
+              <p className="font-semibold text-foreground text-xs">Why is my withdrawal locked right now?</p>
+              <div className="space-y-2 text-[11px]">
+                <div className="flex items-start gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <span>
+                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety regulations, all newly registered accounts undergo a mandatory 48-hour cooling period to safeguard your wallet against unauthorized takeovers, fraudulent sign-ups, and sudden account drainage.
+                  </span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <span>
+                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic UPI and direct bank IMPS) require preliminary compliance verification before executing external bank settlements.
+                  </span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                  <span>
+                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are cooling down, internal peer-to-peer transfers to other Moonlight wallets remain active (up to $10.00 USD during the first 48 hours).
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-end">
+            <Button
+              type="button"
+              className="w-full rounded-full h-11 text-xs font-semibold cursor-pointer"
+              onClick={() => setIsSecurityLockOpen(false)}
+            >
+              I Understand
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
