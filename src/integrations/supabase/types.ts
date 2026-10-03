@@ -398,6 +398,42 @@ export type Database = {
           },
         ];
       };
+      vouchers: {
+        Row: {
+          amount: number;
+          code: string;
+          created_at: string;
+          currency: string;
+          expires_at: string | null;
+          id: string;
+          redeemed_at: string | null;
+          redeemed_by: string | null;
+          status: string;
+        };
+        Insert: {
+          amount: number;
+          code: string;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          redeemed_at?: string | null;
+          redeemed_by?: string | null;
+          status?: string;
+        };
+        Update: {
+          amount?: number;
+          code?: string;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          redeemed_at?: string | null;
+          redeemed_by?: string | null;
+          status?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -476,6 +512,12 @@ export type Database = {
           p_recipient_code: string;
         };
         Returns: string;
+      };
+      redeem_voucher: {
+        Args: {
+          p_code: string;
+        };
+        Returns: Json;
       };
     };
     Enums: {

@@ -240,12 +240,20 @@ function Dashboard() {
               Digital Vouchers
             </h2>
           </div>
-          <Link
-            to="/withdraw"
-            className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline touch-manipulation min-h-[32px]"
-          >
-            Browse all <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/redeem"
+              className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors touch-manipulation min-h-[32px]"
+            >
+              Redeem code
+            </Link>
+            <Link
+              to="/withdraw"
+              className="inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline touch-manipulation min-h-[32px]"
+            >
+              Browse all <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">

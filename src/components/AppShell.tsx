@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Globe,
   TrendingUp,
+  Gift,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 MOONLIGHT
               </span>
               <span className="text-[9px] font-semibold tracking-[0.15em] text-muted-foreground uppercase -mt-0.5">
-                European Fintech
+                Financial Technology
               </span>
             </div>
           </Link>
@@ -127,6 +128,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => navigate({ to: "/withdraw" })}
                 >
                   <Landmark className="mr-2 h-4 w-4" /> Withdraw &amp; Payouts
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
+                  onClick={() => navigate({ to: "/redeem" })}
+                >
+                  <Gift className="mr-2 h-4 w-4 text-primary" /> Redeem Voucher
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="rounded-xl px-3 py-2 text-xs font-medium cursor-pointer"
