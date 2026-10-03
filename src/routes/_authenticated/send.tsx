@@ -221,7 +221,7 @@ function Send() {
     "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shadow-md touch-manipulation cursor-pointer";
 
   return (
-    <div className="mx-auto max-w-md pb-12">
+    <div className="mx-auto max-w-md pb-3">
       {step === "to" && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <PageTitle eyebrow="SEND MONEY" title="Who are you sending to?">
@@ -343,10 +343,35 @@ function Send() {
               </Select>
             </div>
 
-            <p className="px-1 text-xs text-muted-foreground flex items-center justify-between">
-              <span>Available balance</span>
-              <span className="font-semibold text-foreground">{formatMoney(available, cur)}</span>
-            </p>
+            <div className="space-y-2">
+              <p className="px-1 text-xs text-muted-foreground flex items-center justify-between">
+                <span>Available balance</span>
+                <span className="font-semibold text-foreground">{formatMoney(available, cur)}</span>
+              </p>
+
+              {/* Quick Amount Allocation Chips */}
+              <div className="flex items-center gap-1.5">
+                {[
+                  { label: "25%", factor: 0.25 },
+                  { label: "50%", factor: 0.5 },
+                  { label: "75%", factor: 0.75 },
+                  { label: "Max", factor: 1.0 },
+                ].map((chip) => (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => {
+                      const maxSendable = available / (1 + TRANSFER_FEE_RATE);
+                      const calculated = Math.max(0, maxSendable * chip.factor);
+                      setAmount(calculated.toFixed(2));
+                    }}
+                    className="flex-1 py-1.5 px-2 rounded-xl text-xs font-semibold bg-secondary/70 hover:bg-secondary border border-border/50 text-foreground transition-all cursor-pointer active:scale-95 text-center"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {isNewAccount && (
               <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs space-y-1.5 backdrop-blur-xs">

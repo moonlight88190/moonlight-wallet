@@ -175,22 +175,29 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* ─── Main Content ─── */}
-      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-5 sm:py-8 flex-1 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-10 animate-in fade-in duration-200">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-4 sm:py-6 flex-1 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-8 animate-in fade-in duration-200">
         {children}
       </main>
 
-      {/* ─── Mobile Bottom Navigation ─── */}
-      <nav className="sticky bottom-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border/40 pb-[env(safe-area-inset-bottom)] md:hidden">
-        <div className="grid grid-cols-5 py-0.5">
+      {/* ─── Mobile Bottom Navigation (Native App Feel) ─── */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-2xl border-t border-border/50 pb-[env(safe-area-inset-bottom)] md:hidden shadow-elevated"
+      >
+        <div className="grid grid-cols-5 py-1 px-1 max-w-md mx-auto">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground min-h-[48px] touch-manipulation"
-              activeProps={{ className: "text-foreground font-semibold" }}
+              className="group flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-2xl text-[10px] font-medium text-muted-foreground transition-all active:scale-90 min-h-[48px] touch-manipulation relative"
+              activeProps={{
+                className: "text-foreground font-bold [&>div]:bg-primary/10 [&>div]:text-primary",
+              }}
             >
-              <n.icon className="h-[20px] w-[20px]" strokeWidth={1.6} />
-              <span className="truncate max-w-[56px]">{n.label}</span>
+              <div className="flex h-7 w-12 items-center justify-center rounded-full transition-colors group-hover:bg-muted/60">
+                <n.icon className="h-[19px] w-[19px]" strokeWidth={2} />
+              </div>
+              <span className="truncate max-w-[58px] tracking-tight">{n.label}</span>
             </Link>
           ))}
         </div>
@@ -202,24 +209,33 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function PageTitle({
   eyebrow,
   title,
+  action,
   children,
 }: {
   eyebrow?: string;
   title: string;
+  action?: ReactNode;
   children?: ReactNode;
 }) {
   return (
-    <div className="mb-6 sm:mb-8">
-      {eyebrow && (
-        <p className="text-[10px] font-semibold tracking-[0.25em] text-muted-foreground uppercase">
-          {eyebrow}
-        </p>
-      )}
-      <h1 className="mt-1 text-[26px] sm:text-[32px] font-semibold tracking-tight text-foreground leading-tight">
-        {title}
-      </h1>
+    <div className="mb-5 sm:mb-7">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {eyebrow && (
+            <div className="inline-flex items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
+                {eyebrow}
+              </span>
+            </div>
+          )}
+          <h1 className="text-[24px] sm:text-[30px] font-bold tracking-tight text-foreground leading-tight">
+            {title}
+          </h1>
+        </div>
+        {action && <div className="shrink-0 pt-1">{action}</div>}
+      </div>
       {children && (
-        <div className="mt-2 text-[13px] text-muted-foreground max-w-xl leading-relaxed">
+        <div className="mt-1.5 text-[13px] text-muted-foreground max-w-xl leading-relaxed">
           {children}
         </div>
       )}
