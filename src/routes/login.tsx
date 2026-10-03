@@ -35,6 +35,9 @@ const schema = z.object({
   password: z.string().min(1, "Enter your password"),
 });
 
+const DEV_DEFAULT_EMAIL = import.meta.env.VITE_DEV_LOGIN_EMAIL || "lucianfereldenlord@gmail.com";
+const DEV_DEFAULT_PASSWORD = import.meta.env.VITE_DEV_LOGIN_PASSWORD || "12345678";
+
 function Login() {
   const navigate = useNavigate();
   const ratesQuery = useRates();
@@ -150,6 +153,54 @@ function Login() {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
         </button>
       </form>
+
+      {import.meta.env.DEV && (
+        <div className="mt-6 p-3.5 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 text-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-amber-500 dark:text-amber-400">
+              Local Dev Helper
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">DEV MODE ONLY</span>
+          </div>
+          <p className="text-muted-foreground text-[11px]">
+            Prefill or sign in with development test credentials:
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail(DEV_DEFAULT_EMAIL);
+                setPassword(DEV_DEFAULT_PASSWORD);
+              }}
+              className="flex-1 py-2 px-3 rounded-xl border border-border/80 bg-card hover:bg-accent font-medium text-center transition-colors cursor-pointer text-[12px]"
+            >
+              Fill Dev Credentials
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setEmail(DEV_DEFAULT_EMAIL);
+                setPassword(DEV_DEFAULT_PASSWORD);
+                setBusy(true);
+                const { data, error } = await supabase.auth.signInWithPassword({
+                  email: DEV_DEFAULT_EMAIL,
+                  password: DEV_DEFAULT_PASSWORD,
+                });
+                setBusy(false);
+                if (error) {
+                  toast.error(error.message);
+                } else if (data?.session) {
+                  toast.success("Signed in as Dev User");
+                  navigate({ to: "/dashboard" });
+                }
+              }}
+              className="flex-1 py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-300 font-semibold text-center transition-colors cursor-pointer text-[12px]"
+            >
+              1-Tap Dev Sign In
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Live Currency & FX Preview Box */}
       <div className="mt-7 rounded-2xl border border-border/40 bg-accent/30 p-4 space-y-3">

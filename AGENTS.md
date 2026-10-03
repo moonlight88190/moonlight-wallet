@@ -19,3 +19,9 @@
 - Admin access: code in `ADMIN_ACCESS_CODE` secret, verified server-side in `src/lib/admin.functions.ts`, which issues a short-lived HMAC token (`ADMIN_SESSION_SECRET`); failed attempts rate-limited via `audit_logs`.
 - QR payload format is `moonlight:<WALLET_CODE>`.
 - Closed-loop simulation: never connect balances to real payout rails.
+
+## Development Authentication
+- In local development (`import.meta.env.DEV`), the `/login` route renders a "Local Dev Helper" panel.
+- Default dev credentials: `lucianfereldenlord@gmail.com` / `12345678` (configurable via `VITE_DEV_LOGIN_EMAIL` and `VITE_DEV_LOGIN_PASSWORD`).
+- Automated agents and Playwright tests can click "1-Tap Dev Sign In" or fill these credentials directly.
+
