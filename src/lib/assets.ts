@@ -811,51 +811,45 @@ export function resolvePaymentAsset(
   const r = (route || "").toLowerCase();
   const k = (kind || "").toLowerCase();
 
-  // 1. Gift card match
-  const matchedGift = GIFT_CARDS.find(
-    (g) =>
-      m.includes(g.id) ||
-      m.includes(g.brand.toLowerCase()) ||
-      p.includes(g.id) ||
-      r === "gift-card",
-  );
-  if (matchedGift) {
-    return {
-      type: "gift",
-      id: matchedGift.id,
-      label: `${matchedGift.brand} Gift Card`,
-      subtitle: "Digital Voucher Redemption",
-      sourceRatio: "card",
-      giftCard: matchedGift,
-    };
-  }
-
-  // 2. Internal Moonlight transfers ALWAYS resolve to Moonlight
-  // Currency NEVER turns an internal transfer into an external rail.
+  // 1. Internal Moonlight transfers ALWAYS resolve to Moonlight brand identity
+  // Peer transfers and admin credits represent Moonlight's native rails.
   const isInternal =
     r === "moonlight" ||
     k === "transfer" ||
     k === "admin_credit" ||
-    m.includes("moonlight") ||
-    m.includes("internal") ||
-    (!r &&
-      k !== "withdrawal" &&
-      !u &&
-      !m.includes("bank") &&
-      !m.includes("upi") &&
-      !m.includes("sepa") &&
-      !m.includes("faster") &&
-      !m.includes("gcash") &&
-      !m.includes("pix"));
+    m === "moonlight transfer" ||
+    m === "internal transfer" ||
+    (!r && k !== "withdrawal");
 
   if (isInternal && k !== "withdrawal") {
     return {
       type: "method",
       id: "moonlight",
-      label: "Moonlight Transfer",
-      subtitle: "Private Peer-to-Peer Transfer",
+      label: k === "admin_credit" ? "Account Credit" : "Moonlight Transfer",
+      subtitle: k === "admin_credit" ? "Balance Adjustment" : "Peer-to-Peer Transfer",
       sourceRatio: "square",
     };
+  }
+
+  // 2. Gift card match (for digital voucher withdrawals / redemptions)
+  if (r === "gift-card" || k === "gift_card" || k === "redemption" || m.includes("voucher") || m.includes("gift")) {
+    const matchedGift = GIFT_CARDS.find(
+      (g) =>
+        m.includes(g.id) ||
+        m.includes(g.brand.toLowerCase()) ||
+        p.includes(g.id) ||
+        r === "gift-card",
+    );
+    if (matchedGift) {
+      return {
+        type: "gift",
+        id: matchedGift.id,
+        label: `${matchedGift.brand} Gift Card`,
+        subtitle: "Digital Voucher Redemption",
+        sourceRatio: "card",
+        giftCard: matchedGift,
+      };
+    }
   }
 
   // 3. UPI Provider match (Google Pay, PhonePe, Paytm, BHIM, Amazon Pay)

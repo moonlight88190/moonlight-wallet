@@ -11,17 +11,15 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
   const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
   const d = new Date(tx.created_at);
 
+  const isExternal = tx.kind === "withdrawal";
   const paymentAsset = resolvePaymentAsset(
-    tx.kind === "withdrawal"
-      ? tx.method || "Payout Rail"
-      : tx.method || tx.recipient_name || undefined,
-    tx.recipient_wallet_code?.includes("@") ? tx.recipient_wallet_code : undefined,
-    undefined,
+    isExternal ? tx.method || "Payout Rail" : undefined,
+    isExternal && tx.method?.toLowerCase().includes("upi") ? tx.recipient_wallet_code || undefined : undefined,
+    isExternal ? (tx as { provider?: string }).provider || undefined : undefined,
     tx.currency,
     tx.route,
     tx.kind,
   );
-  const showBrand = paymentAsset.id !== "moonlight" && tx.kind !== "admin_credit";
 
   return (
     <Link
@@ -29,13 +27,9 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
       params={{ id: tx.id }}
       className="flex items-center gap-3 py-3.5 px-3.5 sm:px-4 min-h-[56px] transition-colors hover:bg-accent/30 touch-manipulation cursor-pointer group"
     >
-      {/* Transaction Icon */}
+      {/* Transaction Icon with secondary currency badge */}
       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/60 overflow-hidden border border-border/20">
-        {showBrand ? (
-          <BrandAsset id={paymentAsset.id} size="xs" />
-        ) : (
-          <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        )}
+        <BrandAsset id={paymentAsset.id} size="xs" />
         <div className="absolute -bottom-0.5 -right-0.5">
           <CountryFlag code={v.currency} circle size="xs" />
         </div>

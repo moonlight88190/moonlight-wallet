@@ -23,8 +23,8 @@ function History() {
   const txs = useTransactions(200);
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-16 animate-in fade-in duration-200">
-      <PageTitle eyebrow="TRANSACTION LEDGER" title="Activity">
-        Full record of your transfers, payouts, withdrawals and voucher redemptions.
+      <PageTitle eyebrow="WALLET ACTIVITY" title="Transaction History">
+        View your transfers, payouts, and digital wallet activity.
       </PageTitle>
 
       {txs.isLoading ? (
@@ -36,7 +36,7 @@ function History() {
       ) : txs.error ? (
         <div className="rounded-3xl border border-rose-500/30 bg-rose-500/10 p-6 text-center">
           <p className="text-xs font-semibold text-rose-500">
-            Could not load your activity ledger.
+            Could not load your transaction history.
           </p>
         </div>
       ) : !txs.data?.length ? (
@@ -47,7 +47,7 @@ function History() {
           <div>
             <p className="font-semibold text-foreground text-sm">No transactions yet</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Your transfers, payout activity, and redemptions will appear here.
+              Your transfers, payouts, and wallet activity will appear here.
             </p>
           </div>
         </div>

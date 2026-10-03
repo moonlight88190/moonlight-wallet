@@ -6,14 +6,14 @@ import { CountryFlag, PaymentMethodIcon } from "@/components/AssetComponents";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Moonlight — European Financial Technology" },
+      { title: "About Moonlight — Digital Wallet & Payments" },
       {
         name: "description",
         content:
-          "Moonlight Wallet is an institutional-grade international clearing engine and digital treasury platform.",
+          "Moonlight Wallet provides secure multi-currency balance management, instant peer-to-peer transfers, and direct global payout corridors.",
       },
       { property: "og:title", content: "About Moonlight Wallet" },
-      { property: "og:description", content: "European precision for international payments." },
+      { property: "og:description", content: "Modern digital payments and global money transfers." },
     ],
   }),
   component: About,
@@ -23,27 +23,27 @@ const SECTIONS = [
   {
     icon: Globe,
     title: "Our Mission",
-    body: "Transforming how money moves across borders with zero artificial latency, direct European SEPA Instant connectivity, and seamless global payout corridors.",
+    body: "Making money movement across borders simple, fast, and transparent. Moonlight provides customers with reliable digital wallet accounts, direct clearing connections, and clear, upfront exchange rates.",
   },
   {
     icon: Building2,
-    title: "Multi-Currency Treasury",
-    body: "Every Moonlight account operates as an isolated digital treasury with support for EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP, settled with daily Frankfurter exchange reference snapshots.",
+    title: "Multi-Currency Balance Management",
+    body: "Hold, manage, and track balances across major global currencies including EUR, USD, GBP, INR, and more. Rates are updated daily against official market references with transparent conversion previews.",
   },
   {
     icon: Zap,
-    title: "Clearing Rails & Instant Payouts",
-    body: "Direct settlement channels spanning European SEPA IBANs, UK Faster Payments, Czech banking rails, Indian NPCI UPI, and Philippine InstaPay & GCash networks.",
+    title: "Local Clearing & Payout Corridors",
+    body: "Withdraw funds directly to domestic banking and instant payment networks worldwide, including European SEPA, UK Faster Payments, Indian UPI and IMPS, and regional mobile wallets.",
   },
   {
     icon: ShieldCheck,
-    title: "Encrypted Ledger Security",
-    body: "Engineered with immutable SECURITY DEFINER SQL transaction functions, strict 256-bit cryptographic verification, and automated initial 48-hour security clearance thresholds.",
+    title: "Bank-Grade Account Security",
+    body: "Protected by end-to-end data encryption, session verification, automated fraud anomaly detection, and operational security safeguards to keep your funds safe at all times.",
   },
   {
     icon: Lock,
-    title: "Closed-Loop Treasury Architecture",
-    body: "Strict closed-loop simulation architecture ensuring absolute balance isolation, cryptographic ledger audit trails, and zero exposure to unverified settlement rails.",
+    title: "Auditable Transaction Records",
+    body: "Every payment, transfer, and payout generates an immutable reference confirmation with full itemized details, verifiable timestamps, and downloadable receipts.",
   },
 ];
 
@@ -89,13 +89,13 @@ function About() {
 
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase mb-2">
-            <span>FINANCIAL TECHNOLOGY</span>
+            <span>DIGITAL PAYMENTS &amp; TRANSFERS</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
             MOONLIGHT
           </h1>
           <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            European precision and institutional architecture for modern international liquidity.
+            European engineering and modern payment architecture for secure multi-currency transfers and digital wallet balances.
           </p>
         </div>
       </div>

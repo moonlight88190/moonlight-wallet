@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
-import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Calendar } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Calendar, ExternalLink } from "lucide-react";
 import type { ChartPoint, MarketInstrument, MarketTimeRange } from "@/lib/markets.types";
 import { formatMoney } from "@/lib/currency";
 
@@ -285,6 +285,77 @@ export function StockChart({
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Official Destination & Investing Rails */}
+      <div className="mt-3.5 pt-3 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-muted-foreground text-[11px]">
+          <span className="font-medium text-foreground">Official Source:</span>
+          <a
+            href={
+              instrument.symbol === "^NSEI"
+                ? "https://www.niftyindices.com/indices/equity/broad-based-indices/NIFTY-50"
+                : instrument.symbol === "^GSPC"
+                  ? "https://www.spglobal.com/spdji/en/indices/equity/sp-500/"
+                  : instrument.symbol === "^NDX"
+                    ? "https://indexes.nasdaqomx.com/Index/Overview/NDX"
+                    : instrument.symbol === "^STOXX50E"
+                      ? "https://www.stoxx.com/index-details?symbol=SX5E"
+                      : instrument.symbol === "^GDAXI"
+                        ? "https://www.dax-indices.com/"
+                        : instrument.symbol === "^FTSE"
+                          ? "https://www.lseg.com/en/ftse-russell/indices/ftse-100"
+                          : instrument.region === "India"
+                            ? "https://www.nseindia.com/"
+                            : "https://www.nasdaq.com/"
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+          >
+            <span>
+              {instrument.symbol === "^NSEI"
+                ? "NSE NIFTY 50 (niftyindices.com)"
+                : instrument.symbol === "^GSPC"
+                  ? "S&P Dow Jones Indices"
+                  : instrument.symbol === "^NDX"
+                    ? "Nasdaq Global Indexes"
+                    : instrument.symbol === "^STOXX50E"
+                      ? "STOXX Indices"
+                      : instrument.symbol === "^GDAXI"
+                        ? "Deutsche Börse DAX"
+                        : instrument.symbol === "^FTSE"
+                          ? "FTSE Russell / LSEG"
+                          : `${instrument.exchange} Official Directory`}
+            </span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        {/* Indian Equities Investing Gateway */}
+        {instrument.region === "India" && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] text-muted-foreground hidden sm:inline">Invest in India:</span>
+            <a
+              href="https://kite.zerodha.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-all touch-manipulation cursor-pointer shadow-2xs"
+            >
+              <span>Zerodha Kite</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            <a
+              href="https://www.nseindia.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border border-border/60 bg-secondary/50 text-foreground text-[11px] font-semibold hover:bg-secondary transition-all touch-manipulation cursor-pointer"
+            >
+              <span>NSE India</span>
+              <ExternalLink className="h-3 w-3 text-muted-foreground" />
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
