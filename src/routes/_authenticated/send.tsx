@@ -323,7 +323,7 @@ function Send() {
                   setCurrency(newCur);
                 }}
               >
-                <SelectTrigger className="h-14 w-28 sm:w-36 rounded-2xl border-border/60 bg-card/60 px-3 shrink-0 font-semibold">
+                <SelectTrigger className="h-14 w-24 rounded-2xl border-border/60 bg-card/60 px-2 shrink-0 font-semibold overflow-hidden">
                   <CurrencyIcon code={cur} />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl p-1 border-border/60">
@@ -393,7 +393,7 @@ function Send() {
               maxLength={200}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="h-12 rounded-2xl border-border/60 bg-card/60 text-xs px-4"
+              className="h-12 rounded-2xl border-border/60 bg-card/60 text-base px-4"
             />
 
             {amt > 0 && (

@@ -226,7 +226,7 @@ function Withdraw() {
   const [createdWdId, setCreatedWdId] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  // Currency conversions: closed-loop domestic payout corridor
+  // Currency conversions: verified domestic payout corridor
   const sourceAmt = Number(withdrawAmount) || 0;
   const isUPI = selectedMethod.id.includes("upi");
   const isIndianBank = selectedMethod.id === "in-bank";
@@ -1030,7 +1030,7 @@ function Withdraw() {
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">AML Policy</span>
-              <span className="text-[11px] font-semibold text-primary">Domestic Closed-Loop Verified</span>
+              <span className="text-[11px] font-semibold text-primary">Verified Domestic Rail</span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Destination</span>
