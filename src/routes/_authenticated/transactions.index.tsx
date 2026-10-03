@@ -35,7 +35,9 @@ function History() {
         </div>
       ) : txs.error ? (
         <div className="rounded-3xl border border-rose-500/30 bg-rose-500/10 p-6 text-center">
-          <p className="text-xs font-semibold text-rose-500">Could not load your activity ledger.</p>
+          <p className="text-xs font-semibold text-rose-500">
+            Could not load your activity ledger.
+          </p>
         </div>
       ) : !txs.data?.length ? (
         <div className="rounded-3xl border border-dashed border-border/60 bg-card/40 p-12 text-center space-y-3">

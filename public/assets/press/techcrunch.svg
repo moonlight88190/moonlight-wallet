@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56" fill="none">
+  <!-- TechCrunch mark with distinctive green color -->
+  <path d="M6 6 L38 6 L44 28 L38 50 L6 50 Z" fill="#0ABA6A"/>
+  <text x="10" y="37" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="900" font-size="22" fill="white">TC</text>
+  <text x="54" y="37" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="700" font-size="24" letter-spacing="-0.3" fill="currentColor">TechCrunch</text>
+</svg>

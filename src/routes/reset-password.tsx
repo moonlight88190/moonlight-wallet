@@ -9,9 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — Moonlight Wallet" },
+      { title: "Set New Password — Moonlight Wallet" },
       { name: "description", content: "Choose a new password for your Moonlight Wallet." },
-      { property: "og:title", content: "Set a new password — Moonlight Wallet" },
+      { property: "og:title", content: "Set New Password — Moonlight Wallet" },
       { property: "og:description", content: "Choose a new password." },
     ],
   }),
@@ -23,6 +23,7 @@ function Reset() {
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+
   async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     if (pw.length < 8) {
@@ -40,31 +41,36 @@ function Reset() {
       toast.error(error.message);
       return;
     }
-    toast.success("Password updated");
+    toast.success("Password updated successfully");
     navigate({ to: "/dashboard" });
   }
+
   return (
-    <AuthLayout title="New password" subtitle="Choose something memorable and strong.">
+    <AuthLayout
+      title="Create New Password"
+      subtitle="Choose a strong, 8+ character password to secure your Moonlight account."
+    >
       <form onSubmit={submit} className="space-y-3">
         <Input
           type="password"
-          placeholder="New password"
+          placeholder="New password (min 8 chars)"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
+          autoFocus
         />
         <Input
           type="password"
-          placeholder="Confirm password"
+          placeholder="Confirm new password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="h-12 rounded-xl"
+          className="h-12 rounded-xl bg-background/60 px-4 text-[13px] border-border/50 focus:border-ring focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
         />
         <button
-          disabled={busy}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground disabled:opacity-60"
+          disabled={busy || !pw || !confirm}
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft cursor-pointer touch-manipulation mt-2"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update password"}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update Password & Continue"}
         </button>
       </form>
     </AuthLayout>

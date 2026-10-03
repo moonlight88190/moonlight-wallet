@@ -129,6 +129,12 @@ function Receive() {
       {/* ─── Action Buttons ─── */}
       <div className="grid grid-cols-3 gap-2.5">
         {[
+          {
+            label: copied ? "Copied!" : "Copy ID",
+            icon: copied ? Check : Copy,
+            onClick: copy,
+            isCopied: copied,
+          },
           { label: copied ? "Copied!" : "Copy ID", icon: copied ? Check : Copy, onClick: copy, isCopied: copied },
           { label: "Share", icon: Share, onClick: share },
           { label: "Show QR", icon: QrCode, onClick: () => setBig(true) },
@@ -138,6 +144,15 @@ function Receive() {
             onClick={b.onClick}
             disabled={!code}
             className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation ${
+              b.isCopied
+                ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                : ""
+            }`}
+          >
+            <b.icon
+              className={`h-[18px] w-[18px] transition-transform ${b.isCopied ? "scale-110 text-emerald-500" : ""}`}
+              strokeWidth={1.6}
+            />
               b.isCopied ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : ""
             }`}
           >
@@ -150,7 +165,9 @@ function Receive() {
       {/* ─── Full-Screen QR Dialog ─── */}
       <Dialog open={big} onOpenChange={setBig}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-2xl text-center p-5 sm:p-6">
-          <DialogTitle className="text-center font-mono text-[14px] font-semibold">{code}</DialogTitle>
+          <DialogTitle className="text-center font-mono text-[14px] font-semibold">
+            {code}
+          </DialogTitle>
           <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm">
             <QRCodeSVG
               value={qrPayload(code)}

@@ -50,7 +50,10 @@ function Forgot() {
           : "We\u2019ll email you a link to reset it."
       }
       footer={
-        <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
+        <Link
+          to="/login"
+          className="font-semibold text-foreground hover:underline underline-offset-2"
+        >
           Back to sign in
         </Link>
       }

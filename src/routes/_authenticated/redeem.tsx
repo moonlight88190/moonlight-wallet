@@ -149,7 +149,8 @@ function RedeemPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Redeem Voucher</h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Apply a Moonlight gift card, promotional code, or partner voucher directly to your balance.
+          Apply a Moonlight gift card, promotional code, or partner voucher directly to your
+          balance.
         </p>
       </div>
 
@@ -192,10 +193,7 @@ function RedeemPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
-            <Link
-              to="/transactions"
-              className={`${primaryBtn} flex-1 h-11 text-xs`}
-            >
+            <Link to="/transactions" className={`${primaryBtn} flex-1 h-11 text-xs`}>
               View in Activity
             </Link>
             <Button
@@ -253,11 +251,7 @@ function RedeemPage() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={busy || !code.trim()}
-              className={primaryBtn}
-            >
+            <button type="submit" disabled={busy || !code.trim()} className={primaryBtn}>
               {busy ? (
                 <span>Validating & Crediting...</span>
               ) : (
