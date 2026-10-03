@@ -114,12 +114,12 @@ function Receive() {
           )}
         </div>
 
-        {/* ─── Compatible Clearing Infrastructure (Filtered by Account Geography) ─── */}
+        {/* ─── Supported Withdrawals (Filtered by Account Geography) ─── */}
         {isIndianAccount ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Indian Clearing Rails
+                Supported Withdrawals
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 Zero Surcharge
@@ -134,14 +134,14 @@ function Receive() {
               <PaymentMethodIcon id="in-bank" size="sm" />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              Direct routing via NPCI Unified Payments Interface and IMPS domestic interbank rails.
+              Direct balance withdrawals supported via UPI, mobile payment apps, and IMPS domestic interbank rails.
             </p>
           </div>
         ) : geography.data?.isEurope || geography.data?.capabilities?.supportsSEPA ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported European Clearing Rails
+                Supported Withdrawals
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 SEPA Network
@@ -155,14 +155,14 @@ function Receive() {
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              Euro clearing via Single Euro Payments Area (SEPA Credit Transfer).
+              Direct balance withdrawals supported via Single Euro Payments Area (SEPA Credit Transfer).
             </p>
           </div>
         ) : geography.data?.isUK || geography.data?.capabilities?.supportsFasterPayments ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported UK Clearing Rails
+                Supported Withdrawals
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 Faster Payments
@@ -173,14 +173,14 @@ function Receive() {
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              Settlement via the UK Faster Payments Service and interbank network.
+              Direct balance withdrawals supported via the UK Faster Payments Service and interbank network.
             </p>
           </div>
         ) : geography.data?.capabilities?.supportsGCash ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Domestic Clearing Rails
+                Supported Withdrawals
               </p>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -188,29 +188,38 @@ function Receive() {
               <PaymentMethodIcon id="ph-bank" size="sm" />
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance withdrawals supported via GCash and Philippine interbank rails.
+            </p>
           </div>
         ) : geography.data?.capabilities?.supportsPix ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Domestic Clearing Rails
+                Supported Withdrawals
               </p>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <PaymentMethodIcon id="pix" size="sm" />
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance withdrawals supported via Pix instant settlement.
+            </p>
           </div>
         ) : (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                International Payout Rails
+                Supported Withdrawals
               </p>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Direct balance withdrawals supported via international wire and SWIFT transfer.
+            </p>
           </div>
         )}
       </div>
