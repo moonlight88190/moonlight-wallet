@@ -5,12 +5,12 @@ import {
   ArrowRight,
   ShieldCheck,
   Globe,
-  Lock,
-  Zap,
-  Award,
   ArrowRightLeft,
   CheckCircle,
   ChevronRight,
+  Send,
+  Landmark,
+  CreditCard,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,23 +29,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/")(
+  {
   head: () => ({
     meta: [
-      { title: "Moonlight Wallet — Licensed European-First Global Financial Infrastructure" },
+      { title: "Moonlight Wallet — Send, Receive & Manage Money" },
       {
         name: "description",
         content:
-          "Official European-first multi-currency digital wallet and settlement platform. SEPA Instant clearing, encrypted ledger architecture, and global money mobility.",
+          "Send, receive, and manage multiple currencies in one account. Convert between 9 currencies with transparent exchange rates.",
       },
       {
         property: "og:title",
-        content: "Moonlight Wallet — Licensed European-First Global Financial Infrastructure",
+        content: "Moonlight Wallet — Send, Receive & Manage Money",
       },
       {
         property: "og:description",
         content:
-          "Official European-first multi-currency digital wallet and settlement platform with SEPA Instant clearing.",
+          "Multi-currency digital wallet. Send money, receive payments, and convert currencies at mid-market rates.",
       },
     ],
   }),
@@ -64,80 +65,30 @@ const GLOBAL_CURRENCIES = [
   { code: "PHP", flag: "PH" },
 ];
 
-const PRESS_ACCOLADES = [
-  {
-    publication: "Financial Times",
-    logoUrl: "/assets/press/financial-times.svg",
-    tagline: "Fintech Excellence 2025",
-    quote:
-      "Moonlight sets a new benchmark for European cross-border settlement and instant digital liquidity across international corridors.",
-    author: "European Banking Review",
-  },
-  {
-    publication: "Bloomberg",
-    logoUrl: "/assets/press/bloomberg.svg",
-    tagline: "Global Clearing Report",
-    quote:
-      "The definitive European-first multi-currency clearing engine uniting SEPA Instant rails with direct Asian and American payout rails.",
-    author: "Global Markets Intelligence",
-  },
-  {
-    publication: "TechCrunch",
-    logoUrl: "/assets/press/techcrunch.svg",
-    tagline: "Top European Fintech",
-    quote:
-      "A sleek, bank-grade digital wallet engineered with precision, zero artificial latency, and 256-bit cryptographic verification.",
-    author: "Fintech Disruption Series",
-  },
-  {
-    publication: "EU-Startups",
-    logoUrl: "/assets/press/eu-startups.svg",
-    tagline: "Fintech Innovation Award",
-    quote:
-      "Recognized as Europe's premier multi-currency wallet standard for seamless liquidity management and verified cryptographic transfers.",
-    author: "European Fintech Awards",
-  },
-  {
-    publication: "Forbes",
-    logoUrl: "/assets/press/forbes.svg",
-    tagline: "Next-Gen Wealth Infrastructure",
-    quote:
-      "Redefining how global money moves with Apple-grade design simplicity and rigorous European regulatory compliance.",
-    author: "Enterprise Fintech Spotlight",
-  },
-];
-
-const PLATFORM_STATS = [
-  { label: "Processed Volume", value: "€2.4B+", detail: "Annual cleared liquidity" },
-  { label: "Clearing Uptime", value: "99.99%", detail: "SLA bank-grade reliability" },
-  { label: "Global Corridors", value: "140+", detail: "Instant settlement rails" },
-  { label: "Avg Settlement", value: "< 3.2s", detail: "End-to-end clearing time" },
-];
-
-const PRODUCT_CAPABILITIES = [
+const PRODUCT_FEATURES = [
   {
     icon: Globe,
-    title: "Multi-Currency Treasury",
+    title: "Multi-Currency Accounts",
     description:
-      "Hold, convert, and manage EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP with real-time Frankfurter exchange rates.",
+      "Hold and manage EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP balances in one account. Convert between currencies at mid-market rates.",
   },
   {
-    icon: Zap,
-    title: "SEPA Instant & IMPS Clearing",
+    icon: Send,
+    title: "Send & Receive Money",
     description:
-      "Direct bank rail connectivity for zero-latency execution across European IBANs and Asian payout corridors.",
+      "Transfer money to other Moonlight accounts instantly. Receive payments from anyone with your wallet ID or QR code.",
   },
   {
-    icon: ShieldCheck,
-    title: "Encrypted Ledger Security",
+    icon: Landmark,
+    title: "Withdraw to Your Bank",
     description:
-      "256-bit cryptographic verification with SECURITY DEFINER SQL transaction state isolation.",
+      "Withdraw to your bank account via UPI, bank transfer, or other local payment methods available in your country.",
   },
   {
-    icon: Lock,
-    title: "48-Hour Security Clearance",
+    icon: CreditCard,
+    title: "Digital Gift Cards",
     description:
-      "Automated account security clearance and initial withdrawal thresholds to protect multi-currency balances.",
+      "Redeem your balance for gift cards from popular brands including Apple, Google Play, Amazon, and more.",
   },
 ];
 
@@ -185,8 +136,8 @@ function Landing() {
               <span className="text-[12px] font-bold tracking-[0.28em] text-foreground leading-none">
                 MOONLIGHT
               </span>
-              <span className="text-[8px] font-semibold tracking-[0.16em] text-gold uppercase leading-none mt-0.5">
-                Financial Wallet
+              <span className="text-[8px] font-semibold tracking-[0.16em] text-muted-foreground uppercase leading-none mt-0.5">
+                Wallet
               </span>
             </div>
           </Link>
@@ -224,19 +175,13 @@ function Landing() {
       <main className="relative z-10 flex flex-1 flex-col items-center px-5 sm:px-6">
         {/* ─── Section 1: Hero ─── */}
         <section className="w-full max-w-5xl py-20 sm:py-28 flex flex-col items-center text-center space-y-8">
-          {/* Credential badge */}
-          <div className="animate-fade-up badge-gold">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            Licensed European-First Financial Infrastructure
-          </div>
-
           <h1 className="text-display max-w-3xl animate-fade-up stagger-1 text-foreground">
-            Global Capital. <span className="text-muted-foreground/60">Instant Mobility.</span>
+            Send money. <span className="text-muted-foreground/60">Anywhere.</span>
           </h1>
 
           <p className="animate-fade-up stagger-2 max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Send, receive, withdraw, and manage multi-currency balances across Europe, Asia, and the
-            Americas — with SEPA Instant rails and bank-grade encryption.
+            Send, receive, and manage multiple currencies in one account. Convert between
+            9 currencies at transparent mid-market rates.
           </p>
 
           {/* CTAs */}
@@ -262,17 +207,17 @@ function Landing() {
           <div className="animate-fade-up stagger-4 flex items-center gap-4 text-[11px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-success" />
-              No credit check
+              Free to open
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-success" />
-              256-bit encryption
+              No minimum balance
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-success" />
-              Instant settlement
+              9 currencies
             </div>
           </div>
         </section>
@@ -285,10 +230,10 @@ function Landing() {
               <div className="flex items-center gap-2">
                 <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
                 <span className="text-[12px] font-semibold text-foreground">
-                  Live FX Calculator
+                  Currency Converter
                 </span>
               </div>
-              <span className="badge-primary">Live rates</span>
+              <span className="badge-primary">Mid-market rates</span>
             </div>
 
             {/* Calculator body */}
@@ -374,61 +319,38 @@ function Landing() {
           </div>
         </section>
 
-        {/* ─── Section 3: Press recognition strip ─── */}
+        {/* ─── Section 3: Supported Currencies ─── */}
         <section
           className="w-full max-w-5xl py-12 border-t border-b border-border/40"
-          aria-label="Press recognition"
+          aria-label="Supported currencies"
         >
           <p className="text-center text-label-caps text-muted-foreground/60 mb-8">
-            As featured in
+            Supported currencies
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
-            {PRESS_ACCOLADES.map((item) => (
-              <img
-                key={item.publication}
-                src={item.logoUrl}
-                alt={item.publication}
-                className="press-logo"
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* ─── Section 4: Platform Statistics ─── */}
-        <section className="w-full max-w-5xl py-16 space-y-10" aria-label="Platform statistics">
-          <div className="text-center space-y-2">
-            <p className="text-label-caps text-muted-foreground/70">By the numbers</p>
-            <h2 className="text-headline text-foreground">Built for institutional scale</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/40 rounded-2xl overflow-hidden shadow-card">
-            {PLATFORM_STATS.map((stat, i) => (
-              <div
-                key={i}
-                className={`bg-card p-8 text-center space-y-1 animate-fade-up stagger-${i + 1}`}
-              >
-                <p className="stat-number text-foreground">{stat.value}</p>
-                <p className="text-[11px] font-semibold text-foreground/80 mt-2">{stat.label}</p>
-                <p className="text-[10px] text-muted-foreground">{stat.detail}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
+            {GLOBAL_CURRENCIES.map((c) => (
+              <div key={c.code} className="flex items-center gap-2">
+                <CountryFlag code={c.flag} size="sm" circle />
+                <span className="text-sm font-semibold text-foreground">{c.code}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ─── Section 5: Product Capabilities ─── */}
+        {/* ─── Section 4: Product Features ─── */}
         <section
-          className="w-full max-w-5xl py-4 pb-16 space-y-10"
-          aria-label="Product capabilities"
+          className="w-full max-w-5xl py-16 space-y-10"
+          aria-label="Features"
         >
           <div className="text-center space-y-2">
-            <p className="text-label-caps text-muted-foreground/70">Financial engineering</p>
-            <h2 className="text-headline text-foreground">
-              Built for institutional & retail mobility
-            </h2>
+            <h2 className="text-headline text-foreground">What you can do</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Everything you need to manage your money across currencies and countries.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {PRODUCT_CAPABILITIES.map((cap, idx) => {
+            {PRODUCT_FEATURES.map((cap, idx) => {
               const IconComp = cap.icon;
               return (
                 <div
@@ -451,45 +373,6 @@ function Landing() {
             })}
           </div>
         </section>
-
-        {/* ─── Section 6: Press Accolades (full cards) ─── */}
-        <section
-          className="w-full max-w-5xl pb-20 space-y-10 border-t border-border/40 pt-16"
-          aria-label="Press accolades"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Award className="h-4 w-4 text-gold" />
-            <p className="text-label-caps text-muted-foreground/70">
-              International press recognition
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PRESS_ACCOLADES.map((item, idx) => (
-              <div
-                key={idx}
-                className={`rounded-2xl border border-border/60 bg-card p-6 space-y-4 shadow-card flex flex-col justify-between card-hover animate-fade-up stagger-${Math.min(idx + 1, 6)}`}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <img
-                      src={item.logoUrl}
-                      alt={item.publication}
-                      className="h-5 w-auto object-contain opacity-75 dark:invert"
-                    />
-                    <span className="badge-gold shrink-0">{item.tagline}</span>
-                  </div>
-                  <p className="text-[12px] text-muted-foreground leading-relaxed italic">
-                    {item.quote}
-                  </p>
-                </div>
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider border-t border-border/40 pt-3">
-                  — {item.author}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       {/* ═══ FOOTER ═══ */}
@@ -497,9 +380,9 @@ function Landing() {
         <div className="mx-auto max-w-4xl px-5 space-y-2">
           <p className="text-[13px] font-semibold text-foreground">Moonlight Wallet</p>
           <p className="text-[11px] text-muted-foreground leading-relaxed max-w-lg mx-auto">
-            Licensed digital clearing platform operating under European financial compliance
-            standards. SEPA Instant clearing, 256-bit cryptographic ledger, and multi-currency
-            global mobility.
+            A multi-currency digital wallet for sending, receiving, and managing money across
+            9 currencies. This is a closed-loop simulation and does not connect to real banking
+            or payment networks.
           </p>
           <div className="flex items-center justify-center gap-4 pt-2">
             <Link

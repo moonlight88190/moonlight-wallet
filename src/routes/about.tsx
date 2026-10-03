@@ -6,14 +6,14 @@ import { CountryFlag, PaymentMethodIcon } from "@/components/AssetComponents";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Moonlight — European Financial Technology" },
+      { title: "About — Moonlight Wallet" },
       {
         name: "description",
         content:
-          "Moonlight Wallet is an institutional-grade international clearing engine and digital treasury platform.",
+          "Moonlight Wallet is a multi-currency digital wallet for sending, receiving, and managing money across 9 currencies.",
       },
       { property: "og:title", content: "About Moonlight Wallet" },
-      { property: "og:description", content: "European precision for international payments." },
+      { property: "og:description", content: "Multi-currency wallet for sending and receiving money." },
     ],
   }),
   component: About,
@@ -22,28 +22,28 @@ export const Route = createFileRoute("/about")({
 const SECTIONS = [
   {
     icon: Globe,
-    title: "Our Mission",
-    body: "Transforming how money moves across borders with zero artificial latency, direct European SEPA Instant connectivity, and seamless global payout corridors.",
+    title: "Multi-Currency Accounts",
+    body: "Hold and manage EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP balances in one place. Convert between currencies at transparent mid-market exchange rates updated daily.",
   },
   {
     icon: Building2,
-    title: "Multi-Currency Treasury",
-    body: "Every Moonlight account operates as an isolated digital treasury with support for EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP, settled with daily Frankfurter exchange reference snapshots.",
+    title: "Send & Receive",
+    body: "Transfer money to other Moonlight accounts instantly using wallet IDs or QR codes. Receive payments from anyone on the platform with no transfer fees between accounts.",
   },
   {
     icon: Zap,
-    title: "Clearing Rails & Instant Payouts",
-    body: "Direct settlement channels spanning European SEPA IBANs, UK Faster Payments, Czech banking rails, Indian NPCI UPI, and Philippine InstaPay & GCash networks.",
+    title: "Withdraw to Your Bank",
+    body: "Withdraw funds to your bank account through UPI, bank transfer, Faster Payments, GCash, Pix, or SEPA — depending on your country and available payment methods.",
   },
   {
     icon: ShieldCheck,
-    title: "Encrypted Ledger Security",
-    body: "Engineered with immutable SECURITY DEFINER SQL transaction functions, strict 256-bit cryptographic verification, and automated initial 48-hour security clearance thresholds.",
+    title: "Account Security",
+    body: "Your account is protected with authentication, session management, and a 48-hour waiting period on new accounts before withdrawals are enabled.",
   },
   {
     icon: Lock,
-    title: "Closed-Loop Treasury Architecture",
-    body: "Strict closed-loop simulation architecture ensuring absolute balance isolation, cryptographic ledger audit trails, and zero exposure to unverified settlement rails.",
+    title: "How It Works",
+    body: "Moonlight Wallet operates as a closed-loop simulation. Balances, transfers, and withdrawals are processed within the platform and do not connect to external banking networks or payment processors.",
   },
 ];
 
@@ -73,7 +73,7 @@ function About() {
           className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-2 px-1 min-h-[44px] touch-manipulation"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Overview
+          Back
         </Link>
       </div>
 
@@ -88,14 +88,11 @@ function About() {
         </div>
 
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase mb-2">
-            <span>FINANCIAL TECHNOLOGY</span>
-          </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
-            MOONLIGHT
+            Moonlight Wallet
           </h1>
           <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            European precision and institutional architecture for modern international liquidity.
+            A multi-currency digital wallet for sending, receiving, and managing money across 9 currencies.
           </p>
         </div>
       </div>
@@ -127,17 +124,17 @@ function About() {
         ))}
       </div>
 
-      {/* Payment rail logos */}
+      {/* Payment methods */}
       <div className="mt-14 text-center space-y-4 border-t border-border/40 pt-10">
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-          Supported Financial Corridors &amp; Clearing Rails
+          Available Payment Methods
         </p>
         <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
           <PaymentMethodIcon id="sepa" size="md" />
-          <PaymentMethodIcon id="cz-bank" size="md" />
           <PaymentMethodIcon id="upi" size="md" />
           <PaymentMethodIcon id="gcash" size="md" />
-          <PaymentMethodIcon id="int-bank" size="md" />
+          <PaymentMethodIcon id="faster-payments" size="md" />
+          <PaymentMethodIcon id="pix" size="md" />
         </div>
       </div>
 
@@ -150,7 +147,7 @@ function About() {
           to="/admin-access"
           className="opacity-40 hover:opacity-100 font-mono text-[11px] transition-opacity"
         >
-          Authorized Access
+          Admin
         </Link>
       </div>
     </div>
