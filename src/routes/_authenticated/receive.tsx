@@ -111,10 +111,10 @@ function Receive() {
 
   return (
     <div className="mx-auto max-w-md text-center space-y-5 sm:space-y-6 animate-fade-up">
-      <PageTitle eyebrow="RECEIVE" title="Receive Funds">
+      <PageTitle eyebrow="RECEIVE" title="Receive Money">
         {isIndianAccount
-          ? "Receive instant transfers via official UPI QR or your Moonlight Wallet ID."
-          : "Receive instant transfers from other Moonlight users or supported regional payout rails."}
+          ? "Anyone can send money via UPI QR, UPI ID, or your Moonlight Wallet ID."
+          : "Anyone on Moonlight or supported payout rails can send money using this ID or QR code."}
       </PageTitle>
 
       {/* ─── Mode Selector for Indian Accounts ─── */}
@@ -284,6 +284,7 @@ function Receive() {
               </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
+              <PaymentMethodIcon id="upi-qr" size="sm" />
               <PaymentMethodIcon id="upi" size="sm" />
               <BrandAsset id="google-pay" size="sm" />
               <BrandAsset id="phonepe" size="sm" />
