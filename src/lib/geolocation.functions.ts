@@ -1,9 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { IpApiIsProvider, resolveAccountGeography, type NormalizedGeography } from "./geolocation";
-
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+import { resolveAccountGeography, type NormalizedGeography } from "./geolocation";
 
 interface ProfileGeographyRow {
   country_code?: string | null;
@@ -11,49 +8,81 @@ interface ProfileGeographyRow {
   timezone?: string | null;
   region?: string | null;
   geography_updated_at?: string | null;
+  admin_region_override?: boolean | null;
 }
 
 /**
- * Resolves geography for the authenticated account, honoring explicit region overrides
- * and cached results younger than 30 days. Otherwise uses IP lookup, the country
- * header, or an India fallback and attempts to persist the detected geography.
+ * Resolves account geography. Every single account defaults to Indian Account (INR, UPI, Indian Banks)
+ * unless an administrator explicitly changed the account's region via the admin panel.
+ * Eliminates flaky external IP geolocation and header lookups.
  */
 export const syncAccountGeography = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<NormalizedGeography> => {
     const { supabase, userId } = context;
 
-    // 1. Fetch current profile geography safely
+    // 1. Fetch current profile safely
     let profile: ProfileGeographyRow | null = null;
     try {
       const { data } = await supabase
         .from("profiles")
-        .select("country_code, city, timezone, region, geography_updated_at")
+        .select("country_code, city, timezone, region, geography_updated_at, admin_region_override")
         .eq("id", userId)
         .maybeSingle();
       profile = data as ProfileGeographyRow | null;
     } catch {
-      // Columns might not yet exist in un-migrated environments
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("country_code, city, timezone, region, geography_updated_at")
+          .eq("id", userId)
+          .maybeSingle();
+        profile = data as ProfileGeographyRow | null;
+      } catch {
+        // ignore
+      }
     }
 
-    const regUpper = (profile?.region || "").trim().toUpperCase();
-    const isAdminOverride = ["INDIA", "EUROPE", "PHILIPPINES"].includes(regUpper);
-
-    // If an administrator explicitly set the region, respect it permanently!
-    if (isAdminOverride) {
+    // 2. Check if an administrator explicitly set the region via the admin panel
+    if (profile?.admin_region_override === true) {
+      const regUpper = (profile.region || "").trim().toUpperCase();
       const overrideCountry =
-        regUpper === "INDIA"
-          ? "IN"
+        regUpper === "EUROPE"
+          ? (profile.country_code && profile.country_code !== "IN" ? profile.country_code : "DE")
           : regUpper === "PHILIPPINES"
             ? "PH"
-            : (profile?.country_code && profile.country_code !== "GLOBAL" ? profile.country_code : "DE");
+            : regUpper === "GLOBAL"
+              ? (profile.country_code || "IN")
+              : "IN";
 
-      if (profile?.country_code !== overrideCountry) {
+      return resolveAccountGeography(
+        overrideCountry,
+        profile.city,
+        profile.timezone,
+        regUpper,
+      );
+    }
+
+    // 3. Every single account defaults to Indian Account.
+    // Ensure DB profile reflects country_code = 'IN' and region = 'INDIA'
+    if (profile?.country_code !== "IN" || profile?.region !== "INDIA") {
+      try {
+        await supabase
+          .from("profiles")
+          .update({
+            country_code: "IN",
+            region: "INDIA",
+            admin_region_override: false,
+            geography_updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+      } catch {
         try {
           await supabase
             .from("profiles")
             .update({
-              country_code: overrideCountry,
+              country_code: "IN",
+              region: "INDIA",
               geography_updated_at: new Date().toISOString(),
             })
             .eq("id", userId);
@@ -61,74 +90,8 @@ export const syncAccountGeography = createServerFn({ method: "POST" })
           // ignore
         }
       }
-
-      return resolveAccountGeography(
-        overrideCountry,
-        profile?.city,
-        profile?.timezone,
-        regUpper,
-      );
     }
 
-    const lastUpdated = profile?.geography_updated_at
-      ? new Date(profile.geography_updated_at).getTime()
-      : 0;
-
-    // If already resolved and fresh (within 30 days), return cached geography
-    // (Only if it was an active geolocation sync with geography_updated_at)
-    if (profile?.country_code && profile?.geography_updated_at && Date.now() - lastUpdated < THIRTY_DAYS_MS) {
-      return resolveAccountGeography(
-        profile.country_code,
-        profile.city,
-        profile.timezone,
-        profile.region,
-      );
-    }
-
-    // 2. Extract client IP from headers
-    const req = getRequest();
-    let clientIp = "";
-    let headerCountry = "";
-
-    if (req?.headers) {
-      headerCountry = req.headers.get("cf-ipcountry") || "";
-      const forwarded = req.headers.get("x-forwarded-for");
-      if (forwarded) {
-        clientIp = forwarded.split(",")[0]?.trim() || "";
-      } else {
-        clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "";
-      }
-    }
-
-    // 3. Resolve via geolocation provider
-    const provider = new IpApiIsProvider();
-    const result = clientIp ? await provider.lookupIp(clientIp) : null;
-
-    // Normal customer receives geography from IP/geolocation.
-    // India is the normal/default experience when reliable geography is unavailable.
-    const detectedCountry =
-      result?.countryCode ||
-      (headerCountry && headerCountry !== "XX" ? headerCountry.toUpperCase() : null) ||
-      "IN";
-
-    const detectedCity = result?.city || profile?.city || null;
-    const detectedTz = result?.timezone || profile?.timezone || null;
-    const detectedRegion = result?.region || (detectedCountry === "IN" ? "India" : profile?.region) || "India";
-
-    // 4. Persist normalized geography back to profile
-    try {
-      await supabase
-        .from("profiles")
-        .update({
-          country_code: detectedCountry,
-          city: detectedCity,
-          timezone: detectedTz,
-          geography_updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
-    } catch (e) {
-      console.warn("Failed to persist geography to profile", e);
-    }
-
-    return resolveAccountGeography(detectedCountry, detectedCity, detectedTz, detectedRegion);
+    return resolveAccountGeography("IN", profile?.city, profile?.timezone, "INDIA");
   });
+

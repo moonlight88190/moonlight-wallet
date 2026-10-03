@@ -24,19 +24,28 @@ export function useAccountGeography() {
   const { data: profile } = useProfile();
 
   return useQuery({
-    queryKey: ["account-geography", profile?.id, profile?.country_code, profile?.region],
+    queryKey: [
+      "account-geography",
+      profile?.id,
+      profile?.country_code,
+      profile?.region,
+      profile?.admin_region_override,
+    ],
     queryFn: async () => {
       try {
         const geo = await syncGeoFn();
         return geo;
       } catch {
         // Fallback to local resolver using profile data
-        return resolveAccountGeography(
-          profile?.country_code,
-          profile?.city,
-          profile?.timezone,
-          profile?.region,
-        );
+        if (profile?.admin_region_override) {
+          return resolveAccountGeography(
+            profile?.country_code,
+            profile?.city,
+            profile?.timezone,
+            profile?.region,
+          );
+        }
+        return resolveAccountGeography("IN", profile?.city, profile?.timezone, "INDIA");
       }
     },
     staleTime: 60 * 60 * 1000, // 1 hour stale time

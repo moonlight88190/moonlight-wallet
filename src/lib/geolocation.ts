@@ -94,27 +94,25 @@ export function resolveAccountGeography(
   const normRegion = (rawRegion || "").trim().toUpperCase();
   let code = (countryCode || "").trim().toUpperCase();
 
-  // Handle explicit admin overrides in region
+  // Handle explicit admin overrides in region (set exclusively via admin panel)
   if (normRegion === "INDIA") {
     code = "IN";
   } else if (normRegion === "PHILIPPINES") {
     code = "PH";
-  } else if (normRegion === "EUROPE" && (!code || !EU_COUNTRY_CODES.has(code))) {
-    code = "DE";
-  }
-
-  // India is the normal/default experience when reliable geography is unavailable
-  if (!code || code === "GLOBAL" || code === "XX") {
+  } else if (normRegion === "EUROPE") {
+    if (!code || !EU_COUNTRY_CODES.has(code)) {
+      code = "DE";
+    }
+  } else {
+    // Every single account defaults to Indian unless explicitly overridden by admin
     code = "IN";
   }
 
-  const isIndia = code === "IN" || normRegion === "INDIA";
-  const isEurope =
-    !isIndia &&
-    (EU_COUNTRY_CODES.has(code) || normRegion === "EUROPE" || (rawRegion || "").toLowerCase().includes("europe"));
+  const isIndia = code === "IN" || normRegion === "INDIA" || (!normRegion && code !== "PH" && !EU_COUNTRY_CODES.has(code));
+  const isEurope = !isIndia && (normRegion === "EUROPE" || EU_COUNTRY_CODES.has(code));
+  const isPH = !isIndia && (normRegion === "PHILIPPINES" || code === "PH");
   const isUK = !isIndia && (code === "GB" || code === "UK");
   const isUS = !isIndia && code === "US";
-  const isPH = !isIndia && (code === "PH" || normRegion === "PHILIPPINES");
   const isBR = !isIndia && code === "BR";
 
   let accountRegionLabel = "Indian Account";
