@@ -29,6 +29,7 @@ export type MarketInstrument = {
   volume: number;
   asOf: number; // Unix timestamp in seconds
   marketState: "REGULAR" | "CLOSED" | "PRE" | "POST";
+  brandAssetId?: string | undefined;
   history: {
     "1W": ChartPoint[];
     "1M": ChartPoint[];

@@ -35,8 +35,8 @@ const schema = z.object({
   password: z.string().min(1, "Enter your password"),
 });
 
-const DEV_DEFAULT_EMAIL = import.meta.env.VITE_DEV_LOGIN_EMAIL || "lucianfereldenlord@gmail.com";
-const DEV_DEFAULT_PASSWORD = import.meta.env.VITE_DEV_LOGIN_PASSWORD || "12345678";
+const DEV_DEFAULT_EMAIL = import.meta.env["VITE_DEV_LOGIN_EMAIL"] || "lucianfereldenlord@gmail.com";
+const DEV_DEFAULT_PASSWORD = import.meta.env["VITE_DEV_LOGIN_PASSWORD"] || "12345678";
 
 function Login() {
   const navigate = useNavigate();

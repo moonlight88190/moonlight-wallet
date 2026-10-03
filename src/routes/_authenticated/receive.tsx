@@ -135,7 +135,12 @@ function Receive() {
             onClick: copy,
             isCopied: copied,
           },
-          { label: copied ? "Copied!" : "Copy ID", icon: copied ? Check : Copy, onClick: copy, isCopied: copied },
+          {
+            label: copied ? "Copied!" : "Copy ID",
+            icon: copied ? Check : Copy,
+            onClick: copy,
+            isCopied: copied,
+          },
           { label: "Share", icon: Share, onClick: share },
           { label: "Show QR", icon: QrCode, onClick: () => setBig(true) },
         ].map((b) => (
@@ -153,10 +158,6 @@ function Receive() {
               className={`h-[18px] w-[18px] transition-transform ${b.isCopied ? "scale-110 text-emerald-500" : ""}`}
               strokeWidth={1.6}
             />
-              b.isCopied ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : ""
-            }`}
-          >
-            <b.icon className={`h-[18px] w-[18px] transition-transform ${b.isCopied ? "scale-110 text-emerald-500" : ""}`} strokeWidth={1.6} />
             {b.label}
           </button>
         ))}

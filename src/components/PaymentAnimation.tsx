@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export interface PaymentAnimationProps {
   state: "validating" | "processing" | "completed" | "failed" | "cancelled" | "confirming";
-  type?: "transfer" | "withdrawal";
+  type?: "transfer" | "withdrawal" | undefined;
   senderName: string;
   senderCode: string;
   recipientName: string;
