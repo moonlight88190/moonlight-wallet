@@ -550,10 +550,11 @@ function Withdraw() {
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label htmlFor="upi-vpa-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     UPI ID / VPA
                   </label>
                   <Input
+                    id="upi-vpa-input"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder={
@@ -575,10 +576,11 @@ function Withdraw() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label htmlFor="beneficiary-phone-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     Registered Mobile Number
                   </label>
                   <Input
+                    id="beneficiary-phone-input"
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -595,21 +597,33 @@ function Withdraw() {
             {/* Indian Bank */}
             {selectedMethod.id === "in-bank" && (
               <div className="space-y-3">
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="Bank Account Number"
-                  className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
-                />
-                <Input
-                  value={ifscCode}
-                  onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                  placeholder="IFSC Code (e.g. SBIN0001234)"
-                  className="rounded-2xl h-12 text-sm font-mono uppercase border-border/60 bg-card/60 px-4"
-                  maxLength={11}
-                />
+                <div className="space-y-1">
+                  <label htmlFor="bank-account-number" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                    Account Number
+                  </label>
+                  <Input
+                    id="bank-account-number"
+                    type="text"
+                    inputMode="numeric"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="Bank Account Number"
+                    className="rounded-2xl h-12 text-sm font-mono border-border/60 bg-card/60 px-4"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="bank-ifsc-code" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                    IFSC Code
+                  </label>
+                  <Input
+                    id="bank-ifsc-code"
+                    value={ifscCode}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    placeholder="IFSC Code (e.g. SBIN0001234)"
+                    className="rounded-2xl h-12 text-sm font-mono uppercase border-border/60 bg-card/60 px-4"
+                    maxLength={11}
+                  />
+                </div>
               </div>
             )}
 
