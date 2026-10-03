@@ -1,0 +1,2 @@
+ALTER TABLE public.transactions DROP CONSTRAINT transactions_status_check;
+ALTER TABLE public.transactions ADD CONSTRAINT transactions_status_check CHECK (status IN ('completed','pending','processing','failed','cancelled','successful','on hold','under review','on_hold','under_review'));

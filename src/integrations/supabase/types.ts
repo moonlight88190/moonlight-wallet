@@ -151,30 +151,42 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
+          country_code: string | null
           created_at: string
           email: string
           full_name: string
+          geography_updated_at: string | null
           id: string
           preferred_currency: string
           region: string
+          timezone: string | null
           updated_at: string
         }
         Insert: {
+          city?: string | null
+          country_code?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          geography_updated_at?: string | null
           id: string
           preferred_currency?: string
           region?: string
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
+          city?: string | null
+          country_code?: string | null
           created_at?: string
           email?: string
           full_name?: string
+          geography_updated_at?: string | null
           id?: string
           preferred_currency?: string
           region?: string
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -198,6 +210,8 @@ export type Database = {
           recipient_wallet_code: string | null
           recipient_wallet_id: string | null
           reference: string
+          route: string
+          sender_debit: number | null
           sender_name: string | null
           sender_wallet_code: string | null
           sender_wallet_id: string | null
@@ -221,6 +235,8 @@ export type Database = {
           recipient_wallet_code?: string | null
           recipient_wallet_id?: string | null
           reference?: string
+          route?: string
+          sender_debit?: number | null
           sender_name?: string | null
           sender_wallet_code?: string | null
           sender_wallet_id?: string | null
@@ -244,6 +260,8 @@ export type Database = {
           recipient_wallet_code?: string | null
           recipient_wallet_id?: string | null
           reference?: string
+          route?: string
+          sender_debit?: number | null
           sender_name?: string | null
           sender_wallet_code?: string | null
           sender_wallet_id?: string | null
@@ -265,6 +283,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vouchers: {
+        Row: {
+          amount: number
+          code: string
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          code: string
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          code?: string
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       wallets: {
         Row: {
@@ -300,6 +354,7 @@ export type Database = {
           created_at: string
           currency: string
           email: string
+          fee: number
           fee_usd: number
           full_name: string
           id: string
@@ -307,7 +362,10 @@ export type Database = {
           phone: string | null
           provider: string | null
           reason: string | null
+          recipient_amount: number | null
+          recipient_currency: string | null
           reference: string
+          route: string
           status: string
           transaction_id: string | null
           updated_at: string
@@ -321,6 +379,7 @@ export type Database = {
           created_at?: string
           currency?: string
           email: string
+          fee?: number
           fee_usd?: number
           full_name: string
           id?: string
@@ -328,7 +387,10 @@ export type Database = {
           phone?: string | null
           provider?: string | null
           reason?: string | null
+          recipient_amount?: number | null
+          recipient_currency?: string | null
           reference?: string
+          route?: string
           status?: string
           transaction_id?: string | null
           updated_at?: string
@@ -342,6 +404,7 @@ export type Database = {
           created_at?: string
           currency?: string
           email?: string
+          fee?: number
           fee_usd?: number
           full_name?: string
           id?: string
@@ -349,7 +412,10 @@ export type Database = {
           phone?: string | null
           provider?: string | null
           reason?: string | null
+          recipient_amount?: number | null
+          recipient_currency?: string | null
           reference?: string
+          route?: string
           status?: string
           transaction_id?: string | null
           updated_at?: string
@@ -444,6 +510,7 @@ export type Database = {
           wallet_code: string
         }[]
       }
+      redeem_voucher: { Args: { p_code: string }; Returns: Json }
       send_transfer: {
         Args: {
           p_amount: number

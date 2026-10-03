@@ -108,7 +108,7 @@ export function MarketMiniWidget() {
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-foreground truncate">
-                  {bench.shortName || bench.name}
+                  {(bench as { shortName?: string }).shortName || bench.name}
                 </span>
                 <span
                   className={`inline-flex items-center text-[10px] font-bold ${
@@ -204,6 +204,7 @@ export function MarketMiniWidget() {
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const pt = payload[0];
+                  if (!pt) return null;
                   return (
                     <div className="rounded-lg border border-border/80 bg-popover px-2.5 py-1 text-xs shadow-md">
                       <div className="font-mono font-bold text-foreground">

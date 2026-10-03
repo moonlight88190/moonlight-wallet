@@ -45,11 +45,11 @@ export type IndexConstituentData = {
   currency: string;
   currencySymbol: string;
   brandAssetId: string;
-  weightHint?: number;
-  price?: number;
-  change?: number;
-  changePercent?: number;
-  sparkline?: ChartPoint[];
+  weightHint?: number | undefined;
+  price?: number | undefined;
+  change?: number | undefined;
+  changePercent?: number | undefined;
+  sparkline?: ChartPoint[] | undefined;
 };
 
 export type IndexWithData = {
@@ -67,7 +67,7 @@ export type IndexWithData = {
     url: string;
     updateCadence: string;
   };
-  quote?: MarketInstrument;
+  quote?: MarketInstrument | undefined;
   constituents: IndexConstituentData[];
 };
 
