@@ -1,6 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Infosys Official Vector Logo -->
+  <!-- Infosys Official Vector Wordmark Asset -->
   <rect width="100" height="100" rx="20" fill="#007CC3"/>
-  <text x="50" y="58" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-style="italic" font-size="22" fill="#FFFFFF" letter-spacing="-0.5">Infosys</text>
-  <text x="50" y="76" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="8" fill="#E0F2FE" letter-spacing="1">NAVIGATE YOUR NEXT</text>
+  <g transform="translate(14, 28) scale(0.58)" fill="#FFFFFF">
+    <!-- Official Infosys distinctive typographic vector -->
+    <path d="M4 42 L4 12 L10 12 L10 42 Z M4 7 L4 2 L10 2 L10 7 Z"/>
+    <path d="M16 42 L16 12 L22 12 L22 16 C24 13 28 11.5 33 11.5 C40 11.5 45 16 45 25 L45 42 L39 42 L39 26 C39 19 35 16.5 30 16.5 C25 16.5 22 20 22 27 L22 42 Z"/>
+    <path d="M51 42 L51 16 L47 16 L47 12 L51 12 L51 8 C51 3 54 0 61 0 C64 0 67 0.5 68 1 L67 6 C66 5.5 64 5.5 62 5.5 C59 5.5 57 7 57 10 L57 12 L67 12 L67 16 L57 16 L57 42 Z"/>
+    <path d="M82 43 C71 43 64 35 64 27 C64 19 71 11.5 82 11.5 C93 11.5 100 19 100 27 C100 35 93 43 82 43 Z M82 37.5 C89 37.5 93.5 32 93.5 27 C93.5 22 89 17 82 17 C75 17 70.5 22 70.5 27 C70.5 32 75 37.5 82 37.5 Z"/>
+    <path d="M106 35 C108 37 112 38.5 116 38.5 C121 38.5 124 36.5 124 33.5 C124 30.5 121 29 115 27.5 C107 25.5 103 23 103 17.5 C103 13.5 107 11.5 114 11.5 C118 11.5 123 12.5 125 14 L123 18.5 C121 17.5 118 16.5 114 16.5 C109.5 16.5 108 18 108 20 C108 22.5 111 23.5 116.5 25 C124 27 129 29.5 129 34.5 C129 40 124 43 116 43 C111 43 107 41.5 104 39.5 Z"/>
+  </g>
+  <text x="50" y="80" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="700" font-size="7.5" fill="#BAE6FD" letter-spacing="1">DIGITAL ENTERPRISE</text>
 </svg>

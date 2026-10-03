@@ -78,38 +78,29 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-xl space-y-6 pb-12 animate-fade-up">
       {/* ═══════════════════════════════════════
-           1. EXECUTIVE TITANIUM TREASURY CARD
+           1. MODERN ACCOUNT & BALANCE CARD
          ═══════════════════════════════════════ */}
       <section
         aria-label="Account Balance"
-        className="relative overflow-hidden rounded-[28px] border border-white/10 dark:border-white/15 bg-gradient-to-br from-[#161B26] via-[#0E131C] to-[#070A0F] p-6 sm:p-7 text-white shadow-[0_24px_50px_rgba(0,0,0,0.3)] transition-all"
+        className="relative overflow-hidden rounded-[28px] border border-border/70 bg-card p-6 sm:p-7 shadow-card transition-all space-y-6"
       >
-        {/* Ambient Sheen & Radial Lighting */}
+        {/* Subtle Ambient Background Lighting */}
         <div
-          className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/20 blur-[80px]"
+          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/8 blur-[80px]"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-gold/15 blur-[80px]"
-          aria-hidden="true"
-        />
-        {/* Subtle Brushed Metal Grid Background */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"
+          className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/5 blur-[80px]"
           aria-hidden="true"
         />
 
-        {/* Top Header: Badge, Contactless, & Wallet ID */}
-        <div className="relative z-10 flex items-center justify-between gap-2">
+        {/* Top Header: Region Badge & Wallet ID */}
+        <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-gold/20 via-gold/10 to-transparent border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase shadow-2xs">
-              <Sparkles className="h-3 w-3 text-gold" />
-              <span>TITANIUM TREASURY</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/60 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-2xs">
+              <CountryFlag code={geography.data?.countryCode || "IN"} size="xs" circle />
+              <span>{getAccountRegionLabel(geography.data)}</span>
             </div>
-            <Wifi
-              className="h-3.5 w-3.5 text-white/40 rotate-90 hidden sm:block"
-              aria-label="Contactless"
-            />
           </div>
 
           {wallet.data && (
@@ -117,11 +108,11 @@ function Dashboard() {
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy wallet ID"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1 text-[11px] font-mono font-medium text-white/90 hover:text-white transition-all cursor-pointer touch-manipulation backdrop-blur-md active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-muted px-3 py-1 text-[11px] font-mono font-medium text-foreground transition-all cursor-pointer touch-manipulation shadow-2xs active:scale-95"
             >
               <span>{wallet.data.wallet_code}</span>
               {copiedCode ? (
-                <Check className="h-3 w-3 text-emerald-400" />
+                <Check className="h-3 w-3 text-emerald-500" />
               ) : (
                 <Copy className="h-3 w-3 opacity-60" />
               )}
@@ -130,16 +121,16 @@ function Dashboard() {
         </div>
 
         {/* Balance Hero Section */}
-        <div className="relative z-10 space-y-2 pt-6 pb-4 text-center">
-          <p className="text-[10px] font-bold tracking-[0.25em] text-white/50 uppercase">
-            Available Ledger Liquidity
+        <div className="relative z-10 space-y-2 text-center py-2">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Available Balance
           </p>
 
           <div>
             {loading ? (
-              <Skeleton className="mx-auto h-14 w-56 rounded-2xl bg-white/10" />
+              <Skeleton className="mx-auto h-12 w-56 rounded-2xl" />
             ) : (
-              <h1 className="tabular font-sans text-[42px] sm:text-[52px] font-bold tracking-tight text-white leading-none drop-shadow-sm">
+              <h1 className="tabular font-sans text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-none">
                 {formatMoney(balance, cur)}
               </h1>
             )}
@@ -157,10 +148,10 @@ function Dashboard() {
                 )
               }
             >
-              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/90 hover:text-white cursor-pointer transition-all backdrop-blur-md shadow-2xs">
+              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-border/70 bg-background/80 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-all shadow-2xs">
                 <CurrencyIcon code={cur} />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl p-1 border border-border/40 bg-popover text-popover-foreground shadow-elevated">
+              <SelectContent className="rounded-2xl p-1 border border-border/60 bg-popover text-popover-foreground shadow-elevated">
                 {CURRENCIES.map((c) => (
                   <SelectItem
                     key={c.code}
@@ -179,27 +170,28 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Smart Chip Graphic & Action Buttons Divider */}
-        <div className="relative z-10 flex items-center justify-between pt-2 pb-3">
-          <div className="flex items-center gap-1.5 opacity-70">
-            {/* Realistic gold metallic contact chip */}
-            <div className="h-6 w-8 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 p-[1px] shadow-xs">
-              <div className="h-full w-full rounded-[4px] bg-[#1a1710] flex items-center justify-center">
-                <div className="h-3 w-5 border border-amber-400/50 rounded-xs" />
-              </div>
-            </div>
-            <span className="text-[9px] font-mono tracking-widest text-white/50 uppercase">
-              SEPA·IMPS
+        {/* Connected Rails & Capabilities Strip */}
+        <div className="relative z-10 flex items-center justify-between border-t border-border/50 pt-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Landmark className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="font-medium">
+              {geography.data?.isIndia
+                ? "Payouts: UPI & IMPS enabled"
+                : geography.data?.isEurope
+                  ? "Payouts: SEPA Instant enabled"
+                  : geography.data?.isUK
+                    ? "Payouts: UK Faster Payments enabled"
+                    : "Domestic bank payouts connected"}
             </span>
           </div>
-
-          <div className="text-[10px] font-medium text-white/50 tracking-wide">
-            {getAccountRegionLabel(geography.data)}
-          </div>
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Active
+          </span>
         </div>
 
-        {/* 4 Precision Action Hardware Keys */}
-        <div className="relative z-10 grid grid-cols-4 gap-2 sm:gap-2.5 pt-3 border-t border-white/10">
+        {/* 4 Primary Action Buttons */}
+        <div className="relative z-10 grid grid-cols-4 gap-2 pt-1">
           {[
             {
               to: "/send",
@@ -221,24 +213,22 @@ function Dashboard() {
               to={action.to}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               search={action.search as any}
-              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.96] ${
+              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.97] ${
                 action.primary
-                  ? "border-amber-400/60 bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 text-slate-950 font-bold shadow-md hover:brightness-105"
-                  : "border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md"
+                  ? "border-primary bg-primary text-primary-foreground shadow-soft hover:opacity-95"
+                  : "border-border/60 bg-secondary/50 hover:bg-secondary text-foreground hover:border-border"
               }`}
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
-                  action.primary ? "bg-slate-950/15 text-slate-950" : "bg-white/10 text-white/90"
+                  action.primary
+                    ? "bg-primary-foreground/15 text-primary-foreground"
+                    : "bg-background/80 text-foreground"
                 }`}
               >
                 <action.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
               </span>
-              <span
-                className={`text-[11px] font-semibold tracking-wide text-center ${
-                  action.primary ? "text-slate-950 font-bold" : "text-white/90"
-                }`}
-              >
+              <span className="text-[11px] font-semibold tracking-wide text-center">
                 {action.label}
               </span>
             </Link>
@@ -247,28 +237,38 @@ function Dashboard() {
       </section>
 
       {/* ═══════════════════════════════════════
-           2. INSTITUTIONAL ASSURANCE STRIP
+           2. OPERATIONAL STATUS CARDS
          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-3 gap-2 px-1">
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+      <div className="grid grid-cols-3 gap-2 px-0.5">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">256-Bit Ledger</div>
-            <div className="text-[10px] text-muted-foreground truncate">Zero-Trust SQL</div>
+            <div className="font-semibold text-foreground truncate">Account Active</div>
+            <div className="text-[10px] text-muted-foreground truncate">Identity verified</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
-          <Zap className="h-4 w-4 shrink-0 text-amber-500" />
+
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+            <Zap className="h-4 w-4" />
+          </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">Instant Rails</div>
-            <div className="text-[10px] text-muted-foreground truncate">SEPA &amp; IMPS</div>
+            <div className="font-semibold text-foreground truncate">Transfers</div>
+            <div className="text-[10px] text-muted-foreground truncate">Instant &amp; zero fee</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 p-2.5 sm:p-3 text-[11px] backdrop-blur-sm shadow-2xs">
-          <Lock className="h-4 w-4 shrink-0 text-primary" />
+
+        <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-xs shadow-2xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+            <Landmark className="h-4 w-4" />
+          </div>
           <div className="min-w-0">
-            <div className="font-semibold text-foreground truncate">FATF Compliant</div>
-            <div className="text-[10px] text-muted-foreground truncate">Audit Verified</div>
+            <div className="font-semibold text-foreground truncate">Withdrawals</div>
+            <div className="text-[10px] text-muted-foreground truncate">
+              {geography.data?.isIndia ? "UPI & Bank rails" : "Local bank payouts"}
+            </div>
           </div>
         </div>
       </div>

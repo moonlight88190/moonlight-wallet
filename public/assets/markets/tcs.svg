@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Tata Consultancy Services Official Vector -->
-  <rect width="100" height="100" rx="20" fill="#000000"/>
-  <!-- Vibrant TCS multi-color bar -->
-  <rect x="22" y="32" width="12" height="4" fill="#F43F5E"/>
-  <rect x="36" y="32" width="12" height="4" fill="#8B5CF6"/>
-  <rect x="50" y="32" width="12" height="4" fill="#06B6D4"/>
-  <rect x="64" y="32" width="14" height="4" fill="#10B981"/>
-  <text x="50" y="58" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="24" fill="#FFFFFF" letter-spacing="1">TCS</text>
-  <text x="50" y="74" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="8" fill="#9CA3AF" letter-spacing="1.5">TATA</text>
+  <!-- Tata Consultancy Services (TCS) Official Vector Mark -->
+  <rect width="100" height="100" rx="20" fill="#0A1128"/>
+  <!-- Official Tata Brand Emblem -->
+  <g transform="translate(18, 14) scale(0.44)" fill="#FFFFFF">
+    <path d="M60 112 C74 112 87 115 98 120 C110 125 119 133 124 142 C116 140 107 138 98 137 C86 135 75 134 69 134 C63 134 59 136 59 139 L59 198 L53 198 L53 139 C53 136 49 134 43 134 C37 134 26 135 14 137 C5 138 -4 140 -12 142 C-7 133 2 125 14 120 C25 115 38 112 52 112 Z"/>
+    <path d="M72 156 L63 200 C57 199 51 197 46 195 C28 186 17 172 17 157 C17 154 17 151 18 149 C27 147 37 146 47 145 C54 144 61 143 68 143 C71 143 73 145 72 147 C72 150 72 153 72 156 Z"/>
+    <path d="M32 156 L41 200 C47 199 53 197 58 195 C76 186 87 172 87 157 C87 154 87 151 86 149 C77 147 67 146 57 145 C50 144 43 143 36 143 C33 143 31 145 32 147 C32 150 32 153 32 156 Z"/>
+  </g>
+  <!-- TCS Wordmark -->
+  <text x="50" y="78" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="900" font-size="20" fill="#FFFFFF" letter-spacing="1.5">TCS</text>
+  <text x="50" y="89" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="600" font-size="7.5" fill="#38BDF8" letter-spacing="2">TATA</text>
 </svg>

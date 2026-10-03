@@ -91,16 +91,34 @@ export function resolveAccountGeography(
   timezone?: string | null,
   rawRegion?: string | null,
 ): NormalizedGeography {
-  const code = (countryCode || "").trim().toUpperCase();
-  const isIndia = code === "IN";
-  const isEurope = EU_COUNTRY_CODES.has(code) || (rawRegion || "").toLowerCase().includes("europe");
-  const isUK = code === "GB" || code === "UK";
-  const isUS = code === "US";
-  const isPH = code === "PH";
-  const isBR = code === "BR";
+  const normRegion = (rawRegion || "").trim().toUpperCase();
+  let code = (countryCode || "").trim().toUpperCase();
 
-  let accountRegionLabel = "Global Account";
-  let regionName = rawRegion || "Global";
+  // Handle explicit admin overrides in region
+  if (normRegion === "INDIA") {
+    code = "IN";
+  } else if (normRegion === "PHILIPPINES") {
+    code = "PH";
+  } else if (normRegion === "EUROPE" && (!code || !EU_COUNTRY_CODES.has(code))) {
+    code = "DE";
+  }
+
+  // India is the normal/default experience when reliable geography is unavailable
+  if (!code || code === "GLOBAL" || code === "XX") {
+    code = "IN";
+  }
+
+  const isIndia = code === "IN" || normRegion === "INDIA";
+  const isEurope =
+    !isIndia &&
+    (EU_COUNTRY_CODES.has(code) || normRegion === "EUROPE" || (rawRegion || "").toLowerCase().includes("europe"));
+  const isUK = !isIndia && (code === "GB" || code === "UK");
+  const isUS = !isIndia && code === "US";
+  const isPH = !isIndia && (code === "PH" || normRegion === "PHILIPPINES");
+  const isBR = !isIndia && code === "BR";
+
+  let accountRegionLabel = "Indian Account";
+  let regionName = "India";
 
   if (isIndia) {
     accountRegionLabel = "Indian Account";
@@ -122,10 +140,10 @@ export function resolveAccountGeography(
     regionName = "South America";
   }
 
-  const countryName = COUNTRY_NAMES[code] || (code ? code : "Global");
+  const countryName = COUNTRY_NAMES[code] || (code ? code : "India");
 
   return {
-    countryCode: code || "GLOBAL",
+    countryCode: code || "IN",
     countryName,
     region: regionName,
     city: city || null,
