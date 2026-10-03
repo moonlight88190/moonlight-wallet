@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon, ShieldAlert } from "lucide-react";
+import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon, ShieldAlert, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -96,7 +96,7 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
       <div
         id="ml-qr-reader"
         ref={ref}
-        className="w-full max-w-xs aspect-square mx-auto rounded-2xl overflow-hidden bg-black"
+        className="w-full max-w-xs aspect-square mx-auto rounded-3xl overflow-hidden bg-black border border-border/50 shadow-inner"
       />
       <div id="ml-qr-reader-hidden" className="hidden" />
       <div className="flex flex-col items-center gap-2 pt-2">
@@ -104,14 +104,14 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isScanningFile}
-          className="w-full flex items-center justify-center gap-2 rounded-full border bg-secondary/80 px-5 h-12 text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer touch-manipulation"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-muted/60 px-5 h-12 text-xs font-semibold hover:bg-muted transition-all disabled:opacity-50 cursor-pointer touch-manipulation"
         >
           {isScanningFile ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <ImageIcon className="h-4 w-4 text-primary" />
           )}
-          Upload from gallery
+          Upload QR image from gallery
         </button>
         <input
           type="file"
@@ -210,44 +210,58 @@ function Send() {
     qc.invalidateQueries({ queryKey: ["transactions"] });
   }
 
-  const btn =
-    "flex h-[52px] w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 shadow-soft touch-manipulation cursor-pointer";
+  const primaryBtn =
+    "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 shadow-md touch-manipulation cursor-pointer";
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto max-w-md pb-12">
       {step === "to" && (
-        <>
-          <PageTitle eyebrow="SEND" title="Who are you sending to?">
-            Search by wallet ID or email, or scan their QR code.
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <PageTitle eyebrow="SEND MONEY" title="Who are you sending to?">
+            Search by Moonlight ID or registered email, or scan their QR code.
           </PageTitle>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
               lookup(query);
             }}
-            className="space-y-3"
+            className="space-y-4"
           >
-            <Input
-              autoFocus
-              placeholder="ML-XXXX-XXXX or name@email.com"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="h-12 rounded-xl text-base"
-              maxLength={255}
-            />
-            <button disabled={busy || !query.trim()} className={btn}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find recipient"}
+            <div className="relative">
+              <Input
+                autoFocus
+                placeholder="ML-XXXX-XXXX or name@email.com"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="h-14 rounded-2xl text-base px-4 border-border/60 bg-card/60 shadow-xs focus:ring-2 focus:ring-primary/20"
+                maxLength={255}
+              />
+            </div>
+            <button disabled={busy || !query.trim()} className={primaryBtn}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find Recipient"}
             </button>
           </form>
+
+          <div className="relative flex items-center justify-center my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/40" />
+            </div>
+            <span className="relative bg-background px-3 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+              OR
+            </span>
+          </div>
+
           <button
             onClick={() => setScan(true)}
-            className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full border bg-card text-[15px] font-medium hover:bg-accent transition-colors shadow-xs"
+            className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-border/60 bg-card/60 text-xs font-semibold tracking-wide hover:bg-muted/60 transition-all shadow-xs cursor-pointer"
           >
-            <ScanLine className="h-4 w-4" /> Scan QR
+            <ScanLine className="h-4 w-4 text-primary" /> Scan QR Code
           </button>
+
           <Dialog open={scan} onOpenChange={setScan}>
-            <DialogContent className="max-w-sm rounded-3xl">
-              <DialogTitle>Scan a Moonlight QR</DialogTitle>
+            <DialogContent className="max-w-sm rounded-3xl border border-border/60 bg-card p-6 shadow-2xl">
+              <DialogTitle className="text-base font-semibold text-center mb-2">Scan Moonlight QR</DialogTitle>
               {scan && (
                 <Scanner
                   onResult={(v) => {
@@ -259,17 +273,25 @@ function Send() {
               )}
             </DialogContent>
           </Dialog>
-        </>
+        </div>
       )}
 
       {step === "amount" && recipient && (
-        <>
-          <PageTitle eyebrow="SEND" title={`To ${recipient.full_name}`}>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-sm">{recipient.wallet_code}</span>
-              <CountryFlag code={recvCur} circle size="xs" />
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between">
+            <PageTitle eyebrow="TRANSFER AMOUNT" title={`To ${recipient.full_name}`}>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="font-mono text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/40">
+                  {recipient.wallet_code}
+                </span>
+                <CountryFlag code={recvCur} circle size="xs" />
+              </div>
+            </PageTitle>
+            <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <UserCheck className="h-5 w-5 text-emerald-500" />
             </div>
-          </PageTitle>
+          </div>
+
           <div className="space-y-4">
             <div className="flex gap-2.5">
               <Input
@@ -280,7 +302,7 @@ function Send() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="tabular h-14 rounded-2xl text-2xl px-4 flex-1 min-w-0"
+                className="tabular h-14 rounded-2xl text-2xl px-4 flex-1 min-w-0 border-border/60 bg-card/60 font-semibold"
               />
               <Select
                 value={cur}
@@ -292,76 +314,78 @@ function Send() {
                   setCurrency(newCur);
                 }}
               >
-                <SelectTrigger className="h-14 w-28 sm:w-36 rounded-2xl border px-3 shrink-0">
+                <SelectTrigger className="h-14 w-28 sm:w-36 rounded-2xl border-border/60 bg-card/60 px-3 shrink-0 font-semibold">
                   <CurrencyIcon code={cur} />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl p-1">
+                <SelectContent className="rounded-2xl p-1 border-border/60">
                   {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code} className="rounded-xl py-2">
+                    <SelectItem key={c.code} value={c.code} className="rounded-xl py-2 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <CountryFlag code={c.code} circle size="xs" />
-                        <span className="font-semibold">{c.code}</span>
+                        <span className="font-semibold text-xs">{c.code}</span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <p className="px-1 text-xs text-muted-foreground flex items-center gap-1.5">
-              Available {formatMoney(available, cur)}
+
+            <p className="px-1 text-xs text-muted-foreground flex items-center justify-between">
+              <span>Available balance</span>
+              <span className="font-semibold text-foreground">{formatMoney(available, cur)}</span>
             </p>
 
             {isNewAccount && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs space-y-1.5">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs space-y-1.5 backdrop-blur-xs">
                 <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
                   <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>Security Protection &amp; Fraud Prevention Policy</span>
+                  <span>Security Clearance Window (First 48 Hours)</span>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  To protect your account against identity theft and unauthorized scam transactions,
+                  To protect your account against unauthorized scam transactions,
                   transfers for accounts under 48 hours old are limited to{" "}
                   <strong className="text-foreground">$10.00 USD</strong> (
-                  {formatMoney(limit10InCur, cur)}) during the initial verification clearance
-                  period.
+                  {formatMoney(limit10InCur, cur)}) during initial verification.
                 </p>
               </div>
             )}
 
             <Input
-              placeholder="Note (optional)"
+              placeholder="Add note (optional)"
               maxLength={200}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="h-12 rounded-xl"
+              className="h-12 rounded-2xl border-border/60 bg-card/60 text-xs px-4"
             />
+
             {amt > 0 && (
-              <div className="rounded-2xl border bg-card p-3.5 space-y-2 text-xs">
+              <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-2.5 text-xs shadow-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Recipient receives:</span>
-                  <span className="font-semibold text-sm text-foreground flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-foreground flex items-center gap-1.5">
                     <CountryFlag code={recvCur} circle size="xs" />
                     {cur === recvCur ? (
                       formatMoney(recv, recvCur)
                     ) : (
                       <span>
-                        {formatMoney(amt, cur)} converted to{" "}
-                        <strong className="text-emerald-600 dark:text-emerald-400">
+                        {formatMoney(amt, cur)} →{" "}
+                        <strong className="text-emerald-500 font-semibold">
                           {formatMoney(recv, recvCur)}
                         </strong>
                       </span>
                     )}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-muted-foreground pt-1 border-t border-border/40">
-                  <span>Transaction Charge (10%):</span>
-                  <span className="font-semibold">{formatMoney(fee, cur)}</span>
+                <div className="flex justify-between items-center text-muted-foreground pt-2 border-t border-border/40">
+                  <span>Transfer Fee (10%):</span>
+                  <span className="font-semibold text-foreground">{formatMoney(fee, cur)}</span>
                 </div>
-                <div className="pt-1.5 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                  Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled
-                  or reversed.
+                <div className="pt-2 border-t border-border/40 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                  Transaction fee is 10%. Transfers are final once confirmed.
                 </div>
               </div>
             )}
+
             <button
               disabled={amt <= 0 || amt + fee > available + 1e-9 || isOverNewAccountLimit}
               onClick={() => {
@@ -373,91 +397,101 @@ function Send() {
                 }
                 setStep("review");
               }}
-              className={btn}
+              className={primaryBtn}
             >
               {amt + fee > available + 1e-9
-                ? "Insufficient balance"
+                ? "Insufficient Balance"
                 : isOverNewAccountLimit
-                  ? `Limit Exceeded ($10 USD Max for New Accounts)`
+                  ? "Limit Exceeded ($10 USD Max for New Accounts)"
                   : "Review Transfer"}
             </button>
+
             <button
               onClick={() => {
                 setRecipient(null);
                 setStep("to");
               }}
-              className="w-full py-2 text-sm text-muted-foreground hover:text-foreground"
+              className="w-full text-center py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              Change recipient
+              Change Recipient
             </button>
           </div>
-        </>
+        </div>
       )}
 
       {step === "review" && recipient && (
-        <>
-          <PageTitle eyebrow="REVIEW" title={formatMoney(amt, cur)} />
-          <div className="divide-y rounded-3xl border bg-card px-5 shadow-soft">
-            <div className="flex justify-between gap-4 py-4 text-sm">
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <PageTitle eyebrow="CONFIRM DETAILS" title={formatMoney(amt, cur)} />
+          
+          <div className="rounded-3xl border border-border/60 bg-card/60 p-5 shadow-soft divide-y divide-border/40 space-y-3">
+            <div className="flex justify-between gap-4 pb-3 text-xs">
               <span className="text-muted-foreground">From</span>
-              <span className="text-right font-medium">
-                {profile.data?.full_name} · {wallet.data?.wallet_code}
+              <span className="text-right font-medium text-foreground">
+                {profile.data?.full_name} · <span className="font-mono text-[11px]">{wallet.data?.wallet_code}</span>
               </span>
             </div>
-            <div className="flex justify-between gap-4 py-4 text-sm">
+
+            <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">
               <span className="text-muted-foreground">To</span>
-              <span className="text-right font-medium flex items-center gap-1.5 justify-end">
+              <span className="text-right font-medium text-foreground flex items-center gap-1.5 justify-end">
                 <CountryFlag code={recvCur} circle size="xs" />
-                {recipient.full_name} · {recipient.wallet_code}
+                {recipient.full_name} · <span className="font-mono text-[11px]">{recipient.wallet_code}</span>
               </span>
             </div>
-            <div className="flex justify-between gap-4 py-4 text-sm">
+
+            <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">
               <span className="text-muted-foreground">Exchange Rate</span>
-              <span className="text-right font-medium font-mono text-xs">
+              <span className="text-right font-medium font-mono text-[11px] text-muted-foreground">
                 1 {cur} ≈ {rateRatio.toFixed(4)} {recvCur}
               </span>
             </div>
-            <div className="flex justify-between gap-4 py-4 text-sm">
-              <span className="text-muted-foreground">Transaction Fee (10%)</span>
-              <span className="text-right font-medium">{formatMoney(fee, cur)}</span>
+
+            <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">
+              <span className="text-muted-foreground">Transfer Fee (10%)</span>
+              <span className="text-right font-medium text-foreground">{formatMoney(fee, cur)}</span>
             </div>
-            <div className="flex justify-between gap-4 py-4 text-sm">
-              <span className="text-muted-foreground">Recipient receives</span>
-              <span className="text-right font-semibold text-emerald-600 dark:text-emerald-400">
+
+            <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">
+              <span className="text-muted-foreground">Recipient Receives</span>
+              <span className="text-right font-semibold text-emerald-500">
                 {cur === recvCur ? (
                   formatMoney(recv, recvCur)
                 ) : (
                   <span>
-                    {formatMoney(amt, cur)} converted to {formatMoney(recv, recvCur)}
+                    {formatMoney(amt, cur)} ({formatMoney(recv, recvCur)})
                   </span>
                 )}
               </span>
             </div>
-            <div className="flex justify-between gap-4 py-4 text-sm font-semibold">
-              <span>Total Charge</span>
-              <span>{formatMoney(amt + fee, cur)}</span>
+
+            <div className="flex justify-between gap-4 pt-3 pb-3 text-sm font-semibold">
+              <span>Total Debit Amount</span>
+              <span className="text-foreground">{formatMoney(amt + fee, cur)}</span>
             </div>
-            <div className="py-3 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-3 rounded-xl">
-              Transaction charge is 10%. Once sent/submitted, transactions cannot be cancelled or
-              reversed.
-            </div>
+
             {note && (
-              <div className="flex justify-between gap-4 py-4 text-sm">
+              <div className="flex justify-between gap-4 pt-3 text-xs">
                 <span className="text-muted-foreground">Note</span>
-                <span className="text-right font-medium">{note}</span>
+                <span className="text-right font-medium text-foreground">{note}</span>
               </div>
             )}
           </div>
-          <button disabled={busy} onClick={confirmTransfer} className={`${btn} mt-8`}>
+
+          <div className="py-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-4 py-2.5 rounded-xl border border-amber-500/20">
+            Transfer charge is 10%. Submitted transfers cannot be cancelled or reversed.
+          </div>
+
+          <button disabled={busy} onClick={confirmTransfer} className={primaryBtn}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
           </button>
+
           <button
             onClick={() => setStep("amount")}
-            className="mt-2 w-full py-2 text-sm text-muted-foreground hover:text-foreground"
+            className="w-full text-center py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            Back
+            Back to Amount
           </button>
-        </>
+        </div>
       )}
 
       {step === "animating" && recipient && (
@@ -488,19 +522,23 @@ function Send() {
       )}
 
       {step === "done" && (
-        <div className="pt-10 text-center animate-in fade-in zoom-in-95">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-500" strokeWidth={1.25} />
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight">Sent Successfully</h1>
-          <p className="mt-2 text-muted-foreground">
-            {formatMoney(amt, cur)} ({formatMoney(recv, recvCur)}) to {recipient?.full_name}
-          </p>
-          <div className="mt-10 space-y-2">
-            <Link to="/transactions/$id" params={{ id: txId }} className={btn}>
-              View receipt
+        <div className="pt-8 text-center animate-in fade-in zoom-in-95 space-y-6">
+          <div className="mx-auto h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" strokeWidth={1.5} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Sent Successfully</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatMoney(amt, cur)} ({formatMoney(recv, recvCur)}) to {recipient?.full_name}
+            </p>
+          </div>
+          <div className="space-y-3 pt-4">
+            <Link to="/transactions/$id" params={{ id: txId }} className={primaryBtn}>
+              View Receipt
             </Link>
             <Link
               to="/dashboard"
-              className="block py-2 text-sm text-muted-foreground hover:text-foreground"
+              className="block text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               Return to Home
             </Link>
