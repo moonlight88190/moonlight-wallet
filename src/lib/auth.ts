@@ -2,7 +2,23 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const HOSTED_ORIGIN = "https://moonlight-wallet.lovable.app";
+
+function isLocalHost() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0" || h.endsWith(".local");
+}
+
 export async function signInWithGoogle(onSignedIn?: () => void) {
+  // Google sign-in is not permitted from local machines; continue on the hosted app.
+  if (isLocalHost()) {
+    toast.message("Opening Google sign-in on the hosted app…");
+    window.location.assign(
+      `${HOSTED_ORIGIN}/~oauth/initiate?provider=google&redirect_uri=${encodeURIComponent(HOSTED_ORIGIN)}`,
+    );
+    return;
+  }
   try {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
 

@@ -27,7 +27,7 @@ export interface ResolvedRoute {
   brandAssetId: string;
   providerId?: string;
   providerName?: string;
-  destinationMask?: string;
+  destinationMask?: string | undefined;
   terminology: {
     transactionType: string;
     flowTitle: string;

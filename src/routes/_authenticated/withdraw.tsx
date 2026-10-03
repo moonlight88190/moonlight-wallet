@@ -555,6 +555,7 @@ function Withdraw() {
                     htmlFor="upi-vpa-input"
                     className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
                   >
+                  <label htmlFor="upi-vpa-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     UPI ID / VPA
                   </label>
                   <Input
@@ -584,6 +585,7 @@ function Withdraw() {
                     htmlFor="beneficiary-phone-input"
                     className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
                   >
+                  <label htmlFor="beneficiary-phone-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     Registered Mobile Number
                   </label>
                   <Input
@@ -609,6 +611,7 @@ function Withdraw() {
                     htmlFor="bank-account-number"
                     className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
                   >
+                  <label htmlFor="bank-account-number" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     Account Number
                   </label>
                   <Input
@@ -626,6 +629,7 @@ function Withdraw() {
                     htmlFor="bank-ifsc-code"
                     className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
                   >
+                  <label htmlFor="bank-ifsc-code" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
                     IFSC Code
                   </label>
                   <Input

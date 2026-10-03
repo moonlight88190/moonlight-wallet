@@ -12,7 +12,7 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
   const d = new Date(tx.created_at);
 
   const paymentAsset = resolvePaymentAsset(
-    tx.kind === "withdrawal" ? tx.method || "Payout Rail" : tx.method || tx.recipient_name,
+    tx.kind === "withdrawal" ? tx.method || "Payout Rail" : tx.method || tx.recipient_name || undefined,
     tx.recipient_wallet_code?.includes("@") ? tx.recipient_wallet_code : undefined,
     undefined,
     tx.currency,

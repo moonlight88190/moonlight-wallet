@@ -104,6 +104,7 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
               aria-atomic="true"
               className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/80 border border-border/50 text-[11px] font-medium text-muted-foreground"
             >
+            <div aria-live="polite" aria-atomic="true" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/80 border border-border/50 text-[11px] font-medium text-muted-foreground">
               <span
                 className={`h-2 w-2 rounded-full ${
                   status === "live" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
