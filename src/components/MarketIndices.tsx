@@ -295,10 +295,10 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
         <div className="flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <span>
-            {source} · Reference quotes update daily. Cached locally for quick access.
+            {source} · Reference quotes update once daily. Cached locally for zero-latency viewing.
           </span>
         </div>
-        <span className="shrink-0 font-medium">Market Reference Data</span>
+        <span className="shrink-0 font-medium">Closed-loop Financial Analytics</span>
       </div>
     </section>
   );
