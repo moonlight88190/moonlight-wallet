@@ -129,7 +129,7 @@ function Receive() {
       {/* ─── Action Buttons ─── */}
       <div className="grid grid-cols-3 gap-2.5">
         {[
-          { label: copied ? "Copied!" : "Copy ID", icon: copied ? Check : Copy, onClick: copy },
+          { label: copied ? "Copied!" : "Copy ID", icon: copied ? Check : Copy, onClick: copy, isCopied: copied },
           { label: "Share", icon: Share, onClick: share },
           { label: "Show QR", icon: QrCode, onClick: () => setBig(true) },
         ].map((b) => (
@@ -137,9 +137,11 @@ function Receive() {
             key={b.label}
             onClick={b.onClick}
             disabled={!code}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation"
+            className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation ${
+              b.isCopied ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : ""
+            }`}
           >
-            <b.icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            <b.icon className={`h-[18px] w-[18px] transition-transform ${b.isCopied ? "scale-110 text-emerald-500" : ""}`} strokeWidth={1.6} />
             {b.label}
           </button>
         ))}
