@@ -31,6 +31,10 @@ export const Route = createFileRoute("/_authenticated/receive")({
 
 const qrPayload = (code: string) => `moonlight:${code}`;
 
+/**
+ * Renders the wallet ID and Moonlight QR code with copy, share, and enlarged QR actions.
+ * Displays payment methods based on the account geography and capabilities.
+ */
 function Receive() {
   const wallet = useWallet();
   const profile = useProfile();

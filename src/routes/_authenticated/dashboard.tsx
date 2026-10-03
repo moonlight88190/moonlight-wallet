@@ -50,6 +50,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
+/**
+ * Renders the signed-in wallet overview with display-currency balances,
+ * account geography, regional payment methods, and recent transactions.
+ */
 function Dashboard() {
   const navigate = useNavigate();
   const profile = useProfile();

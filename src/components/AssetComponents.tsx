@@ -135,6 +135,10 @@ export interface BrandAssetProps {
   imgClassName?: string | undefined;
 }
 
+/**
+ * Renders a payment, bank, or market brand image resolved from its ID or a custom URL.
+ * Falls back to a generic building icon if the image fails to load.
+ */
 export function BrandAsset({
   id = "",
   name,

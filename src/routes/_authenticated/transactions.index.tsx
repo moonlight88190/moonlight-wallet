@@ -18,6 +18,9 @@ export const Route = createFileRoute("/_authenticated/transactions/")({
   component: History,
 });
 
+/**
+ * Renders up to 200 wallet transactions with loading, error, and empty states.
+ */
 function History() {
   const wallet = useWallet();
   const txs = useTransactions(200);

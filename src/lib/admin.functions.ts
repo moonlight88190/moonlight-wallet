@@ -161,6 +161,11 @@ export const adminSetFreeze = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Sets a wallet owner's region after validating the authenticated admin session.
+ * Also attempts to update the profile country code and geography timestamp.
+ * Throws when the admin token is invalid or the region update RPC fails.
+ */
 export const adminSetRegion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
