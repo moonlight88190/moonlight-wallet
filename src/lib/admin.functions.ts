@@ -183,6 +183,33 @@ export const adminSetRegion = createServerFn({ method: "POST" })
       p_region: data.region,
     });
     if (error) throw new Error(error.message);
+
+    // Also update country_code directly so the override takes immediate effect
+    const countryCode =
+      data.region === "INDIA"
+        ? "IN"
+        : data.region === "EUROPE"
+          ? "DE"
+          : data.region === "PHILIPPINES"
+            ? "PH"
+            : null;
+
+    const { data: w } = await supabaseAdmin
+      .from("wallets")
+      .select("user_id")
+      .eq("wallet_code", data.walletCode.toUpperCase())
+      .maybeSingle();
+
+    if (w?.user_id) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          country_code: countryCode,
+          geography_updated_at: new Date().toISOString(),
+        })
+        .eq("id", w.user_id);
+    }
+
     return { ok: true };
   });
 

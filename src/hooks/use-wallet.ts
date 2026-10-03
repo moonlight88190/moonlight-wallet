@@ -12,7 +12,7 @@ export function getAccountRegionLabel(geography?: NormalizedGeography | null): s
   if (geography?.accountRegionLabel) {
     return geography.accountRegionLabel;
   }
-  return "Global Account";
+  return "Indian Account";
 }
 
 /**
@@ -24,7 +24,7 @@ export function useAccountGeography() {
   const { data: profile } = useProfile();
 
   return useQuery({
-    queryKey: ["account-geography", profile?.id, profile?.country_code],
+    queryKey: ["account-geography", profile?.id, profile?.country_code, profile?.region],
     queryFn: async () => {
       try {
         const geo = await syncGeoFn();

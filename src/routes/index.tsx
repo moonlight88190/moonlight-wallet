@@ -11,6 +11,7 @@ import {
   ArrowRightLeft,
   CheckCircle,
   ChevronRight,
+  Landmark,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -32,20 +33,20 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Moonlight Wallet — Licensed European-First Global Financial Infrastructure" },
+      { title: "Moonlight Wallet — Modern Multi-Currency Account & Global Transfers" },
       {
         name: "description",
         content:
-          "Official European-first multi-currency digital wallet and settlement platform. SEPA Instant clearing, encrypted ledger architecture, and global money mobility.",
+          "Multi-currency digital wallet and transfer platform. Hold global currencies, send instant peer transfers, and withdraw to local bank accounts.",
       },
       {
         property: "og:title",
-        content: "Moonlight Wallet — Licensed European-First Global Financial Infrastructure",
+        content: "Moonlight Wallet — Modern Multi-Currency Account & Global Transfers",
       },
       {
         property: "og:description",
         content:
-          "Official European-first multi-currency digital wallet and settlement platform with SEPA Instant clearing.",
+          "Multi-currency digital wallet and global settlement platform with instant transfers and local bank withdrawals.",
       },
     ],
   }),
@@ -117,27 +118,27 @@ const PLATFORM_STATS = [
 const PRODUCT_CAPABILITIES = [
   {
     icon: Globe,
-    title: "Multi-Currency Treasury",
+    title: "Multi-Currency Accounts",
     description:
-      "Hold, convert, and manage EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP with real-time Frankfurter exchange rates.",
+      "Hold, convert, and manage EUR, USD, GBP, INR, and other major currencies with real-time mid-market exchange rates.",
   },
   {
     icon: Zap,
-    title: "SEPA Instant & IMPS Clearing",
+    title: "Instant Peer-to-Peer Payments",
     description:
-      "Direct bank rail connectivity for zero-latency execution across European IBANs and Asian payout corridors.",
+      "Send and receive money instantly using unique Moonlight wallet codes or QR scans, with zero internal transfer fees.",
   },
   {
     icon: ShieldCheck,
-    title: "Encrypted Ledger Security",
+    title: "Proactive Account Protection",
     description:
-      "256-bit cryptographic verification with SECURITY DEFINER SQL transaction state isolation.",
+      "Multi-factor session security, automated fraud prevention, and new-account security holds to safeguard your balances.",
   },
   {
-    icon: Lock,
-    title: "48-Hour Security Clearance",
+    icon: Landmark,
+    title: "Domestic Bank Payouts",
     description:
-      "Automated account security clearance and initial withdrawal thresholds to protect multi-currency balances.",
+      "Withdraw funds directly to domestic bank accounts via IMPS and UPI in India, SEPA across Europe, and Faster Payments in the UK.",
   },
 ];
 
@@ -225,18 +226,18 @@ function Landing() {
         {/* ─── Section 1: Hero ─── */}
         <section className="w-full max-w-5xl py-20 sm:py-28 flex flex-col items-center text-center space-y-8">
           {/* Credential badge */}
-          <div className="animate-fade-up badge-gold">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            Licensed European-First Financial Infrastructure
+          <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/60 px-3.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-2xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Multi-Currency Digital Account
           </div>
 
           <h1 className="text-display max-w-3xl animate-fade-up stagger-1 text-foreground">
-            Global Capital. <span className="text-muted-foreground/60">Instant Mobility.</span>
+            Move money globally. <span className="text-muted-foreground/60">Settle locally.</span>
           </h1>
 
           <p className="animate-fade-up stagger-2 max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Send, receive, withdraw, and manage multi-currency balances across Europe, Asia, and the
-            Americas — with SEPA Instant rails and bank-grade encryption.
+            Manage balances in USD, EUR, GBP, INR, and more. Send instant transfers to other members,
+            convert currencies at live rates, and withdraw directly to your domestic bank account.
           </p>
 
           {/* CTAs */}
@@ -261,18 +262,18 @@ function Landing() {
           {/* Trust indicators */}
           <div className="animate-fade-up stagger-4 flex items-center gap-4 text-[11px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-success" />
-              No credit check
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+              Free to open
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-success" />
-              256-bit encryption
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+              Live mid-market rates
             </div>
             <div className="h-3 w-px bg-border" />
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-success" />
-              Instant settlement
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+              Instant member transfers
             </div>
           </div>
         </section>
@@ -421,9 +422,9 @@ function Landing() {
           aria-label="Product capabilities"
         >
           <div className="text-center space-y-2">
-            <p className="text-label-caps text-muted-foreground/70">Financial engineering</p>
+            <p className="text-label-caps text-muted-foreground/70">Core Capabilities</p>
             <h2 className="text-headline text-foreground">
-              Built for institutional & retail mobility
+              Everything you need to move money globally
             </h2>
           </div>
 

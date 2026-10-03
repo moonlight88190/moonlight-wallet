@@ -31,12 +31,47 @@ export const syncAccountGeography = createServerFn({ method: "POST" })
       // Columns might not yet exist in un-migrated environments
     }
 
+    const regUpper = (profile?.region || "").trim().toUpperCase();
+    const isAdminOverride = ["INDIA", "EUROPE", "PHILIPPINES"].includes(regUpper);
+
+    // If an administrator explicitly set the region, respect it permanently!
+    if (isAdminOverride) {
+      const overrideCountry =
+        regUpper === "INDIA"
+          ? "IN"
+          : regUpper === "PHILIPPINES"
+            ? "PH"
+            : (profile?.country_code && profile.country_code !== "GLOBAL" ? profile.country_code : "DE");
+
+      if (profile?.country_code !== overrideCountry) {
+        try {
+          await supabase
+            .from("profiles")
+            .update({
+              country_code: overrideCountry,
+              geography_updated_at: new Date().toISOString(),
+            })
+            .eq("id", userId);
+        } catch {
+          // ignore
+        }
+      }
+
+      return resolveAccountGeography(
+        overrideCountry,
+        profile?.city,
+        profile?.timezone,
+        regUpper,
+      );
+    }
+
     const lastUpdated = profile?.geography_updated_at
       ? new Date(profile.geography_updated_at).getTime()
       : 0;
 
     // If already resolved and fresh (within 30 days), return cached geography
-    if (profile?.country_code && Date.now() - lastUpdated < THIRTY_DAYS_MS) {
+    // (Only if it was an active geolocation sync with geography_updated_at)
+    if (profile?.country_code && profile?.geography_updated_at && Date.now() - lastUpdated < THIRTY_DAYS_MS) {
       return resolveAccountGeography(
         profile.country_code,
         profile.city,
@@ -64,15 +99,16 @@ export const syncAccountGeography = createServerFn({ method: "POST" })
     const provider = new IpApiIsProvider();
     const result = clientIp ? await provider.lookupIp(clientIp) : null;
 
+    // Normal customer receives geography from IP/geolocation.
+    // India is the normal/default experience when reliable geography is unavailable.
     const detectedCountry =
       result?.countryCode ||
       (headerCountry && headerCountry !== "XX" ? headerCountry.toUpperCase() : null) ||
-      profile?.country_code ||
-      "IN"; // Safe default if on local machine without external IP
+      "IN";
 
     const detectedCity = result?.city || profile?.city || null;
     const detectedTz = result?.timezone || profile?.timezone || null;
-    const detectedRegion = result?.region || profile?.region || null;
+    const detectedRegion = result?.region || (detectedCountry === "IN" ? "India" : profile?.region) || "India";
 
     // 4. Persist normalized geography back to profile
     try {
