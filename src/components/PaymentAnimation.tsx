@@ -106,7 +106,7 @@ function WithdrawalAnimationView({
     recipientCode.includes("@") ||
     destinationCurrency === "INR";
 
-  // Realistic clearance stages
+  // Realistic clearance stages with 24–48 hours processing window
   const withdrawalStages = isUPI
     ? [
         {
@@ -118,30 +118,30 @@ function WithdrawalAnimationView({
         },
         {
           title: `Connecting ${paymentAsset.label} Network`,
-          description: "Establishing encrypted 256-bit TLS 1.3 socket with NPCI National Payment Gateway",
+          description: "Establishing encrypted 256-bit TLS 1.3 socket with National Payment Gateway",
           pill: "Gateway Connected",
-          corridorStatus: "NPCI Handshake",
+          corridorStatus: "Gateway Handshake",
           progress: 42,
         },
         {
-          title: "Real-Time VPA Validation",
-          description: `Validating recipient VPA (${recipientCode}) with receiving bank via IMPS protocol`,
-          pill: "VPA Validated",
+          title: "VPA & Account Validation",
+          description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
+          pill: "Validated",
           corridorStatus: "Validating Beneficiary",
           progress: 65,
         },
         {
-          title: "Direct Interbank IMPS Clearing",
-          description: "Immediate interbank liquidity allocation via NPCI high-speed settlement network",
-          pill: "IMPS Cleared",
-          corridorStatus: "Instant Clearing",
+          title: "Outbound Batch Allocation",
+          description: "Transaction queued for processing in the 24–48 hours settlement window",
+          pill: "24–48h Queue",
+          corridorStatus: "Batch Allocation",
           progress: 86,
         },
         {
-          title: "Instant Secure Settlement Confirmed",
-          description: "Real-time payout payload confirmed. Funds transmitted directly to beneficiary account",
-          pill: "Instant Settled",
-          corridorStatus: "Instant Credit",
+          title: "Settlement Reference Confirmed",
+          description: "Payout tracking active. Funds dispatched within the 24–48 hours clearance window",
+          pill: "Queued (24–48h)",
+          corridorStatus: "Processing (24–48h)",
           progress: 100,
         },
       ]
@@ -169,14 +169,14 @@ function WithdrawalAnimationView({
         },
         {
           title: "Outbound Batch Allocation",
-          description: "Transaction allocated to settlement dispatch queue with 5–7 business days value date",
-          pill: "Batch Queued",
+          description: "Transaction queued for processing in the 24–48 hours settlement window",
+          pill: "24–48h Queue",
           corridorStatus: "Batch Allocation",
           progress: 86,
         },
         {
           title: "Settlement Reference Confirmed",
-          description: "Disbursement payload registered. Payout tracking active and queued for dispatch",
+          description: "Disbursement payload registered. Payout tracking active and scheduled for dispatch",
           pill: "Dispatched",
           corridorStatus: "Dispatched & Queued",
           progress: 100,
@@ -254,13 +254,13 @@ function WithdrawalAnimationView({
         {/* Top Header: Badge & Delivery Window */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1">
-            <Zap className="h-3.5 w-3.5 text-primary" />
+            <Clock className="h-3.5 w-3.5 text-primary" />
             <span className="text-[10px] font-bold tracking-wider text-primary uppercase">
-              {isUPI ? "Instant Secure Withdrawal" : "Outbound Bank Dispatch"}
+              Outbound Bank Dispatch
             </span>
           </div>
-          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-            {isUPI ? "⚡ Instant • Real-Time IMPS" : "5–7 Business Days"}
+          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+            24–48 Hours Processing
           </span>
         </div>
 
@@ -456,41 +456,22 @@ function WithdrawalAnimationView({
         </div>
 
         {/* ─── Delivery Window Reassurance Card ─── */}
-        {isUPI ? (
-          <div className="flex items-center justify-between rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs">
-            <div className="flex items-center gap-2.5">
-              <Zap className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <div>
-                <p className="font-semibold text-emerald-700 dark:text-emerald-300 text-[11px]">
-                  Instant Secure UPI Settlement
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  Real-time clearing via NPCI IMPS gateway. Immediate account credit.
-                </p>
-              </div>
+        <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
+          <div className="flex items-center gap-2.5">
+            <Clock className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="font-semibold text-foreground text-[11px]">
+                Standard Withdrawal Processing Window
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                Verified and processed within 24 to 48 hours
+              </p>
             </div>
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 font-mono shrink-0">
-              Instant
-            </span>
           </div>
-        ) : (
-          <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
-            <div className="flex items-center gap-2.5">
-              <Clock className="h-4 w-4 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-foreground text-[11px]">
-                  Standard Banking Delivery Window
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  Funds reflect in your beneficiary statement in 5–7 business days
-                </p>
-              </div>
-            </div>
-            <span className="text-[11px] font-bold text-primary font-mono shrink-0">
-              5–7 Days
-            </span>
-          </div>
-        )}
+          <span className="text-[11px] font-bold text-primary font-mono shrink-0">
+            24–48h
+          </span>
+        </div>
 
         {/* ─── Beneficiary & Payout Account Details ─── */}
         <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border/30">
@@ -518,12 +499,10 @@ function WithdrawalAnimationView({
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center space-y-1">
               <div className="flex items-center justify-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
                 <Check className="h-4 w-4 stroke-[3]" />
-                <span>{isUPI ? "Instant Secure Withdrawal Dispatched" : "Withdrawal Dispatched to Rail"}</span>
+                <span>Withdrawal Scheduled for Processing</span>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                {isUPI
-                  ? "Your UPI payout has cleared the NPCI switch. Immediate credit reflected in your beneficiary bank account."
-                  : "Your payout instruction has been registered. Expected in your account within 5–7 business days."}
+                Your payout request has been registered and scheduled for 24–48 hours verification and clearance.
               </p>
             </div>
 

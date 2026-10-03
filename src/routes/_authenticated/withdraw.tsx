@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Lock,
   Zap,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -76,12 +77,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
-  { id: "upi", name: "UPI", icon: "upi", badge: "Instant • Secure" },
-  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "IMPS Rail" },
-  { id: "sepa", name: "SEPA", icon: "sepa", badge: "EUR Rail" },
-  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "GBP Rail" },
-  { id: "gcash", name: "GCash", icon: "gcash", badge: "PHP Rail" },
-  { id: "pix", name: "Pix", icon: "pix", badge: "BRL Rail" },
+  { id: "upi", name: "UPI", icon: "upi", badge: "24–48 Hours" },
+  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "24–48 Hours" },
+  { id: "sepa", name: "SEPA", icon: "sepa", badge: "24–48 Hours" },
+  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "24–48 Hours" },
+  { id: "gcash", name: "GCash", icon: "gcash", badge: "24–48 Hours" },
+  { id: "pix", name: "Pix", icon: "pix", badge: "24–48 Hours" },
 ];
 
 function Withdraw() {
@@ -754,15 +755,15 @@ function Withdraw() {
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3 w-full">
-                {/* Instant Secure UPI Callout */}
-                <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3 flex items-start gap-2.5 text-xs">
-                  <Zap className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                {/* 24-48 Hours Processing Window Notice */}
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 flex items-start gap-2.5 text-xs">
+                  <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
-                    <span className="font-bold text-emerald-700 dark:text-emerald-300">
-                      Instant Secure Withdrawal Active
+                    <span className="font-bold text-foreground">
+                      Standard Processing Window: 24 to 48 Hours
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      UPI transfers clear in real-time via NPCI IMPS direct settlement rails with 256-bit encryption. Zero multi-day hold.
+                      Withdrawal requests undergo multi-factor identity verification and are processed within 24 to 48 hours.
                     </p>
                   </div>
                 </div>
@@ -1014,10 +1015,10 @@ function Withdraw() {
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
-              <span className="text-muted-foreground">Settlement Speed</span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <Zap className="h-3 w-3" />
-                {isUPI ? "Instant (Real-Time IMPS)" : "Standard Banking (5–7 Business Days)"}
+              <span className="text-muted-foreground">Processing Window</span>
+              <span className="font-semibold text-primary flex items-center gap-1 font-mono text-xs">
+                <Clock className="h-3 w-3" />
+                24–48 Hours
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
