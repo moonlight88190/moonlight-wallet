@@ -63,6 +63,9 @@ const FEATURED_COUNTRIES = [
   "JP",
 ];
 
+/**
+ * Renders the public Moonlight introduction, capabilities, and supported payment methods.
+ */
 function About() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-20 animate-fade-up">

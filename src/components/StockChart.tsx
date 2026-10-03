@@ -11,6 +11,10 @@ interface StockChartProps {
   className?: string;
 }
 
+/**
+ * Renders an instrument price chart with selectable time ranges and source links.
+ * Includes optional currency conversion and investing links for Indian instruments.
+ */
 export function StockChart({
   instrument,
   userCurrency,

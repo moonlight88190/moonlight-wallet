@@ -797,6 +797,11 @@ export interface ResolvedPaymentAsset {
   giftCard?: GiftCardMeta;
 }
 
+/**
+ * Resolves transaction metadata to a display asset and label.
+ * Prioritizes internal Moonlight transfers and credits before matching external
+ * payment providers, banks, vouchers, and currency-based fallback rails.
+ */
 export function resolvePaymentAsset(
   methodName?: string,
   upiId?: string,

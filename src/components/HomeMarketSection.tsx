@@ -7,6 +7,10 @@ import { BrandAsset } from "@/components/AssetComponents";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MarketTimeRange } from "@/lib/markets.types";
 
+/**
+ * Renders selectable market benchmarks, their price history, and constituent previews.
+ * Shows a skeleton during initial loading and returns null when no index is available.
+ */
 export function HomeMarketSection() {
   const { indices, status, fetchedAt, isLoading } = useMarkets();
 

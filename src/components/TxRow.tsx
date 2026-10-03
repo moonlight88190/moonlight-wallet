@@ -6,6 +6,10 @@ import { cn } from "@/lib/utils";
 import { CountryFlag, BrandAsset } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
 
+/**
+ * Renders a linked transaction summary relative to the supplied wallet.
+ * Displays the resolved payment brand with a secondary currency flag.
+ */
 export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
   const v = txView(tx, walletId);
   const Icon = tx.kind === "admin_credit" ? Plus : v.outgoing ? ArrowUpRight : ArrowDownLeft;
