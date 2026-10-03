@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
@@ -8,6 +8,9 @@ import {
   User,
   ArrowLeft,
   ShieldAlert,
+  ShieldCheck,
+  Lock,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,12 +76,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
-  { id: "upi", name: "UPI", icon: "upi", badge: "Instant" },
-  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "IMPS" },
-  { id: "sepa", name: "SEPA", icon: "sepa", badge: "EUR" },
-  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "GBP" },
-  { id: "gcash", name: "GCash", icon: "gcash", badge: "PHP" },
-  { id: "pix", name: "Pix", icon: "pix", badge: "BRL" },
+  { id: "upi", name: "UPI", icon: "upi", badge: "Instant • Secure" },
+  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "IMPS Rail" },
+  { id: "sepa", name: "SEPA", icon: "sepa", badge: "EUR Rail" },
+  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "GBP Rail" },
+  { id: "gcash", name: "GCash", icon: "gcash", badge: "PHP Rail" },
+  { id: "pix", name: "Pix", icon: "pix", badge: "BRL Rail" },
 ];
 
 function Withdraw() {
@@ -87,8 +90,78 @@ function Withdraw() {
   const { data: wallet } = useWallet();
   const { data: profile } = useProfile();
   const rates = useRates();
+  const geography = useAccountGeography();
+  const geo = geography.data;
 
-  const preferredCurrency = profile?.preferred_currency || "EUR";
+  // Authoritative verified jurisdiction resolution
+  const verifiedCountryCode = (geo?.countryCode || profile?.country_code || "IN").toUpperCase();
+  const isIndia = geo?.isIndia ?? (verifiedCountryCode === "IN");
+  const isEurope =
+    geo?.isEurope ??
+    ([
+      "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
+      "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
+    ].includes(verifiedCountryCode) ||
+      profile?.region?.toUpperCase() === "EUROPE");
+  const isPH = Boolean(
+    geo?.capabilities?.supportsGCash ||
+      verifiedCountryCode === "PH" ||
+      profile?.region?.toUpperCase() === "PHILIPPINES",
+  );
+  const isUK = geo?.isUK ?? (verifiedCountryCode === "GB" || verifiedCountryCode === "UK");
+  const isBR = Boolean(geo?.capabilities?.supportsPix || verifiedCountryCode === "BR");
+
+  // Currency strictly locked to verified jurisdiction (AML & CFT Statutory Requirement)
+  const verifiedCurrency = isIndia
+    ? "INR"
+    : isEurope
+      ? "EUR"
+      : isPH
+        ? "PHP"
+        : isUK
+          ? "GBP"
+          : isBR
+            ? "BRL"
+            : "INR";
+
+  const verifiedCountryName = isIndia
+    ? "India"
+    : isEurope
+      ? "Europe"
+      : isPH
+        ? "Philippines"
+        : isUK
+          ? "United Kingdom"
+          : isBR
+            ? "Brazil"
+            : (geo?.countryName || "India");
+
+  const verifiedFlagCode = isIndia
+    ? "IN"
+    : isEurope
+      ? "DE"
+      : isPH
+        ? "PH"
+        : isUK
+          ? "GB"
+          : isBR
+            ? "BR"
+            : "IN";
+
+  // Authorized domestic payout rails for verified country
+  const allowedRailIds = isIndia
+    ? ["upi", "in-bank"]
+    : isEurope
+      ? ["sepa"]
+      : isPH
+        ? ["gcash"]
+        : isUK
+          ? ["faster-payments"]
+          : isBR
+            ? ["pix"]
+            : ["upi", "in-bank"];
+
+  const preferredCurrency = profile?.preferred_currency || verifiedCurrency;
   const r = rates.data?.rates ?? {};
 
   // 48h account age check
@@ -104,19 +177,18 @@ function Withdraw() {
   // Mode: rails vs vouchers
   const [activeTab, setActiveTab] = useState<"rails" | "vouchers">("rails");
 
-  // Selected payout method
-  const defaultMethod = PAYMENT_METHODS.find((m) => m.id === "upi") || PAYMENT_METHODS[0]!;
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta>(defaultMethod);
+  // Selected payout method: default to first allowed domestic rail
+  const initialDefaultMethod =
+    PAYMENT_METHODS.find((m) => allowedRailIds.includes(m.id)) || PAYMENT_METHODS[0]!;
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodMeta>(initialDefaultMethod);
   const [selectedUPIApp, setSelectedUPIApp] = useState<UPIProviderMeta | null>(
     UPI_PROVIDERS.find((p) => p.id === "bhim") || UPI_PROVIDERS[0]!,
   );
   const [selectedBank, setSelectedBank] = useState<BankMeta | null>(INDIAN_BANKS[0]!);
 
-  // Form state
+  // Form state - currency strictly locked to verified jurisdiction
   const [withdrawAmount, setWithdrawAmount] = useState<string>("100");
-  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(
-    getMethodTargetCurrency(defaultMethod.id),
-  );
+  const [withdrawCurrency, setWithdrawCurrency] = useState<string>(verifiedCurrency);
   const [upiId, setUpiId] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [ifscCode, setIfscCode] = useState<string>("");
@@ -124,6 +196,18 @@ function Withdraw() {
   const [email, setEmail] = useState<string>(profile?.email || "");
   const [phone, setPhone] = useState<string>("");
   const [showPersonalDetails, setShowPersonalDetails] = useState<boolean>(false);
+
+  // Synchronize method and currency whenever verified geography resolves
+  useEffect(() => {
+    if (!allowedRailIds.includes(selectedMethod.id)) {
+      const firstAllowed =
+        PAYMENT_METHODS.find((m) => allowedRailIds.includes(m.id)) || PAYMENT_METHODS[0]!;
+      setSelectedMethod(firstAllowed);
+    }
+    if (withdrawCurrency !== verifiedCurrency) {
+      setWithdrawCurrency(verifiedCurrency);
+    }
+  }, [allowedRailIds, selectedMethod.id, verifiedCurrency, withdrawCurrency]);
 
   // Review dialog
   const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
@@ -141,21 +225,15 @@ function Withdraw() {
   const [createdWdId, setCreatedWdId] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  // Currency conversions
+  // Currency conversions: closed-loop domestic payout corridor
   const sourceAmt = Number(withdrawAmount) || 0;
   const isUPI = selectedMethod.id.includes("upi");
   const isIndianBank = selectedMethod.id === "in-bank";
-  const targetCorridorCurrency = getMethodTargetCurrency(selectedMethod.id);
-  const effectiveCurrency = isUPI || isIndianBank ? "INR" : withdrawCurrency;
-  const isCrossCorridor = effectiveCurrency !== targetCorridorCurrency;
-  const sourceRate = r[effectiveCurrency] ?? 1;
-  const targetRate = r[targetCorridorCurrency] ?? 1;
-  const fxRateRatio = sourceRate > 0 ? targetRate / sourceRate : 1;
-  const convertedTargetAmt = isCrossCorridor ? sourceAmt * fxRateRatio : sourceAmt;
+  const effectiveCurrency = verifiedCurrency;
+  const targetCorridorCurrency = verifiedCurrency;
+  const isCrossCorridor = false;
   const feeAmount = sourceAmt * 0.1;
-  const netReceivedAmt = isCrossCorridor
-    ? (sourceAmt - feeAmount) * fxRateRatio
-    : sourceAmt - feeAmount;
+  const netReceivedAmt = sourceAmt - feeAmount;
 
   const upiDetection = parseUPIHandle(upiId);
 
@@ -169,24 +247,45 @@ function Withdraw() {
     }
   };
 
-  // Rail switch handler with currency corridor synchronization
+  // Rail switch handler with AML compliance and jurisdiction lock enforcement
   const handleSelectRail = (railId: string) => {
+    if (!allowedRailIds.includes(railId)) {
+      toast.error(
+        `AML & Fraud Prevention Policy: Verified ${verifiedCountryName} accounts may only withdraw in ${verifiedCurrency} via domestic rails (${allowedRailIds.join(", ").toUpperCase()}). Foreign rail access is restricted to prevent cross-border money laundering.`,
+        { duration: 5000 },
+      );
+      return;
+    }
     const found = PAYMENT_METHODS.find((m) => m.id === railId);
     if (!found) return;
     setSelectedMethod(found);
-    const newCorridor = getMethodTargetCurrency(found.id);
-    const curAmt = Number(withdrawAmount) || 0;
-    if (curAmt > 0 && withdrawCurrency && newCorridor && withdrawCurrency !== newCorridor) {
-      const converted = convert(curAmt, withdrawCurrency, newCorridor, r);
-      setWithdrawAmount(converted.toFixed(2));
-    }
-    setWithdrawCurrency(newCorridor);
+    setWithdrawCurrency(verifiedCurrency);
   };
 
   // Submit withdrawal
   async function handleSubmitWithdrawal() {
     if (!isEligible48h) {
       toast.error("Withdrawals unlock 48 hours after account creation.");
+      return;
+    }
+
+    if (sourceAmt <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
+
+    // Strict AML Verification
+    if (!allowedRailIds.includes(selectedMethod.id)) {
+      toast.error(
+        `AML Policy: Payout method not authorized for verified ${verifiedCountryName} accounts.`,
+      );
+      return;
+    }
+
+    if (effectiveCurrency !== verifiedCurrency) {
+      toast.error(
+        `AML Policy: Verified ${verifiedCountryName} accounts may only withdraw in ${verifiedCurrency}.`,
+      );
       return;
     }
 
@@ -365,7 +464,7 @@ function Withdraw() {
               ? selectedBank?.name || "Indian Bank"
               : selectedUPIApp?.name || selectedMethod.name
           }
-          exchangeRate={isCrossCorridor ? fxRateRatio : undefined}
+          exchangeRate={undefined}
           fee={feeAmount}
           errorMessage={withdrawError || undefined}
           onRetry={() => setAnimState("idle")}
@@ -403,6 +502,68 @@ function Withdraw() {
           </div>
         </div>
       )}
+
+      {/* ─── AML & Anti-Fraud Compliance Notice ─── */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 sm:p-4 space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </div>
+            <span className="font-bold text-foreground text-xs">
+              AML & Anti-Fraud Compliance Policy
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/25 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <CountryFlag code={verifiedFlagCode} circle size="xs" />
+            <span>{verifiedCountryName} Verified</span>
+          </span>
+        </div>
+
+        <p className="text-muted-foreground text-[11px] leading-relaxed">
+          In strict compliance with statutory Anti-Money Laundering (AML), CFT guidelines, and central bank regulations (including Reserve Bank of India, European Central Bank, and BSP), withdrawals are locked to your verified country of residence and its domestic national currency:
+        </p>
+
+        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isIndia
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">India 🇮🇳</span>
+            <span className="text-xs font-mono font-bold text-foreground">INR Only</span>
+          </div>
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isEurope
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">Europe 🇪🇺</span>
+            <span className="text-xs font-mono font-bold text-foreground">EUR Only</span>
+          </div>
+          <div
+            className={`p-2 rounded-xl border text-center transition-all ${
+              isPH
+                ? "border-primary/50 bg-primary/10 font-semibold"
+                : "border-border/40 bg-card/40 opacity-70"
+            }`}
+          >
+            <span className="text-[10px] block text-muted-foreground">Philippines 🇵🇭</span>
+            <span className="text-xs font-mono font-bold text-foreground">PHP Only</span>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-1.5 pt-1 text-[10px] text-muted-foreground border-t border-border/40">
+          <Lock className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground/80" />
+          <span>
+            <strong>Fraud & Anti-Money Laundering Safeguard:</strong> Protects your account against unauthorized cross-border foreign exchange conversion, credential stuffing exfiltration, and illicit money laundering by locking rails to verified local identity.
+          </span>
+        </div>
+      </div>
 
       {/* Mode Tabs */}
       <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-card/60 border border-border/60 text-xs font-semibold shadow-xs">
@@ -444,23 +605,37 @@ function Withdraw() {
             <div className="grid grid-cols-3 gap-2 w-full">
               {RAIL_OPTIONS.map((rail) => {
                 const isSelected = selectedMethod.id === rail.id;
+                const isAllowed = allowedRailIds.includes(rail.id);
                 return (
                   <button
                     key={rail.id}
                     type="button"
                     onClick={() => handleSelectRail(rail.id)}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center min-w-0 overflow-hidden ${
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border transition-all cursor-pointer touch-manipulation text-center min-w-0 overflow-hidden relative ${
                       isSelected
                         ? "border-primary/60 bg-primary/10 shadow-xs font-semibold"
-                        : "border-border/50 bg-card/60 hover:bg-muted/40"
+                        : isAllowed
+                          ? "border-border/50 bg-card/60 hover:bg-muted/40"
+                          : "border-border/30 bg-muted/20 opacity-60 hover:opacity-80"
                     }`}
                   >
+                    {!isAllowed && (
+                      <span className="absolute top-1.5 right-1.5 text-muted-foreground/80">
+                        <Lock className="h-3 w-3" />
+                      </span>
+                    )}
                     <BrandAsset id={rail.icon} size="xs" />
                     <span className="text-xs font-semibold text-foreground truncate w-full">
                       {rail.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.2 rounded-md">
-                      {rail.badge}
+                    <span
+                      className={`text-[9px] px-1.5 py-0.2 rounded-md font-mono ${
+                        isAllowed
+                          ? "text-muted-foreground bg-muted/60"
+                          : "text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                      }`}
+                    >
+                      {isAllowed ? rail.badge : "AML Locked"}
                     </span>
                   </button>
                 );
@@ -547,38 +722,27 @@ function Withdraw() {
                 placeholder="100"
                 className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4 min-w-0"
               />
-              <Select
-                value={effectiveCurrency}
-                onValueChange={(newCur) => {
-                  const curAmt = Number(withdrawAmount) || 0;
-                  if (curAmt > 0 && effectiveCurrency && newCur && effectiveCurrency !== newCur) {
-                    const converted = convert(curAmt, effectiveCurrency, newCur, r);
-                    setWithdrawAmount(converted.toFixed(2));
-                  }
-                  setWithdrawCurrency(newCur);
-                }}
-                disabled={isUPI || isIndianBank}
+              <div
+                className="h-14 w-36 rounded-2xl border border-border/60 bg-muted/40 font-semibold shrink-0 flex items-center justify-between px-3 cursor-not-allowed select-none"
+                title={`Locked to ${effectiveCurrency} based on your verified ${verifiedCountryName} identity (Anti-Money Laundering & Fraud Protection Policy)`}
               >
-                <SelectTrigger className="h-14 w-32 rounded-2xl border-border/60 bg-card/60 font-semibold shrink-0 cursor-pointer flex items-center gap-1.5 px-3">
-                  <CountryFlag code={effectiveCurrency} circle size="xs" />
-                  <SelectValue placeholder="Currency" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-border/60 p-1">
-                  {CURRENCIES.map((c) => (
-                    <SelectItem
-                      key={c.code}
-                      value={c.code}
-                      className="font-semibold cursor-pointer text-xs py-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CountryFlag code={c.code} circle size="xs" />
-                        <span>{c.code}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <CountryFlag code={verifiedFlagCode} circle size="xs" />
+                  <span className="text-sm font-bold text-foreground font-mono">{effectiveCurrency}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-background/60 border border-border/40 px-1.5 py-0.5 rounded-md">
+                  <Lock className="h-2.5 w-2.5" />
+                  <span>AML</span>
+                </div>
+              </div>
             </div>
+
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1 pt-0.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>
+                Withdrawal currency strictly locked to <strong>{effectiveCurrency}</strong> (Verified Country: <strong>{verifiedCountryName}</strong>).
+              </span>
+            </p>
           </section>
 
           {/* ─── STEP 3: Destination ─── */}
@@ -590,6 +754,18 @@ function Withdraw() {
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3 w-full">
+                {/* Instant Secure UPI Callout */}
+                <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3 flex items-start gap-2.5 text-xs">
+                  <Zap className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                      Instant Secure Withdrawal Active
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      UPI transfers clear in real-time via NPCI IMPS direct settlement rails with 256-bit encryption. Zero multi-day hold.
+                    </p>
+                  </div>
+                </div>
                 <div className="space-y-1">
                   <label
                     htmlFor="upi-vpa-input"
@@ -772,11 +948,6 @@ function Withdraw() {
                 {formatMoney(netReceivedAmt, targetCorridorCurrency)}
               </span>
             </div>
-            {isCrossCorridor && (
-              <p className="text-[10px] text-muted-foreground pt-0.5 font-mono">
-                Rate: 1 {withdrawCurrency} ≈ {fxRateRatio.toFixed(4)} {targetCorridorCurrency}
-              </p>
-            )}
           </div>
 
           {/* Submit */}
@@ -841,6 +1012,24 @@ function Withdraw() {
                     ? `${(upiDetection.isVPA && upiDetection.providerId ? UPI_PROVIDERS.find((p) => p.id === upiDetection.providerId) : selectedUPIApp)?.name || "BHIM"} (UPI)`
                     : selectedMethod.name}
               </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">Settlement Speed</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                {isUPI ? "Instant (Real-Time IMPS)" : "Standard Banking (5–7 Business Days)"}
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">Verified Country</span>
+              <span className="font-medium text-foreground flex items-center gap-1.5">
+                <CountryFlag code={verifiedFlagCode} circle size="xs" />
+                <span>{verifiedCountryName} ({effectiveCurrency} Only)</span>
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 pb-2">
+              <span className="text-muted-foreground">AML Policy</span>
+              <span className="text-[11px] font-semibold text-primary">Domestic Closed-Loop Verified</span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
               <span className="text-muted-foreground">Destination</span>

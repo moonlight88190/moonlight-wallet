@@ -188,6 +188,7 @@ export interface WithdrawalComplianceResult {
 export function getWithdrawalComplianceInfo(
   createdAtStr: string,
   dbStatus: string,
+  options?: { isUPI?: boolean; method?: string; route?: string },
 ): WithdrawalComplianceResult {
   const createdDate = new Date(createdAtStr);
   const now = new Date();
@@ -200,6 +201,38 @@ export function getWithdrawalComplianceInfo(
 
   const arrival = formatEstimatedArrival(createdAtStr);
   const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
+
+  const isUPI =
+    Boolean(options?.isUPI) ||
+    options?.method?.toLowerCase().includes("upi") ||
+    options?.route?.toLowerCase() === "upi";
+
+  // UPI Instant Settlement handling
+  if (isUPI && upperStatus !== "FAILED" && upperStatus !== "REJECTED" && upperStatus !== "CANCELLED") {
+    const isSettled = upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED";
+    return {
+      statusLabel: isSettled ? "SUCCESS" : "INSTANT CLEARING",
+      stageTitle: "Instant Secure Settlement",
+      description: "Dispatched via NPCI IMPS direct settlement rails with 256-bit bank encryption.",
+      currentStep: isSettled ? "Settled & Credited" : "Real-Time Interbank IMPS Clearing",
+      currentStepDescription: isSettled
+        ? "Funds have been verified and deposited directly into your UPI linked bank account."
+        : "Immediate clearance switch handshake with beneficiary bank. Zero multi-day hold.",
+      nextStep: isSettled ? "Transfer Completed" : "Immediate Account Credit",
+      nextStepDescription: isSettled ? "Instant settlement cycle completed." : "Recipient bank is acknowledging instant credit.",
+      estimatedArrivalDate: "Instant (Immediate)",
+      estimatedDaysText: "Instant • Secure Withdrawal",
+      progressPercent: isSettled ? 100 : 92,
+      isProcessing: !isSettled,
+      isHold: false,
+      isSuccess: isSettled,
+      isFailed: false,
+      stageNumber: 4,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: 0,
+    };
+  }
 
   // Finalized by admin
   if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED") {

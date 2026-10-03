@@ -229,9 +229,19 @@ function Receipt() {
         ? grossAmount
         : grossAmount + feeAmount;
 
+  const isUPI =
+    rawData.route?.toLowerCase() === "upi" ||
+    rawData.recipient_name?.toLowerCase().includes("upi") ||
+    (rawData.recipient_name && rawData.recipient_name.includes("@")) ||
+    paymentAsset.id?.toLowerCase().includes("upi");
+
   // Compliance info for withdrawals
   const complianceInfo = isWithdrawal
-    ? getWithdrawalComplianceInfo(rawData.created_at, rawData.status)
+    ? getWithdrawalComplianceInfo(rawData.created_at, rawData.status, {
+        isUPI,
+        method: rawData.recipient_name || rawData.route || undefined,
+        route: rawData.route || undefined,
+      })
     : null;
 
   return (
@@ -369,7 +379,7 @@ function Receipt() {
                   Payout Timeline
                 </span>
                 <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                  {complianceInfo.isSuccess ? "Settled" : "5–7 Business Days"}
+                  {complianceInfo.isSuccess ? "Settled" : complianceInfo.estimatedDaysText}
                 </span>
               </div>
               <div className="text-right text-[10px] text-muted-foreground">

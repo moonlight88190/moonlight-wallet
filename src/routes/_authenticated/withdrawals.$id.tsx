@@ -164,14 +164,7 @@ function WithdrawalReceipt() {
     );
   }
 
-  const compliance = getWithdrawalComplianceInfo(wd.created_at, wd.status);
   const statusUpper = (wd.status || "PROCESSING").toUpperCase().replace(/_/g, " ");
-
-  // Fee and settlement economics
-  const grossAmount = Number(wd.amount);
-  const feeAmount = Number(wd.fee ?? Math.round(grossAmount * 0.1));
-  const netSettlement = Number(wd.recipient_amount ?? grossAmount - feeAmount);
-  const payoutCurrency = wd.recipient_currency || wd.currency;
 
   const isUPI =
     wd.method?.toLowerCase().includes("upi") || wd.route?.toLowerCase() === "upi" || !!wd.upi_id;
@@ -179,6 +172,18 @@ function WithdrawalReceipt() {
     wd.method?.toLowerCase().includes("bank") ||
     wd.method?.toLowerCase().includes("imps") ||
     wd.route?.toLowerCase() === "in-bank";
+
+  const compliance = getWithdrawalComplianceInfo(wd.created_at, wd.status, {
+    isUPI,
+    method: wd.method,
+    route: wd.route,
+  });
+
+  // Fee and settlement economics
+  const grossAmount = Number(wd.amount);
+  const feeAmount = Number(wd.fee ?? Math.round(grossAmount * 0.1));
+  const netSettlement = Number(wd.recipient_amount ?? grossAmount - feeAmount);
+  const payoutCurrency = wd.recipient_currency || wd.currency;
 
   const isIndianRail = isUPI || isIndianBank;
   const displayCurrency =
@@ -292,7 +297,7 @@ function WithdrawalReceipt() {
             <span className="uppercase">{statusUpper}</span>
           </div>
           <span className="text-[11px] font-medium opacity-90">
-            {compliance.isSuccess ? "Settled" : "Est. Arrival: 5–7 Business Days"}
+            {compliance.isSuccess ? "Settled" : compliance.estimatedDaysText}
           </span>
         </div>
 

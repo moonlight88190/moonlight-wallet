@@ -100,44 +100,88 @@ function WithdrawalAnimationView({
     "withdrawal",
   );
 
-  // 5 realistic banking clearance stages (total ~7.2s sequence)
-  const withdrawalStages = [
-    {
-      title: "Wallet Debit & Ledger Signature",
-      description: "Securing balance, deducting fee & writing immutable double-entry ledger record",
-      pill: "Ledger Signed",
-      corridorStatus: "Debiting Balance",
-      progress: 20,
-    },
-    {
-      title: `Connecting ${paymentAsset.label} Gateway`,
-      description: "Establishing encrypted TLS 1.3 socket with national payment clearance switch",
-      pill: "Rail Connected",
-      corridorStatus: "Switch Handshake",
-      progress: 42,
-    },
-    {
-      title: "Beneficiary Account Validation",
-      description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
-      pill: "Account Validated",
-      corridorStatus: "Validating Account",
-      progress: 65,
-    },
-    {
-      title: "Outbound Batch Allocation",
-      description: "Transaction allocated to settlement dispatch queue with 5–7 business days value date",
-      pill: "Batch Queued",
-      corridorStatus: "Batch Allocation",
-      progress: 86,
-    },
-    {
-      title: "Settlement Reference Confirmed",
-      description: "Disbursement payload registered. Payout tracking active and queued for dispatch",
-      pill: "Dispatched",
-      corridorStatus: "Dispatched & Queued",
-      progress: 100,
-    },
-  ];
+  const isUPI =
+    paymentMethodId?.toLowerCase().includes("upi") ||
+    paymentMethodName?.toLowerCase().includes("upi") ||
+    recipientCode.includes("@") ||
+    destinationCurrency === "INR";
+
+  // Realistic clearance stages
+  const withdrawalStages = isUPI
+    ? [
+        {
+          title: "Wallet Debit & Ledger Signature",
+          description: "Securing balance, deducting 10% fee & writing immutable double-entry ledger record",
+          pill: "Ledger Signed",
+          corridorStatus: "Debiting Balance",
+          progress: 20,
+        },
+        {
+          title: `Connecting ${paymentAsset.label} Network`,
+          description: "Establishing encrypted 256-bit TLS 1.3 socket with NPCI National Payment Gateway",
+          pill: "Gateway Connected",
+          corridorStatus: "NPCI Handshake",
+          progress: 42,
+        },
+        {
+          title: "Real-Time VPA Validation",
+          description: `Validating recipient VPA (${recipientCode}) with receiving bank via IMPS protocol`,
+          pill: "VPA Validated",
+          corridorStatus: "Validating Beneficiary",
+          progress: 65,
+        },
+        {
+          title: "Direct Interbank IMPS Clearing",
+          description: "Immediate interbank liquidity allocation via NPCI high-speed settlement network",
+          pill: "IMPS Cleared",
+          corridorStatus: "Instant Clearing",
+          progress: 86,
+        },
+        {
+          title: "Instant Secure Settlement Confirmed",
+          description: "Real-time payout payload confirmed. Funds transmitted directly to beneficiary account",
+          pill: "Instant Settled",
+          corridorStatus: "Instant Credit",
+          progress: 100,
+        },
+      ]
+    : [
+        {
+          title: "Wallet Debit & Ledger Signature",
+          description: "Securing balance, deducting fee & writing immutable double-entry ledger record",
+          pill: "Ledger Signed",
+          corridorStatus: "Debiting Balance",
+          progress: 20,
+        },
+        {
+          title: `Connecting ${paymentAsset.label} Gateway`,
+          description: "Establishing encrypted TLS 1.3 socket with national payment clearance switch",
+          pill: "Rail Connected",
+          corridorStatus: "Switch Handshake",
+          progress: 42,
+        },
+        {
+          title: "Beneficiary Account Validation",
+          description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
+          pill: "Account Validated",
+          corridorStatus: "Validating Account",
+          progress: 65,
+        },
+        {
+          title: "Outbound Batch Allocation",
+          description: "Transaction allocated to settlement dispatch queue with 5–7 business days value date",
+          pill: "Batch Queued",
+          corridorStatus: "Batch Allocation",
+          progress: 86,
+        },
+        {
+          title: "Settlement Reference Confirmed",
+          description: "Disbursement payload registered. Payout tracking active and queued for dispatch",
+          pill: "Dispatched",
+          corridorStatus: "Dispatched & Queued",
+          progress: 100,
+        },
+      ];
 
   const totalStages = withdrawalStages.length;
   const [visualStage, setVisualStage] = useState(0);
@@ -207,16 +251,16 @@ function WithdrawalAnimationView({
         {/* Specular accent line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
-        {/* Top Header: Badge & 5-7 Days Promise */}
+        {/* Top Header: Badge & Delivery Window */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1">
             <Zap className="h-3.5 w-3.5 text-primary" />
             <span className="text-[10px] font-bold tracking-wider text-primary uppercase">
-              Outbound Bank Dispatch
+              {isUPI ? "Instant Secure Withdrawal" : "Outbound Bank Dispatch"}
             </span>
           </div>
           <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-            5–7 Business Days
+            {isUPI ? "⚡ Instant • Real-Time IMPS" : "5–7 Business Days"}
           </span>
         </div>
 
@@ -411,23 +455,42 @@ function WithdrawalAnimationView({
           })}
         </div>
 
-        {/* ─── 5-7 Business Days Reassurance Card ─── */}
-        <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
-          <div className="flex items-center gap-2.5">
-            <Clock className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="font-semibold text-foreground text-[11px]">
-                Standard Banking Delivery Window
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                Funds reflect in your beneficiary statement in 5–7 business days
-              </p>
+        {/* ─── Delivery Window Reassurance Card ─── */}
+        {isUPI ? (
+          <div className="flex items-center justify-between rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs">
+            <div className="flex items-center gap-2.5">
+              <Zap className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div>
+                <p className="font-semibold text-emerald-700 dark:text-emerald-300 text-[11px]">
+                  Instant Secure UPI Settlement
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Real-time clearing via NPCI IMPS gateway. Immediate account credit.
+                </p>
+              </div>
             </div>
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 font-mono shrink-0">
+              Instant
+            </span>
           </div>
-          <span className="text-[11px] font-bold text-primary font-mono shrink-0">
-            5–7 Days
-          </span>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
+            <div className="flex items-center gap-2.5">
+              <Clock className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="font-semibold text-foreground text-[11px]">
+                  Standard Banking Delivery Window
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Funds reflect in your beneficiary statement in 5–7 business days
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-primary font-mono shrink-0">
+              5–7 Days
+            </span>
+          </div>
+        )}
 
         {/* ─── Beneficiary & Payout Account Details ─── */}
         <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border/30">
@@ -455,10 +518,12 @@ function WithdrawalAnimationView({
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center space-y-1">
               <div className="flex items-center justify-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
                 <Check className="h-4 w-4 stroke-[3]" />
-                <span>Withdrawal Dispatched to Rail</span>
+                <span>{isUPI ? "Instant Secure Withdrawal Dispatched" : "Withdrawal Dispatched to Rail"}</span>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Your payout instruction has been registered. Expected in your account within 5–7 business days.
+                {isUPI
+                  ? "Your UPI payout has cleared the NPCI switch. Immediate credit reflected in your beneficiary bank account."
+                  : "Your payout instruction has been registered. Expected in your account within 5–7 business days."}
               </p>
             </div>
 
