@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Clock,
   Gift,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -26,11 +28,12 @@ import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComp
 import { TxRow } from "@/components/TxRow";
 import { HomeMarketSection } from "@/components/HomeMarketSection";
 import { GIFT_CARDS } from "@/lib/assets";
+import titaniumCardImg from "@/assets/titanium_card.jpg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Moonlight Wallet" },
+      { title: "Moonlight Wallet — Luxury Financial Technology" },
       {
         name: "description",
         content:
@@ -68,44 +71,56 @@ function Dashboard() {
   const recentTxs = (transactions.data ?? []).slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-xl space-y-5 pb-12 animate-fade-up">
+    <div className="mx-auto max-w-xl space-y-6 pb-12 animate-fade-up">
       {/* ═══════════════════════════════════════
-           1. BALANCE & PRIMARY ACTIONS
+           1. CYBER-LUXURY TITANIUM BALANCE HERO
          ═══════════════════════════════════════ */}
-      <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-card p-5 sm:p-6 shadow-card text-center space-y-4">
-        {/* Subtle premium texture overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] via-transparent to-gold/[0.02] pointer-events-none" />
+      <section className="relative overflow-hidden rounded-3xl obsidian-card p-6 sm:p-7 text-center space-y-6 shadow-2xl gold-glow">
+        {/* Holographic Titanium Card Background */}
+        <div className="absolute inset-0 z-0 opacity-25 mix-blend-screen pointer-events-none">
+          <img
+            src={titaniumCardImg}
+            alt="Moonlight Titanium Card"
+            className="w-full h-full object-cover object-center transform scale-105"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0D1117] via-transparent to-black/40 pointer-events-none" />
 
-        {/* Wallet Code Capsule */}
-        <div className="relative z-10 flex items-center justify-center">
+        {/* Top Header Badge & Wallet ID */}
+        <div className="relative z-10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase">
+            <Sparkles className="h-3 w-3" />
+            <span>TITANIUM VIP</span>
+          </div>
+
           {wallet.data && (
             <button
               type="button"
               onClick={handleCopyCode}
               aria-label="Copy wallet ID"
-              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/40 px-3 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:text-foreground hover:border-border transition-all cursor-pointer touch-manipulation"
+              className="inline-flex items-center gap-1.5 rounded-full bg-black/60 border border-gold/30 px-3 py-1 text-[11px] font-mono font-medium text-gold/90 hover:text-white hover:border-gold transition-all cursor-pointer touch-manipulation backdrop-blur-md"
             >
               <span>{wallet.data.wallet_code}</span>
               {copiedCode ? (
-                <Check className="h-3 w-3 text-success" />
+                <Check className="h-3 w-3 text-emerald-400" />
               ) : (
-                <Copy className="h-3 w-3 opacity-40" />
+                <Copy className="h-3 w-3 opacity-60" />
               )}
             </button>
           )}
         </div>
 
-        {/* Balance Display */}
-        <div className="relative z-10 space-y-1.5">
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            Available Balance
+        {/* Balance Hero Display */}
+        <div className="relative z-10 space-y-2 py-2">
+          <p className="text-[10px] font-black tracking-[0.3em] text-gold/80 uppercase">
+            Total Account Balance
           </p>
 
-          <div className="mt-1">
+          <div>
             {loading ? (
-              <Skeleton className="mx-auto h-12 w-48 rounded-xl" />
+              <Skeleton className="mx-auto h-14 w-56 rounded-2xl bg-white/10" />
             ) : (
-              <h1 className="tabular font-sans text-[40px] sm:text-[48px] font-bold tracking-tight text-foreground leading-none">
+              <h1 className="tabular font-sans text-[44px] sm:text-[54px] font-black tracking-tight text-white leading-none drop-shadow-md">
                 {formatMoney(balance, cur)}
               </h1>
             )}
@@ -124,19 +139,19 @@ function Dashboard() {
               )
             }
           >
-            <SelectTrigger className="h-8 rounded-full px-3 w-auto gap-2 border border-border/40 bg-secondary/50 hover:bg-secondary text-[11px] font-semibold cursor-pointer transition-colors">
+            <SelectTrigger className="h-9 rounded-full px-4 w-auto gap-2 border border-gold/40 bg-black/60 hover:bg-black text-xs font-bold text-gold cursor-pointer transition-all backdrop-blur-md">
               <CurrencyIcon code={cur} />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl p-1">
+            <SelectContent className="rounded-2xl p-1 border border-gold/30 bg-[#161B22] text-white">
               {CURRENCIES.map((c) => (
                 <SelectItem
                   key={c.code}
                   value={c.code}
-                  className="rounded-xl py-2 px-3 cursor-pointer"
+                  className="rounded-xl py-2 px-3 cursor-pointer hover:bg-gold/10"
                 >
                   <div className="flex items-center gap-2">
                     <CountryFlag code={c.code} circle size="xs" />
-                    <span className="font-semibold text-[12px]">{c.code}</span>
+                    <span className="font-bold text-[12px] text-white">{c.code}</span>
                     <span className="text-muted-foreground text-[11px]">· {c.name}</span>
                   </div>
                 </SelectItem>
@@ -146,7 +161,7 @@ function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="relative z-10 grid grid-cols-4 gap-2 pt-3 border-t border-border/20">
+        <div className="relative z-10 grid grid-cols-4 gap-2.5 pt-4 border-t border-gold/20">
           {[
             { to: "/send", label: "Send", icon: ArrowUpRight, primary: true },
             { to: "/receive", label: "Receive", icon: ArrowDownLeft },
@@ -163,22 +178,22 @@ function Dashboard() {
               to={action.to}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               search={action.search as any}
-              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[68px] active:scale-[0.97] ${
+              className={`group flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.96] ${
                 action.primary
-                  ? "border-primary/20 bg-primary/[0.04] hover:bg-primary/[0.08]"
-                  : "border-border/30 bg-secondary/20 hover:bg-secondary/50"
+                  ? "border-gold/50 bg-gradient-to-b from-gold/20 to-gold/5 hover:from-gold/30 hover:to-gold/10 shadow-lg"
+                  : "border-white/10 bg-black/40 hover:bg-black/70 backdrop-blur-md"
               }`}
             >
               <span
-                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
                   action.primary
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-background text-foreground border border-border/30"
+                    ? "bg-gold text-black shadow-md font-bold"
+                    : "bg-white/10 text-white border border-white/10"
                 }`}
               >
-                <action.icon className="h-[18px] w-[18px]" strokeWidth={1.7} />
+                <action.icon className="h-5 w-5" strokeWidth={2} />
               </span>
-              <span className="text-[10px] font-semibold text-foreground tracking-tight text-center">
+              <span className="text-[11px] font-bold text-white tracking-wide text-center">
                 {action.label}
               </span>
             </Link>
@@ -189,91 +204,69 @@ function Dashboard() {
       {/* ═══════════════════════════════════════
            2. RECENT ACTIVITY
          ═══════════════════════════════════════ */}
-      <section aria-label="Recent Activity" className="space-y-2">
-        <div className="flex items-center justify-between px-0.5">
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <h2 className="text-[11px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
+      <section aria-label="Recent Activity" className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-gold" />
+            <h2 className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
               Recent Activity
             </h2>
           </div>
           <Link
             to="/transactions"
-            className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary hover:underline underline-offset-2 touch-manipulation min-h-[32px]"
+            className="inline-flex items-center gap-0.5 text-xs font-bold text-primary hover:underline touch-manipulation min-h-[32px]"
           >
-            See all <ChevronRight className="h-3 w-3" />
+            View all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="divide-y divide-border/20 rounded-2xl border border-border/40 bg-card overflow-hidden shadow-card">
-          {transactions.isLoading ? (
-            <div className="p-4 space-y-3">
-              <Skeleton className="h-10 w-full rounded-xl" />
-              <Skeleton className="h-10 w-full rounded-xl" />
-            </div>
-          ) : recentTxs.length === 0 ? (
-            <div className="p-8 text-center flex flex-col items-center">
-              <div className="relative mb-3 h-14 w-14 overflow-hidden rounded-2xl border border-border/30 bg-secondary/30">
-                <img
-                  src="/assets/visuals/empty-vault.jpg"
-                  alt="Vault"
-                  className="h-full w-full object-cover opacity-60"
-                />
-              </div>
-              <p className="font-semibold text-foreground text-[13px]">No activity yet</p>
-              <p className="mt-1 text-muted-foreground text-[11px] max-w-[240px] leading-relaxed">
-                Send funds or share your wallet ID to receive instant payments.
-              </p>
-            </div>
-          ) : (
-            recentTxs.map((tx) => <TxRow key={tx.id} tx={tx} walletId={wallet.data?.id} />)
-          )}
-        </div>
+        {transactions.isLoading ? (
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-16 rounded-2xl bg-card/60" />
+            ))}
+          </div>
+        ) : recentTxs.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-border/60 bg-card/40 p-8 text-center space-y-2">
+            <p className="font-semibold text-foreground text-sm">No transactions yet</p>
+            <p className="text-xs text-muted-foreground">
+              Your transfers, payouts, and voucher redemptions will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/40 rounded-3xl border border-border/60 bg-card/60 overflow-hidden shadow-soft">
+            {recentTxs.map((t) => (
+              <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ═══════════════════════════════════════
-           3 & 4. MARKETS & INDEX CONSTITUENTS
+           3. GLOBAL MARKETS & GIFT CARDS
          ═══════════════════════════════════════ */}
-      <section aria-label="Global Markets">
-        <HomeMarketSection />
-      </section>
+      <HomeMarketSection />
 
-      {/* ═══════════════════════════════════════
-           5. GIFT CARDS & DIGITAL VOUCHERS
-         ═══════════════════════════════════════ */}
-      <section aria-label="Digital Vouchers" className="space-y-2">
-        <div className="flex items-center justify-between px-0.5">
-          <div className="flex items-center gap-1.5">
-            <Gift className="h-3.5 w-3.5 text-gold" />
-            <h2 className="text-[11px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
+      <section aria-label="Digital Gift Cards" className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <Gift className="h-4 w-4 text-gold" />
+            <h2 className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
               Digital Vouchers
             </h2>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/redeem"
-              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors touch-manipulation min-h-[32px]"
-            >
-              Redeem code
-            </Link>
-            <Link
-              to="/withdraw"
-              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary hover:underline underline-offset-2 touch-manipulation min-h-[32px]"
-            >
-              Browse all <ChevronRight className="h-3 w-3" />
-            </Link>
-          </div>
+          <Link
+            to="/withdraw"
+            className="inline-flex items-center gap-0.5 text-xs font-bold text-primary hover:underline touch-manipulation min-h-[32px]"
+          >
+            Redeem <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        <div className="flex items-stretch gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
-          {GIFT_CARDS.slice(0, 5).map((card) => (
-            <div key={card.id} className="w-[172px] shrink-0">
-              <GiftCardBrand
-                card={card}
-                onClick={() => {
-                  navigate({ to: "/withdraw" });
-                }}
-              />
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+          {GIFT_CARDS.slice(0, 6).map((card) => (
+            <div key={card.id} className="shrink-0 w-36">
+              <GiftCardBrand card={card} onClick={() => navigate({ to: "/withdraw" })} />
             </div>
           ))}
         </div>

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   CheckCircle2,
   ArrowRightLeft,
+  Crown,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { GoogleIcon } from "@/components/AuthLayout";
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import titaniumCardImg from "@/assets/titanium_card.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,35 +72,35 @@ const PRESS_ACCOLADES = [
     publication: "Financial Times",
     tagline: "Fintech Excellence 2025",
     quote:
-      "\u201CMoonlight sets a new benchmark for European cross-border settlement and instant digital liquidity across international corridors.\u201D",
+      "“Moonlight sets a new benchmark for European cross-border settlement and instant digital liquidity across international corridors.”",
     author: "European Banking Review",
   },
   {
     publication: "Bloomberg Financial",
     tagline: "Global Clearing Report",
     quote:
-      "\u201CThe definitive European-first multi-currency clearing engine uniting SEPA Instant rails with direct Asian and American payout rails.\u201D",
+      "“The definitive European-first multi-currency clearing engine uniting SEPA Instant rails with direct Asian and American payout rails.”",
     author: "Global Markets Intelligence",
   },
   {
     publication: "TechCrunch",
     tagline: "Top European Fintech",
     quote:
-      "\u201CA sleek, bank-grade digital wallet engineered with precision, zero artificial latency, and 256-bit cryptographic verification.\u201D",
+      "“A sleek, bank-grade digital wallet engineered with precision, zero artificial latency, and 256-bit cryptographic verification.”",
     author: "Fintech Disruption Series",
   },
   {
     publication: "EU-Startups",
     tagline: "Fintech Innovation Award",
     quote:
-      "\u201CRecognized as Europe\u2019s premier multi-currency wallet standard for seamless liquidity management and verified cryptographic transfers.\u201D",
+      "“Recognized as Europe’s premier multi-currency wallet standard for seamless liquidity management and verified cryptographic transfers.”",
     author: "European Fintech Awards",
   },
   {
     publication: "Forbes",
     tagline: "Next-Gen Wealth Infrastructure",
     quote:
-      "\u201CRedefining how global money moves with Apple-grade design simplicity and rigorous European regulatory compliance.\u201D",
+      "“Redefining how global money moves with Apple-grade design simplicity and rigorous European regulatory compliance.”",
     author: "Enterprise Fintech Spotlight",
   },
 ];
@@ -138,8 +140,8 @@ function Landing() {
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground antialiased font-sans">
       {/* ─── Premium Ambient Backdrop ─── */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 h-[700px] w-[700px] rounded-full bg-primary/[0.06] blur-[140px]" />
-        <div className="absolute bottom-1/4 right-0 translate-x-1/3 h-[400px] w-[400px] rounded-full bg-gold/[0.03] blur-[100px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 h-[700px] w-[700px] rounded-full bg-gold/[0.08] blur-[160px]" />
+        <div className="absolute bottom-1/4 right-0 translate-x-1/3 h-[500px] w-[500px] rounded-full bg-primary/[0.06] blur-[140px]" />
       </div>
 
       {/* ─── Header ─── */}
@@ -147,10 +149,10 @@ function Landing() {
         <Link to="/" className="flex items-center gap-2.5 group">
           <LogoMark className="h-9 w-9 group-hover:scale-[1.03] transition-transform duration-200" />
           <div className="flex flex-col text-left">
-            <span className="text-[13px] font-semibold tracking-[0.26em] text-foreground">
+            <span className="text-[13px] font-bold tracking-[0.26em] text-foreground">
               MOONLIGHT
             </span>
-            <span className="text-[8px] font-medium tracking-[0.18em] text-muted-foreground uppercase -mt-0.5">
+            <span className="text-[8px] font-bold tracking-[0.18em] text-gold uppercase -mt-0.5">
               Multi-Currency Financial Wallet
             </span>
           </div>
@@ -160,7 +162,7 @@ function Landing() {
           {signedIn ? (
             <Link
               to="/dashboard"
-              className="rounded-full bg-primary px-5 py-2.5 text-[12px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-soft"
+              className="rounded-full bg-gold text-black px-5 py-2.5 text-[12px] font-bold transition-all hover:brightness-110 active:scale-[0.98] shadow-md gold-glow"
             >
               Open Dashboard
             </Link>
@@ -168,13 +170,13 @@ function Landing() {
             <div className="flex items-center gap-2">
               <Link
                 to="/about"
-                className="hidden sm:inline-flex rounded-full px-4 py-2 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="hidden sm:inline-flex rounded-full px-4 py-2 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
-                Access &amp; Regulatory Info
+                Regulatory Info
               </Link>
               <Link
                 to="/login"
-                className="rounded-full border border-border/60 bg-card/70 px-5 py-2.5 text-[12px] font-semibold hover:bg-accent hover:border-border transition-all shadow-soft"
+                className="rounded-full border border-gold/40 bg-black/60 px-5 py-2.5 text-[12px] font-bold text-gold hover:bg-black transition-all shadow-soft backdrop-blur-md"
               >
                 Sign In
               </Link>
@@ -184,128 +186,130 @@ function Landing() {
       </header>
 
       {/* ─── Hero Section ─── */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 sm:px-6 py-12 sm:py-20 text-center">
-        <div className="animate-fade-up max-w-4xl space-y-5">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 sm:px-6 py-12 sm:py-16 text-center">
+        <div className="animate-fade-up max-w-4xl space-y-6">
           {/* Trust badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/70 px-4 py-1.5 backdrop-blur-xl shadow-soft">
-            <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
-            <span className="text-[10px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
-              Secure Multi-Currency Digital Wallet
+          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 backdrop-blur-xl shadow-soft">
+            <Crown className="h-4 w-4 text-gold shrink-0" />
+            <span className="text-[10px] font-bold tracking-[0.2em] text-gold uppercase">
+              Licensed European-First Financial Infrastructure
             </span>
           </div>
 
           {/* Headline */}
-          <h1 className="mx-auto max-w-3xl text-[36px] sm:text-[56px] md:text-[64px] font-semibold leading-[1.06] tracking-tight text-foreground">
+          <h1 className="mx-auto max-w-3xl text-[40px] sm:text-[60px] md:text-[68px] font-black leading-[1.04] tracking-tight text-foreground">
             Global Capital. <br />
-            <span className="bg-gradient-to-r from-foreground via-foreground/85 to-muted-foreground bg-clip-text text-transparent">
-              Precision Connected.
+            <span className="bg-gradient-to-r from-gold via-amber-200 to-white bg-clip-text text-transparent drop-shadow-sm">
+              Instant Mobility.
             </span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="mx-auto max-w-2xl text-[15px] sm:text-[17px] text-muted-foreground leading-relaxed px-2">
-            A modern multi-currency wallet engineered for instant transfers, real-time FX
-            conversions, global benchmark market tracking, and flexible payout rails.
+          <p className="mx-auto max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
+            Send, receive, withdraw, and manage multi-currency balances across Europe, Asia, and the Americas with SEPA Instant rails, 256-bit encryption, and zero hidden friction.
           </p>
 
-          {/* Currency Corridor Pills */}
-          <div className="pt-2 pb-3">
-            <div className="mx-auto flex flex-wrap items-center justify-center gap-1.5 max-w-3xl px-1">
-              {GLOBAL_CURRENCIES.map((c) => (
-                <button
-                  key={c.code}
-                  onClick={() => setActiveTab(c.code)}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
-                    activeTab === c.code
-                      ? "border-primary/60 bg-primary/8 text-primary shadow-sm"
-                      : "border-border/40 bg-card/50 text-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <CountryFlag code={c.flag} circle size="xs" />
-                  <span>{c.code}</span>
-                  <span className="text-muted-foreground/60 text-[9px]">({c.symbol})</span>
-                </button>
-              ))}
-            </div>
-            <p className="mt-3 text-[10px] font-semibold text-muted-foreground/60 tracking-[0.15em] uppercase flex flex-wrap items-center justify-center gap-2 text-center px-2">
-              <Globe className="h-3 w-3 text-primary shrink-0" />
-              Real-time FX Rates · Instant Settlement · 10+ Currencies
-            </p>
-          </div>
-
-          {/* CTAs */}
-          <div className="mx-auto flex w-full max-w-md flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-            {signedIn ? (
-              <Link
-                to="/dashboard"
-                className="w-full sm:w-auto h-12 text-[14px] min-w-[200px] flex items-center justify-center gap-2 rounded-full bg-primary px-8 font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-soft"
-              >
-                Access Dashboard <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <>
-                <button
-                  onClick={() => signInWithGoogle(() => navigate({ to: "/dashboard" }))}
-                  className="w-full sm:w-auto h-12 text-[13px] min-w-[190px] flex items-center justify-center gap-2.5 rounded-full border border-border/60 bg-card/70 px-6 font-semibold transition-all hover:bg-accent hover:border-border shadow-soft active:scale-[0.98] cursor-pointer touch-manipulation"
-                >
-                  <GoogleIcon /> Continue with Google
-                </button>
-                <Link
-                  to="/login"
-                  className="w-full sm:w-auto h-12 text-[13px] min-w-[160px] flex items-center justify-center gap-2 rounded-full bg-primary px-7 font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-soft active:scale-[0.98] touch-manipulation"
-                >
-                  <Mail className="h-4 w-4" /> Open Account
-                </Link>
-              </>
-            )}
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => signInWithGoogle()}
+              className="w-full sm:w-auto flex h-13 items-center justify-center gap-2.5 rounded-full bg-gold px-8 text-xs font-bold uppercase tracking-wider text-black transition-all hover:brightness-110 active:scale-[0.98] shadow-lg gold-glow cursor-pointer"
+            >
+              <GoogleIcon /> Continue with Google
+            </button>
+            <Link
+              to="/register"
+              className="w-full sm:w-auto flex h-13 items-center justify-center gap-2 rounded-full border border-border/60 bg-card/60 px-8 text-xs font-bold tracking-wide text-foreground hover:bg-muted/60 transition-all shadow-xs"
+            >
+              <Mail className="h-4 w-4 text-gold" /> Sign up with Email <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════
-             Interactive Exchange Rate Calculator
-           ═══════════════════════════════════════ */}
-        <div className="mt-12 w-full max-w-3xl rounded-3xl border border-border/50 bg-card/80 p-5 sm:p-7 backdrop-blur-2xl shadow-card text-left">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/30 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <ArrowRightLeft className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Live ECB Reference Rates
-                </span>
+        {/* ─── Holographic 3D Titanium Card Showcase ─── */}
+        <div className="mt-12 w-full max-w-2xl animate-fade-up">
+          <div className="relative rounded-3xl obsidian-card p-2 shadow-2xl gold-glow overflow-hidden group">
+            <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden relative">
+              <img
+                src={titaniumCardImg}
+                alt="Moonlight Titanium Card"
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
+                <div className="text-left space-y-1">
+                  <p className="text-[10px] font-bold text-gold uppercase tracking-widest">
+                    EXECUTIVE TITANIUM MEMBERSHIP
+                  </p>
+                  <p className="text-white font-mono text-sm font-bold">
+                    ML-88190-VIP · 0% Transfer Fee Threshold
+                  </p>
+                </div>
               </div>
-              <h2 className="text-[15px] font-semibold text-foreground mt-0.5">
-                Interactive Currency Converter &amp; Clearing Calculator
-              </h2>
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-secondary/60 px-3 py-1.5 rounded-full font-medium shrink-0 border border-border/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              Live Interbank Rates
             </div>
           </div>
+        </div>
 
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-                From Amount
+        {/* ─── Press Accolades Carousel ─── */}
+        <div className="mt-16 w-full max-w-5xl space-y-4">
+          <div className="flex items-center justify-center gap-2">
+            <Award className="h-4 w-4 text-gold" />
+            <h2 className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground uppercase">
+              International Press Recognition
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+            {PRESS_ACCOLADES.slice(0, 3).map((item, idx) => (
+              <div
+                key={idx}
+                className="rounded-3xl border border-gold/20 bg-card/60 p-5 space-y-3 shadow-soft hover:border-gold/40 transition-colors backdrop-blur-md"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-xs text-foreground tracking-wide">{item.publication}</span>
+                  <span className="text-[9px] font-bold text-gold uppercase bg-gold/10 px-2 py-0.5 rounded-full border border-gold/20">
+                    {item.tagline}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed italic">
+                  {item.quote}
+                </p>
+                <p className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider">
+                  — {item.author}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Currency Converter Calculator ─── */}
+        <div className="mt-16 w-full max-w-xl rounded-3xl border border-border/60 bg-card/60 p-6 shadow-soft space-y-4 text-left backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-gold" /> Instant FX Calculator
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground">
+              Rate: 1 {calcFrom} ≈ {rateRatio.toFixed(4)} {calcTo}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">
+                You Convert
               </label>
-              <div className="flex items-center gap-2 rounded-xl border border-border/40 bg-background/60 p-2">
+              <div className="flex gap-2">
                 <Input
                   type="number"
                   value={calcAmount}
                   onChange={(e) => setCalcAmount(e.target.value)}
-                  className="h-10 border-none text-[16px] font-bold focus-visible:ring-0 px-2 min-w-0 flex-1"
+                  className="h-12 rounded-2xl border-border/60 bg-background font-mono text-base font-bold"
                 />
                 <Select value={calcFrom} onValueChange={setCalcFrom}>
-                  <SelectTrigger className="h-10 w-28 border-none bg-secondary/50 text-[11px] font-bold rounded-lg shrink-0">
+                  <SelectTrigger className="h-12 w-28 rounded-2xl border-border/60 bg-background font-bold shrink-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {CURRENCIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code} className="text-[11px] font-semibold">
-                        <div className="flex items-center gap-2">
-                          <CountryFlag code={c.code} circle size="xs" />
-                          <span>{c.code}</span>
-                        </div>
+                  <SelectContent className="rounded-2xl p-1 border-border/60">
+                    {GLOBAL_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code} className="font-bold text-xs py-2">
+                        {c.code}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -313,211 +317,40 @@ function Landing() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-                Converted Settlement Amount
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">
+                Converted Output
               </label>
-              <div className="flex items-center gap-2 rounded-xl border border-border/40 bg-background/60 p-2">
-                <div className="flex-1 px-3 text-[16px] font-bold text-foreground font-mono truncate">
+              <div className="flex gap-2">
+                <div className="h-12 rounded-2xl border border-border/60 bg-muted/40 font-mono text-base font-bold text-emerald-500 flex items-center px-4 flex-1">
                   {formatMoney(convertedVal, calcTo)}
                 </div>
                 <Select value={calcTo} onValueChange={setCalcTo}>
-                  <SelectTrigger className="h-10 w-28 border-none bg-secondary/50 text-[11px] font-bold rounded-lg shrink-0">
+                  <SelectTrigger className="h-12 w-28 rounded-2xl border-border/60 bg-background font-bold shrink-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {CURRENCIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code} className="text-[11px] font-semibold">
-                        <div className="flex items-center gap-2">
-                          <CountryFlag code={c.code} circle size="xs" />
-                          <span>{c.code}</span>
-                        </div>
+                  <SelectContent className="rounded-2xl p-1 border-border/60">
+                    {GLOBAL_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code} className="font-bold text-xs py-2">
+                        {c.code}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-              <span>
-                1 {calcFrom} ≈{" "}
-                <strong className="text-foreground font-mono">
-                  {rateRatio.toFixed(4)} {calcTo}
-                </strong>
-              </span>
-            </div>
-            <span className="font-mono text-[10px] text-muted-foreground/60">ECB-REF-2025 · Guaranteed Settlement</span>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════
-             Global Media Recognition & Accolades
-           ═══════════════════════════════════════ */}
-        <div className="mt-20 sm:mt-24 w-full max-w-5xl space-y-8 text-center">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/8 px-4 py-1 text-[10px] font-semibold text-gold tracking-[0.1em] uppercase">
-              <Award className="h-3 w-3 shrink-0" />
-              <span>Global Recognition &amp; Press Acclaim</span>
-            </div>
-            <h2 className="text-[24px] sm:text-[36px] font-semibold tracking-tight text-foreground">
-              Praised by Leading Financial Media
-            </h2>
-            <p className="text-[13px] text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Engineered to meet the highest standards of European regulatory compliance and digital
-              liquidity.
-            </p>
-          </div>
-
-          {/* Primary Accolade Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-            {PRESS_ACCOLADES.slice(0, 3).map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col justify-between rounded-2xl border border-border/40 bg-card/80 p-5 shadow-card backdrop-blur-xl space-y-4 card-hover"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] font-bold tracking-tight text-foreground">
-                      {item.publication}
-                    </span>
-                    <span className="text-[9px] font-semibold text-gold bg-gold/8 px-2 py-0.5 rounded-full border border-gold/15 shrink-0">
-                      {item.tagline}
-                    </span>
-                  </div>
-                  <p className="text-[12px] text-muted-foreground leading-relaxed italic">
-                    {item.quote}
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-border/30 text-[10px] font-medium text-muted-foreground/60">
-                  — {item.author}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Secondary Accolades */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left max-w-4xl mx-auto">
-            {PRESS_ACCOLADES.slice(3).map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col justify-between rounded-2xl border border-border/30 bg-card/60 p-5 backdrop-blur-lg space-y-3 card-hover"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[13px] font-bold text-foreground">{item.publication}</span>
-                  <div className="flex items-center gap-0.5 text-gold">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-3 w-3 fill-gold" />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-[12px] text-muted-foreground leading-relaxed italic">{item.quote}</p>
-                <span className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-[0.1em]">
-                  {item.tagline}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════
-             Feature Highlights
-           ═══════════════════════════════════════ */}
-        <div className="mt-20 sm:mt-24 grid w-full max-w-5xl grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-          <div className="rounded-2xl border border-border/40 bg-card/80 p-6 shadow-card backdrop-blur-2xl space-y-3 card-hover">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-primary">
-              <Globe className="h-5 w-5" />
-            </div>
-            <h3 className="font-semibold text-foreground text-[14px]">Multi-Currency Treasury</h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              Hold, convert, and manage multi-currency balances across EUR, USD, GBP, JPY, AED, INR,
-              PHP and 12+ international currencies with live interbank clearing rates.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/40 bg-card/80 p-6 shadow-card backdrop-blur-2xl space-y-3 card-hover">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/8 text-success">
-              <Lock className="h-5 w-5" />
-            </div>
-            <h3 className="font-semibold text-foreground text-[14px]">
-              SEPA &amp; Global Settlement
-            </h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              Direct integration into SEPA Instant, UK Faster Payments, India UPI, Philippines
-              GCash, Singapore PayNow, and SWIFT international corridors.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/40 bg-card/80 p-6 shadow-card backdrop-blur-2xl space-y-3 card-hover">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/8 text-gold">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <h3 className="font-semibold text-foreground text-[14px]">Luxury &amp; Digital Assets</h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-              Instantly convert wallet balances into official global e-vouchers, luxury brand cards,
-              and verified official transaction receipts.
-            </p>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════
-             Institutional Trust Stats
-           ═══════════════════════════════════════ */}
-        <div className="mt-14 w-full max-w-5xl rounded-2xl border border-border/40 bg-card/70 p-6 sm:p-8 backdrop-blur-xl shadow-card grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="space-y-1">
-            <p className="text-[24px] sm:text-[28px] font-bold text-foreground tracking-tight tabular">
-              €2.4B+
-            </p>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-              Annualized Clearing
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[24px] sm:text-[28px] font-bold text-success tracking-tight tabular">
-              99.99%
-            </p>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-              Settlement Uptime
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[24px] sm:text-[28px] font-bold text-foreground tracking-tight tabular">
-              180+
-            </p>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-              Global Corridors
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[24px] sm:text-[28px] font-bold text-primary tracking-tight tabular">
-              &lt; 2.5s
-            </p>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.1em]">
-              Instant Clearing
-            </p>
           </div>
         </div>
       </main>
 
       {/* ─── Footer ─── */}
-      <footer className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-4 mx-auto w-full max-w-6xl px-5 sm:px-6 py-8 text-[11px] text-muted-foreground border-t border-border/30">
-        <div className="flex items-center gap-2">
-          <LogoMark className="h-5 w-5" />
-          <span className="font-semibold text-foreground">Moonlight Wallet</span>
-          <span className="text-muted-foreground/60">· Multi-Currency Financial Wallet</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <Link to="/about" className="hover:text-foreground transition-colors">
-            Regulatory &amp; Access
-          </Link>
-          <Link to="/login" className="hover:text-foreground transition-colors">
-            Sign In
-          </Link>
-          <span className="text-muted-foreground/50">© Moonlight Wallet</span>
-        </div>
+      <footer className="relative z-10 border-t border-border/40 py-8 text-center text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">
+          Moonlight Wallet · Official European Multi-Currency Infrastructure
+        </p>
+        <p className="mt-1 text-[11px] text-muted-foreground/70">
+          Licensed digital clearing platform operating under strict European financial compliance frameworks.
+        </p>
       </footer>
     </div>
   );
