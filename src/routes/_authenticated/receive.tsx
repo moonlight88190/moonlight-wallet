@@ -1,16 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import {
-  Copy,
-  Share,
-  QrCode,
-  Check,
-  ShieldCheck,
-  Globe,
-  Smartphone,
-  Wallet,
-} from "lucide-react";
+import { Copy, Share, QrCode, Check, ShieldCheck, Globe } from "lucide-react";
 import { toast } from "sonner";
 import {
   useProfile,
@@ -29,127 +20,61 @@ export const Route = createFileRoute("/_authenticated/receive")({
       { title: "Receive Money — Moonlight Wallet" },
       {
         name: "description",
-        content: "Receive funds via UPI QR, instant bank clearing, or your Moonlight Wallet ID.",
+        content: "Share your Moonlight ID or QR code to receive money.",
       },
       { property: "og:title", content: "Receive Money — Moonlight Wallet" },
-      { property: "og:description", content: "Instant receive channels and account QR." },
+      { property: "og:description", content: "Share your Moonlight ID or QR code." },
     ],
   }),
   component: Receive,
 });
 
+const qrPayload = (code: string) => `moonlight:${code}`;
+
 function Receive() {
   const wallet = useWallet();
   const profile = useProfile();
   const geography = useAccountGeography();
-
-  const [copiedType, setCopiedType] = useState<"upi" | "wallet" | null>(null);
+  const [copied, setCopied] = useState(false);
   const [big, setBig] = useState(false);
-
   const code = wallet.data?.wallet_code ?? "";
-  const payeeName = profile.data?.full_name?.trim() || "Moonlight Customer";
 
   const isIndianAccount = Boolean(
     geography.data?.isIndia || geography.data?.capabilities?.supportsUPI,
   );
 
-  // Default active tab: UPI QR for Indian accounts, Wallet ID for other accounts
-  const [activeTab, setActiveTab] = useState<"upi" | "wallet">("upi");
-
-  // Format valid, compliant UPI VPA from legitimate user wallet identifier
-  const cleanCode = (code || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const upiVpa = cleanCode ? `${cleanCode}@moonlight` : "";
-
-  // NPCI-compliant UPI deep link payload for QR code
-  const upiQrPayload = upiVpa
-    ? `upi://pay?pa=${encodeURIComponent(upiVpa)}&pn=${encodeURIComponent(payeeName)}&cu=INR&tn=${encodeURIComponent("Transfer via Moonlight")}`
-    : "";
-
-  // Standard Moonlight wallet peer-to-peer payload
-  const walletQrPayload = code ? `moonlight:${code}` : "";
-
-  // Selected payload based on account geography and active tab
-  const isViewingUpi = isIndianAccount && activeTab === "upi";
-  const activeQrPayload = isViewingUpi ? upiQrPayload : walletQrPayload;
-
-  async function copyUpi() {
-    if (!upiVpa) return;
-    await navigator.clipboard.writeText(upiVpa);
-    setCopiedType("upi");
-    toast.success("UPI ID copied to clipboard");
-    setTimeout(() => setCopiedType(null), 2000);
-  }
-
-  async function copyWalletCode() {
+  async function copy() {
     if (!code) return;
     await navigator.clipboard.writeText(code);
-    setCopiedType("wallet");
-    toast.success("Moonlight Wallet ID copied to clipboard");
-    setTimeout(() => setCopiedType(null), 2000);
+    setCopied(true);
+    toast.success("Wallet ID copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function share() {
     if (!code) return;
-    const text = isViewingUpi && upiVpa
-      ? `Pay me via UPI: ${upiVpa} (${payeeName}) on Moonlight Wallet.`
-      : `Send me money on Moonlight Wallet. My ID: ${code} (${payeeName}).`;
-
+    const text = `Send me money on Moonlight Wallet. My ID: ${code}`;
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: isViewingUpi ? "My Moonlight UPI ID" : "My Moonlight Wallet ID",
-          text,
-        });
+        await navigator.share({ title: "My Moonlight ID", text });
       } catch {
-        /* user dismissed share sheet */
+        /* dismissed */
       }
     } else {
       await navigator.clipboard.writeText(text);
-      toast.success("Payment details copied for sharing");
+      toast.success("Share message copied");
     }
   }
 
   return (
     <div className="mx-auto max-w-md text-center space-y-5 sm:space-y-6 animate-fade-up">
       <PageTitle eyebrow="RECEIVE" title="Receive Money">
-        {isIndianAccount
-          ? "Anyone can send money via UPI, instant bank transfer, or your Moonlight Wallet ID."
-          : "Anyone on Moonlight or supported payout rails can send money using this ID or QR code."}
+        Anyone on Moonlight or supported payout rails can send money using this ID or QR code.
       </PageTitle>
 
-      {/* ─── Mode Selector for Indian Accounts ─── */}
-      {isIndianAccount && (
-        <div className="flex rounded-2xl border border-border/40 bg-card p-1 shadow-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab("upi")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer touch-manipulation ${
-              activeTab === "upi"
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Smartphone className="h-3.5 w-3.5" />
-            <span>UPI (Scan & Pay)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("wallet")}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer touch-manipulation ${
-              activeTab === "wallet"
-                ? "bg-primary text-primary-foreground shadow-2xs"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Wallet className="h-3.5 w-3.5" />
-            <span>Moonlight ID</span>
-          </button>
-        </div>
-      )}
-
-      {/* ─── Identity & QR Card ─── */}
+      {/* ─── Identity Card ─── */}
       <div className="rounded-2xl border border-border/40 bg-card p-5 sm:p-7 shadow-card space-y-5">
-        {/* Region & Capability Badge */}
+        {/* Region Badge */}
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/30 bg-secondary/50 px-3 py-1 text-[10px] font-semibold text-muted-foreground">
           {geography.data?.isIndia || geography.data?.isEurope ? (
             <ShieldCheck className="h-3 w-3 text-emerald-500" />
@@ -159,120 +84,37 @@ function Receive() {
           <span>{getAccountRegionLabel(geography.data)}</span>
         </div>
 
-        {/* QR Code Container */}
+        {/* QR Code */}
         {wallet.isLoading ? (
-          <Skeleton className="mx-auto h-52 w-52 rounded-2xl" />
+          <Skeleton className="mx-auto h-44 w-44 sm:h-52 sm:w-52 rounded-2xl" />
         ) : (
-          <div className="mx-auto w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm border border-border/10 flex flex-col items-center gap-3">
-            {/* Header Badge inside QR card */}
-            {isViewingUpi ? (
-              <div className="flex items-center gap-2">
-                <img
-                  src="/assets/payment-methods/upi.svg"
-                  alt="NPCI UPI"
-                  className="h-5 w-auto object-contain"
-                />
-                <span className="text-[11px] font-bold tracking-tight text-slate-800">
-                  Unified Payments Interface
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <img
-                  src="/assets/brand/moonlight-emblem.png"
-                  alt="Moonlight"
-                  className="h-4 w-4 object-contain"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = "none";
-                  }}
-                />
-                <span className="text-[11px] font-semibold tracking-wide text-slate-800 uppercase">
-                  Moonlight Wallet
-                </span>
-              </div>
-            )}
-
+          <div className="mx-auto w-fit rounded-2xl bg-white p-4 shadow-sm border border-border/10">
             <QRCodeSVG
-              value={activeQrPayload || "moonlight:pending"}
+              value={qrPayload(code)}
               size={180}
               className="w-[180px] h-[180px] sm:w-[200px] sm:h-[200px]"
               fgColor="#0f172a"
               level="M"
             />
-
-            <p className="text-[10px] font-medium text-slate-500">
-              {isViewingUpi
-                ? "Scan with Google Pay, PhonePe, Paytm or any UPI app"
-                : "Scan with Moonlight camera to transfer instantly"}
-            </p>
           </div>
         )}
 
-        {/* Primary Identifier Display */}
-        <div className="space-y-1">
-          {isViewingUpi ? (
-            <>
-              <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                Virtual Payment Address (VPA)
-              </p>
-              <div className="flex items-center justify-center gap-1.5 mt-1">
-                <span className="font-mono text-[18px] sm:text-[22px] font-bold text-foreground">
-                  {upiVpa || "—"}
-                </span>
-                {upiVpa && (
-                  <button
-                    type="button"
-                    onClick={copyUpi}
-                    aria-label="Copy UPI ID"
-                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    {copiedType === "upi" ? (
-                      <Check className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                )}
-              </div>
-              <p className="text-[12px] font-medium text-muted-foreground">
-                Payee: <span className="text-foreground font-semibold">{payeeName}</span>
-              </p>
-              <p className="text-[11px] text-muted-foreground/75 font-mono pt-0.5">
-                Account ID: {code}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                Your Moonlight Wallet ID
-              </p>
-              <div className="flex items-center justify-center gap-1.5 mt-1">
-                <span className="font-mono text-[20px] sm:text-[24px] font-bold tracking-wider text-foreground">
-                  {code || "—"}
-                </span>
-                {code && (
-                  <button
-                    type="button"
-                    onClick={copyWalletCode}
-                    aria-label="Copy Wallet ID"
-                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    {copiedType === "wallet" ? (
-                      <Check className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                )}
-              </div>
-              <p className="text-[12px] font-medium text-muted-foreground">
-                Account Name: <span className="text-foreground font-semibold">{payeeName}</span>
-              </p>
-            </>
+        {/* Wallet ID */}
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+            Your Moonlight Wallet ID
+          </p>
+          <p className="mt-1.5 font-mono text-[20px] sm:text-[24px] font-semibold tracking-wider text-foreground">
+            {code || "—"}
+          </p>
+          {profile.data && (
+            <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+              {profile.data.full_name}
+            </p>
           )}
         </div>
 
-        {/* ─── Compatible Clearing Infrastructure by Geography ─── */}
+        {/* ─── Compatible Clearing Infrastructure (Filtered by Account Geography) ─── */}
         {isIndianAccount ? (
           <div className="border-t border-border/30 pt-4 space-y-2.5">
             <div className="flex items-center justify-between">
@@ -373,92 +215,46 @@ function Receive() {
         )}
       </div>
 
-      {/* ─── Action Buttons (No Duplicates) ─── */}
-      <div className={`grid ${isIndianAccount ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"} gap-2.5`}>
-        {isIndianAccount && (
+      {/* ─── Action Buttons (Clean 3-column grid, no duplicate buttons) ─── */}
+      <div className="grid grid-cols-3 gap-2.5">
+        {[
+          {
+            label: copied ? "Copied!" : "Copy ID",
+            icon: copied ? Check : Copy,
+            onClick: copy,
+            isCopied: copied,
+          },
+          { label: "Share", icon: Share, onClick: share },
+          { label: "Show QR", icon: QrCode, onClick: () => setBig(true) },
+        ].map((b) => (
           <button
-            type="button"
-            onClick={copyUpi}
-            disabled={!upiVpa}
-            className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 px-2 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation ${
-              copiedType === "upi"
+            key={b.label}
+            onClick={b.onClick}
+            disabled={!code}
+            className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation ${
+              b.isCopied
                 ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
                 : ""
             }`}
           >
-            {copiedType === "upi" ? (
-              <Check className="h-[18px] w-[18px] text-emerald-500 scale-110 transition-transform" />
-            ) : (
-              <Copy className="h-[18px] w-[18px]" strokeWidth={1.6} />
-            )}
-            <span>{copiedType === "upi" ? "Copied UPI!" : "Copy UPI ID"}</span>
+            <b.icon
+              className={`h-[18px] w-[18px] transition-transform ${b.isCopied ? "scale-110 text-emerald-500" : ""}`}
+              strokeWidth={1.6}
+            />
+            {b.label}
           </button>
-        )}
-
-        <button
-          type="button"
-          onClick={copyWalletCode}
-          disabled={!code}
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 px-2 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation ${
-            copiedType === "wallet"
-              ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-              : ""
-          }`}
-        >
-          {copiedType === "wallet" ? (
-            <Check className="h-[18px] w-[18px] text-emerald-500 scale-110 transition-transform" />
-          ) : (
-            <Copy className="h-[18px] w-[18px]" strokeWidth={1.6} />
-          )}
-          <span>{copiedType === "wallet" ? "Copied ID!" : "Copy Wallet ID"}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={share}
-          disabled={!code}
-          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 px-2 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation"
-        >
-          <Share className="h-[18px] w-[18px]" strokeWidth={1.6} />
-          <span>Share</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setBig(true)}
-          disabled={!code}
-          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card min-h-[56px] py-3 px-2 text-[11px] font-semibold transition-all hover:bg-accent hover:border-border active:scale-[0.97] shadow-card disabled:opacity-40 cursor-pointer touch-manipulation"
-        >
-          <QrCode className="h-[18px] w-[18px]" strokeWidth={1.6} />
-          <span>Full Screen</span>
-        </button>
+        ))}
       </div>
 
       {/* ─── Full-Screen QR Dialog ─── */}
       <Dialog open={big} onOpenChange={setBig}>
         <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-2xl text-center p-5 sm:p-6">
           <DialogTitle className="text-center font-mono text-[14px] font-semibold">
-            {isViewingUpi ? upiVpa : code}
+            {code}
           </DialogTitle>
-          <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm border border-border/10 flex flex-col items-center gap-3">
-            {isViewingUpi ? (
-              <img
-                src="/assets/payment-methods/upi.svg"
-                alt="UPI"
-                className="h-6 w-auto object-contain"
-              />
-            ) : (
-              <img
-                src="/assets/brand/moonlight-emblem.png"
-                alt="Moonlight"
-                className="h-5 w-5 object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = "none";
-                }}
-              />
-            )}
+          <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 sm:p-5 shadow-sm border border-border/10">
             <QRCodeSVG
-              value={activeQrPayload || "moonlight:pending"}
+              value={qrPayload(code)}
               size={220}
               className="w-[220px] h-[220px] sm:w-[250px] sm:h-[250px]"
               fgColor="#0f172a"
@@ -466,9 +262,7 @@ function Receive() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground mt-3">
-            {isViewingUpi
-              ? "Scan with Google Pay, PhonePe, Paytm, BHIM, or any UPI app to pay"
-              : "Scan with Moonlight camera to transfer funds instantly"}
+            Scan with Moonlight mobile camera or QR reader
           </p>
         </DialogContent>
       </Dialog>
