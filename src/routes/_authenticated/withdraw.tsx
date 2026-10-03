@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BankLogo,
+  CountryFlag,
   GiftCardBrand,
   GiftCardImage,
   UPIProviderLogo,
@@ -141,6 +142,7 @@ function Withdraw() {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   // Currency conversions
+  const sourceAmt = Number(withdrawAmount) || 0;
   const isUPI = selectedMethod.id.includes("upi");
   const isIndianBank = selectedMethod.id === "in-bank";
   const targetCorridorCurrency = getMethodTargetCurrency(selectedMethod.id);

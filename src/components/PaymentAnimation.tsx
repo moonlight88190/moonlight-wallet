@@ -185,6 +185,7 @@ function WithdrawalAnimationView({
       const t = setTimeout(() => setShowComplete(true), 500);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [isBackendDone, visualStage, totalStages]);
 
   const isComplete = showComplete && isBackendDone;
