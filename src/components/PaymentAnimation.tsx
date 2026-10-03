@@ -100,52 +100,100 @@ function WithdrawalAnimationView({
     "withdrawal",
   );
 
+  // 5 realistic banking clearance stages (total ~7.2s sequence)
   const withdrawalStages = [
     {
-      title: "Wallet Balance Debit",
-      description: "Available balance secured & transaction ledger entry recorded",
-      pill: "Instant",
+      title: "Wallet Debit & Ledger Signature",
+      description: "Securing balance, deducting fee & writing immutable double-entry ledger record",
+      pill: "Ledger Signed",
+      corridorStatus: "Debiting Balance",
+      progress: 20,
     },
     {
-      title: `Routing via ${paymentAsset.label}`,
-      description: "Direct connection with domestic interbank settlement rail",
-      pill: "In Transit",
+      title: `Connecting ${paymentAsset.label} Gateway`,
+      description: "Establishing encrypted TLS 1.3 socket with national payment clearance switch",
+      pill: "Rail Connected",
+      corridorStatus: "Switch Handshake",
+      progress: 42,
     },
     {
-      title: "Outbound Clearing Queue",
-      description: "Disbursement payload registered for 5–7 business days settlement",
-      pill: "Queued",
+      title: "Beneficiary Account Validation",
+      description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
+      pill: "Account Validated",
+      corridorStatus: "Validating Account",
+      progress: 65,
+    },
+    {
+      title: "Outbound Batch Allocation",
+      description: "Transaction allocated to settlement dispatch queue with 5–7 business days value date",
+      pill: "Batch Queued",
+      corridorStatus: "Batch Allocation",
+      progress: 86,
+    },
+    {
+      title: "Settlement Reference Confirmed",
+      description: "Disbursement payload registered. Payout tracking active and queued for dispatch",
+      pill: "Dispatched",
+      corridorStatus: "Dispatched & Queued",
+      progress: 100,
     },
   ];
 
   const totalStages = withdrawalStages.length;
   const [visualStage, setVisualStage] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(15);
   const [showComplete, setShowComplete] = useState(false);
   const backendDoneRef = useRef(isBackendDone);
   backendDoneRef.current = isBackendDone;
 
-  useEffect(() => {
-    if (isFailed || isCancelled) return;
-    const interval = setInterval(() => {
-      setVisualStage((prev) => {
-        if (prev < totalStages - 1) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, 1100);
-    return () => clearInterval(interval);
-  }, [isFailed, isCancelled, totalStages]);
+  // Realistic stage pacing: 1400ms, 1500ms, 1500ms, 1500ms, 1300ms (~7.2 seconds total)
+  const stageDurations = [1400, 1500, 1500, 1500, 1300];
 
   useEffect(() => {
+    if (isFailed || isCancelled) return;
+
+    let current = 0;
+    const timeouts: NodeJS.Timeout[] = [];
+
+    const scheduleNext = (index: number) => {
+      if (index >= totalStages - 1) {
+        // At final stage, advance progress to 96% and wait for backend completion
+        setProgressPercent(96);
+        return;
+      }
+      const dur = stageDurations[index] || 1500;
+      const t = setTimeout(() => {
+        current = index + 1;
+        setVisualStage(current);
+        setProgressPercent(withdrawalStages[current]?.progress || 90);
+        scheduleNext(current);
+      }, dur);
+      timeouts.push(t);
+    };
+
+    scheduleNext(0);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [isFailed, isCancelled, totalStages]);
+
+  // When backend is completed and we've reached stage 4, transition to complete
+  useEffect(() => {
     if (isBackendDone && visualStage >= totalStages - 1) {
-      const t = setTimeout(() => setShowComplete(true), 400);
+      setProgressPercent(100);
+      const t = setTimeout(() => setShowComplete(true), 500);
       return () => clearTimeout(t);
     }
   }, [isBackendDone, visualStage, totalStages]);
 
   const isComplete = showComplete && isBackendDone;
   const isTerminal = isComplete || isFailed || isCancelled;
+
+  const currentCorridorText =
+    isComplete
+      ? "Clearing Handshake Complete"
+      : withdrawalStages[visualStage]?.corridorStatus || "In Transit";
 
   return (
     <div
@@ -191,11 +239,41 @@ function WithdrawalAnimationView({
           )}
         </div>
 
+        {/* Real-time Smooth Progress Indicator */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+              {!isTerminal && (
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              )}
+              {isComplete
+                ? "Dispatched & Confirmed"
+                : withdrawalStages[visualStage]?.title || "Processing..."}
+            </span>
+            <span className="font-mono font-bold text-primary text-xs">
+              {progressPercent}%
+            </span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-secondary overflow-hidden p-0.5">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-700 ease-out",
+                isComplete
+                  ? "bg-emerald-500"
+                  : isFailed
+                    ? "bg-destructive"
+                    : "bg-gradient-to-r from-primary/80 to-primary",
+              )}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
         {/* ─── Interactive Clearing Corridor (Visual Bridge) ─── */}
         <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 space-y-3">
           <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             <span>Clearing Pipeline</span>
-            <span className="text-primary font-mono">Domestic Interbank Bridge</span>
+            <span className="text-primary font-mono">{currentCorridorText}</span>
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-1">
@@ -220,7 +298,7 @@ function WithdrawalAnimationView({
                   <div
                     className={cn(
                       "h-full rounded-full bg-gradient-to-r from-primary/30 via-primary to-primary/30 transition-all duration-700",
-                      isComplete ? "w-full bg-emerald-500" : "w-2/3 animate-pulse",
+                      isComplete ? "w-full bg-emerald-500" : "w-3/4 animate-pulse",
                     )}
                   />
                 </div>
@@ -230,8 +308,8 @@ function WithdrawalAnimationView({
                   />
                 </div>
               </div>
-              <span className="text-[9px] font-mono text-muted-foreground text-center mt-0.5">
-                {isComplete ? "Handshake Completed" : "Corridor Routing"}
+              <span className="text-[9px] font-mono text-muted-foreground text-center mt-0.5 truncate max-w-[120px]">
+                {currentCorridorText}
               </span>
             </div>
 
@@ -262,7 +340,7 @@ function WithdrawalAnimationView({
           </div>
         </div>
 
-        {/* ─── Real Banking Transit Milestones ─── */}
+        {/* ─── Real Banking Transit Milestones (5 Stages) ─── */}
         <div className="space-y-2 text-xs">
           {withdrawalStages.map((st, i) => {
             const isDone = isComplete || visualStage > i;
