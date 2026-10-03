@@ -16,6 +16,7 @@ import {
   Gift,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useAccountGeography, getAccountRegionLabel } from "@/hooks/use-wallet";
 import {
@@ -107,8 +108,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5 shadow-elevated">
                 <DropdownMenuLabel className="font-normal px-3 py-2">
-                  <div className="text-[13px] font-semibold text-foreground">{profile?.full_name}</div>
-                  <div className="truncate text-[11px] text-muted-foreground mt-0.5">{profile?.email}</div>
+                  <div className="text-[13px] font-semibold text-foreground">
+                    {profile?.full_name}
+                  </div>
+                  <div className="truncate text-[11px] text-muted-foreground mt-0.5">
+                    {profile?.email}
+                  </div>
                   <div
                     className={`mt-1.5 flex items-center gap-1 text-[10px] font-semibold ${geography.data?.isIndia || geography.data?.isEurope ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
                   >
@@ -131,7 +136,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className="rounded-xl px-3 py-2.5 text-[12px] font-medium cursor-pointer"
                   onClick={() => navigate({ to: "/withdraw" })}
                 >
-                  <Landmark className="mr-2.5 h-4 w-4 text-muted-foreground" /> Withdraw &amp; Payouts
+                  <Landmark className="mr-2.5 h-4 w-4 text-muted-foreground" /> Withdraw &amp;
+                  Payouts
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="rounded-xl px-3 py-2.5 text-[12px] font-medium cursor-pointer"
@@ -154,6 +160,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <ThemeToggle />
 
             <Link
               to="/receive"
@@ -210,7 +218,11 @@ export function PageTitle({
       <h1 className="mt-1 text-[26px] sm:text-[32px] font-semibold tracking-tight text-foreground leading-tight">
         {title}
       </h1>
-      {children && <div className="mt-2 text-[13px] text-muted-foreground max-w-xl leading-relaxed">{children}</div>}
+      {children && (
+        <div className="mt-2 text-[13px] text-muted-foreground max-w-xl leading-relaxed">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

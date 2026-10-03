@@ -359,7 +359,8 @@ function Withdraw() {
               48-Hour Security Clearance Active
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers.
+              Withdrawal operations unlock 48 hours after account creation to protect against
+              unauthorized transfers.
             </p>
           </div>
         </div>
@@ -550,7 +551,10 @@ function Withdraw() {
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label htmlFor="upi-vpa-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label
+                    htmlFor="upi-vpa-input"
+                    className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
+                  >
                     UPI ID / VPA
                   </label>
                   <Input
@@ -576,7 +580,10 @@ function Withdraw() {
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="beneficiary-phone-input" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label
+                    htmlFor="beneficiary-phone-input"
+                    className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
+                  >
                     Registered Mobile Number
                   </label>
                   <Input
@@ -598,7 +605,10 @@ function Withdraw() {
             {selectedMethod.id === "in-bank" && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label htmlFor="bank-account-number" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label
+                    htmlFor="bank-account-number"
+                    className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
+                  >
                     Account Number
                   </label>
                   <Input
@@ -612,7 +622,10 @@ function Withdraw() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="bank-ifsc-code" className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  <label
+                    htmlFor="bank-ifsc-code"
+                    className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1"
+                  >
                     IFSC Code
                   </label>
                   <Input
@@ -757,7 +770,9 @@ function Withdraw() {
       <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
         <DialogContent className="max-w-sm rounded-3xl border border-border/60 bg-card p-6 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-center">Confirm Withdrawal</DialogTitle>
+            <DialogTitle className="text-base font-bold text-center">
+              Confirm Withdrawal
+            </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground text-center">
               Verify your payout details before submitting to processing.
             </DialogDescription>
@@ -838,7 +853,9 @@ function Withdraw() {
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-muted-foreground">Select Denomination</span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Select Denomination
+                </span>
                 <div className="grid grid-cols-4 gap-2">
                   {[10, 25, 50, 100].map((val) => (
                     <button

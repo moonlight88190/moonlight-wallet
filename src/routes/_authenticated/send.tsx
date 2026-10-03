@@ -2,7 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, ScanLine, CheckCircle2, Image as ImageIcon, ShieldAlert, UserCheck } from "lucide-react";
+import {
+  Loader2,
+  ScanLine,
+  CheckCircle2,
+  Image as ImageIcon,
+  ShieldAlert,
+  UserCheck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
@@ -261,7 +268,9 @@ function Send() {
 
           <Dialog open={scan} onOpenChange={setScan}>
             <DialogContent className="max-w-sm rounded-3xl border border-border/60 bg-card p-6 shadow-2xl">
-              <DialogTitle className="text-base font-semibold text-center mb-2">Scan Moonlight QR</DialogTitle>
+              <DialogTitle className="text-base font-semibold text-center mb-2">
+                Scan Moonlight QR
+              </DialogTitle>
               {scan && (
                 <Scanner
                   onResult={(v) => {
@@ -319,7 +328,11 @@ function Send() {
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl p-1 border-border/60">
                   {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code} className="rounded-xl py-2 cursor-pointer">
+                    <SelectItem
+                      key={c.code}
+                      value={c.code}
+                      className="rounded-xl py-2 cursor-pointer"
+                    >
                       <div className="flex items-center gap-2">
                         <CountryFlag code={c.code} circle size="xs" />
                         <span className="font-semibold text-xs">{c.code}</span>
@@ -342,8 +355,8 @@ function Send() {
                   <span>Security Clearance Window (First 48 Hours)</span>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  To protect your account against unauthorized scam transactions,
-                  transfers for accounts under 48 hours old are limited to{" "}
+                  To protect your account against unauthorized scam transactions, transfers for
+                  accounts under 48 hours old are limited to{" "}
                   <strong className="text-foreground">$10.00 USD</strong> (
                   {formatMoney(limit10InCur, cur)}) during initial verification.
                 </p>
@@ -422,12 +435,13 @@ function Send() {
       {step === "review" && recipient && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <PageTitle eyebrow="CONFIRM DETAILS" title={formatMoney(amt, cur)} />
-          
+
           <div className="rounded-3xl border border-border/60 bg-card/60 p-5 shadow-soft divide-y divide-border/40 space-y-3">
             <div className="flex justify-between gap-4 pb-3 text-xs">
               <span className="text-muted-foreground">From</span>
               <span className="text-right font-medium text-foreground">
-                {profile.data?.full_name} · <span className="font-mono text-[11px]">{wallet.data?.wallet_code}</span>
+                {profile.data?.full_name} ·{" "}
+                <span className="font-mono text-[11px]">{wallet.data?.wallet_code}</span>
               </span>
             </div>
 
@@ -435,7 +449,8 @@ function Send() {
               <span className="text-muted-foreground">To</span>
               <span className="text-right font-medium text-foreground flex items-center gap-1.5 justify-end">
                 <CountryFlag code={recvCur} circle size="xs" />
-                {recipient.full_name} · <span className="font-mono text-[11px]">{recipient.wallet_code}</span>
+                {recipient.full_name} ·{" "}
+                <span className="font-mono text-[11px]">{recipient.wallet_code}</span>
               </span>
             </div>
 
@@ -448,7 +463,9 @@ function Send() {
 
             <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">
               <span className="text-muted-foreground">Transfer Fee (10%)</span>
-              <span className="text-right font-medium text-foreground">{formatMoney(fee, cur)}</span>
+              <span className="text-right font-medium text-foreground">
+                {formatMoney(fee, cur)}
+              </span>
             </div>
 
             <div className="flex justify-between gap-4 pt-3 pb-3 text-xs">

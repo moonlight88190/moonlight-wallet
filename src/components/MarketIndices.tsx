@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import type { MarketFilter, MarketInstrument } from "@/lib/markets.types";
 import { formatMoney } from "@/lib/currency";
 
+import { BrandAsset } from "@/components/AssetComponents";
+
 interface MarketIndicesProps {
   compact?: boolean;
   showHeader?: boolean;
@@ -97,7 +99,11 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
 
           <div className="flex items-center gap-2 self-start sm:self-center">
             {/* Status Pill */}
-            <div aria-live="polite" aria-atomic="true" className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/80 border border-border/50 text-[11px] font-medium text-muted-foreground">
+            <div
+              aria-live="polite"
+              aria-atomic="true"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/80 border border-border/50 text-[11px] font-medium text-muted-foreground"
+            >
               <span
                 className={`h-2 w-2 rounded-full ${
                   status === "live" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
@@ -229,9 +235,12 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
                         {item.region}
                       </span>
                     </div>
-                    <h4 className="mt-1 truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {item.name}
-                    </h4>
+                    <div className="mt-1 flex items-center gap-2 min-w-0">
+                      <BrandAsset id={item.brandAssetId} size="xs" />
+                      <h4 className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h4>
+                    </div>
                     <p className="text-[11px] text-muted-foreground truncate">{item.category}</p>
                   </div>
 

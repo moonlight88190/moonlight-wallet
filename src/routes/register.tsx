@@ -71,7 +71,10 @@ function Register() {
         title="Check your email"
         subtitle={`We sent a confirmation link to ${form.email}.`}
         footer={
-          <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
+          <Link
+            to="/login"
+            className="font-semibold text-foreground hover:underline underline-offset-2"
+          >
             Back to sign in
           </Link>
         }
@@ -95,7 +98,10 @@ function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-foreground hover:underline underline-offset-2">
+          <Link
+            to="/login"
+            className="font-semibold text-foreground hover:underline underline-offset-2"
+          >
             Sign in
           </Link>
         </>

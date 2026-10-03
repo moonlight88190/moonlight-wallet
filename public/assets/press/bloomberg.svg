@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" fill="none">
+  <!-- Bloomberg terminal-era wordmark, geometric precision -->
+  <rect width="44" height="44" x="0" y="6" rx="2" fill="currentColor"/>
+  <rect width="12" height="12" x="10" y="16" rx="1.5" fill="white"/>
+  <rect width="12" height="12" x="10" y="32" rx="1.5" fill="white"/>
+  <rect width="12" height="8" x="24" y="16" rx="1.5" fill="white"/>
+  <rect width="12" height="8" x="24" y="34" rx="1.5" fill="white"/>
+  <text x="54" y="37" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-weight="700" font-size="26" letter-spacing="-0.5" fill="currentColor">Bloomberg</text>
+</svg>

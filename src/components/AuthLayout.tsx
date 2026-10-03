@@ -61,7 +61,9 @@ export function AuthLayout({
         {/* Security badge footer */}
         <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-medium tracking-[0.12em] text-muted-foreground/60 uppercase">
           <span className="flex items-center gap-1">
-            <svg className="h-3 w-3 text-emerald-500/70" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a4 4 0 0 0-4 4v2H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4zm2 6V4a2 2 0 1 0-4 0v2h4z"/></svg>
+            <svg className="h-3 w-3 text-emerald-500/70" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0a4 4 0 0 0-4 4v2H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4zm2 6V4a2 2 0 1 0-4 0v2h4z" />
+            </svg>
             256-Bit SSL
           </span>
           <span className="text-border">·</span>

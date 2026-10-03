@@ -1,44 +1,50 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LogoFull } from "@/components/Logo";
+import { ArrowLeft, Globe, ShieldCheck, Zap, Lock, Building2 } from "lucide-react";
+import { LogoMark } from "@/components/Logo";
 import { CountryFlag, PaymentMethodIcon } from "@/components/AssetComponents";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Moonlight Wallet" },
+      { title: "About Moonlight — European Financial Technology" },
       {
         name: "description",
         content:
-          "Moonlight Wallet is a calm international wallet. Our mission, global features, security and technology.",
+          "Moonlight Wallet is an institutional-grade international clearing engine and digital treasury platform.",
       },
       { property: "og:title", content: "About Moonlight Wallet" },
-      { property: "og:description", content: "Move money without the complexity." },
+      { property: "og:description", content: "European precision for international payments." },
     ],
   }),
   component: About,
 });
 
 const SECTIONS = [
-  [
-    "Our Mission",
-    "Make moving money between people and countries feel simple, clear and effortless across Europe and global corridors.",
-  ],
-  [
-    "Global Wallet",
-    "Every Moonlight account has its own wallet ID and QR code, with balances displayed in the currency you prefer.",
-  ],
-  [
-    "European & Global Networks",
-    "Seamless integration with European SEPA Instant, Czech banking rails, Indian NPCI UPI, Philippine InstaPay & GCash.",
-  ],
-  [
-    "Security & Ledger Integrity",
-    "Moonlight is built around protected account access, synchronized international interbank ledger verification, and server-enforced balances.",
-  ],
-  [
-    "Private Wealth Standard",
-    "Explore transfers, withdrawals, market indexes, and instant digital voucher redemption from one unified platform.",
-  ],
+  {
+    icon: Globe,
+    title: "Our Mission",
+    body: "Transforming how money moves across borders with zero artificial latency, direct European SEPA Instant connectivity, and seamless global payout corridors.",
+  },
+  {
+    icon: Building2,
+    title: "Multi-Currency Treasury",
+    body: "Every Moonlight account operates as an isolated digital treasury with support for EUR, USD, GBP, AED, SGD, JPY, AUD, INR, and PHP, settled with daily Frankfurter exchange reference snapshots.",
+  },
+  {
+    icon: Zap,
+    title: "Clearing Rails & Instant Payouts",
+    body: "Direct settlement channels spanning European SEPA IBANs, UK Faster Payments, Czech banking rails, Indian NPCI UPI, and Philippine InstaPay & GCash networks.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Encrypted Ledger Security",
+    body: "Engineered with immutable SECURITY DEFINER SQL transaction functions, strict 256-bit cryptographic verification, and automated initial 48-hour security clearance thresholds.",
+  },
+  {
+    icon: Lock,
+    title: "Closed-Loop Treasury Architecture",
+    body: "Strict closed-loop simulation architecture ensuring absolute balance isolation, cryptographic ledger audit trails, and zero exposure to unverified settlement rails.",
+  },
 ];
 
 const FEATURED_COUNTRIES = [
@@ -59,48 +65,91 @@ const FEATURED_COUNTRIES = [
 
 function About() {
   return (
-    <div className="mx-auto max-w-2xl px-6 py-20">
-      <LogoFull className="mx-auto h-48 w-48" />
-      <h1 className="mt-8 text-center text-5xl font-semibold tracking-tight">MOONLIGHT</h1>
-      <p className="mt-4 text-center text-xl text-muted-foreground">
-        European precision for international payments.
-      </p>
+    <div className="mx-auto max-w-3xl px-6 py-12 sm:py-20 animate-fade-up">
+      {/* Back button */}
+      <div className="mb-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-2 px-1 min-h-[44px] touch-manipulation"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Overview
+        </Link>
+      </div>
+
+      {/* Brand Header */}
+      <div className="text-center space-y-4">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-950 p-2 shadow-card border border-border/40">
+          <img
+            src="/assets/brand/moonlight-logo.png"
+            alt="Moonlight Wallet"
+            className="h-full w-full object-contain rounded-2xl"
+          />
+        </div>
+
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-[10px] font-bold text-gold tracking-widest uppercase mb-2">
+            <span>FINANCIAL TECHNOLOGY</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
+            MOONLIGHT
+          </h1>
+          <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            European precision and institutional architecture for modern international liquidity.
+          </p>
+        </div>
+      </div>
 
       {/* Flag corridor bar */}
-      <div className="mt-10 flex items-center justify-center gap-2 flex-wrap rounded-full border bg-card/60 p-3 shadow-soft">
+      <div className="mt-10 flex items-center justify-center gap-2.5 flex-wrap rounded-full border border-border/40 bg-card/60 p-3 shadow-soft backdrop-blur-md">
         {FEATURED_COUNTRIES.map((c) => (
           <CountryFlag key={c} code={c} circle size="sm" />
         ))}
       </div>
 
-      <div className="mt-16 space-y-12">
-        {SECTIONS.map(([t, b]) => (
-          <section key={t} className="rounded-3xl border bg-card/40 p-6 shadow-xs">
-            <h2 className="text-xl font-semibold tracking-tight">{t}</h2>
-            <p className="mt-2 text-base leading-relaxed text-muted-foreground">{b}</p>
+      {/* Structured Sections */}
+      <div className="mt-14 space-y-4 sm:space-y-6">
+        {SECTIONS.map((s) => (
+          <section
+            key={s.title}
+            className="flex flex-col sm:flex-row items-start gap-4 rounded-3xl border border-border/50 bg-card/60 p-6 sm:p-7 shadow-xs backdrop-blur-sm transition-all hover:border-border hover:bg-card/80"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+              <s.icon className="h-5 w-5" />
+            </div>
+            <div className="space-y-1.5">
+              <h2 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">
+                {s.title}
+              </h2>
+              <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+            </div>
           </section>
         ))}
       </div>
 
       {/* Payment rail logos */}
-      <div className="mt-14 text-center space-y-4 border-t pt-10">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-          Supported Financial Infrastructure
+      <div className="mt-14 text-center space-y-4 border-t border-border/40 pt-10">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+          Supported Financial Corridors &amp; Clearing Rails
         </p>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <PaymentMethodIcon id="sepa" size="sm" />
-          <PaymentMethodIcon id="cz-bank" size="sm" />
-          <PaymentMethodIcon id="upi" size="sm" />
-          <PaymentMethodIcon id="gcash" size="sm" />
-          <PaymentMethodIcon id="int-bank" size="sm" />
+        <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
+          <PaymentMethodIcon id="sepa" size="md" />
+          <PaymentMethodIcon id="cz-bank" size="md" />
+          <PaymentMethodIcon id="upi" size="md" />
+          <PaymentMethodIcon id="gcash" size="md" />
+          <PaymentMethodIcon id="int-bank" size="md" />
         </div>
       </div>
 
-      <div className="mt-16 flex items-center justify-between border-t pt-8 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground font-medium">
+      {/* Footer navigation */}
+      <div className="mt-16 flex items-center justify-between border-t border-border/40 pt-8 text-xs text-muted-foreground">
+        <Link to="/" className="hover:text-foreground font-semibold">
           Moonlight Wallet
         </Link>
-        <Link to="/admin-access" className="opacity-50 hover:opacity-100 font-mono">
+        <Link
+          to="/admin-access"
+          className="opacity-40 hover:opacity-100 font-mono text-[11px] transition-opacity"
+        >
           Authorized Access
         </Link>
       </div>

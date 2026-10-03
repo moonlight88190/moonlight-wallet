@@ -94,7 +94,10 @@ function Login() {
       footer={
         <>
           New to Moonlight?{" "}
-          <Link to="/register" className="font-semibold text-foreground hover:underline underline-offset-2 transition-colors">
+          <Link
+            to="/register"
+            className="font-semibold text-foreground hover:underline underline-offset-2 transition-colors"
+          >
             Open an Account
           </Link>
         </>
@@ -162,7 +165,9 @@ function Login() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold uppercase text-muted-foreground/70 tracking-wider">From</label>
+            <label className="text-[10px] font-semibold uppercase text-muted-foreground/70 tracking-wider">
+              From
+            </label>
             <div className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-card/60 p-1.5">
               <Input
                 type="number"
@@ -189,7 +194,9 @@ function Login() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold uppercase text-muted-foreground/70 tracking-wider">To</label>
+            <label className="text-[10px] font-semibold uppercase text-muted-foreground/70 tracking-wider">
+              To
+            </label>
             <div className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-card/60 p-1.5">
               <div className="flex-1 px-2 text-[13px] font-bold text-foreground font-mono truncate">
                 {formatMoney(convertedVal, toCurr)}
