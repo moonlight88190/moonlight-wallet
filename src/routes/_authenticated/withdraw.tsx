@@ -25,6 +25,7 @@ import {
   BrandAsset,
 } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
+import { triggerTransactionalEmail } from "@/lib/email";
 import {
   GIFT_CARDS,
   PAYMENT_METHODS,
@@ -37,7 +38,7 @@ import {
   type PaymentMethodMeta,
   type UPIProviderMeta,
 } from "@/lib/assets";
-import { CURRENCIES, convert, formatMoney } from "@/lib/currency";
+import { CURRENCIES, convert, formatMoney, getRate } from "@/lib/currency";
 import {
   Select,
   SelectContent,
@@ -105,27 +106,43 @@ function Withdraw() {
     geo?.isEurope ??
     Boolean(
       profile?.admin_region_override &&
-        ([
-          "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
-          "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
-        ].includes(verifiedCountryCode) ||
-          profile?.region?.toUpperCase() === "EUROPE"),
+      ([
+        "DE",
+        "FR",
+        "IT",
+        "ES",
+        "NL",
+        "BE",
+        "AT",
+        "PT",
+        "IE",
+        "FI",
+        "GR",
+        "EE",
+        "LV",
+        "LT",
+        "SK",
+        "SI",
+        "CY",
+        "MT",
+        "LU",
+      ].includes(verifiedCountryCode) ||
+        profile?.region?.toUpperCase() === "EUROPE"),
     );
   const isPH = Boolean(
     geo?.capabilities?.supportsGCash ||
-      (profile?.admin_region_override &&
-        (verifiedCountryCode === "PH" ||
-          profile?.region?.toUpperCase() === "PHILIPPINES")),
+    (profile?.admin_region_override &&
+      (verifiedCountryCode === "PH" || profile?.region?.toUpperCase() === "PHILIPPINES")),
   );
   const isIndia = geo?.isIndia ?? (!isEurope && !isPH);
   const isUK = Boolean(
     geo?.isUK ??
-      (profile?.admin_region_override &&
-        (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
+    (profile?.admin_region_override &&
+      (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
   );
   const isBR = Boolean(
     geo?.capabilities?.supportsPix ||
-      (profile?.admin_region_override && verifiedCountryCode === "BR"),
+    (profile?.admin_region_override && verifiedCountryCode === "BR"),
   );
 
   // Currency strictly locked to verified jurisdiction (AML & CFT Statutory Requirement)
@@ -151,7 +168,7 @@ function Withdraw() {
           ? "United Kingdom"
           : isBR
             ? "Brazil"
-            : (geo?.countryName || "India");
+            : geo?.countryName || "India";
 
   const verifiedFlagCode = isIndia
     ? "IN"
@@ -201,9 +218,8 @@ function Withdraw() {
   const [isSecurityLockOpen, setIsSecurityLockOpen] = useState<boolean>(false);
 
   // $100 USD max limit
-  const usdRate = r["USD"] ?? 1;
-  const userRate = r[preferredCurrency] ?? 1;
-  const limit100InPreferred = (100 / usdRate) * userRate;
+  const userRate = getRate(preferredCurrency, rates.data?.rates);
+  const limit100InPreferred = 100 * userRate;
 
   // Mode: rails vs vouchers
   const [activeTab, setActiveTab] = useState<"rails" | "vouchers">("rails");
@@ -409,11 +425,17 @@ function Withdraw() {
       return;
     }
 
-    setCreatedWdId(wdId as string);
+    const createdWdIdStr = wdId as string;
+    setCreatedWdId(createdWdIdStr);
     setAnimState("completed");
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
+
+    triggerTransactionalEmail({
+      eventType: "withdrawal_requested",
+      withdrawalId: createdWdIdStr,
+    });
   }
 
   // Voucher redemption
@@ -453,12 +475,18 @@ function Withdraw() {
       return;
     }
 
+    const createdVoucherWdId = wdId as string;
     setSelectedCard(null);
-    setCreatedWdId(wdId as string);
+    setCreatedWdId(createdVoucherWdId);
     setAnimState("completed");
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["withdrawals"] });
+
+    triggerTransactionalEmail({
+      eventType: "withdrawal_requested",
+      withdrawalId: createdVoucherWdId,
+    });
   }
 
   const primaryBtn =
@@ -538,7 +566,8 @@ function Withdraw() {
                 </span>
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers. Tap to view clearance details & unlock schedule.
+                Withdrawal operations unlock 48 hours after account creation to protect against
+                unauthorized transfers. Tap to view clearance details & unlock schedule.
               </p>
             </div>
           </div>
@@ -566,7 +595,10 @@ function Withdraw() {
         </div>
 
         <p className="text-muted-foreground text-[11px] leading-relaxed">
-          In strict compliance with statutory Anti-Money Laundering (AML), CFT guidelines, and central bank regulations (including Reserve Bank of India, European Central Bank, and BSP), withdrawals are locked to your verified country of residence and its domestic national currency:
+          In strict compliance with statutory Anti-Money Laundering (AML), CFT guidelines, and
+          central bank regulations (including Reserve Bank of India, European Central Bank, and
+          BSP), withdrawals are locked to your verified country of residence and its domestic
+          national currency:
         </p>
 
         <div className="grid grid-cols-3 gap-1.5 pt-0.5">
@@ -605,7 +637,9 @@ function Withdraw() {
         <div className="flex items-start gap-1.5 pt-1 text-[10px] text-muted-foreground border-t border-border/40">
           <Lock className="h-3 w-3 shrink-0 mt-0.5 text-muted-foreground/80" />
           <span>
-            <strong>Fraud & Anti-Money Laundering Safeguard:</strong> Protects your account against unauthorized cross-border foreign exchange conversion, credential stuffing exfiltration, and illicit money laundering by locking rails to verified local identity.
+            <strong>Fraud & Anti-Money Laundering Safeguard:</strong> Protects your account against
+            unauthorized cross-border foreign exchange conversion, credential stuffing exfiltration,
+            and illicit money laundering by locking rails to verified local identity.
           </span>
         </div>
       </div>
@@ -773,7 +807,9 @@ function Withdraw() {
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <CountryFlag code={verifiedFlagCode} circle size="xs" />
-                  <span className="text-sm font-bold text-foreground font-mono">{effectiveCurrency}</span>
+                  <span className="text-sm font-bold text-foreground font-mono">
+                    {effectiveCurrency}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-background/60 border border-border/40 px-1.5 py-0.5 rounded-md">
                   <Lock className="h-2.5 w-2.5" />
@@ -785,7 +821,8 @@ function Withdraw() {
             <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1 pt-0.5">
               <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
               <span>
-                Withdrawal currency strictly locked to <strong>{effectiveCurrency}</strong> (Verified Country: <strong>{verifiedCountryName}</strong>).
+                Withdrawal currency strictly locked to <strong>{effectiveCurrency}</strong>{" "}
+                (Verified Country: <strong>{verifiedCountryName}</strong>).
               </span>
             </p>
           </section>
@@ -807,7 +844,8 @@ function Withdraw() {
                       Standard Processing Window: 24 to 48 Hours
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Withdrawal requests undergo multi-factor identity verification and are processed within 24 to 48 hours.
+                      Withdrawal requests undergo multi-factor identity verification and are
+                      processed within 24 to 48 hours.
                     </p>
                   </div>
                 </div>
@@ -1075,7 +1113,9 @@ function Withdraw() {
               <span className="text-muted-foreground">Verified Country</span>
               <span className="font-medium text-foreground flex items-center gap-1.5">
                 <CountryFlag code={verifiedFlagCode} circle size="xs" />
-                <span>{verifiedCountryName} ({effectiveCurrency} Only)</span>
+                <span>
+                  {verifiedCountryName} ({effectiveCurrency} Only)
+                </span>
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
@@ -1258,24 +1298,33 @@ function Withdraw() {
 
             {/* Why Can't You Withdraw Right Now */}
             <div className="space-y-2.5 text-muted-foreground leading-relaxed">
-              <p className="font-semibold text-foreground text-xs">Why is my withdrawal locked right now?</p>
+              <p className="font-semibold text-foreground text-xs">
+                Why is my withdrawal locked right now?
+              </p>
               <div className="space-y-2 text-[11px]">
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   <span>
-                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety regulations, all newly registered accounts undergo a mandatory 48-hour cooling period to safeguard your wallet against unauthorized takeovers, fraudulent sign-ups, and sudden account drainage.
+                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety
+                    regulations, all newly registered accounts undergo a mandatory 48-hour cooling
+                    period to safeguard your wallet against unauthorized takeovers, fraudulent
+                    sign-ups, and sudden account drainage.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   <span>
-                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic UPI and direct bank IMPS) require preliminary compliance verification before executing external bank settlements.
+                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic
+                    UPI and direct bank IMPS) require preliminary compliance verification before
+                    executing external bank settlements.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                   <span>
-                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are cooling down, internal peer-to-peer transfers to other Moonlight wallets remain active (up to $10.00 USD during the first 48 hours).
+                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are
+                    cooling down, internal peer-to-peer transfers to other Moonlight wallets remain
+                    active (up to $10.00 USD during the first 48 hours).
                   </span>
                 </div>
               </div>

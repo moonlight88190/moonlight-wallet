@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, convert, getRate, FALLBACK_RATES } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import { CountryFlag, BrandAsset } from "@/components/AssetComponents";
@@ -8,8 +8,24 @@ import { resolvePaymentAsset } from "@/lib/assets";
 /**
  * Renders a linked transaction summary relative to the supplied wallet.
  * Displays the resolved payment brand with a secondary currency flag.
+ *
+ * When `displayCur` and `rates` are provided, amounts are converted from
+ * the transaction's stored currency to the user's preferred display currency
+ * so that switching currency in the dashboard/settings is reflected everywhere.
  */
-export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined }) {
+export function TxRow({
+  tx,
+  walletId,
+  displayCur,
+  rates,
+}: {
+  tx: Tx;
+  walletId?: string | undefined;
+  /** User's preferred display currency (e.g. "INR"). Falls back to tx currency. */
+  displayCur?: string;
+  /** Exchange-rate map (quote per 1 USD). */
+  rates?: Record<string, number>;
+}) {
   const v = txView(tx, walletId);
   const d = new Date(tx.created_at);
 
@@ -34,8 +50,33 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
     tx.kind,
   );
 
-  const flagCode = isIndianRail ? "IN" : v.currency;
-  const displayCurrency = isIndianRail && v.currency === "EUR" ? "INR" : v.currency;
+  // Determine the currency and amount to show in the row.
+  // When a display currency is provided, calculate the authoritative amount
+  // from the transaction's USD base (wallets.balance_usd architecture)
+  // multiplied by the display currency's exchange rate.
+  const txCurrency = isIndianRail && v.currency === "EUR" ? "INR" : v.currency;
+  const effectiveCur = displayCur || txCurrency;
+  const flagCode = isIndianRail && !displayCur ? "IN" : effectiveCur;
+
+  let displayAmount: number;
+  if (displayCur) {
+    const curRate = getRate(displayCur, rates);
+    if (tx.amount_usd != null && Number(tx.amount_usd) > 0) {
+      if (v.outgoing) {
+        const totalUsd =
+          tx.fee_usd != null
+            ? Number(tx.amount_usd) + Number(tx.fee_usd)
+            : Number(tx.sender_debit ?? tx.amount) / (getRate(tx.currency, rates) || 1);
+        displayAmount = -Math.abs(totalUsd * curRate);
+      } else {
+        displayAmount = Math.abs(Number(tx.amount_usd) * curRate);
+      }
+    } else {
+      displayAmount = convert(v.amount, txCurrency, displayCur, rates);
+    }
+  } else {
+    displayAmount = v.amount;
+  }
 
   return (
     <Link
@@ -70,14 +111,14 @@ export function TxRow({ tx, walletId }: { tx: Tx; walletId?: string | undefined 
         </div>
       </div>
 
-      {/* Amount */}
+      {/* Amount — converted to user's preferred display currency */}
       <div
         className={cn(
           "tabular text-[13px] font-semibold shrink-0 text-right",
           !v.outgoing && "text-success",
         )}
       >
-        {formatMoney(v.amount, displayCurrency, { sign: true })}
+        {formatMoney(displayAmount, effectiveCur, { sign: true })}
       </div>
     </Link>
   );

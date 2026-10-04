@@ -99,6 +99,18 @@ export const adminAddBalance = createServerFn({ method: "POST" })
       p_reason: data.reason,
     });
     if (error) throw new Error(error.message);
+
+    // Trigger authoritative transactional email to recipient
+    import("./email.server")
+      .then(({ dispatchTransactionalEmailServer }) => {
+        dispatchTransactionalEmailServer({
+          eventType: "payment_received",
+          transactionId: txId as string,
+          isServiceRole: true,
+        });
+      })
+      .catch((err) => console.warn("[Admin] Background balance credit email notice:", err));
+
     return { transactionId: txId as string };
   });
 
@@ -253,8 +265,10 @@ export const adminListUsers = createServerFn({ method: "POST" })
       const ageHours = Math.max(0, Math.floor(ageMs / (1000 * 60 * 60)));
       const ageDays = Math.floor(ageHours / 24);
 
-      const isExplicitOverride = Boolean((p as any)?.admin_region_override);
-      const displayRegion = isExplicitOverride ? (p?.region || "INDIA") : "INDIA";
+      const isExplicitOverride = Boolean(
+        (p as { admin_region_override?: boolean | null } | null)?.admin_region_override,
+      );
+      const displayRegion = isExplicitOverride ? p?.region || "INDIA" : "INDIA";
 
       return {
         id: w.id,
@@ -368,6 +382,30 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
     });
 
     if (error) throw new Error(error.message);
+
+    // Trigger authoritative transactional email based on updated status
+    let eventType: "withdrawal_processing" | "withdrawal_completed" | "withdrawal_failed" | null =
+      null;
+    if (data.newStatus === "PROCESSING") {
+      eventType = "withdrawal_processing";
+    } else if (data.newStatus === "SUCCESSFUL") {
+      eventType = "withdrawal_completed";
+    } else if (data.newStatus === "FAILED" || data.newStatus === "CANCELLED") {
+      eventType = "withdrawal_failed";
+    }
+
+    if (eventType) {
+      import("./email.server")
+        .then(({ dispatchTransactionalEmailServer }) => {
+          dispatchTransactionalEmailServer({
+            eventType,
+            withdrawalId: data.withdrawalId,
+            isServiceRole: true,
+          });
+        })
+        .catch((err) => console.warn("[Admin] Background withdrawal status email notice:", err));
+    }
+
     return { ok: true, result };
   });
 

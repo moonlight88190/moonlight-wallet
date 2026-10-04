@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useWallet, useProfile } from "@/hooks/use-wallet";
-import { formatMoney } from "@/lib/currency";
+import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
+import { formatMoney, getRate, convert } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BrandAsset, GiftCardImage, CountryFlag } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
@@ -48,6 +48,7 @@ function Receipt() {
   const { id } = Route.useParams();
   const profile = useProfile();
   const wallet = useWallet();
+  const rates = useRates();
   const [copied, setCopied] = useState(false);
 
   const tx = useQuery({
@@ -222,6 +223,22 @@ function Receipt() {
         ? grossAmount - feeAmount
         : grossAmount;
   const recipientCurrency = (rawData.recipient_currency as string) || currency;
+  const ratesMap = rates.data?.rates;
+  const preferredCur = profile.data?.preferred_currency || "EUR";
+
+  const isGlitched1to1 =
+    currency === "USD" &&
+    recipientCurrency === "INR" &&
+    (rawData.recipient_amount === grossAmount || Number(rawData.fx_rate) === 1);
+
+  const effectiveNetAmount = isGlitched1to1
+    ? Number(rawData.amount_usd ?? grossAmount) * getRate("INR", ratesMap)
+    : netAmount;
+
+  const effectiveFxRate = isGlitched1to1
+    ? getRate("INR", ratesMap)
+    : Number(rawData.fx_rate || 1);
+
   const senderDebit =
     rawData.sender_debit != null
       ? Number(rawData.sender_debit)
@@ -330,10 +347,15 @@ function Receipt() {
           <span className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
             {formatMoney(grossAmount, currency)}
           </span>
-          {currency !== recipientCurrency && rawData.fx_rate && (
+          {currency !== recipientCurrency && (
             <p className="text-xs text-muted-foreground mt-1 font-mono">
-              Net: {formatMoney(netAmount, recipientCurrency)} · FX Rate:{" "}
-              {Number(rawData.fx_rate).toFixed(4)}
+              Net: {formatMoney(effectiveNetAmount, recipientCurrency)} · FX Rate:{" "}
+              {Number(effectiveFxRate).toFixed(4)}
+            </p>
+          )}
+          {preferredCur !== currency && preferredCur !== recipientCurrency && (
+            <p className="text-xs text-primary font-medium mt-1 font-mono">
+              ≈ {formatMoney(Number(rawData.amount_usd ?? grossAmount) * getRate(preferredCur, ratesMap), preferredCur)} ({preferredCur})
             </p>
           )}
         </div>
@@ -540,7 +562,7 @@ function Receipt() {
                 {formatMoney(senderDebit, currency)}
               </DetailRow>
               <DetailRow label="Recipient Receives" bold mono emerald>
-                {formatMoney(netAmount, recipientCurrency)}
+                {formatMoney(effectiveNetAmount, recipientCurrency)}
               </DetailRow>
             </>
           )}

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getRates } from "@/lib/rates.functions";
 import { syncAccountGeography } from "@/lib/geolocation.functions";
 import { resolveAccountGeography, type NormalizedGeography } from "@/lib/geolocation";
+import { FALLBACK_RATES } from "@/lib/currency";
 
 /**
  * Returns account region label derived from normalized geography (e.g. "Indian Account", "European Account").
@@ -82,7 +83,31 @@ export function useWallet() {
 
 export function useRates() {
   const fn = useServerFn(getRates);
-  return useQuery({ queryKey: ["rates"], queryFn: () => fn(), staleTime: 60 * 60 * 1000 });
+  return useQuery({
+    queryKey: ["rates"],
+    queryFn: async () => {
+      try {
+        const res = await fn();
+        return {
+          ...res,
+          rates: { ...FALLBACK_RATES, ...(res?.rates ?? {}) },
+        };
+      } catch (err) {
+        console.warn("Failed to fetch rates, falling back to cached/default rates:", err);
+        return {
+          rates: { ...FALLBACK_RATES },
+          fetchedAt: new Date().toISOString(),
+          source: "fallback",
+        };
+      }
+    },
+    staleTime: 60 * 60 * 1000,
+    initialData: {
+      rates: { ...FALLBACK_RATES },
+      fetchedAt: new Date().toISOString(),
+      source: "fallback",
+    },
+  });
 }
 
 export function useTransactions(limit = 100) {
@@ -110,7 +135,11 @@ export function useSetPreferredCurrency() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["transactions"] });
+      qc.invalidateQueries({ queryKey: ["rates"] });
+    },
   });
 }
 
