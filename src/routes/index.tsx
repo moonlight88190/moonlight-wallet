@@ -12,6 +12,7 @@ import {
   CheckCircle,
   ChevronRight,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,6 +22,7 @@ import { signInWithGoogle } from "@/lib/auth";
 import { CountryFlag } from "@/components/AssetComponents";
 import { CURRENCIES, FALLBACK_RATES, convert, formatMoney } from "@/lib/currency";
 import { useRates } from "@/hooks/use-wallet";
+import { TitaniumCard3D } from "@/components/TitaniumCard3D";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -156,6 +158,9 @@ function Landing() {
   const [calcFrom, setCalcFrom] = useState<string>("EUR");
   const [calcTo, setCalcTo] = useState<string>("USD");
 
+  const [demoCurrency, setDemoCurrency] = useState<string>("EUR");
+  const demoBalance = convert(14850, "EUR", demoCurrency, rates);
+
   const numAmt = Number(calcAmount) || 0;
   const convertedVal = convert(numAmt, calcFrom, calcTo, rates);
   const rateRatio = convert(1, calcFrom, calcTo, rates);
@@ -227,57 +232,119 @@ function Landing() {
 
       {/* ═══ MAIN CONTENT ═══ */}
       <main className="relative z-10 flex flex-1 flex-col items-center px-5 sm:px-6">
-        {/* ─── Section 1: Hero ─── */}
-        <section className="w-full max-w-5xl py-20 sm:py-28 flex flex-col items-center text-center space-y-8">
-          {/* Credential badge */}
-          <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/60 px-3.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-2xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Multi-Currency Digital Account
-          </div>
+        {/* ─── Section 1: Hero (Split 3D Showcase) ─── */}
+        <section className="w-full max-w-6xl py-12 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            {/* Left Column: Mission & Trust */}
+            <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
+              {/* Credential badge */}
+              <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/60 px-3.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Institutional Digital Liquidity</span>
+              </div>
 
-          <h1 className="text-display max-w-3xl animate-fade-up stagger-1 text-foreground">
-            Move money globally. <span className="text-muted-foreground/60">Settle locally.</span>
-          </h1>
+              <h1 className="text-display max-w-2xl animate-fade-up stagger-1 text-foreground leading-[1.08]">
+                Move money globally. <span className="text-muted-foreground/60">Settle locally.</span>
+              </h1>
 
-          <p className="animate-fade-up stagger-2 max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Manage balances in USD, EUR, GBP, INR, and more. Send instant transfers to other members,
-            convert currencies at live rates, and withdraw directly to your domestic bank account.
-          </p>
+              <p className="animate-fade-up stagger-2 max-w-xl text-[15px] text-muted-foreground leading-relaxed">
+                Manage private multi-currency balances across 140+ countries. Send instant transfers, convert at wholesale mid-market rates, and withdraw directly to domestic banks with 256-bit cryptographic verification.
+              </p>
 
-          {/* CTAs */}
-          <div className="animate-fade-up stagger-3 flex flex-col sm:flex-row items-center gap-3 pt-1">
-            <button
-              onClick={() => signInWithGoogle()}
-              className="w-full sm:w-auto flex h-12 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-[13px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-elevated cursor-pointer"
-            >
-              <GoogleIcon />
-              Continue with Google
-            </button>
-            <Link
-              to="/register"
-              className="w-full sm:w-auto flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-8 text-[13px] font-semibold text-foreground hover:bg-muted transition-all shadow-soft"
-            >
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              Create account
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          </div>
+              {/* CTAs */}
+              <div className="animate-fade-up stagger-3 flex flex-col sm:flex-row items-center gap-3 pt-1 w-full sm:w-auto">
+                <button
+                  onClick={() => signInWithGoogle()}
+                  className="w-full sm:w-auto flex h-12 items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-[13px] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] shadow-elevated cursor-pointer"
+                >
+                  <GoogleIcon />
+                  Continue with Google
+                </button>
+                <Link
+                  to="/register"
+                  className="w-full sm:w-auto flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-8 text-[13px] font-semibold text-foreground hover:bg-muted transition-all shadow-soft"
+                >
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  Create account
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              </div>
 
-          {/* Trust indicators */}
-          <div className="animate-fade-up stagger-4 flex items-center gap-4 text-[11px] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-              Free to open
+              {/* Trust indicators */}
+              <div className="animate-fade-up stagger-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-[11px] text-muted-foreground pt-1">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                  Free to open
+                </div>
+                <div className="h-3 w-px bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                  Live mid-market rates
+                </div>
+                <div className="h-3 w-px bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                  Zero rail markups
+                </div>
+              </div>
+
+              {/* Mini platform stat pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 w-full border-t border-border/40">
+                {PLATFORM_STATS.map((stat, i) => (
+                  <div key={i} className="p-3 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm text-left">
+                    <div className="font-mono text-xs font-bold text-foreground">{stat.value}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="h-3 w-px bg-border" />
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-              Live mid-market rates
-            </div>
-            <div className="h-3 w-px bg-border" />
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-              Instant member transfers
+
+            {/* Right Column: Interactive 3D Titanium Card Showcase */}
+            <div className="lg:col-span-5 w-full flex flex-col items-center">
+              <div className="relative w-full max-w-md mx-auto">
+                {/* Luminous Ambient Halo */}
+                <div className="pointer-events-none absolute -inset-4 rounded-[36px] bg-gradient-to-r from-emerald-500/20 via-primary/20 to-amber-500/15 blur-3xl opacity-80" />
+                
+                <TitaniumCard3D
+                  balance={demoBalance}
+                  currency={demoCurrency}
+                  walletCode="MOONLIGHT-TREASURY"
+                  countryCode={
+                    demoCurrency === "USD"
+                      ? "US"
+                      : demoCurrency === "GBP"
+                        ? "GB"
+                        : demoCurrency === "INR"
+                          ? "IN"
+                          : demoCurrency === "JPY"
+                            ? "JP"
+                            : demoCurrency === "SGD"
+                              ? "SG"
+                              : "EU"
+                  }
+                  regionLabel="Private Liquidity"
+                  cardholderName="Lucian Ferelden"
+                  tierName="TITANIUM PHYSICAL"
+                  showPrivacyToggle={true}
+                  interactive={true}
+                  onCurrencySelect={setDemoCurrency}
+                  currencyOptions={[
+                    { code: "EUR", flag: "EU" },
+                    { code: "USD", flag: "US" },
+                    { code: "GBP", flag: "GB" },
+                    { code: "INR", flag: "IN" },
+                    { code: "JPY", flag: "JP" },
+                    { code: "SGD", flag: "SG" },
+                  ]}
+                />
+
+                <div className="mt-3.5 flex items-center justify-center gap-2 text-center">
+                  <Sparkles className="h-3.5 w-3.5 text-gold animate-pulse" />
+                  <span className="text-[11px] font-mono text-muted-foreground tracking-wide">
+                    Interactive 3D Physical Card • Tilt cursor to inspect finish
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -379,7 +446,73 @@ function Landing() {
           </div>
         </section>
 
-        {/* ─── Section 3: Press recognition strip ─── */}
+        {/* ─── Section 3: Physical & Cryptographic Architecture Bento ─── */}
+        <section className="w-full max-w-5xl py-8 pb-16 space-y-8" aria-label="Architecture and Security">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/80 bg-secondary/60 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              Institutional Architecture
+            </div>
+            <h2 className="text-headline text-foreground">
+              Physical Precision Meets Cryptographic Rigor
+            </h2>
+            <p className="text-xs text-muted-foreground max-w-lg mx-auto">
+              Engineered with industrial titanium hardware discipline and mathematical double-entry accounting.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            {/* Bento 1: 3D Titanium Card Render (7 cols) */}
+            <div className="md:col-span-7 rounded-3xl border border-border/60 bg-card overflow-hidden shadow-card relative group flex flex-col justify-between">
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/40">
+                <img
+                  src="/assets/moonlight_titanium_card.jpg"
+                  alt="Moonlight Physical Titanium Card"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+                <span className="absolute top-4 left-4 rounded-full border border-white/20 bg-black/60 px-3 py-1 text-[10px] font-mono font-bold text-white backdrop-blur-md">
+                  TITANIUM NOCTURNE
+                </span>
+              </div>
+              <div className="p-6 space-y-2">
+                <h3 className="font-sans text-base font-bold text-foreground">
+                  Laser-Etched Titanium Architecture
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Crafted from solid brushed titanium with chamfered specular rims, dual-contact EMV secure elements, and global tap-to-pay clearance. Zero foreign transaction fees across 140+ countries.
+                </p>
+              </div>
+            </div>
+
+            {/* Bento 2: 3D Cryptographic Vault Core (5 cols) */}
+            <div className="md:col-span-5 rounded-3xl border border-border/60 bg-card overflow-hidden shadow-card relative group flex flex-col justify-between">
+              <div className="relative aspect-square w-full overflow-hidden bg-black/40">
+                <img
+                  src="/assets/moonlight_vault_emblem.jpg"
+                  alt="Moonlight Cryptographic Vault Core"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+                <span className="absolute top-4 left-4 rounded-full border border-emerald-400/30 bg-emerald-950/80 px-3 py-1 text-[10px] font-mono font-bold text-emerald-400 backdrop-blur-md">
+                  IMMUTABLE LEDGER
+                </span>
+              </div>
+              <div className="p-6 space-y-2">
+                <h3 className="font-sans text-base font-bold text-foreground">
+                  Double-Entry Vault Security
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Balances live in encrypted vault storage (<code className="font-mono text-primary font-semibold">wallets.balance_usd</code>) and change strictly via PostgreSQL SECURITY DEFINER functions with cryptographic audit tracking.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Section 4: Press recognition strip ─── */}
         <section
           className="w-full max-w-5xl py-12 border-t border-b border-border/40"
           aria-label="Press recognition"

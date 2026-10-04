@@ -32,6 +32,7 @@ import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComp
 import { TxRow } from "@/components/TxRow";
 import { HomeMarketSection } from "@/components/HomeMarketSection";
 import { GIFT_CARDS } from "@/lib/assets";
+import { TitaniumCard3D } from "@/components/TitaniumCard3D";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -82,74 +83,28 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-2 animate-fade-up">
       {/* ═══════════════════════════════════════
-           1. MODERN ACCOUNT & BALANCE CARD
+           1. 3D TITANIUM WEALTH & BALANCE MODULE
          ═══════════════════════════════════════ */}
-      <section
-        aria-label="Account Balance"
-        className="relative overflow-hidden rounded-[28px] border border-border/70 bg-card p-6 sm:p-7 shadow-card transition-all space-y-6"
-      >
-        {/* Subtle Ambient Background Lighting */}
-        <div
-          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/8 blur-[80px]"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/5 blur-[80px]"
-          aria-hidden="true"
+      <section aria-label="Account Balance" className="space-y-4">
+        {/* Interactive 3D Titanium Physical Card */}
+        <TitaniumCard3D
+          balance={balance}
+          currency={cur}
+          walletCode={wallet.data?.wallet_code}
+          countryCode={geography.data?.countryCode || "IN"}
+          regionLabel={getAccountRegionLabel(geography.data)}
+          cardholderName={profile.data?.full_name || "Moonlight Member"}
+          tierName="TITANIUM TREASURY"
+          showPrivacyToggle={true}
+          interactive={true}
         />
 
-        {/* Top Header: Region Badge & Wallet ID */}
-        <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
+        {/* Currency Switcher & Rails Status Strip */}
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md text-xs shadow-soft">
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/60 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-2xs">
-              <CountryFlag code={geography.data?.countryCode || "IN"} size="xs" circle />
-              <span>{getAccountRegionLabel(geography.data)}</span>
-            </div>
-          </div>
-
-          {wallet.data && (
-            <button
-              type="button"
-              onClick={handleCopyCode}
-              aria-label="Copy wallet ID"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/80 hover:bg-muted px-3 py-1 text-[11px] font-mono font-medium text-foreground transition-all cursor-pointer touch-manipulation shadow-2xs active:scale-95"
-            >
-              <span>{wallet.data.wallet_code}</span>
-              {copiedCode ? (
-                <Check className="h-3 w-3 text-emerald-500" />
-              ) : (
-                <Copy className="h-3 w-3 opacity-60" />
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Balance Hero Section */}
-        <div className="relative z-10 space-y-2 text-center py-1">
-          <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            <span>Available Balance</span>
-            <button
-              type="button"
-              onClick={() => setShowBalance(!showBalance)}
-              aria-label={showBalance ? "Hide balance" : "Show balance"}
-              className="p-1 rounded-full text-muted-foreground/80 hover:text-foreground hover:bg-secondary/70 transition-colors cursor-pointer"
-            >
-              {showBalance ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            </button>
-          </div>
-
-          <div>
-            {loading ? (
-              <Skeleton className="mx-auto h-12 w-56 rounded-2xl" />
-            ) : (
-              <h1 className="tabular font-sans text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-none">
-                {showBalance ? formatMoney(balance, cur) : "••••••••"}
-              </h1>
-            )}
-          </div>
-
-          {/* Currency Switcher Pill */}
-          <div className="flex items-center justify-center pt-2">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Display Currency:
+            </span>
             <Select
               value={cur}
               onValueChange={(v) =>
@@ -160,7 +115,7 @@ function Dashboard() {
                 )
               }
             >
-              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-border/70 bg-background/80 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-all shadow-2xs">
+              <SelectTrigger className="h-7.5 rounded-full px-3 w-auto gap-1.5 border border-border/70 bg-background hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-all shadow-2xs">
                 <CurrencyIcon code={cur} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl p-1 border border-border/60 bg-popover text-popover-foreground shadow-elevated">
@@ -180,30 +135,23 @@ function Dashboard() {
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        {/* Connected Rails & Capabilities Strip */}
-        <div className="relative z-10 flex items-center justify-between border-t border-border/50 pt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Landmark className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span className="font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {geography.data?.isIndia
-                ? "Payouts: UPI & IMPS enabled"
+                ? "UPI & IMPS Rails"
                 : geography.data?.isEurope
-                  ? "Payouts: SEPA Instant enabled"
+                  ? "SEPA Instant Rails"
                   : geography.data?.isUK
-                    ? "Payouts: UK Faster Payments enabled"
-                    : "Domestic bank payouts connected"}
+                    ? "Faster Payments"
+                    : "Global Settlement"}
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Active
-          </span>
         </div>
 
-        {/* 4 Primary Action Buttons */}
-        <div className="relative z-10 grid grid-cols-4 gap-2 pt-1">
+        {/* 4 Primary Action Buttons with elevated tactile styling */}
+        <div className="grid grid-cols-4 gap-2.5 pt-0.5">
           {[
             {
               to: "/send",
@@ -226,24 +174,22 @@ function Dashboard() {
               preload="intent"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               search={action.search as any}
-              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.97] ${
+              className={`group flex flex-col items-center justify-center gap-1.5 py-3.5 px-2 rounded-2xl border transition-all touch-manipulation min-h-[76px] cursor-pointer active:scale-[0.96] ${
                 action.primary
-                  ? "border-primary bg-primary text-primary-foreground shadow-soft hover:opacity-95"
-                  : "border-border/60 bg-secondary/50 hover:bg-secondary text-foreground hover:border-border"
+                  ? "border-emerald-500/40 bg-primary text-primary-foreground shadow-elevated hover:brightness-110"
+                  : "border-border/60 bg-card/80 hover:bg-secondary/70 text-foreground hover:border-border shadow-soft"
               }`}
             >
               <span
-                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110 ${
                   action.primary
-                    ? "bg-primary-foreground/15 text-primary-foreground"
-                    : "bg-background/80 text-foreground"
+                    ? "bg-primary-foreground/15 text-primary-foreground shadow-xs"
+                    : "bg-secondary text-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                 }`}
               >
-                <action.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                <action.icon className="h-5 w-5" strokeWidth={2.2} />
               </span>
-              <span className="text-[11px] font-semibold tracking-wide text-center">
-                {action.label}
-              </span>
+              <span className="text-[12px] font-bold tracking-tight">{action.label}</span>
             </Link>
           ))}
         </div>
