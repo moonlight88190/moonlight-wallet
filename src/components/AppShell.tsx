@@ -152,13 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <Info className="mr-2.5 h-4 w-4 text-muted-foreground" /> About Moonlight
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="rounded-xl px-3 py-2.5 text-[12px] font-semibold cursor-pointer text-primary hover:text-primary focus:text-primary bg-primary/5 hover:bg-primary/10"
-                  onClick={() => navigate({ to: "/admin-access" })}
-                >
-                  <ShieldCheck className="mr-2.5 h-4 w-4 text-primary" /> Admin Operations
-                </DropdownMenuItem>
+
                 <DropdownMenuItem
                   className="rounded-xl px-3 py-2.5 text-[12px] font-medium cursor-pointer text-destructive focus:text-destructive"
                   onClick={signOut}

@@ -28,10 +28,12 @@ import {
   Globe,
   MessageSquare,
   Plus,
-  Minus,
   FileText,
+  CreditCard,
+  History,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import {
   checkAdminToken,
   adminOverview,
@@ -148,12 +150,12 @@ type Section =
 const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "overview", label: "Overview", icon: LayoutGrid },
   { id: "withdrawals", label: "Withdrawals", icon: ArrowUpRight },
-  { id: "transactions", label: "Transactions", icon: List },
+  { id: "users", label: "Users & Wallets", icon: Users },
   { id: "balance", label: "Balance Control", icon: Wallet },
-  { id: "users", label: "Users", icon: Users },
+  { id: "transactions", label: "Transactions", icon: List },
   { id: "controls", label: "Account Controls", icon: ShieldCheck },
   { id: "search", label: "Global Search", icon: Search },
-  { id: "activity", label: "Activity", icon: Activity },
+  { id: "activity", label: "Security & Audit", icon: Activity },
 ];
 
 type AdminUser = {
@@ -267,81 +269,105 @@ function Admin() {
     );
   }
 
+  const pendingWdCount = withdrawals.filter((w) => w.status === "PROCESSING").length;
+
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-24 md:flex-row md:pb-8">
-      <aside className="hidden w-56 shrink-0 md:block">
-        <div className="sticky top-6 space-y-1">
-          <p className="px-3 pb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Operations
-          </p>
-          {NAV.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => setSection(n.id)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
-                section === n.id
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/60",
-              )}
-            >
-              <n.icon className="h-4 w-4" strokeWidth={1.5} />
-              {n.label}
-            </button>
-          ))}
-          <button
-            onClick={exit}
-            className="mt-6 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-secondary/60"
-          >
-            <LogOut className="h-4 w-4" strokeWidth={1.5} /> Exit admin
-          </button>
-        </div>
-      </aside>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-1 overflow-x-auto border-t border-border bg-background/95 px-2 py-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden scrollbar-none">
-        {NAV.map((n) => (
-          <button
-            key={n.id}
-            onClick={() => setSection(n.id)}
-            className={cn(
-              "flex shrink-0 min-h-[46px] flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer",
-              section === n.id
-                ? "bg-secondary text-primary font-semibold shadow-2xs"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <n.icon className="h-4 w-4" strokeWidth={1.5} />
-            <span className="whitespace-nowrap">{n.label}</span>
-          </button>
-        ))}
-        <button
-          onClick={exit}
-          className="flex shrink-0 min-h-[46px] flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl text-[10px] text-muted-foreground hover:text-destructive cursor-pointer"
-        >
-          <LogOut className="h-4 w-4" strokeWidth={1.5} />
-          <span>Exit</span>
-        </button>
-      </nav>
-
-      <main className="min-w-0 flex-1">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Admin</p>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {NAV.find((n) => n.id === section)?.label}
-            </h1>
+    <div className="mx-auto w-full max-w-6xl space-y-6 pb-20 animate-fade-in">
+      {/* Top Admin Master Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Operational Master Terminal</span>
+            </span>
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Security Clearance Active
+            </span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Moonlight Control Center
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Institutional management of wallets, balances, clearing rails, payouts, and compliance logs.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={refresh}
-            aria-label="Refresh"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border hover:bg-secondary cursor-pointer"
+            disabled={loading}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-card hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer shadow-xs"
           >
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={exit}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-destructive/20 bg-destructive/10 hover:bg-destructive/20 text-xs font-semibold text-destructive transition-colors cursor-pointer shadow-xs"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Exit Terminal</span>
           </button>
         </div>
+      </div>
 
+      {/* Primary Top Tab Navigation Bar */}
+      <div className="border-b border-border/60 pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {NAV.map((n) => {
+            const Icon = n.icon;
+            const isActive = section === n.id;
+            const badgeCount =
+              n.id === "withdrawals"
+                ? pendingWdCount
+                : n.id === "users"
+                  ? users.length
+                  : undefined;
+
+            return (
+              <button
+                key={n.id}
+                onClick={() => setSection(n.id)}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer touch-manipulation whitespace-nowrap shrink-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card/80 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+                )}
+              >
+                <Icon className="h-4 w-4" strokeWidth={isActive ? 2 : 1.75} />
+                <span>{n.label}</span>
+                {badgeCount !== undefined && badgeCount > 0 && (
+                  <span
+                    className={cn(
+                      "px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none",
+                      isActive
+                        ? "bg-white/25 text-white"
+                        : n.id === "withdrawals"
+                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          : "bg-secondary text-foreground",
+                    )}
+                  >
+                    {badgeCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Tab View */}
+      <main className="w-full">
         {section === "overview" && (
-          <OverviewSection data={overview} users={users} withdrawals={withdrawals} />
+          <OverviewSection
+            data={overview}
+            users={users}
+            withdrawals={withdrawals}
+            onSelectTab={setSection}
+          />
         )}
         {section === "withdrawals" && (
           <WithdrawalsSection token={token} withdrawals={withdrawals} onDone={refresh} />
@@ -349,7 +375,14 @@ function Admin() {
         {section === "transactions" && <TransactionsSection token={token} />}
         {section === "balance" && <BalanceSection token={token} users={users} onDone={refresh} />}
         {section === "users" && <UsersSection users={users} token={token} onDone={refresh} />}
-        {section === "controls" && <ControlsSection token={token} users={users} onDone={refresh} />}
+        {section === "controls" && (
+          <ControlsSection
+            token={token}
+            users={users}
+            onDone={refresh}
+            onSelectTab={setSection}
+          />
+        )}
         {section === "search" && (
           <GlobalSearchSection
             token={token}
@@ -377,10 +410,12 @@ function OverviewSection({
   data,
   users,
   withdrawals,
+  onSelectTab,
 }: {
   data: Overview | null;
   users: AdminUser[];
   withdrawals: WithdrawalItem[];
+  onSelectTab?: (s: Section) => void;
 }) {
   if (!data) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
   const recent = [...users].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
@@ -388,6 +423,53 @@ function OverviewSection({
 
   return (
     <div className="space-y-6">
+      {/* Quick Launchpad */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button
+          onClick={() => onSelectTab?.("balance")}
+          className="p-3.5 rounded-2xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all text-left flex items-center justify-between group cursor-pointer shadow-xs"
+        >
+          <div>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Balance Console</p>
+            <p className="text-xs text-foreground font-semibold mt-0.5">+ Credit / − Debit</p>
+          </div>
+          <Wallet className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+        </button>
+
+        <button
+          onClick={() => onSelectTab?.("withdrawals")}
+          className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-all text-left flex items-center justify-between group cursor-pointer shadow-xs"
+        >
+          <div>
+            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending Payouts</p>
+            <p className="text-xs text-foreground font-semibold mt-0.5">{pendingWdCount} Awaiting Review</p>
+          </div>
+          <ArrowUpRight className="h-4 w-4 text-amber-500 group-hover:scale-110 transition-transform" />
+        </button>
+
+        <button
+          onClick={() => onSelectTab?.("controls")}
+          className="p-3.5 rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 transition-all text-left flex items-center justify-between group cursor-pointer shadow-xs"
+        >
+          <div>
+            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Account Policies</p>
+            <p className="text-xs text-foreground font-semibold mt-0.5">Regions &amp; Freeze</p>
+          </div>
+          <ShieldCheck className="h-4 w-4 text-blue-500 group-hover:scale-110 transition-transform" />
+        </button>
+
+        <button
+          onClick={() => onSelectTab?.("users")}
+          className="p-3.5 rounded-2xl border border-border bg-card hover:bg-secondary/70 transition-all text-left flex items-center justify-between group cursor-pointer shadow-xs"
+        >
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">User Directory</p>
+            <p className="text-xs text-foreground font-semibold mt-0.5">{users.length} Registered</p>
+          </div>
+          <Users className="h-4 w-4 text-muted-foreground group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Stat label="Total users" value={data.totalUsers} />
         <Stat label="New signups (7d)" value={data.newSignups} />
@@ -582,8 +664,27 @@ function BalanceSection({
           </select>
         </div>
       </div>
+      {/* Quick Preset Amounts */}
+      <div className="space-y-1">
+        <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+          Quick Preset Amounts
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {["10", "50", "100", "500", "1000", "5000"].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setAmount(preset)}
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-border bg-secondary/60 hover:bg-secondary text-foreground transition-colors cursor-pointer"
+            >
+              +{preset}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">Reason (logged)</label>
+        <label className="text-xs text-muted-foreground">Reason (logged in audit trail)</label>
         <Input
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -591,6 +692,19 @@ function BalanceSection({
           placeholder="e.g. Promotional credit"
           className="h-12 rounded-xl"
         />
+        {/* Quick Reason Chips */}
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
+          {["Promotional Credit", "Manual Settlement Correction", "KYC Clearance Reward", "Account Balance Adjustment"].map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => setReason(chip)}
+              className="text-[10px] rounded-lg border border-border bg-secondary/60 hover:bg-secondary px-2 py-0.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              + {chip}
+            </button>
+          ))}
+        </div>
       </div>
       <button
         disabled={busy || !walletCode || !amount}
@@ -708,6 +822,26 @@ function WithdrawalsSection({
     }
   }
 
+  async function handleQuickStatus(w: WithdrawalItem, status: WithdrawalStatus) {
+    setBusy(true);
+    try {
+      await updateStatusFn({
+        data: {
+          token,
+          withdrawalId: w.id,
+          newStatus: status,
+          reason: w.reason || `Marked as ${status} via direct admin action.`,
+        },
+      });
+      toast.success(`Withdrawal ${w.reference} marked as ${status}.`);
+      onDone();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
@@ -807,20 +941,62 @@ function WithdrawalsSection({
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                onClick={() => {
-                  setSelectedWd(w);
-                  setNewStatus(
-                    w.status === "PROCESSING" ? "SUCCESSFUL" : (w.status as WithdrawalStatus),
-                  );
-                  setStatusReason(w.reason || "");
-                }}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span>Update Status &amp; Add Note</span>
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {w.status === "PROCESSING" && (
+                  <>
+                    <button
+                      disabled={busy}
+                      onClick={() => handleQuickStatus(w, "SUCCESSFUL")}
+                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span>Approve</span>
+                    </button>
+                    <button
+                      disabled={busy}
+                      onClick={() => handleQuickStatus(w, "UNDER REVIEW")}
+                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <Clock className="h-3 w-3" />
+                      <span>Review</span>
+                    </button>
+                    <button
+                      disabled={busy}
+                      onClick={() => handleQuickStatus(w, "ON HOLD")}
+                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-[11px] font-semibold text-amber-600 dark:text-amber-400 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <AlertCircle className="h-3 w-3" />
+                      <span>Hold</span>
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setSelectedWd(w);
+                    setNewStatus(
+                      w.status === "PROCESSING" ? "SUCCESSFUL" : (w.status as WithdrawalStatus),
+                    );
+                    setStatusReason(w.reason || "");
+                  }}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Modify Status &amp; Note</span>
+                </button>
+
+                <Link
+                  to="/withdrawals/$id"
+                  params={{ id: w.id }}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-secondary/60 hover:bg-secondary text-xs font-medium text-foreground transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Inspect</span>
+                </Link>
+              </div>
             </div>
           </div>
         ))}
@@ -969,7 +1145,45 @@ function UsersSection({
 
   const [selectedUserForRegion, setSelectedUserForRegion] = useState<AdminUser | null>(null);
   const [selectedUserForAge, setSelectedUserForAge] = useState<AdminUser | null>(null);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState<AdminUser | null>(null);
+  const [userHistoryLoading, setUserHistoryLoading] = useState(false);
+  const [userHistoryData, setUserHistoryData] = useState<{
+    transactions: any[];
+    withdrawals: any[];
+  }>({
+    transactions: [],
+    withdrawals: [],
+  });
   const [busy, setBusy] = useState(false);
+
+  async function handleOpenHistory(user: AdminUser) {
+    setSelectedUserForHistory(user);
+    setUserHistoryLoading(true);
+    try {
+      const [txRes, wdRes] = await Promise.all([
+        supabase
+          .from("transactions")
+          .select("*")
+          .or(`sender_wallet_id.eq.${user.id},recipient_wallet_id.eq.${user.id}`)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("withdrawals")
+          .select("*")
+          .eq("user_id", user.user_id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
+      setUserHistoryData({
+        transactions: txRes.data || [],
+        withdrawals: wdRes.data || [],
+      });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setUserHistoryLoading(false);
+    }
+  }
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -1235,6 +1449,16 @@ function UsersSection({
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>48h Age: {u.account_age_hours}h</span>
                 </button>
+
+                {/* 5. User Activity History */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenHistory(u)}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border/80 bg-secondary/60 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                >
+                  <History className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Activity History</span>
+                </button>
               </div>
             </div>
           );
@@ -1495,6 +1719,106 @@ function UsersSection({
           </div>
         </div>
       )}
+
+      {/* MODAL 4: User Activity History */}
+      {selectedUserForHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xl max-h-[85vh] flex flex-col">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                <span>Financial Activity History</span>
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Account: <span className="font-bold text-foreground">{selectedUserForHistory.full_name}</span> ·{" "}
+                <span className="font-mono">{selectedUserForHistory.wallet_code}</span> ({selectedUserForHistory.email})
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {userHistoryLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Withdrawals &amp; Payouts ({userHistoryData.withdrawals.length})
+                    </h4>
+                    {userHistoryData.withdrawals.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">No withdrawals recorded.</p>
+                    ) : (
+                      <div className="rounded-xl border border-border divide-y divide-border/60 overflow-hidden">
+                        {userHistoryData.withdrawals.map((w: any) => (
+                          <div key={w.id} className="p-3 text-xs flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-foreground">
+                                {w.method} · <span className="font-mono text-[11px]">{w.reference}</span>
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {new Date(w.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-foreground">
+                                {formatMoney(Number(w.amount), w.currency)}
+                              </p>
+                              <span className="text-[10px] font-bold text-primary">{w.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Transfers &amp; Credits ({userHistoryData.transactions.length})
+                    </h4>
+                    {userHistoryData.transactions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">No transactions recorded.</p>
+                    ) : (
+                      <div className="rounded-xl border border-border divide-y divide-border/60 overflow-hidden">
+                        {userHistoryData.transactions.map((t: any) => (
+                          <div key={t.id} className="p-3 text-xs flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-foreground">
+                                {t.kind} · <span className="font-mono text-[11px]">{t.reference}</span>
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {t.note || "Transfer"} · {new Date(t.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-foreground">
+                                {formatMoney(Number(t.amount), t.currency)}
+                              </p>
+                              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                {t.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-border/40 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedUserForHistory(null)}
+                className="h-10 px-5 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1503,13 +1827,16 @@ function ControlsSection({
   token,
   users,
   onDone,
+  onSelectTab,
 }: {
   token: string;
   users: AdminUser[];
   onDone: () => void;
+  onSelectTab?: (s: Section) => void;
 }) {
   const freezeFn = useServerFn(adminSetFreeze);
   const regionFn = useServerFn(adminSetRegion);
+  const ageFn = useServerFn(adminSetAccountAge);
   const [walletCode, setWalletCode] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1655,6 +1982,60 @@ function ControlsSection({
                 );
               })}
             </div>
+          </div>
+
+          {/* 48h Security Age Window */}
+          <div className="space-y-2 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground">Anti-Fraud 48h Security Clearance</label>
+              <span className="text-[11px] font-mono text-muted-foreground">
+                Current: <span className="font-bold text-foreground">{user.account_age_hours} hrs</span> ({user.account_age_days} days)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  const targetDate = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+                  run(
+                    () => ageFn({ data: { token, userId: user.user_id, createdAtISO: targetDate } }),
+                    "Account age updated to 72 hours (Withdrawals Unlocked)."
+                  );
+                }}
+                className="h-10 px-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Unlock (Set 72h)</span>
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  const targetDate = new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString();
+                  run(
+                    () => ageFn({ data: { token, userId: user.user_id, createdAtISO: targetDate } }),
+                    "Account age updated to 1 hour (Withdrawals Locked)."
+                  );
+                }}
+                className="h-10 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Clock className="h-3.5 w-3.5" />
+                <span>Lock (Set 1h Old)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Balance Adjustment Jump */}
+          <div className="pt-2 border-t border-border/50 flex justify-end">
+            <button
+              type="button"
+              onClick={() => onSelectTab?.("balance")}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer"
+            >
+              <Wallet className="h-3.5 w-3.5" />
+              <span>Open Balance Console for this Wallet</span>
+            </button>
           </div>
         </>
       )}
