@@ -24,6 +24,18 @@ export function useAccountGeography() {
   const syncGeoFn = useServerFn(syncAccountGeography);
   const { data: profile } = useProfile();
 
+  const getFallbackGeo = () => {
+    if (profile?.admin_region_override) {
+      return resolveAccountGeography(
+        profile?.country_code,
+        profile?.city,
+        profile?.timezone,
+        profile?.region,
+      );
+    }
+    return resolveAccountGeography("IN", profile?.city, profile?.timezone, "INDIA");
+  };
+
   return useQuery({
     queryKey: [
       "account-geography",
@@ -37,19 +49,11 @@ export function useAccountGeography() {
         const geo = await syncGeoFn();
         return geo;
       } catch {
-        // Fallback to local resolver using profile data
-        if (profile?.admin_region_override) {
-          return resolveAccountGeography(
-            profile?.country_code,
-            profile?.city,
-            profile?.timezone,
-            profile?.region,
-          );
-        }
-        return resolveAccountGeography("IN", profile?.city, profile?.timezone, "INDIA");
+        return getFallbackGeo();
       }
     },
-    staleTime: 60 * 60 * 1000, // 1 hour stale time
+    placeholderData: getFallbackGeo,
+    staleTime: 24 * 60 * 60 * 1000,
   });
 }
 
@@ -67,6 +71,7 @@ export function useProfile() {
       if (error) throw error;
       return data;
     },
+    staleTime: 60 * 1000,
   });
 }
 
@@ -78,6 +83,7 @@ export function useWallet() {
       if (error) throw error;
       return data;
     },
+    staleTime: 60 * 1000,
   });
 }
 
@@ -122,6 +128,7 @@ export function useTransactions(limit = 100) {
       if (error) throw error;
       return data;
     },
+    staleTime: 30 * 1000,
   });
 }
 
@@ -135,11 +142,25 @@ export function useSetPreferredCurrency() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async ({ currency }) => {
+      await qc.cancelQueries({ queryKey: ["profile"] });
+      const previousProfile = qc.getQueryData(["profile"]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      qc.setQueryData(["profile"], (old: any) =>
+        old ? { ...old, preferred_currency: currency } : old,
+      );
+      return { previousProfile };
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (_err, _variables, context: any) => {
+      if (context?.previousProfile) {
+        qc.setQueryData(["profile"], context.previousProfile);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["wallet"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["rates"] });
     },
   });
 }

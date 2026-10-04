@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Lock,
+  ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,6 +261,31 @@ function Receipt() {
         route: rawData.route || undefined,
       })
     : null;
+  // Counterparty resolution for direct Pay Back / Send Again actions
+  const myWalletId = wallet.data?.id;
+  const myWalletCode = wallet.data?.wallet_code;
+  const isTransfer = !isWithdrawal && rawData.kind === "transfer";
+  const isIncomingTransfer =
+    isTransfer &&
+    (rawData.recipient_wallet_id === myWalletId ||
+      (rawData.recipient_wallet_code && rawData.recipient_wallet_code === myWalletCode) ||
+      (rawData.sender_wallet_code && rawData.sender_wallet_code !== myWalletCode));
+  const isOutgoingTransfer =
+    isTransfer &&
+    (rawData.sender_wallet_id === myWalletId ||
+      (rawData.sender_wallet_code && rawData.sender_wallet_code === myWalletCode));
+
+  const counterpartyWalletCode = isIncomingTransfer
+    ? rawData.sender_wallet_code
+    : isOutgoingTransfer
+      ? rawData.recipient_wallet_code
+      : null;
+
+  const counterpartyName = isIncomingTransfer
+    ? rawData.sender_name || "Sender"
+    : isOutgoingTransfer
+      ? rawData.recipient_name || rawData.full_name || "Recipient"
+      : null;
 
   return (
     <div className="mx-auto max-w-sm sm:max-w-md px-2 sm:px-4 space-y-4 pb-2 animate-in fade-in duration-200">
@@ -579,13 +605,30 @@ function Receipt() {
         </div>
       </div>
 
-      {/* Done Button */}
-      <div className="no-print pt-2">
+      {/* Action Buttons */}
+      <div className="no-print pt-2 space-y-2.5">
+        {counterpartyWalletCode && (
+          <Link
+            to="/send"
+            search={{ to: counterpartyWalletCode }}
+            preload="intent"
+            className="w-full flex items-center justify-center gap-2 rounded-full h-12 bg-primary text-primary-foreground font-semibold text-sm shadow-soft hover:brightness-110 active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
+          >
+            <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} />
+            <span>
+              {isIncomingTransfer
+                ? `Pay Back ${counterpartyName ? counterpartyName.split(" ")[0] : "Sender"}`
+                : `Send Again to ${counterpartyName ? counterpartyName.split(" ")[0] : "Recipient"}`}
+            </span>
+          </Link>
+        )}
+
         <Link
           to="/transactions"
-          className="w-full flex items-center justify-center rounded-full h-12 bg-primary text-primary-foreground font-semibold text-sm shadow-xs hover:opacity-95 active:scale-[0.98] transition-transform touch-manipulation cursor-pointer"
+          preload="intent"
+          className="w-full flex items-center justify-center rounded-full h-11 border border-border/70 bg-secondary/50 text-foreground font-medium text-xs hover:bg-secondary active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
         >
-          Done
+          Back to Activity
         </Link>
       </div>
     </div>

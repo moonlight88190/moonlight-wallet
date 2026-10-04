@@ -89,6 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                preload="intent"
                 className="rounded-full px-3.5 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60"
                 activeProps={{ className: "bg-secondary text-foreground font-semibold" }}
               >
@@ -189,6 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={n.to}
               to={n.to}
+              preload="intent"
               className="group flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-2xl text-[10px] font-medium text-muted-foreground transition-all active:scale-90 min-h-[48px] touch-manipulation relative"
               activeProps={{
                 className: "text-foreground font-bold [&>div]:bg-primary/10 [&>div]:text-primary",

@@ -18,6 +18,14 @@ const SYMBOLS = [
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+let memoryCachedResult: {
+  rates: Record<string, number>;
+  fetchedAt: string;
+  source: string;
+} | null = null;
+let lastMemoryCacheTime = 0;
+const MEMORY_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Returns FX rates (quote per 1 USD). Rates are cached in the database and
  * refreshed from Frankfurter (ECB reference rates, free, no key) at most once per 24h.
@@ -26,6 +34,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const getRates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (memoryCachedResult && Date.now() - lastMemoryCacheTime < MEMORY_CACHE_TTL_MS) {
+      return memoryCachedResult;
+    }
     const read = async () => {
       try {
         const { data, error } = await context.supabase
@@ -106,10 +117,14 @@ export const getRates = createServerFn({ method: "GET" })
       new Date().toISOString(),
     );
 
-    return {
+    const result = {
       rates,
       fetchedAt,
       source: rows[0]?.source ?? (freshRates ? "frankfurter" : "fallback"),
     };
+    memoryCachedResult = result;
+    lastMemoryCacheTime = Date.now();
+
+    return result;
   });
 
