@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Share, QrCode, Check, ShieldCheck, Globe } from "lucide-react";
+import { Copy, Share, QrCode, Check, ShieldCheck, Globe, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   useProfile,
@@ -118,15 +118,15 @@ function Receive() {
           )}
         </div>
 
-        {/* ─── Supported Settlement Rails (Filtered by Account Geography) ─── */}
+        {/* ─── Supported Withdrawal Methods (Filtered by Account Geography) ─── */}
         {isIndianAccount ? (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                Zero Surcharge
+                Instant UPI & Bank
               </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -137,18 +137,28 @@ function Receive() {
               <BrandAsset id="bhim" size="sm" />
               <PaymentMethodIcon id="in-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance settlement supported via UPI, verified mobile payment handles, and IMPS domestic banking rails.
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: instant UPI transfer (Google Pay, PhonePe, Paytm, BHIM) and IMPS / NEFT domestic Indian bank accounts.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         ) : geography.data?.isEurope || geography.data?.capabilities?.supportsSEPA ? (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                SEPA Network
+                SEPA Instant
               </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -158,15 +168,25 @@ function Receive() {
               )}
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance transfers supported via Single Euro Payments Area (SEPA Credit Transfer).
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: SEPA Instant credit transfer and Eurozone domestic bank accounts.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         ) : geography.data?.isUK || geography.data?.capabilities?.supportsFasterPayments ? (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 Faster Payments
@@ -176,54 +196,103 @@ function Receive() {
               <PaymentMethodIcon id="faster-payments" size="sm" />
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance settlement supported via the UK Faster Payments Service and interbank network.
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: UK Faster Payments and domestic UK bank accounts.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         ) : geography.data?.capabilities?.supportsGCash ? (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                GCash & Banks
+              </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <PaymentMethodIcon id="gcash" size="sm" />
               <PaymentMethodIcon id="ph-bank" size="sm" />
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance transfers supported via GCash and Philippine domestic interbank rails.
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: GCash wallet and Philippine domestic bank accounts.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         ) : geography.data?.capabilities?.supportsPix ? (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Pix Instant
+              </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <PaymentMethodIcon id="pix" size="sm" />
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance settlement supported via Pix instant settlement network.
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: Pix instant payout and Brazilian domestic bank accounts.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="border-t border-border/30 pt-4 space-y-2.5">
+          <div className="border-t border-border/30 pt-4 space-y-2.5 text-center">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-muted-foreground tracking-[0.1em] uppercase">
-                Supported Settlement Rails
+              <p className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">
+                Supported Withdrawal Methods
               </p>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                Global Rails
+              </span>
             </div>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <PaymentMethodIcon id="int-bank" size="sm" />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Direct balance transfers supported via international wire and SWIFT interbank network.
+            <p className="text-[11px] text-muted-foreground leading-relaxed px-1">
+              These are all the supported withdrawal methods for your account: international wire transfer and domestic banking networks.
             </p>
+            <div className="pt-0.5">
+              <Link
+                to="/withdraw"
+                preload="intent"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+              >
+                <span>Go to Withdrawal Channels</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
           </div>
         )}
       </div>

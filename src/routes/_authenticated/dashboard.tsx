@@ -223,6 +223,7 @@ function Dashboard() {
             <Link
               key={`${action.to}-${idx}`}
               to={action.to}
+              preload="intent"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               search={action.search as any}
               className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.97] ${

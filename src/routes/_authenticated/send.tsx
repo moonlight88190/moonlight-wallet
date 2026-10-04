@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -9,9 +9,11 @@ import {
   Image as ImageIcon,
   ShieldAlert,
   UserCheck,
+  ArrowUpRight,
+  ArrowDownLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
+import { useProfile, useRates, useWallet, useTransactions } from "@/hooks/use-wallet";
 import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney, getRate } from "@/lib/currency";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,7 +29,16 @@ import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
 import { triggerTransactionalEmail } from "@/lib/email";
 
+export type SendSearchParams = {
+  to?: string;
+  scan?: string;
+};
+
 export const Route = createFileRoute("/_authenticated/send")({
+  validateSearch: (search: Record<string, unknown>): SendSearchParams => ({
+    ...(typeof search["to"] === "string" ? { to: search["to"] } : {}),
+    ...(typeof search["scan"] === "string" ? { scan: search["scan"] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Send money — Moonlight Wallet" },
@@ -136,9 +147,11 @@ function Scanner({ onResult }: { onResult: (v: string) => void }) {
 function Send() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const profile = useProfile();
   const wallet = useWallet();
   const rates = useRates();
+  const txQuery = useTransactions(50);
 
   const [step, setStep] = useState<"to" | "amount" | "review" | "animating" | "done">("to");
   const [animState, setAnimState] = useState<"confirming" | "processing" | "completed" | "failed">(
@@ -184,6 +197,51 @@ function Send() {
     setRecipient(data[0] ?? null);
     setStep("amount");
   }
+
+  // Auto-fill and lookup if navigated from receipt or activity with ?to=...
+  useEffect(() => {
+    if (search?.to) {
+      const code = search.to.trim();
+      setQuery(code);
+      lookup(code);
+    } else if (search?.scan === "true") {
+      setScan(true);
+    }
+  }, [search?.to, search?.scan]);
+
+  // Derive recent contacts (recipients you sent to & senders who paid you)
+  const myWalletId = wallet.data?.id;
+  const myWalletCode = wallet.data?.wallet_code;
+
+  const recentContacts = useMemo(() => {
+    const list: Array<{
+      walletCode: string;
+      name: string;
+      type: "sent" | "received";
+      date: string;
+    }> = [];
+    const seen = new Set<string>();
+
+    for (const t of txQuery.data ?? []) {
+      if (t.kind !== "transfer") continue;
+      const isOut = t.sender_wallet_id === myWalletId;
+      const code = isOut ? t.recipient_wallet_code : t.sender_wallet_code;
+      const name = isOut
+        ? t.recipient_name || "Recipient"
+        : t.sender_name || "Sender";
+
+      if (code && code !== myWalletCode && !seen.has(code.toUpperCase())) {
+        seen.add(code.toUpperCase());
+        list.push({
+          walletCode: code,
+          name,
+          type: isOut ? "sent" : "received",
+          date: t.created_at,
+        });
+      }
+    }
+    return list.slice(0, 6);
+  }, [txQuery.data, myWalletId, myWalletCode]);
 
   async function confirmTransfer() {
     if (!recipient) return;
@@ -257,6 +315,50 @@ function Send() {
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find Recipient"}
             </button>
           </form>
+
+          {/* Quick Recent Contacts & Senders */}
+          {recentContacts.length > 0 && (
+            <div className="space-y-2.5 pt-1">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground">
+                  Recent Senders &amp; Recipients
+                </span>
+                <span className="text-[10px] text-muted-foreground/80">
+                  Tap to pay directly
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {recentContacts.map((c) => (
+                  <button
+                    key={c.walletCode}
+                    type="button"
+                    onClick={() => {
+                      setQuery(c.walletCode);
+                      lookup(c.walletCode);
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 bg-card/60 hover:bg-secondary/70 hover:border-border transition-all text-left group cursor-pointer touch-manipulation active:scale-[0.98]"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-bold text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-2xs">
+                      {c.name.charAt(0).toUpperCase() || "M"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-foreground truncate">
+                        {c.name}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                        <span className={c.type === "received" ? "text-emerald-500 font-semibold" : "font-medium"}>
+                          {c.type === "received" ? "Paid you" : "Sent to"}
+                        </span>
+                        <span>·</span>
+                        <span className="font-mono text-muted-foreground/80 truncate">{c.walletCode}</span>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="relative flex items-center justify-center my-4">
             <div className="absolute inset-0 flex items-center">
