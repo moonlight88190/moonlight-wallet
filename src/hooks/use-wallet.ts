@@ -137,6 +137,7 @@ export function useSetPreferredCurrency() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["wallet"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["rates"] });
     },
