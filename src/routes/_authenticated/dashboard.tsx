@@ -269,7 +269,7 @@ function Dashboard() {
           </div>
           <div className="min-w-0">
             <div className="font-semibold text-foreground truncate">Instant Transfers</div>
-            <div className="text-[11px] text-muted-foreground truncate">0% peer-to-peer fee</div>
+            <div className="text-[11px] text-muted-foreground truncate">Real-time ledger settlement</div>
           </div>
         </div>
 

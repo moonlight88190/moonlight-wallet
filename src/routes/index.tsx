@@ -126,7 +126,7 @@ const PRODUCT_CAPABILITIES = [
     icon: Zap,
     title: "Instant Peer-to-Peer Payments",
     description:
-      "Send and receive money instantly using unique Moonlight wallet codes or QR scans, with zero internal transfer fees.",
+      "Send and receive money instantly using unique Moonlight wallet codes or QR scans, with real-time cryptographic verification.",
   },
   {
     icon: ShieldCheck,
