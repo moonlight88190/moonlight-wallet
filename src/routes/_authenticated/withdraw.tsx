@@ -131,16 +131,6 @@ function Withdraw() {
     );
   const isPH = Boolean(
     geo?.capabilities?.supportsGCash ||
-    (profile?.admin_region_override &&
-      (verifiedCountryCode === "PH" || profile?.region?.toUpperCase() === "PHILIPPINES")),
-        ([
-          "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
-          "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
-        ].includes(verifiedCountryCode) ||
-          profile?.region?.toUpperCase() === "EUROPE"),
-    );
-  const isPH = Boolean(
-    geo?.capabilities?.supportsGCash ||
       (profile?.admin_region_override &&
         (verifiedCountryCode === "PH" ||
           profile?.region?.toUpperCase() === "PHILIPPINES")),
@@ -148,12 +138,6 @@ function Withdraw() {
   const isIndia = geo?.isIndia ?? (!isEurope && !isPH);
   const isUK = Boolean(
     geo?.isUK ??
-    (profile?.admin_region_override &&
-      (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
-  );
-  const isBR = Boolean(
-    geo?.capabilities?.supportsPix ||
-    (profile?.admin_region_override && verifiedCountryCode === "BR"),
       (profile?.admin_region_override &&
         (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
   );

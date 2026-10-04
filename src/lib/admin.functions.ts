@@ -269,8 +269,6 @@ export const adminListUsers = createServerFn({ method: "POST" })
         (p as { admin_region_override?: boolean | null } | null)?.admin_region_override,
       );
       const displayRegion = isExplicitOverride ? p?.region || "INDIA" : "INDIA";
-      const isExplicitOverride = Boolean((p as any)?.admin_region_override);
-      const displayRegion = isExplicitOverride ? (p?.region || "INDIA") : "INDIA";
 
       return {
         id: w.id,
