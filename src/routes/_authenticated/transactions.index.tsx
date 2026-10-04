@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { useTransactions, useWallet, useProfile, useRates, txView } from "@/hooks/use-wallet";
+import { useTransactions, useWallet, txView } from "@/hooks/use-wallet";
 import { TxRow } from "@/components/TxRow";
 import { groupByPeriod } from "@/lib/compliance";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,15 +28,11 @@ type FilterType = "all" | "sent" | "received" | "payouts";
  */
 function History() {
   const wallet = useWallet();
-  const profile = useProfile();
-  const rates = useRates();
   const txs = useTransactions(200);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const walletId = wallet.data?.id;
-  const displayCur = profile.data?.preferred_currency ?? "EUR";
-  const ratesMap = rates.data?.rates;
 
   const rawList = txs.data ?? [];
 
@@ -209,7 +205,7 @@ function History() {
             </div>
             <div className="divide-y divide-border/40 rounded-3xl border border-border/60 bg-card/70 overflow-hidden shadow-soft">
               {g.items.map((t) => (
-                <TxRow key={t.id} tx={t} walletId={walletId} displayCur={displayCur} rates={ratesMap} />
+                <TxRow key={t.id} tx={t} walletId={walletId} />
               ))}
             </div>
           </div>
