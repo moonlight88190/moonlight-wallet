@@ -25,6 +25,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowDownLeft,
+  Globe,
+  MessageSquare,
+  Plus,
+  Minus,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +42,7 @@ import {
   adminListUsers,
   adminListWithdrawals,
   adminUpdateWithdrawalStatus,
+  adminUpdateWithdrawalNote,
   adminSetAccountAge,
   adminListTransactions,
   adminGlobalSearch,
@@ -69,6 +75,66 @@ const ADMIN_CURRENCIES = [
   "CHF",
 ] as const;
 const REGIONS = ["INDIA", "EUROPE", "PHILIPPINES", "GLOBAL"] as const;
+
+export const COUNTRY_REGION_OPTIONS = [
+  {
+    region: "INDIA" as const,
+    countryCode: "IN",
+    preferredCurrency: "INR",
+    flag: "🇮🇳",
+    label: "India",
+    methods: "UPI, IMPS, NetBanking",
+  },
+  {
+    region: "EUROPE" as const,
+    countryCode: "DE",
+    preferredCurrency: "EUR",
+    flag: "🇩🇪",
+    label: "Germany / Europe",
+    methods: "SEPA Instant, IBAN Bank Transfer",
+  },
+  {
+    region: "EUROPE" as const,
+    countryCode: "FR",
+    preferredCurrency: "EUR",
+    flag: "🇫🇷",
+    label: "France / Eurozone",
+    methods: "SEPA Instant, Eurozone Rails",
+  },
+  {
+    region: "GLOBAL" as const,
+    countryCode: "GB",
+    preferredCurrency: "GBP",
+    flag: "🇬🇧",
+    label: "United Kingdom",
+    methods: "Faster Payments, Sort Code",
+  },
+  {
+    region: "GLOBAL" as const,
+    countryCode: "US",
+    preferredCurrency: "USD",
+    flag: "🇺🇸",
+    label: "United States",
+    methods: "ACH, Fedwire, Domestic Routing",
+  },
+  {
+    region: "PHILIPPINES" as const,
+    countryCode: "PH",
+    preferredCurrency: "PHP",
+    flag: "🇵🇭",
+    label: "Philippines",
+    methods: "GCash, Maya, InstaPay",
+  },
+  {
+    region: "GLOBAL" as const,
+    countryCode: "GL",
+    preferredCurrency: "USD",
+    flag: "🌐",
+    label: "Global / International",
+    methods: "SWIFT, Multi-currency Wire",
+  },
+] as const;
+
 type Section =
   | "overview"
   | "withdrawals"
@@ -100,6 +166,8 @@ type AdminUser = {
   full_name: string;
   email: string;
   region: string;
+  country_code?: string;
+  preferred_currency?: string;
   is_admin_region?: boolean;
   created_at: string;
   account_age_hours: number;
@@ -550,11 +618,17 @@ function WithdrawalsSection({
   onDone: () => void;
 }) {
   const updateStatusFn = useServerFn(adminUpdateWithdrawalStatus);
+  const updateNoteFn = useServerFn(adminUpdateWithdrawalNote);
   const [filter, setFilter] = useState<string>("ALL");
   const [q, setQ] = useState<string>("");
   const [selectedWd, setSelectedWd] = useState<WithdrawalItem | null>(null);
   type WithdrawalStatus =
-    "PROCESSING" | "SUCCESSFUL" | "FAILED" | "ON HOLD" | "UNDER REVIEW" | "CANCELLED";
+    | "PROCESSING"
+    | "SUCCESSFUL"
+    | "FAILED"
+    | "ON HOLD"
+    | "UNDER REVIEW"
+    | "CANCELLED";
 
   const [newStatus, setNewStatus] = useState<WithdrawalStatus>("SUCCESSFUL");
   const [statusReason, setStatusReason] = useState<string>("");
@@ -576,9 +650,15 @@ function WithdrawalsSection({
       const matchesFilter = filter === "ALL" || w.status === filter;
       const matchesQuery =
         !s ||
-        [w.reference, w.full_name, w.email, w.method, w.upi_id || "", w.provider || ""].some((v) =>
-          v.toLowerCase().includes(s),
-        );
+        [
+          w.reference,
+          w.full_name,
+          w.email,
+          w.method,
+          w.upi_id || "",
+          w.provider || "",
+          w.reason || "",
+        ].some((v) => v.toLowerCase().includes(s));
       return matchesFilter && matchesQuery;
     });
   }, [withdrawals, filter, q]);
@@ -595,7 +675,29 @@ function WithdrawalsSection({
           reason: statusReason.trim() || undefined,
         },
       });
-      toast.success(`Withdrawal status updated to ${newStatus}`);
+      toast.success(`Withdrawal status updated to ${newStatus} & note saved.`);
+      setSelectedWd(null);
+      setStatusReason("");
+      onDone();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUpdateNoteOnly() {
+    if (!selectedWd) return;
+    setBusy(true);
+    try {
+      await updateNoteFn({
+        data: {
+          token,
+          withdrawalId: selectedWd.id,
+          note: statusReason.trim(),
+        },
+      });
+      toast.success("Moonlight custom note saved to user receipt.");
       setSelectedWd(null);
       setStatusReason("");
       onDone();
@@ -614,7 +716,7 @@ function WithdrawalsSection({
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search reference, name, email or UPI/account..."
+            placeholder="Search reference, name, email, UPI, or notes..."
             className="h-11 rounded-xl pl-11"
           />
         </div>
@@ -675,7 +777,7 @@ function WithdrawalsSection({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-secondary/30 p-3 rounded-xl">
               <div>
-                <p className="text-muted-foreground">User Name / Email:</p>
+                <p className="text-muted-foreground">Beneficiary / Email:</p>
                 <p className="font-semibold text-foreground truncate">{w.full_name}</p>
                 <p className="text-muted-foreground truncate">{w.email}</p>
               </div>
@@ -689,11 +791,21 @@ function WithdrawalsSection({
                 <p className="font-mono font-semibold text-foreground truncate">
                   {w.upi_id || w.email || "N/A"}
                 </p>
-                {w.reason && (
-                  <p className="text-muted-foreground italic truncate">Note: {w.reason}</p>
-                )}
               </div>
             </div>
+
+            {/* Custom Moonlight Note on User Receipt */}
+            {w.reason && (
+              <div className="flex items-start gap-2 rounded-xl border border-primary/25 bg-primary/8 p-3 text-xs">
+                <MessageSquare className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <span className="font-semibold text-primary block text-[11px] uppercase tracking-wider">
+                    Moonlight Note on User Receipt:
+                  </span>
+                  <p className="text-foreground leading-relaxed mt-0.5">{w.reason}</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-1">
               <button
@@ -704,9 +816,10 @@ function WithdrawalsSection({
                   );
                   setStatusReason(w.reason || "");
                 }}
-                className="h-9 px-4 rounded-xl border border-border bg-secondary/80 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
               >
-                Update Status
+                <FileText className="h-3.5 w-3.5" />
+                <span>Update Status &amp; Add Note</span>
               </button>
             </div>
           </div>
@@ -720,9 +833,12 @@ function WithdrawalsSection({
 
       {selectedWd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 space-y-4 shadow-lg">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="space-y-1">
-              <h3 className="font-semibold text-base">Update Withdrawal Status</h3>
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span>Update Withdrawal Status &amp; Add Custom Note</span>
+              </h3>
               <p className="text-xs text-muted-foreground">
                 Ref:{" "}
                 <span className="font-mono font-bold text-foreground">{selectedWd.reference}</span>{" "}
@@ -732,7 +848,7 @@ function WithdrawalsSection({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Target Status</label>
+              <label className="text-xs font-semibold text-foreground">Target Withdrawal Status</label>
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value as WithdrawalStatus)}
@@ -749,36 +865,77 @@ function WithdrawalsSection({
             </div>
 
             {(newStatus === "FAILED" || newStatus === "CANCELLED") && (
-              <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-xl">
+              <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                 ⚠️ Transitioning to FAILED or CANCELLED will automatically refund{" "}
-                {formatMoney(Number(selectedWd.amount_usd), "USD")} back to the user's wallet!
+                {formatMoney(Number(selectedWd.amount_usd), "USD")} back to the user's wallet balance!
               </p>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Reason / Admin Note</label>
-              <Input
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                  <span>Custom Note by Moonlight (Visible on User Receipt)</span>
+                </label>
+                <span className="text-[10px] text-muted-foreground">Live on receipt</span>
+              </div>
+              <textarea
                 value={statusReason}
                 onChange={(e) => setStatusReason(e.target.value)}
-                placeholder="e.g. Verified by bank / Invalid UPI handle"
-                className="h-11 rounded-xl text-xs"
+                placeholder="Write custom instructions, compliance update, or payout clearance message..."
+                rows={3}
+                maxLength={300}
+                className="w-full rounded-xl border border-input bg-background p-3 text-xs leading-relaxed focus:outline-hidden focus:ring-1 focus:ring-ring font-sans"
               />
+
+              {/* Quick Template Buttons */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider block">
+                  Quick Note Templates (Tap to insert):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {[
+                    "Verified and settled via banking rail.",
+                    "AML clearing review in progress. Delivery expected in 5-7 business days.",
+                    "Verification hold: please contact support with identity proof.",
+                    "Destination rejected transfer. Amount refunded to wallet balance.",
+                  ].map((tmpl) => (
+                    <button
+                      key={tmpl}
+                      type="button"
+                      onClick={() => setStatusReason(tmpl)}
+                      className="text-[10px] rounded-lg border border-border/80 bg-secondary/60 hover:bg-secondary p-1.5 text-muted-foreground hover:text-foreground text-left transition-colors cursor-pointer"
+                    >
+                      + {tmpl}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border/40">
               <button
                 type="button"
                 onClick={() => setSelectedWd(null)}
-                className="flex-1 h-11 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer"
+                className="h-11 px-4 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer sm:w-auto"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                disabled={busy || !statusReason.trim()}
+                onClick={handleUpdateNoteOnly}
+                className="flex-1 h-11 rounded-xl border border-primary/50 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Save Note Only"}
+              </button>
+              <button
+                type="button"
                 disabled={busy}
                 onClick={handleUpdateStatus}
-                className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer shadow-soft"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Save Status"}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Save Status & Note"}
               </button>
             </div>
           </div>
@@ -797,8 +954,20 @@ function UsersSection({
   token: string;
   onDone: () => void;
 }) {
+  const addBalanceFn = useServerFn(adminAddBalance);
+  const removeBalanceFn = useServerFn(adminRemoveBalance);
+  const setFreezeFn = useServerFn(adminSetFreeze);
+  const setRegionFn = useServerFn(adminSetRegion);
   const setAgeFn = useServerFn(adminSetAccountAge);
+
   const [q, setQ] = useState("");
+  const [selectedUserForBalance, setSelectedUserForBalance] = useState<AdminUser | null>(null);
+  const [balanceMode, setBalanceMode] = useState<"add" | "remove">("add");
+  const [balanceCurrency, setBalanceCurrency] = useState<(typeof ADMIN_CURRENCIES)[number]>("USD");
+  const [balanceAmount, setBalanceAmount] = useState("");
+  const [balanceReason, setBalanceReason] = useState("");
+
+  const [selectedUserForRegion, setSelectedUserForRegion] = useState<AdminUser | null>(null);
   const [selectedUserForAge, setSelectedUserForAge] = useState<AdminUser | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -806,10 +975,96 @@ function UsersSection({
     const s = q.trim().toLowerCase();
     return users
       .filter(
-        (u) => !s || [u.full_name, u.email, u.wallet_code].some((v) => v.toLowerCase().includes(s)),
+        (u) =>
+          !s ||
+          [u.full_name, u.email, u.wallet_code, u.region, u.country_code || ""].some((v) =>
+            v.toLowerCase().includes(s),
+          ),
       )
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [users, q]);
+
+  async function handleToggleFreeze(user: AdminUser) {
+    setBusy(true);
+    try {
+      await setFreezeFn({
+        data: {
+          token,
+          walletCode: user.wallet_code,
+          freeze: !user.is_frozen,
+          reason: user.is_frozen ? "Admin account reactivated" : "Admin security freeze",
+        },
+      });
+      toast.success(user.is_frozen ? `Wallet ${user.wallet_code} unfrozen.` : `Wallet ${user.wallet_code} frozen.`);
+      onDone();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAdjustBalance(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedUserForBalance) return;
+    const amt = Number(balanceAmount);
+    if (!(amt > 0)) {
+      toast.error("Enter a valid positive amount.");
+      return;
+    }
+    if (balanceReason.trim().length < 3) {
+      toast.error("Please add a reason (min 3 characters).");
+      return;
+    }
+    setBusy(true);
+    try {
+      const fn = balanceMode === "add" ? addBalanceFn : removeBalanceFn;
+      await fn({
+        data: {
+          token,
+          walletCode: selectedUserForBalance.wallet_code,
+          currency: balanceCurrency,
+          amount: amt,
+          reason: balanceReason.trim(),
+        },
+      });
+      toast.success(
+        balanceMode === "add"
+          ? `Credited ${formatMoney(amt, balanceCurrency)} to ${selectedUserForBalance.full_name}.`
+          : `Debited ${formatMoney(amt, balanceCurrency)} from ${selectedUserForBalance.full_name}.`,
+      );
+      setSelectedUserForBalance(null);
+      setBalanceAmount("");
+      setBalanceReason("");
+      onDone();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSetRegion(user: AdminUser, opt: (typeof COUNTRY_REGION_OPTIONS)[number]) {
+    setBusy(true);
+    try {
+      await setRegionFn({
+        data: {
+          token,
+          walletCode: user.wallet_code,
+          region: opt.region,
+          countryCode: opt.countryCode,
+          preferredCurrency: opt.preferredCurrency,
+        },
+      });
+      toast.success(`Country set to ${opt.label} (${opt.countryCode}) with currency ${opt.preferredCurrency}.`);
+      setSelectedUserForRegion(null);
+      onDone();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleSetAge(userId: string, hoursOld: number) {
     setBusy(true);
@@ -838,97 +1093,375 @@ function UsersSection({
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name, email or wallet ID"
-          className="h-12 rounded-xl pl-11"
-        />
+      {/* Search Header */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, email, wallet ID, or country..."
+            className="h-12 rounded-xl pl-11"
+          />
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono shrink-0 px-1">
+          <span>{list.length} users</span>
+          <span>·</span>
+          <span className="text-destructive font-semibold">{users.filter((u) => u.is_frozen).length} frozen</span>
+          <span>·</span>
+          <span className="text-emerald-500 font-semibold">{users.filter((u) => u.account_age_hours >= 48).length} eligible</span>
+        </div>
       </div>
-      <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+
+      {/* Users Card List */}
+      <div className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
         {list.map((u) => {
           const is48hEligible = u.account_age_hours >= 48;
+          const countryOpt = COUNTRY_REGION_OPTIONS.find(
+            (c) => c.countryCode === u.country_code || (c.region === u.region && c.countryCode === "IN"),
+          );
+          const flag = countryOpt?.flag || (u.region === "EUROPE" ? "🇪🇺" : u.region === "PHILIPPINES" ? "🇵🇭" : "🇮🇳");
+
           return (
-            <div
-              key={u.id}
-              className="flex flex-col gap-2 p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-semibold">{u.full_name}</p>
-                  <span
-                    className={cn(
-                      "text-[10px] font-bold px-2 py-0.2 rounded-full",
-                      is48hEligible
-                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-                    )}
-                  >
-                    {is48hEligible ? "48h+ Eligible" : "Locked (<48h)"}
-                  </span>
+            <div key={u.id} className="p-4 sm:p-5 flex flex-col gap-3">
+              {/* Top row: User Identity, Status & Balance */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-bold text-foreground">{u.full_name}</p>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                        u.is_frozen
+                          ? "bg-destructive/15 text-destructive border border-destructive/20"
+                          : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+                      )}
+                    >
+                      {u.is_frozen ? "Frozen" : "Active"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                        is48hEligible
+                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                          : "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+                      )}
+                    >
+                      {is48hEligible ? "48h+ Eligible" : "Locked (<48h)"}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                    <span className="truncate">{u.email}</span>
+                    <span>·</span>
+                    <span className="font-mono text-foreground font-semibold">{u.wallet_code}</span>
+                  </div>
                 </div>
-                <p className="truncate text-xs text-muted-foreground">{u.email}</p>
-                <p className="mt-0.5 font-mono text-xs text-muted-foreground">{u.wallet_code}</p>
+
+                {/* Balance & Country display */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                  <div className="text-left sm:text-right">
+                    <div className="text-base font-bold tabular-nums text-foreground">
+                      {formatMoney(Number(u.balance_usd), "USD")}
+                    </div>
+                    <div className="flex items-center sm:justify-end gap-1 text-xs text-muted-foreground">
+                      <span>{flag}</span>
+                      <span className="font-semibold text-foreground">
+                        {u.country_code || (u.region === "EUROPE" ? "DE" : u.region === "PHILIPPINES" ? "PH" : "IN")}
+                      </span>
+                      <span>({u.preferred_currency || (u.region === "EUROPE" ? "EUR" : u.region === "PHILIPPINES" ? "PHP" : "INR")})</span>
+                      {u.is_admin_region && (
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.2 rounded font-semibold ml-1">
+                          Override
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs sm:justify-end">
-                <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 font-medium text-xs",
-                    u.is_admin_region
-                      ? "border border-primary/30 bg-primary/10 text-primary"
-                      : "bg-secondary text-secondary-foreground",
-                  )}
-                >
-                  {u.region || "INDIA"}
-                  {u.is_admin_region ? " • Admin Override" : ""}
-                </span>
-                <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 font-medium",
-                    u.is_frozen
-                      ? "bg-destructive/15 text-destructive"
-                      : "bg-primary/15 text-primary",
-                  )}
-                >
-                  {u.is_frozen ? "Frozen" : "Active"}
-                </span>
+
+              {/* Action Toolbar: 4 Direct Operations */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+                {/* 1. Adjust Balance */}
                 <button
-                  onClick={() => setSelectedUserForAge(u)}
-                  className="inline-flex items-center gap-1 rounded-full border bg-secondary/60 hover:bg-secondary px-2.5 py-1 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setSelectedUserForBalance(u);
+                    setBalanceMode("add");
+                    setBalanceAmount("");
+                    setBalanceReason("");
+                    setBalanceCurrency(
+                      (ADMIN_CURRENCIES.find((c) => c === u.preferred_currency) as typeof ADMIN_CURRENCIES[number]) ||
+                        "USD",
+                    );
+                  }}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
                 >
-                  <Calendar className="h-3 w-3 text-muted-foreground" />
-                  {u.account_age_hours}h ({u.account_age_days}d)
+                  <Wallet className="h-3.5 w-3.5" />
+                  <span>Adjust Balance</span>
                 </button>
-                <span className="w-full text-right text-sm font-bold tabular-nums sm:w-auto pl-2">
-                  {formatMoney(Number(u.balance_usd), "USD")}
-                </span>
+
+                {/* 2. Change Country / Region */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedUserForRegion(u)}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20 text-xs font-semibold text-blue-600 dark:text-blue-400 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>Change Country ({flag} {u.country_code || u.region})</span>
+                </button>
+
+                {/* 3. Freeze / Unfreeze */}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => handleToggleFreeze(u)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-2xs border",
+                    u.is_frozen
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                      : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
+                  )}
+                >
+                  {u.is_frozen ? <Sun className="h-3.5 w-3.5" /> : <Snowflake className="h-3.5 w-3.5" />}
+                  <span>{u.is_frozen ? "Unfreeze Account" : "Freeze Account"}</span>
+                </button>
+
+                {/* 4. 48h Security Hold */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedUserForAge(u)}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border/80 bg-secondary/60 hover:bg-secondary text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                >
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>48h Age: {u.account_age_hours}h</span>
+                </button>
               </div>
             </div>
           );
         })}
+
         {list.length === 0 && (
-          <p className="p-6 text-center text-sm text-muted-foreground">No users found.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">No matching users found.</p>
         )}
       </div>
 
+      {/* MODAL 1: Adjust Balance */}
+      {selectedUserForBalance && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
+          <form
+            onSubmit={handleAdjustBalance}
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xl"
+          >
+            <div className="space-y-1">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
+                <span>Adjust User Balance</span>
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Target: <span className="font-bold text-foreground">{selectedUserForBalance.full_name}</span> ·{" "}
+                <span className="font-mono">{selectedUserForBalance.wallet_code}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Current Balance:{" "}
+                <span className="font-bold text-foreground">
+                  {formatMoney(Number(selectedUserForBalance.balance_usd), "USD")}
+                </span>
+              </p>
+            </div>
+
+            {/* Mode toggle */}
+            <div className="grid grid-cols-2 gap-1 rounded-full bg-secondary p-1">
+              {(["add", "remove"] as const).map((m) => (
+                <button
+                  type="button"
+                  key={m}
+                  onClick={() => setBalanceMode(m)}
+                  className={cn(
+                    "h-9 rounded-full text-xs font-semibold transition-colors cursor-pointer",
+                    balanceMode === m
+                      ? m === "add"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-destructive text-destructive-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {m === "add" ? "+ Credit / Increase" : "− Debit / Decrease"}
+                </button>
+              ))}
+            </div>
+
+            {/* Amount & Currency */}
+            <div className="grid grid-cols-[1fr_6.5rem] gap-2">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Amount</label>
+                <Input
+                  inputMode="decimal"
+                  value={balanceAmount}
+                  onChange={(e) => setBalanceAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="h-11 rounded-xl tabular-nums text-sm font-semibold"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-foreground">Currency</label>
+                <select
+                  value={balanceCurrency}
+                  onChange={(e) => setBalanceCurrency(e.target.value as typeof balanceCurrency)}
+                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-xs font-semibold"
+                >
+                  {ADMIN_CURRENCIES.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Reason / Ledger Memo</label>
+              <Input
+                value={balanceReason}
+                onChange={(e) => setBalanceReason(e.target.value)}
+                maxLength={200}
+                placeholder="e.g. Promotional credit, KYC bonus, or correction"
+                className="h-11 rounded-xl text-xs"
+              />
+              {/* Quick reason chips */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {["Promotional Credit", "Account Adjustment", "KYC Bonus", "Manual Correction"].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setBalanceReason(chip)}
+                    className="text-[10px] rounded-lg border border-border bg-secondary/70 hover:bg-secondary px-2 py-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-2 pt-2 border-t border-border/50">
+              <button
+                type="button"
+                onClick={() => setSelectedUserForBalance(null)}
+                className="flex-1 h-11 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={busy || !balanceAmount}
+                className={cn(
+                  "flex-1 h-11 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-50 cursor-pointer shadow-soft flex items-center justify-center gap-1.5",
+                  balanceMode === "add"
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "bg-destructive text-destructive-foreground hover:opacity-90",
+                )}
+              >
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : balanceMode === "add" ? (
+                  "Confirm Credit"
+                ) : (
+                  "Confirm Debit"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* MODAL 2: Change Country / Region */}
+      {selectedUserForRegion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <Globe className="h-4 w-4 text-blue-500" />
+                <span>Change User Country &amp; Banking Region</span>
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Target: <span className="font-bold text-foreground">{selectedUserForRegion.full_name}</span> (
+                {selectedUserForRegion.wallet_code})
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Current Setting:{" "}
+                <span className="font-semibold text-foreground">
+                  {selectedUserForRegion.country_code || selectedUserForRegion.region} (
+                  {selectedUserForRegion.preferred_currency || "INR"})
+                </span>
+                {selectedUserForRegion.is_admin_region && " · Admin Override Active"}
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <label className="text-xs font-semibold text-foreground block">
+                Select Destination Country &amp; Capabilities:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {COUNTRY_REGION_OPTIONS.map((opt) => {
+                  const isCurrent =
+                    selectedUserForRegion.country_code === opt.countryCode ||
+                    (!selectedUserForRegion.country_code && selectedUserForRegion.region === opt.region);
+
+                  return (
+                    <button
+                      key={`${opt.region}-${opt.countryCode}`}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => handleSetRegion(selectedUserForRegion, opt)}
+                      className={cn(
+                        "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1",
+                        isCurrent
+                          ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/40 font-semibold"
+                          : "border-border hover:border-border/80 bg-card hover:bg-secondary/60 text-foreground",
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold flex items-center gap-1.5">
+                          <span className="text-base">{opt.flag}</span>
+                          <span>{opt.label}</span>
+                        </span>
+                        <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-secondary">
+                          {opt.preferredCurrency}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground line-clamp-1">{opt.methods}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedUserForRegion(null)}
+              className="w-full h-11 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: 48h Age Security Hold */}
       {selectedUserForAge && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
           <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 space-y-4 shadow-lg">
             <div className="space-y-1">
-              <h3 className="font-semibold text-base">Adjust Account Creation Date</h3>
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span>Adjust Account 48h Security Hold</span>
+              </h3>
               <p className="text-xs text-muted-foreground">
-                Target User:{" "}
-                <span className="font-semibold text-foreground">
-                  {selectedUserForAge.full_name}
-                </span>{" "}
-                ({selectedUserForAge.email})
+                Target User: <span className="font-semibold text-foreground">{selectedUserForAge.full_name}</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 Current Age:{" "}
                 <span className="font-bold text-foreground">
-                  {selectedUserForAge.account_age_hours} hours
+                  {selectedUserForAge.account_age_hours} hours ({selectedUserForAge.account_age_days} days)
                 </span>
               </p>
             </div>
@@ -937,7 +1470,7 @@ function UsersSection({
               <button
                 disabled={busy}
                 onClick={() => handleSetAge(selectedUserForAge.user_id, 72)}
-                className="w-full h-11 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-colors cursor-pointer text-left px-3.5 flex items-center justify-between"
+                className="w-full h-11 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-colors cursor-pointer text-left px-3.5 flex items-center justify-between border border-emerald-500/20"
               >
                 <span>Unlock Withdrawals (Set Age to 72 hours)</span>
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -945,7 +1478,7 @@ function UsersSection({
               <button
                 disabled={busy}
                 onClick={() => handleSetAge(selectedUserForAge.user_id, 1)}
-                className="w-full h-11 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-bold transition-colors cursor-pointer text-left px-3.5 flex items-center justify-between"
+                className="w-full h-11 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-bold transition-colors cursor-pointer text-left px-3.5 flex items-center justify-between border border-amber-500/20"
               >
                 <span>Lock Withdrawals (Reset Age to 1 hour old)</span>
                 <Clock className="h-4 w-4 text-amber-500" />
@@ -996,73 +1529,131 @@ function ControlsSection({
   }
 
   return (
-    <div className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-5">
+    <div className="max-w-xl space-y-4 rounded-2xl border border-border bg-card p-5">
+      <div className="space-y-1">
+        <h3 className="font-semibold text-base">Account Security &amp; Region Controls</h3>
+        <p className="text-xs text-muted-foreground">
+          Quickly inspect, freeze/unfreeze, or change the verified country of any Moonlight account by wallet ID.
+        </p>
+      </div>
+
       <WalletPicker users={users} value={walletCode} onChange={setWalletCode} />
+
       {user && (
         <>
-          <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">Reason (optional)</label>
+          {/* User Info Card */}
+          <div className="p-3.5 rounded-xl border border-border/80 bg-secondary/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-sm text-foreground">{user.full_name}</div>
+                <div className="text-xs text-muted-foreground font-mono">{user.email}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-sm text-foreground">
+                  {formatMoney(Number(user.balance_usd), "USD")}
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                    user.is_frozen
+                      ? "bg-destructive/15 text-destructive"
+                      : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+                  )}
+                >
+                  {user.is_frozen ? "Frozen" : "Active"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Freeze / Unfreeze with Reason */}
+          <div className="space-y-2 pt-1">
+            <label className="text-xs font-semibold text-foreground">Security Action Memo (Optional)</label>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. User requested freeze, compliance review, or cleared"
               maxLength={200}
-              className="h-12 rounded-xl"
+              className="h-11 rounded-xl text-xs"
             />
+            <button
+              disabled={busy}
+              onClick={() =>
+                run(
+                  () =>
+                    freezeFn({
+                      data: { token, walletCode: user.wallet_code, freeze: !user.is_frozen, reason },
+                    }),
+                  user.is_frozen ? "Wallet unfrozen successfully." : "Wallet frozen successfully.",
+                )
+              }
+              className={cn(
+                "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-bold transition-opacity disabled:opacity-50 cursor-pointer shadow-soft",
+                user.is_frozen
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-destructive hover:bg-destructive/90 text-destructive-foreground",
+              )}
+            >
+              {user.is_frozen ? <Sun className="h-4 w-4" /> : <Snowflake className="h-4 w-4" />}
+              {user.is_frozen ? "Unfreeze Wallet" : "Freeze Wallet"}
+            </button>
           </div>
-          <button
-            disabled={busy}
-            onClick={() =>
-              run(
-                () =>
-                  freezeFn({
-                    data: { token, walletCode: user.wallet_code, freeze: !user.is_frozen, reason },
-                  }),
-                user.is_frozen ? "Wallet unfrozen." : "Wallet frozen.",
-              )
-            }
-            className={cn(
-              "flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium disabled:opacity-50",
-              user.is_frozen
-                ? "bg-primary text-primary-foreground"
-                : "bg-destructive text-destructive-foreground",
-            )}
-          >
-            {user.is_frozen ? <Sun className="h-4 w-4" /> : <Snowflake className="h-4 w-4" />}
-            {user.is_frozen ? "Unfreeze wallet" : "Freeze wallet"}
-          </button>
-          <div className="space-y-1.5 pt-2">
+
+          {/* Country & Region Switcher */}
+          <div className="space-y-2 pt-2 border-t border-border/50">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Account region</label>
+              <label className="text-xs font-semibold text-foreground">Verified Country &amp; Capabilities</label>
               <span className="text-[11px] font-mono text-muted-foreground">
-                Current: <span className="font-semibold text-foreground">{user.region || "INDIA"}</span>
-                {user.is_admin_region ? " (Admin Override)" : " (Default: India)"}
+                Current: <span className="font-bold text-foreground">{user.country_code || user.region}</span>
+                {user.is_admin_region ? " (Override)" : " (Default)"}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {REGIONS.map((r) => (
-                <button
-                  key={r}
-                  disabled={busy || user.region === r}
-                  onClick={() =>
-                    run(
-                      () => regionFn({ data: { token, walletCode: user.wallet_code, region: r } }),
-                      `Region set to ${r}.`,
-                    )
-                  }
-                  className={cn(
-                    "h-11 rounded-xl border text-sm capitalize flex items-center justify-center gap-1.5 font-medium cursor-pointer transition-all",
-                    user.region === r
-                      ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
-                      : "border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {r === "INDIA" && "🇮🇳 "}
-                  {r === "EUROPE" && "🇪🇺 "}
-                  {r === "PHILIPPINES" && "🇵🇭 "}
-                  {r === "GLOBAL" && "🌐 "}
-                  {r.toLowerCase()}
-                </button>
-              ))}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {COUNTRY_REGION_OPTIONS.map((opt) => {
+                const isCurrent =
+                  user.country_code === opt.countryCode ||
+                  (!user.country_code && user.region === opt.region);
+
+                return (
+                  <button
+                    key={`${opt.region}-${opt.countryCode}`}
+                    disabled={busy || isCurrent}
+                    onClick={() =>
+                      run(
+                        () =>
+                          regionFn({
+                            data: {
+                              token,
+                              walletCode: user.wallet_code,
+                              region: opt.region,
+                              countryCode: opt.countryCode,
+                              preferredCurrency: opt.preferredCurrency,
+                            },
+                          }),
+                        `Country set to ${opt.label} (${opt.countryCode}).`,
+                      )
+                    }
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1",
+                      isCurrent
+                        ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/40 font-semibold"
+                        : "border-border hover:border-border/80 bg-card hover:bg-secondary/60 text-foreground",
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold flex items-center gap-1.5">
+                        <span>{opt.flag}</span>
+                        <span>{opt.label}</span>
+                      </span>
+                      <span className="font-mono text-[10px] font-semibold px-1 py-0.5 rounded bg-secondary">
+                        {opt.preferredCurrency}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground line-clamp-1">{opt.methods}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>

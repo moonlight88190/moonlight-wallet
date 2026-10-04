@@ -186,6 +186,8 @@ export const adminSetRegion = createServerFn({ method: "POST" })
         token: z.string().max(300),
         walletCode: z.string().trim(),
         region: z.enum(["GLOBAL", "EUROPE", "INDIA", "PHILIPPINES"]),
+        countryCode: z.string().trim().max(10).optional(),
+        preferredCurrency: z.string().trim().max(10).optional(),
       })
       .parse(d),
   )
@@ -203,13 +205,24 @@ export const adminSetRegion = createServerFn({ method: "POST" })
 
     // Also update country_code directly so the override takes immediate effect
     const countryCode =
-      data.region === "INDIA"
+      data.countryCode?.toUpperCase() ||
+      (data.region === "INDIA"
         ? "IN"
         : data.region === "EUROPE"
           ? "DE"
           : data.region === "PHILIPPINES"
             ? "PH"
-            : "IN";
+            : "IN");
+
+    const preferredCurrency =
+      data.preferredCurrency?.toUpperCase() ||
+      (data.region === "INDIA"
+        ? "INR"
+        : data.region === "EUROPE"
+          ? "EUR"
+          : data.region === "PHILIPPINES"
+            ? "PHP"
+            : "USD");
 
     const { data: w } = await supabaseAdmin
       .from("wallets")
@@ -223,13 +236,14 @@ export const adminSetRegion = createServerFn({ method: "POST" })
         .update({
           region: data.region,
           country_code: countryCode,
+          preferred_currency: preferredCurrency,
           admin_region_override: true,
           geography_updated_at: new Date().toISOString(),
         })
         .eq("id", w.user_id);
     }
 
-    return { ok: true };
+    return { ok: true, region: data.region, country_code: countryCode };
   });
 
 export const adminListUsers = createServerFn({ method: "POST" })
@@ -247,7 +261,7 @@ export const adminListUsers = createServerFn({ method: "POST" })
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, region, created_at, admin_region_override");
+      .select("id, full_name, email, region, country_code, preferred_currency, created_at, admin_region_override");
     if (pErr) throw new Error(pErr.message);
 
     const { data: txs } = await supabaseAdmin
@@ -280,6 +294,8 @@ export const adminListUsers = createServerFn({ method: "POST" })
         full_name: p?.full_name || "N/A",
         email: p?.email || "N/A",
         region: displayRegion,
+        country_code: p?.country_code || (displayRegion === "EUROPE" ? "DE" : displayRegion === "PHILIPPINES" ? "PH" : "IN"),
+        preferred_currency: p?.preferred_currency || (displayRegion === "EUROPE" ? "EUR" : displayRegion === "PHILIPPINES" ? "PHP" : "INR"),
         is_admin_region: isExplicitOverride,
         created_at: userCreatedAt,
         account_age_hours: ageHours,
@@ -383,6 +399,28 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
 
+    // Persist custom note / reason directly to withdrawals and linked transaction
+    if (data.reason !== undefined) {
+      const cleanReason = data.reason.trim() || null;
+      await supabaseAdmin
+        .from("withdrawals")
+        .update({ reason: cleanReason, updated_at: new Date().toISOString() })
+        .eq("id", data.withdrawalId);
+
+      const { data: wd } = await supabaseAdmin
+        .from("withdrawals")
+        .select("transaction_id")
+        .eq("id", data.withdrawalId)
+        .maybeSingle();
+
+      if (wd?.transaction_id) {
+        await supabaseAdmin
+          .from("transactions")
+          .update({ note: cleanReason })
+          .eq("id", wd.transaction_id);
+      }
+    }
+
     // Trigger authoritative transactional email based on updated status
     let eventType: "withdrawal_processing" | "withdrawal_completed" | "withdrawal_failed" | null =
       null;
@@ -407,6 +445,53 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
     }
 
     return { ok: true, result };
+  });
+
+export const adminUpdateWithdrawalNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        withdrawalId: z.string().uuid(),
+        note: z.string().trim().max(300),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) {
+      throw new Error("Admin session expired.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const cleanNote = data.note.trim() || null;
+
+    await supabaseAdmin
+      .from("withdrawals")
+      .update({ reason: cleanNote, updated_at: new Date().toISOString() })
+      .eq("id", data.withdrawalId);
+
+    const { data: wd } = await supabaseAdmin
+      .from("withdrawals")
+      .select("transaction_id, wallet_id")
+      .eq("id", data.withdrawalId)
+      .maybeSingle();
+
+    if (wd?.transaction_id) {
+      await supabaseAdmin
+        .from("transactions")
+        .update({ note: cleanNote })
+        .eq("id", wd.transaction_id);
+    }
+
+    await supabaseAdmin.from("admin_actions").insert({
+      actor_user_id: context.userId,
+      action: "withdrawal_custom_note",
+      target_wallet_id: wd?.wallet_id || null,
+      transaction_id: wd?.transaction_id || null,
+      details: { withdrawal_id: data.withdrawalId, note: cleanNote },
+    });
+
+    return { ok: true, note: cleanNote };
   });
 
 export const adminOverview = createServerFn({ method: "POST" })

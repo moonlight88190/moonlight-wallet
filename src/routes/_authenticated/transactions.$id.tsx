@@ -507,6 +507,19 @@ function Receipt() {
           </div>
         )}
 
+        {/* ─── Moonlight Official Operations Note ─── */}
+        {(rawData.reason || rawData.note) && (
+          <div className="mx-5 sm:mx-6 mb-4 rounded-2xl border border-primary/25 bg-primary/8 p-4 text-left shadow-2xs space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+              <LogoMark className="h-4 w-4 shrink-0" />
+              <span>Official Note from Moonlight Operations</span>
+            </div>
+            <p className="text-xs text-foreground leading-relaxed pl-6 font-medium">
+              {rawData.reason || rawData.note}
+            </p>
+          </div>
+        )}
+
         {/* ─── Details Table (Mobile-Safe & Non-Clipping) ─── */}
         <div className="px-5 sm:px-6 divide-y divide-border/30 text-xs">
           <DetailRow label="Reference">
@@ -553,6 +566,14 @@ function Receipt() {
           {rawData.phone && (
             <DetailRow label="Beneficiary Mobile" mono>
               {rawData.phone}
+            </DetailRow>
+          )}
+
+          {(rawData.reason || rawData.note) && (
+            <DetailRow label="Operations Note">
+              <span className="font-medium text-primary break-words">
+                {rawData.reason || rawData.note}
+              </span>
             </DetailRow>
           )}
 
