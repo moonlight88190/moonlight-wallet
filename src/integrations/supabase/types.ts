@@ -151,6 +151,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_region_override: boolean
           city: string | null
           country_code: string | null
           created_at: string
@@ -164,6 +165,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_region_override?: boolean
           city?: string | null
           country_code?: string | null
           created_at?: string
@@ -177,6 +179,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_region_override?: boolean
           city?: string | null
           country_code?: string | null
           created_at?: string
