@@ -14,11 +14,13 @@ import {
   Globe,
   TrendingUp,
   Gift,
+  Snowflake,
+  Lock,
 } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useAccountGeography, getAccountRegionLabel } from "@/hooks/use-wallet";
+import { useProfile, useWallet, useAccountGeography, getAccountRegionLabel } from "@/hooks/use-wallet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,17 +33,17 @@ import {
 const DESKTOP_NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
   { to: "/markets", label: "Markets", icon: TrendingUp },
-  { to: "/send", label: "Send", icon: ArrowUpRight },
+  { to: "/send", label: "Send", icon: ArrowUpRight, lockable: true },
   { to: "/receive", label: "Receive", icon: ArrowDownLeft },
-  { to: "/withdraw", label: "Withdraw", icon: Landmark },
+  { to: "/withdraw", label: "Withdraw", icon: Landmark, lockable: true },
   { to: "/transactions", label: "Activity", icon: List },
 ] as const;
 
 const NAV = [
   { to: "/dashboard", label: "Home", icon: Home },
-  { to: "/send", label: "Send", icon: ArrowUpRight },
+  { to: "/send", label: "Send", icon: ArrowUpRight, lockable: true },
   { to: "/receive", label: "Receive", icon: ArrowDownLeft },
-  { to: "/withdraw", label: "Withdraw", icon: Landmark },
+  { to: "/withdraw", label: "Withdraw", icon: Landmark, lockable: true },
   { to: "/transactions", label: "Activity", icon: List },
 ] as const;
 
@@ -49,7 +51,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: profile } = useProfile();
+  const { data: wallet } = useWallet();
   const geography = useAccountGeography();
+
+  const isFrozen = wallet?.status === "frozen";
 
   async function signOut() {
     await qc.cancelQueries();
@@ -90,10 +95,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 preload="intent"
-                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60"
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:text-foreground hover:bg-accent/60 inline-flex items-center gap-1.5"
                 activeProps={{ className: "bg-secondary text-foreground font-semibold" }}
               >
-                {n.label}
+                <span>{n.label}</span>
+                {isFrozen && "lockable" in n && n.lockable && (
+                  <Lock className="h-3 w-3 text-destructive opacity-80" />
+                )}
               </Link>
             ))}
           </nav>
@@ -115,15 +123,27 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <div className="truncate text-[11px] text-muted-foreground mt-0.5">
                     {profile?.email}
                   </div>
-                  <div
-                    className={`mt-1.5 flex items-center gap-1 text-[10px] font-semibold ${geography.data?.isIndia || geography.data?.isEurope ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
-                  >
-                    {geography.data?.isIndia || geography.data?.isEurope ? (
-                      <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                  <div className="mt-2 flex items-center justify-between gap-1 text-[10px]">
+                    <div
+                      className={`flex items-center gap-1 font-semibold ${geography.data?.isIndia || geography.data?.isEurope ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}
+                    >
+                      {geography.data?.isIndia || geography.data?.isEurope ? (
+                        <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <Globe className="h-3 w-3 text-blue-500" />
+                      )}
+                      <span>{getAccountRegionLabel(geography.data)}</span>
+                    </div>
+
+                    {isFrozen ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 text-destructive border border-destructive/30 px-1.5 py-0.5 font-bold uppercase tracking-wider text-[9px]">
+                        <Snowflake className="h-2.5 w-2.5" /> Frozen
+                      </span>
                     ) : (
-                      <Globe className="h-3 w-3 text-blue-500" />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 font-semibold text-[9px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+                      </span>
                     )}
-                    <span>{getAccountRegionLabel(geography.data)}</span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -175,6 +195,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
+      {/* ─── Global Freeze Security Banner ─── */}
+      {isFrozen && (
+        <div className="bg-destructive/10 dark:bg-destructive/15 border-b border-destructive/30 px-4 py-2.5 text-xs text-destructive dark:text-rose-300">
+          <div className="mx-auto max-w-5xl flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-destructive/20 text-destructive font-bold text-[11px]">
+                <Snowflake className="h-3 w-3 animate-pulse" />
+              </span>
+              <span className="font-semibold text-foreground">
+                Account Freeze Active: Outgoing transfers, withdrawals, and redemptions are locked. Your assets remain secure.
+              </span>
+            </div>
+            <span className="shrink-0 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-destructive/20 border border-destructive/30 font-bold uppercase tracking-wider text-destructive">
+              Read-Only
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ─── Main Content ─── */}
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 sm:px-6 py-4 sm:py-6 flex-1 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-8 animate-in fade-in duration-200">
         {children}
@@ -196,8 +235,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className: "text-foreground font-bold [&>div]:bg-primary/10 [&>div]:text-primary",
               }}
             >
-              <div className="flex h-7 w-12 items-center justify-center rounded-full transition-colors group-hover:bg-muted/60">
+              <div className="flex h-7 w-12 items-center justify-center rounded-full transition-colors group-hover:bg-muted/60 relative">
                 <n.icon className="h-[19px] w-[19px]" strokeWidth={2} />
+                {isFrozen && "lockable" in n && n.lockable && (
+                  <span className="absolute top-0.5 right-2 h-2 w-2 rounded-full bg-destructive" />
+                )}
               </div>
               <span className="truncate max-w-[58px] tracking-tight">{n.label}</span>
             </Link>

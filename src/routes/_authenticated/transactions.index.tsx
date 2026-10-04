@@ -5,7 +5,7 @@ import { TxRow } from "@/components/TxRow";
 import { groupByPeriod } from "@/lib/compliance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageTitle } from "@/components/AppShell";
-import { Receipt, Search, X, Filter, ArrowUpRight, ArrowDownLeft, Landmark } from "lucide-react";
+import { Receipt, Search, X, Filter, ArrowUpRight, ArrowDownLeft, Landmark, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/transactions/")({
@@ -33,6 +33,7 @@ function History() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const walletId = wallet.data?.id;
+  const isFrozen = wallet.data?.status === "frozen";
 
   const rawList = txs.data ?? [];
 
@@ -92,6 +93,21 @@ function History() {
       <PageTitle eyebrow="WALLET ACTIVITY" title="Transaction History">
         View your peer transfers, instant payouts, and financial ledger activity.
       </PageTitle>
+
+      {/* Account Freeze Notice */}
+      {isFrozen && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive dark:text-rose-300 flex items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 shrink-0" />
+            <span className="font-medium text-foreground">
+              Audit Ledger Access: Account is under security freeze. Past activity records remain immutable.
+            </span>
+          </div>
+          <span className="text-[10px] font-mono uppercase bg-destructive/20 border border-destructive/30 px-2 py-0.5 rounded-full font-bold shrink-0">
+            Read-Only
+          </span>
+        </div>
+      )}
 
       {/* ─── Search & Filter Controls ─── */}
       <div className="space-y-3">

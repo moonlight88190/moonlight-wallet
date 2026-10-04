@@ -96,6 +96,8 @@ function Withdraw() {
   const geography = useAccountGeography();
   const geo = geography.data;
 
+  const isFrozen = wallet?.status === "frozen";
+
   // Authoritative verified jurisdiction resolution (Indian by default; changed via admin panel only)
   const verifiedCountryCode = (
     geo?.countryCode ||
@@ -297,6 +299,10 @@ function Withdraw() {
 
   // Rail switch handler with AML compliance and jurisdiction lock enforcement
   const handleSelectRail = (railId: string) => {
+    if (isFrozen) {
+      toast.error("Account is frozen. Payout rail selection is disabled.");
+      return;
+    }
     if (!allowedRailIds.includes(railId)) {
       toast.error(
         `AML & Fraud Prevention Policy: Verified ${verifiedCountryName} accounts may only withdraw in ${verifiedCurrency} via domestic rails (${allowedRailIds.join(", ").toUpperCase()}). Foreign rail access is restricted to prevent cross-border money laundering.`,
@@ -312,6 +318,10 @@ function Withdraw() {
 
   // Submit withdrawal
   async function handleSubmitWithdrawal() {
+    if (isFrozen) {
+      toast.error("Account is frozen. Withdrawals are locked.");
+      return;
+    }
     if (!isEligible48h) {
       setIsReviewOpen(false);
       setIsSecurityLockOpen(true);
@@ -441,6 +451,10 @@ function Withdraw() {
 
   // Voucher redemption
   async function handleRedeemVoucher() {
+    if (isFrozen) {
+      toast.error("Account is frozen. Voucher redemption is locked.");
+      return;
+    }
     if (!isEligible48h) {
       setSelectedCard(null);
       setIsSecurityLockOpen(true);
@@ -646,6 +660,24 @@ function Withdraw() {
         </div>
       </div>
 
+      {/* ─── Freeze Alert Banner ─── */}
+      {isFrozen && (
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-left space-y-2 text-destructive dark:text-rose-300 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+              <Lock className="h-4 w-4" />
+              <span>Withdrawals Suspended — Account Frozen</span>
+            </div>
+            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-destructive/20 border border-destructive/30">
+              Restricted
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            This wallet is under an administrative security freeze. Outbound domestic payouts (UPI, Indian Bank IMPS, SEPA, Faster Payments) and digital gift voucher redemptions are paused. Your ledger funds remain safe.
+          </p>
+        </div>
+      )}
+
       {/* Mode Tabs */}
       <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-card/60 border border-border/60 text-xs font-semibold shadow-xs">
         <button
@@ -798,10 +830,13 @@ function Withdraw() {
               <Input
                 type="number"
                 inputMode="decimal"
+                disabled={isFrozen || busy}
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="100"
-                className="h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4 min-w-0"
+                className={`h-14 text-2xl font-bold rounded-2xl flex-1 border-border/60 bg-card/60 px-4 min-w-0 ${
+                  isFrozen ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               />
               <div
                 className="h-14 w-36 rounded-2xl border border-border/60 bg-muted/40 font-semibold shrink-0 flex items-center justify-between px-3 cursor-not-allowed select-none"
@@ -1038,17 +1073,29 @@ function Withdraw() {
           {/* Submit */}
           <button
             type="button"
-            disabled={busy || sourceAmt <= 0}
+            disabled={isFrozen || busy || sourceAmt <= 0}
             onClick={() => {
+              if (isFrozen) {
+                toast.error("Account is frozen. Withdrawals are disabled.");
+                return;
+              }
               if (!isEligible48h) {
                 setIsSecurityLockOpen(true);
                 return;
               }
               setIsReviewOpen(true);
             }}
-            className={primaryBtn}
+            className={`${primaryBtn} ${isFrozen ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            Review Withdrawal <ArrowRight className="h-4 w-4" />
+            {isFrozen ? (
+              <span className="flex items-center gap-2">
+                <Lock className="h-4 w-4" /> Withdrawals Locked
+              </span>
+            ) : (
+              <>
+                Review Withdrawal <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         </div>
       ) : (
@@ -1165,11 +1212,11 @@ function Withdraw() {
               Edit
             </Button>
             <button
-              disabled={busy}
+              disabled={isFrozen || busy}
               onClick={handleSubmitWithdrawal}
-              className={`${primaryBtn} flex-1 h-11 text-xs`}
+              className={`${primaryBtn} flex-1 h-11 text-xs ${isFrozen ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              Submit
+              {isFrozen ? "Withdrawals Locked" : "Submit"}
             </button>
           </div>
         </DialogContent>
@@ -1216,17 +1263,21 @@ function Withdraw() {
               </div>
 
               <button
-                disabled={busy}
+                disabled={isFrozen || busy}
                 onClick={() => {
+                  if (isFrozen) {
+                    toast.error("Account is frozen. Voucher redemption is locked.");
+                    return;
+                  }
                   if (!isEligible48h) {
                     setIsSecurityLockOpen(true);
                     return;
                   }
                   handleRedeemVoucher();
                 }}
-                className={primaryBtn}
+                className={`${primaryBtn} ${isFrozen ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                Confirm Redemption
+                {isFrozen ? "Redemption Locked" : "Confirm Redemption"}
               </button>
             </div>
           )}

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Share, QrCode, Check, ShieldCheck, Globe, ArrowUpRight } from "lucide-react";
+import { Copy, Share, QrCode, Check, ShieldCheck, Globe, ArrowUpRight, Lock, Snowflake } from "lucide-react";
 import { toast } from "sonner";
 import {
   useProfile,
@@ -43,6 +43,8 @@ function Receive() {
   const [big, setBig] = useState(false);
   const code = wallet.data?.wallet_code ?? "";
 
+  const isFrozen = wallet.data?.status === "frozen";
+
   const isIndianAccount = Boolean(
     geography.data?.isIndia || geography.data?.capabilities?.supportsUPI,
   );
@@ -75,6 +77,24 @@ function Receive() {
       <PageTitle eyebrow="RECEIVE" title="Receive Money">
         Anyone on Moonlight or supported payout rails can send money using this ID or QR code.
       </PageTitle>
+
+      {/* Account Freeze Inbound Advisory */}
+      {isFrozen && (
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-left space-y-2 text-destructive dark:text-rose-300 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+              <Lock className="h-4 w-4" />
+              <span>Inbound Advisory — Account Frozen</span>
+            </div>
+            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-destructive/20 border border-destructive/30">
+              Restricted
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            This wallet is under an administrative freeze. While you can view your QR code and ID, incoming payments or clearing transfers may be held in compliance escrow until the account is unfrozen.
+          </p>
+        </div>
+      )}
 
       {/* ─── Identity Card ─── */}
       <div className="rounded-2xl border border-border/40 bg-card p-5 sm:p-7 shadow-card space-y-5">
