@@ -133,6 +133,17 @@ function Withdraw() {
     geo?.capabilities?.supportsGCash ||
     (profile?.admin_region_override &&
       (verifiedCountryCode === "PH" || profile?.region?.toUpperCase() === "PHILIPPINES")),
+        ([
+          "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI",
+          "GR", "EE", "LV", "LT", "SK", "SI", "CY", "MT", "LU",
+        ].includes(verifiedCountryCode) ||
+          profile?.region?.toUpperCase() === "EUROPE"),
+    );
+  const isPH = Boolean(
+    geo?.capabilities?.supportsGCash ||
+      (profile?.admin_region_override &&
+        (verifiedCountryCode === "PH" ||
+          profile?.region?.toUpperCase() === "PHILIPPINES")),
   );
   const isIndia = geo?.isIndia ?? (!isEurope && !isPH);
   const isUK = Boolean(
@@ -143,6 +154,12 @@ function Withdraw() {
   const isBR = Boolean(
     geo?.capabilities?.supportsPix ||
     (profile?.admin_region_override && verifiedCountryCode === "BR"),
+      (profile?.admin_region_override &&
+        (verifiedCountryCode === "GB" || verifiedCountryCode === "UK")),
+  );
+  const isBR = Boolean(
+    geo?.capabilities?.supportsPix ||
+      (profile?.admin_region_override && verifiedCountryCode === "BR"),
   );
 
   // Currency strictly locked to verified jurisdiction (AML & CFT Statutory Requirement)
@@ -568,6 +585,7 @@ function Withdraw() {
               <p className="text-muted-foreground leading-relaxed">
                 Withdrawal operations unlock 48 hours after account creation to protect against
                 unauthorized transfers. Tap to view clearance details & unlock schedule.
+                Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers. Tap to view clearance details & unlock schedule.
               </p>
             </div>
           </div>
@@ -1301,6 +1319,7 @@ function Withdraw() {
               <p className="font-semibold text-foreground text-xs">
                 Why is my withdrawal locked right now?
               </p>
+              <p className="font-semibold text-foreground text-xs">Why is my withdrawal locked right now?</p>
               <div className="space-y-2 text-[11px]">
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
@@ -1309,6 +1328,7 @@ function Withdraw() {
                     regulations, all newly registered accounts undergo a mandatory 48-hour cooling
                     period to safeguard your wallet against unauthorized takeovers, fraudulent
                     sign-ups, and sudden account drainage.
+                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety regulations, all newly registered accounts undergo a mandatory 48-hour cooling period to safeguard your wallet against unauthorized takeovers, fraudulent sign-ups, and sudden account drainage.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -1317,6 +1337,7 @@ function Withdraw() {
                     <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic
                     UPI and direct bank IMPS) require preliminary compliance verification before
                     executing external bank settlements.
+                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic UPI and direct bank IMPS) require preliminary compliance verification before executing external bank settlements.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -1325,6 +1346,7 @@ function Withdraw() {
                     <strong>Peer Transfers Active:</strong> While external bank withdrawals are
                     cooling down, internal peer-to-peer transfers to other Moonlight wallets remain
                     active (up to $10.00 USD during the first 48 hours).
+                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are cooling down, internal peer-to-peer transfers to other Moonlight wallets remain active (up to $10.00 USD during the first 48 hours).
                   </span>
                 </div>
               </div>

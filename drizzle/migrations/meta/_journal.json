@@ -64,6 +64,13 @@
       "when": 1791014631570,
       "tag": "0008_allow_extended_transaction_statuses",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791092275666,
+      "tag": "0009_add_admin_region_override",
+      "breakpoints": true
     }
   ]
 }
