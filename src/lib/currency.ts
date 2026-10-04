@@ -49,14 +49,30 @@ export function formatMoney(amount: number, currency: string, opts: { sign?: boo
   return amount < 0 ? "−" + str : str;
 }
 
+/**
+ * Resolves FX rate (quote per 1 USD) for a currency.
+ * Guarantees a valid, positive number by checking provided rates map,
+ * falling back to FALLBACK_RATES, and defaulting to 1 for USD.
+ */
+export function getRate(currency?: string | null, rates?: Record<string, number> | null): number {
+  if (!currency || currency.toUpperCase() === "USD") return 1.0;
+  const upper = currency.toUpperCase();
+  const r = rates?.[upper];
+  if (typeof r === "number" && r > 0 && Number.isFinite(r)) return r;
+  const fallback = FALLBACK_RATES[upper];
+  if (typeof fallback === "number" && fallback > 0) return fallback;
+  return 1.0;
+}
+
 /** rates are quote-per-1-USD */
 export function convert(
   amount: number,
   from: string,
   to: string,
-  rates: Record<string, number> = {},
+  rates?: Record<string, number> | null,
 ) {
-  const f = rates[from] ?? FALLBACK_RATES[from] ?? 1;
-  const t = rates[to] ?? FALLBACK_RATES[to] ?? 1;
+  if (!amount || from === to) return amount;
+  const f = getRate(from, rates);
+  const t = getRate(to, rates);
   return (amount / f) * t;
 }

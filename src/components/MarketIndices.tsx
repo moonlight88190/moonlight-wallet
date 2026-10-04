@@ -20,7 +20,7 @@ import { StockChart } from "@/components/StockChart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { MarketFilter, MarketInstrument } from "@/lib/markets.types";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, getRate } from "@/lib/currency";
 
 import { BrandAsset } from "@/components/AssetComponents";
 
@@ -44,7 +44,7 @@ export function MarketIndices({ compact = false, showHeader = true }: MarketIndi
   const profile = useProfile();
   const rates = useRates();
   const userCur = profile.data?.preferred_currency ?? "EUR";
-  const userRate = rates.data?.rates[userCur] ?? 1;
+  const userRate = getRate(userCur, rates.data?.rates);
 
   const [activeFilter, setActiveFilter] = useState<MarketFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");

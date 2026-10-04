@@ -15,10 +15,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useWallet, useProfile } from "@/hooks/use-wallet";
+import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, getRate } from "@/lib/currency";
+import { triggerTransactionalEmail } from "@/lib/email";
 
 export const Route = createFileRoute("/_authenticated/redeem")({
   head: () => ({
@@ -51,12 +52,15 @@ function RedeemPage() {
   const qc = useQueryClient();
   const wallet = useWallet();
   const profile = useProfile();
+  const rates = useRates();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [result, setResult] = useState<RedemptionResult | null>(null);
 
   const preferredCurrency = profile.data?.preferred_currency || "USD";
+  const rate = getRate(preferredCurrency, rates.data?.rates);
+  const balance = Number(wallet.data?.balance_usd || 0) * rate;
 
   async function handlePaste() {
     try {
@@ -111,6 +115,13 @@ function RedeemPage() {
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["vouchers"] });
+
+      if (res.transaction_id) {
+        triggerTransactionalEmail({
+          eventType: "payment_received",
+          transactionId: res.transaction_id,
+        });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to redeem voucher";
       setErrorMsg(msg);
@@ -142,7 +153,7 @@ function RedeemPage() {
         </Link>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted/60 px-3 py-1 rounded-xl border border-border/40">
           <Wallet className="h-3.5 w-3.5 text-primary" />
-          <span>Balance: {formatMoney(wallet.data?.balance_usd || 0, "USD")}</span>
+          <span>Balance: {formatMoney(balance, preferredCurrency)}</span>
         </div>
       </div>
 

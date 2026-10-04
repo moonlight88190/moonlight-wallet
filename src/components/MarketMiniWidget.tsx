@@ -4,7 +4,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "rec
 import { ArrowUpRight, ArrowDownRight, ChevronRight, TrendingUp } from "lucide-react";
 import { useMarkets } from "@/hooks/use-markets";
 import { useProfile, useRates } from "@/hooks/use-wallet";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, getRate } from "@/lib/currency";
 import type { MarketInstrument, MarketTimeRange } from "@/lib/markets.types";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -16,7 +16,7 @@ export function MarketMiniWidget() {
   const rates = useRates();
 
   const userCur = profile.data?.preferred_currency ?? "EUR";
-  const userRate = rates.data?.rates[userCur] ?? 1;
+  const userRate = getRate(userCur, rates.data?.rates);
 
   // Selected instrument for the mini chart
   const [selectedSymbol, setSelectedSymbol] = useState<string>("^STOXX50E");

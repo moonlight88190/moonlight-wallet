@@ -25,7 +25,7 @@ import {
   useAccountGeography,
   getAccountRegionLabel,
 } from "@/hooks/use-wallet";
-import { CURRENCIES, formatMoney } from "@/lib/currency";
+import { CURRENCIES, formatMoney, getRate } from "@/lib/currency";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountryFlag, CurrencyIcon, GiftCardBrand } from "@/components/AssetComponents";
@@ -65,7 +65,7 @@ function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
 
   const cur = profile.data?.preferred_currency ?? "EUR";
-  const rate = rates.data?.rates[cur] ?? 1;
+  const rate = getRate(cur, rates.data?.rates);
   const balance = Number(wallet.data?.balance_usd ?? 0) * rate;
   const loading = profile.isLoading || wallet.isLoading || rates.isLoading;
 
@@ -343,7 +343,7 @@ function Dashboard() {
         ) : (
           <div className="divide-y divide-border/40 rounded-3xl border border-border/60 bg-card/70 overflow-hidden shadow-soft">
             {recentTxs.map((t) => (
-              <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />
+              <TxRow key={t.id} tx={t} walletId={wallet.data?.id} displayCur={cur} rates={rates.data?.rates} />
             ))}
           </div>
         )}

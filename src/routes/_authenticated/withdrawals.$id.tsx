@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useWallet, useProfile } from "@/hooks/use-wallet";
-import { formatMoney } from "@/lib/currency";
+import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
+import { formatMoney, convert, getRate } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BrandAsset,
@@ -52,6 +52,7 @@ function WithdrawalReceipt() {
   const { id } = Route.useParams();
   const profile = useProfile();
   const wallet = useWallet();
+  const rates = useRates();
   const [copied, setCopied] = useState(false);
 
   const wdQuery = useQuery({
@@ -180,11 +181,12 @@ function WithdrawalReceipt() {
   });
 
   // Fee and settlement economics
-  const grossAmount = Number(wd.amount);
-  const feeAmount = Number(wd.fee ?? Math.round(grossAmount * 0.1));
-  const netSettlement = Number(wd.recipient_amount ?? grossAmount - feeAmount);
+  const rawGross = Number(wd.amount);
+  const rawFee = Number(wd.fee ?? Math.round(rawGross * 0.1));
+  const rawNet = Number(wd.recipient_amount ?? rawGross - rawFee);
   const payoutCurrency = wd.recipient_currency || wd.currency;
 
+  const ratesMap = rates.data?.rates;
   const isIndianRail = isUPI || isIndianBank;
   const displayCurrency =
     isIndianRail && (wd.currency === "EUR" || wd.currency === "USD") ? "INR" : wd.currency;
@@ -193,6 +195,19 @@ function WithdrawalReceipt() {
     isIndianRail && (payoutCurrency === "EUR" || payoutCurrency === "USD")
       ? "INR"
       : payoutCurrency;
+
+  const grossAmount =
+    displayCurrency !== wd.currency
+      ? convert(rawGross, wd.currency, displayCurrency, ratesMap)
+      : rawGross;
+  const feeAmount =
+    displayCurrency !== wd.currency
+      ? grossAmount * 0.1
+      : rawFee;
+  const netSettlement =
+    displayPayoutCurrency !== payoutCurrency
+      ? convert(rawNet, payoutCurrency, displayPayoutCurrency, ratesMap)
+      : rawNet;
   const displayMethod =
     isUPI &&
     (wd.upi_id?.includes("@upi") || wd.upi_id?.includes("@bhim")) &&

@@ -75,6 +75,80 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          created_at?: string;
+          details?: Json;
+          event?: string;
+          id?: number;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      email_delivery_records: {
+        Row: {
+          created_at: string;
+          error_message: string | null;
+          event_type: string;
+          id: string;
+          metadata: Json;
+          provider: string;
+          provider_message_id: string | null;
+          recipient_email: string;
+          sent_at: string | null;
+          status: string;
+          transaction_id: string | null;
+          updated_at: string;
+          user_id: string | null;
+          withdrawal_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          error_message?: string | null;
+          event_type: string;
+          id?: string;
+          metadata?: Json;
+          provider?: string;
+          provider_message_id?: string | null;
+          recipient_email: string;
+          sent_at?: string | null;
+          status?: string;
+          transaction_id?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+          withdrawal_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          error_message?: string | null;
+          event_type?: string;
+          id?: string;
+          metadata?: Json;
+          provider?: string;
+          provider_message_id?: string | null;
+          recipient_email?: string;
+          sent_at?: string | null;
+          status?: string;
+          transaction_id?: string | null;
+          updated_at?: string;
+          user_id?: string | null;
+          withdrawal_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_records_transaction_id_fkey";
+            columns: ["transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_delivery_records_withdrawal_id_fkey";
+            columns: ["withdrawal_id"];
+            isOneToOne: false;
+            referencedRelation: "withdrawals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
           created_at?: string
           details?: Json
           event?: string
@@ -151,6 +225,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_region_override: boolean | null;
+          city: string | null;
+          country_code: string | null;
+          created_at: string;
+          email: string;
+          full_name: string;
+          geography_updated_at: string | null;
+          id: string;
+          preferred_currency: string;
+          region: string;
+          timezone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          admin_region_override?: boolean | null;
+          city?: string | null;
+          country_code?: string | null;
+          created_at?: string;
+          email?: string;
+          full_name?: string;
+          geography_updated_at?: string | null;
+          id: string;
+          preferred_currency?: string;
+          region?: string;
+          timezone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          admin_region_override?: boolean | null;
+          city?: string | null;
+          country_code?: string | null;
+          created_at?: string;
+          email?: string;
+          full_name?: string;
+          geography_updated_at?: string | null;
+          id?: string;
+          preferred_currency?: string;
+          region?: string;
+          timezone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
           admin_region_override: boolean
           city: string | null
           country_code: string | null

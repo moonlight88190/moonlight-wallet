@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet } from "@/hooks/use-wallet";
-import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney } from "@/lib/currency";
+import { CURRENCIES, TRANSFER_FEE_RATE, convert, formatMoney, getRate } from "@/lib/currency";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PageTitle } from "@/components/AppShell";
 import { CountryFlag, CurrencyIcon } from "@/components/AssetComponents";
 import { PaymentAnimation } from "@/components/PaymentAnimation";
+import { triggerTransactionalEmail } from "@/lib/email";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({
@@ -160,13 +161,13 @@ function Send() {
   const recvCur = recipient?.preferred_currency ?? "EUR";
   const recv = convert(amt, cur, recvCur, r);
   const rateRatio = convert(1, cur, recvCur, r);
-  const available = Number(wallet.data?.balance_usd ?? 0) * (r[cur] ?? 1);
+  const curRate = getRate(cur, r);
+  const available = Number(wallet.data?.balance_usd ?? 0) * curRate;
 
   // New account anti-fraud check (48-hour security clearance window)
   const createdAt = profile.data?.created_at ? new Date(profile.data.created_at) : new Date();
   const accountAgeHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
   const isNewAccount = accountAgeHours < 48;
-  const curRate = r[cur] ?? 1;
   const limit10InCur = 10 * curRate; // $10 USD equivalent in current display currency
   const isOverNewAccountLimit = isNewAccount && amt > limit10InCur + 1e-6;
 
@@ -211,10 +212,17 @@ function Send() {
       return;
     }
 
-    setTxId(res.data as string);
+    const createdTxId = res.data as string;
+    setTxId(createdTxId);
     setAnimState("completed");
     qc.invalidateQueries({ queryKey: ["wallet"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
+
+    // Automatically trigger authoritative transactional email delivery
+    triggerTransactionalEmail({
+      eventType: "transfer_sent",
+      transactionId: createdTxId,
+    });
   }
 
   const primaryBtn =
