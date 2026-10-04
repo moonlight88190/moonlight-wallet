@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { formatMoney, convert, getRate, FALLBACK_RATES } from "@/lib/currency";
+import { formatMoney } from "@/lib/currency";
 import { txView, type Tx } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import { CountryFlag, BrandAsset } from "@/components/AssetComponents";
@@ -7,23 +7,20 @@ import { resolvePaymentAsset } from "@/lib/assets";
 
 /**
  * Renders a linked transaction summary relative to the supplied wallet.
- * Displays the resolved payment brand with a secondary currency flag.
+ * Displays the resolved payment brand with the transaction's authentic currency flag.
  *
- * When `displayCur` and `rates` are provided, amounts are converted from
- * the transaction's stored currency to the user's preferred display currency
- * so that switching currency in the dashboard/settings is reflected everywhere.
+ * Transactions represent historical financial records and always preserve their
+ * original transacted currency and authentic currency flag, regardless of
+ * current viewing preferences on the home page.
  */
 export function TxRow({
   tx,
   walletId,
-  displayCur,
-  rates,
 }: {
   tx: Tx;
   walletId?: string | undefined;
-  /** User's preferred display currency (e.g. "INR"). Falls back to tx currency. */
+  /** Historical transactions preserve their authentic currency */
   displayCur?: string;
-  /** Exchange-rate map (quote per 1 USD). */
   rates?: Record<string, number>;
 }) {
   const v = txView(tx, walletId);
@@ -50,33 +47,9 @@ export function TxRow({
     tx.kind,
   );
 
-  // Determine the currency and amount to show in the row.
-  // When a display currency is provided, calculate the authoritative amount
-  // from the transaction's USD base (wallets.balance_usd architecture)
-  // multiplied by the display currency's exchange rate.
-  const txCurrency = isIndianRail && v.currency === "EUR" ? "INR" : v.currency;
-  const effectiveCur = displayCur || txCurrency;
-  const flagCode = isIndianRail && !displayCur ? "IN" : effectiveCur;
-
-  let displayAmount: number;
-  if (displayCur) {
-    const curRate = getRate(displayCur, rates);
-    if (tx.amount_usd != null && Number(tx.amount_usd) > 0) {
-      if (v.outgoing) {
-        const totalUsd =
-          tx.fee_usd != null
-            ? Number(tx.amount_usd) + Number(tx.fee_usd)
-            : Number(tx.sender_debit ?? tx.amount) / (getRate(tx.currency, rates) || 1);
-        displayAmount = -Math.abs(totalUsd * curRate);
-      } else {
-        displayAmount = Math.abs(Number(tx.amount_usd) * curRate);
-      }
-    } else {
-      displayAmount = convert(v.amount, txCurrency, displayCur, rates);
-    }
-  } else {
-    displayAmount = v.amount;
-  }
+  // Authoritative transaction currency — historical record never mutates with user preferences
+  const txCurrency = isIndianRail && v.currency === "EUR" ? "INR" : (v.currency || tx.currency || "USD");
+  const flagCode = isIndianRail ? "IN" : txCurrency;
 
   return (
     <Link
@@ -84,7 +57,7 @@ export function TxRow({
       params={{ id: tx.id }}
       className="flex items-center gap-3 py-3.5 px-3.5 sm:px-4 min-h-[56px] transition-colors hover:bg-accent/30 touch-manipulation cursor-pointer group"
     >
-      {/* Transaction Icon with secondary currency badge */}
+      {/* Transaction Icon with authentic transaction currency badge */}
       <div className="relative shrink-0">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-2xs p-1.5 overflow-hidden">
           <BrandAsset
@@ -111,14 +84,14 @@ export function TxRow({
         </div>
       </div>
 
-      {/* Amount — converted to user's preferred display currency */}
+      {/* Amount — always in original transacted currency */}
       <div
         className={cn(
           "tabular text-[13px] font-semibold shrink-0 text-right",
           !v.outgoing && "text-success",
         )}
       >
-        {formatMoney(displayAmount, effectiveCur, { sign: true })}
+        {formatMoney(v.amount, txCurrency, { sign: true })}
       </div>
     </Link>
   );

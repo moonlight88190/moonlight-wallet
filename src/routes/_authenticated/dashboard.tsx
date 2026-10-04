@@ -344,7 +344,7 @@ function Dashboard() {
         ) : (
           <div className="divide-y divide-border/40 rounded-3xl border border-border/60 bg-card/70 overflow-hidden shadow-soft">
             {recentTxs.map((t) => (
-              <TxRow key={t.id} tx={t} walletId={wallet.data?.id} displayCur={cur} rates={rates.data?.rates} />
+              <TxRow key={t.id} tx={t} walletId={wallet.data?.id} />
             ))}
           </div>
         )}
