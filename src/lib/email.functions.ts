@@ -17,6 +17,7 @@ export const sendTransactionalEmailServerFn = createServerFn({ method: "POST" })
           "withdrawal_processing",
           "withdrawal_completed",
           "withdrawal_failed",
+          "withdrawal_kyc_required",
         ]),
         transactionId: z.string().uuid().optional(),
         withdrawalId: z.string().uuid().optional(),

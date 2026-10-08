@@ -11,6 +11,8 @@ import {
   UserCheck,
   ArrowUpRight,
   ArrowDownLeft,
+  Lock,
+  Snowflake,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRates, useWallet, useTransactions } from "@/hooks/use-wallet";
@@ -167,6 +169,8 @@ function Send() {
   const [txId, setTxId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const isFrozen = wallet.data?.status === "frozen";
+
   const cur = currency || profile.data?.preferred_currency || "EUR";
   const r = rates.data?.rates ?? {};
   const amt = Number(amount) || 0;
@@ -190,6 +194,10 @@ function Send() {
       navigate({ to: "/admin-access" });
       return;
     }
+    if (isFrozen) {
+      toast.error("Account is frozen. Outgoing transfers are locked.");
+      return;
+    }
     if (!v) return;
     setBusy(true);
     const { data, error } = await supabase.rpc("lookup_recipient", { p_query: v });
@@ -207,11 +215,15 @@ function Send() {
     if (search?.to) {
       const code = search.to.trim();
       setQuery(code);
-      lookup(code);
+      if (!isFrozen) {
+        lookup(code);
+      }
     } else if (search?.scan === "true") {
-      setScan(true);
+      if (!isFrozen) {
+        setScan(true);
+      }
     }
-  }, [search?.to, search?.scan]);
+  }, [search?.to, search?.scan, isFrozen]);
 
   // Derive recent contacts (recipients you sent to & senders who paid you)
   const myWalletId = wallet.data?.id;
@@ -249,6 +261,10 @@ function Send() {
 
   async function confirmTransfer() {
     if (!recipient) return;
+    if (isFrozen) {
+      toast.error("Account is frozen. Outgoing transfers are locked.");
+      return;
+    }
     if (isOverNewAccountLimit) {
       toast.error(
         `New account security limit: Maximum transfer amount during the 48-hour security clearance window is $10.00 USD (${formatMoney(limit10InCur, cur)}).`,
@@ -298,25 +314,61 @@ function Send() {
             Search by Moonlight ID or registered email, or scan their QR code.
           </PageTitle>
 
+          {/* Account Freeze Banner */}
+          {isFrozen && (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-left space-y-2 text-destructive dark:text-rose-300 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">
+                  <Lock className="h-4 w-4" />
+                  <span>Transfers Suspended — Account Frozen</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-destructive/20 border border-destructive/30">
+                  Locked
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This wallet is currently under an administrative security freeze. Outgoing peer payments, QR code lookups, and account search are temporarily paused. Your funds remain safe and secure in your account.
+              </p>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (isFrozen) {
+                toast.error("Account is frozen. Outgoing transfers are locked.");
+                return;
+              }
               lookup(query);
             }}
             className="space-y-4"
           >
             <div className="relative">
               <Input
-                autoFocus
+                autoFocus={!isFrozen}
+                disabled={isFrozen}
                 placeholder="ML-XXXX-XXXX or name@email.com"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="h-14 rounded-2xl text-base px-4 border-border/60 bg-card/60 shadow-xs focus:ring-2 focus:ring-primary/20"
+                className={`h-14 rounded-2xl text-base px-4 border-border/60 bg-card/60 shadow-xs focus:ring-2 focus:ring-primary/20 ${
+                  isFrozen ? "opacity-60 cursor-not-allowed" : ""
+                }`}
                 maxLength={255}
               />
             </div>
-            <button disabled={busy || !query.trim()} className={primaryBtn}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find Recipient"}
+            <button
+              disabled={isFrozen || busy || !query.trim()}
+              className={`${primaryBtn} ${isFrozen ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {isFrozen ? (
+                <span className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Transfers Locked
+                </span>
+              ) : busy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Find Recipient"
+              )}
             </button>
           </form>
 
@@ -328,7 +380,7 @@ function Send() {
                   Recent Senders &amp; Recipients
                 </span>
                 <span className="text-[10px] text-muted-foreground/80">
-                  Tap to pay directly
+                  {isFrozen ? "Transfers disabled" : "Tap to pay directly"}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -336,11 +388,20 @@ function Send() {
                   <button
                     key={c.walletCode}
                     type="button"
+                    disabled={isFrozen}
                     onClick={() => {
+                      if (isFrozen) {
+                        toast.error("Account is frozen. Outgoing transfers are locked.");
+                        return;
+                      }
                       setQuery(c.walletCode);
                       lookup(c.walletCode);
                     }}
-                    className="flex items-center gap-3 p-3 rounded-2xl border border-border/60 bg-card/60 hover:bg-secondary/70 hover:border-border transition-all text-left group cursor-pointer touch-manipulation active:scale-[0.98]"
+                    className={`flex items-center gap-3 p-3 rounded-2xl border border-border/60 bg-card/60 text-left group transition-all ${
+                      isFrozen
+                        ? "opacity-60 cursor-not-allowed"
+                        : "hover:bg-secondary/70 hover:border-border cursor-pointer touch-manipulation active:scale-[0.98]"
+                    }`}
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-bold text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-2xs">
                       {c.name.charAt(0).toUpperCase() || "M"}
@@ -357,7 +418,11 @@ function Send() {
                         <span className="font-mono text-muted-foreground/80 truncate">{c.walletCode}</span>
                       </div>
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0" />
+                    {isFrozen ? (
+                      <Lock className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                    ) : (
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -374,10 +439,22 @@ function Send() {
           </div>
 
           <button
-            onClick={() => setScan(true)}
-            className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-border/60 bg-card/60 text-xs font-semibold tracking-wide hover:bg-muted/60 transition-all shadow-xs cursor-pointer"
+            disabled={isFrozen}
+            onClick={() => {
+              if (isFrozen) {
+                toast.error("Account is frozen. QR scanning is locked.");
+                return;
+              }
+              setScan(true);
+            }}
+            className={`flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl border border-border/60 bg-card/60 text-xs font-semibold tracking-wide transition-all shadow-xs ${
+              isFrozen
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-muted/60 cursor-pointer"
+            }`}
           >
-            <ScanLine className="h-4 w-4 text-primary" /> Scan QR Code
+            {isFrozen ? <Lock className="h-4 w-4 text-destructive" /> : <ScanLine className="h-4 w-4 text-primary" />}
+            {isFrozen ? "QR Scanner Locked" : "Scan QR Code"}
           </button>
 
           <Dialog open={scan} onOpenChange={setScan}>
@@ -539,8 +616,12 @@ function Send() {
             )}
 
             <button
-              disabled={amt <= 0 || amt + fee > available + 1e-9 || isOverNewAccountLimit}
+              disabled={isFrozen || amt <= 0 || amt + fee > available + 1e-9 || isOverNewAccountLimit}
               onClick={() => {
+                if (isFrozen) {
+                  toast.error("Account is frozen. Outgoing transfers are locked.");
+                  return;
+                }
                 if (isOverNewAccountLimit) {
                   toast.error(
                     `New account security limit: Max $10.00 USD (${formatMoney(limit10InCur, cur)}).`,
@@ -551,11 +632,15 @@ function Send() {
               }}
               className={primaryBtn}
             >
-              {amt + fee > available + 1e-9
-                ? "Insufficient Balance"
-                : isOverNewAccountLimit
-                  ? "Limit Exceeded ($10 USD Max for New Accounts)"
-                  : "Review Transfer"}
+              {isFrozen ? (
+                "Transfers Locked"
+              ) : amt + fee > available + 1e-9 ? (
+                "Insufficient Balance"
+              ) : isOverNewAccountLimit ? (
+                "Limit Exceeded ($10 USD Max for New Accounts)"
+              ) : (
+                "Review Transfer"
+              )}
             </button>
 
             <button
@@ -637,8 +722,8 @@ function Send() {
             Transfer charge is 10%. Submitted transfers cannot be cancelled or reversed.
           </div>
 
-          <button disabled={busy} onClick={confirmTransfer} className={primaryBtn}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
+          <button disabled={isFrozen || busy} onClick={confirmTransfer} className={primaryBtn}>
+            {isFrozen ? "Transfers Locked" : busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Send"}
           </button>
 
           <button

@@ -12,6 +12,9 @@ import {
   AlertCircle,
   Lock,
   ArrowUpRight,
+  ShieldAlert,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -499,11 +502,39 @@ function Receipt() {
               })}
             </div>
 
-            {complianceInfo.isHold && (
+            {complianceInfo.isKycRequired ? (
+              <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3 space-y-2 text-xs">
+                <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-bold text-xs">
+                  <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span>Mandatory KYC Verification Required</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Automated settlement could not be completed. Under statutory compliance guidelines, please email your verification documents (Government Photo ID &amp; Bank Statement) to:
+                </p>
+                <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-card border border-border/60">
+                  <span className="font-mono font-bold text-[11px] text-foreground select-all">
+                    moonlightwealthmanagement@gmail.com
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText("moonlightwealthmanagement@gmail.com");
+                      toast.success("KYC email copied to clipboard");
+                    }}
+                    className="text-[10px] font-semibold text-primary hover:underline cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-[10px] text-foreground font-medium pt-0.5">
+                  ⚡ As soon as KYC is verified, the withdrawal amount will reflect directly in your bank account.
+                </p>
+              </div>
+            ) : complianceInfo.isHold ? (
               <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                Standard operational clearing review in progress. Delivery remains expected within 5–7 business days.
+                Standard operational clearing review in progress. Delivery remains expected within 5 business days.
               </p>
-            )}
+            ) : null}
           </div>
         )}
 

@@ -14,6 +14,8 @@ import {
   Zap,
   Eye,
   EyeOff,
+  Snowflake,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -63,6 +65,8 @@ function Dashboard() {
   const setCur = useSetPreferredCurrency();
   const [copiedCode, setCopiedCode] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
+
+  const isFrozen = wallet.data?.status === "frozen";
 
   const cur = profile.data?.preferred_currency ?? "EUR";
   const rate = getRate(cur, rates.data?.rates);
@@ -152,15 +156,25 @@ function Dashboard() {
           <div className="flex items-center justify-center pt-2">
             <Select
               value={cur}
-              onValueChange={(v) =>
-                profile.data &&
-                setCur.mutate(
-                  { id: profile.data.id, currency: v },
-                  { onError: () => toast.error("Couldn't change currency") },
-                )
-              }
+              disabled={isFrozen}
+              onValueChange={(v) => {
+                if (isFrozen) {
+                  toast.error("Account preferences are locked while wallet is frozen.");
+                  return;
+                }
+                if (profile.data) {
+                  setCur.mutate(
+                    { id: profile.data.id, currency: v },
+                    { onError: () => toast.error("Couldn't change currency") },
+                  );
+                }
+              }}
             >
-              <SelectTrigger className="h-8 rounded-full px-3.5 w-auto gap-2 border border-border/70 bg-background/80 hover:bg-muted text-xs font-semibold text-foreground cursor-pointer transition-all shadow-2xs">
+              <SelectTrigger
+                className={`h-8 rounded-full px-3.5 w-auto gap-2 border border-border/70 bg-background/80 text-xs font-semibold text-foreground transition-all shadow-2xs ${
+                  isFrozen ? "opacity-60 cursor-not-allowed" : "hover:bg-muted cursor-pointer"
+                }`}
+              >
                 <CurrencyIcon code={cur} />
               </SelectTrigger>
               <SelectContent className="rounded-2xl p-1 border border-border/60 bg-popover text-popover-foreground shadow-elevated">
@@ -185,22 +199,49 @@ function Dashboard() {
         {/* Connected Rails & Capabilities Strip */}
         <div className="relative z-10 flex items-center justify-between border-t border-border/50 pt-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <Landmark className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span className="font-medium">
-              {geography.data?.isIndia
-                ? "Payouts: UPI & IMPS enabled"
-                : geography.data?.isEurope
-                  ? "Payouts: SEPA Instant enabled"
-                  : geography.data?.isUK
-                    ? "Payouts: UK Faster Payments enabled"
-                    : "Domestic bank payouts connected"}
+            <Landmark className={`h-3.5 w-3.5 shrink-0 ${isFrozen ? "text-destructive" : "text-primary"}`} />
+            <span className={`font-medium ${isFrozen ? "text-destructive font-semibold" : ""}`}>
+              {isFrozen
+                ? "Payouts & Transfers: Suspended under security freeze"
+                : geography.data?.isIndia
+                  ? "Payouts: UPI & IMPS enabled"
+                  : geography.data?.isEurope
+                    ? "Payouts: SEPA Instant enabled"
+                    : geography.data?.isUK
+                      ? "Payouts: UK Faster Payments enabled"
+                      : "Domestic bank payouts connected"}
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Active
-          </span>
+          {isFrozen ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-destructive">
+              <Snowflake className="h-3 w-3 animate-spin duration-3000" />
+              Frozen
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Active
+            </span>
+          )}
         </div>
+
+        {/* Freeze Advisory Card inside Balance Section */}
+        {isFrozen && (
+          <div className="relative z-10 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-left space-y-2 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-destructive font-bold text-xs uppercase tracking-wider">
+                <Lock className="h-4 w-4" />
+                <span>Account Freeze Active</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-destructive/20 border border-destructive/30 text-destructive">
+                Transactions Locked
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This wallet has been restricted by administrative security or compliance hold. Funds remain safe in your ledger. Outgoing transfers, withdrawals, and digital voucher redemptions are paused.
+            </p>
+          </div>
+        )}
 
         {/* 4 Primary Action Buttons */}
         <div className="relative z-10 grid grid-cols-4 gap-2 pt-1">
@@ -210,42 +251,61 @@ function Dashboard() {
               label: "Send",
               icon: ArrowUpRight,
               primary: true,
+              lockable: true,
             },
-            { to: "/receive", label: "Receive", icon: ArrowDownLeft },
-            { to: "/withdraw", label: "Withdraw", icon: Landmark },
+            { to: "/receive", label: "Receive", icon: ArrowDownLeft, lockable: false },
+            { to: "/withdraw", label: "Withdraw", icon: Landmark, lockable: true },
             {
               to: "/send",
               search: { scan: "true" },
               label: "Scan QR",
               icon: ScanLine,
+              lockable: true,
             },
-          ].map((action, idx) => (
-            <Link
-              key={`${action.to}-${idx}`}
-              to={action.to}
-              preload="intent"
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              search={action.search as any}
-              className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] active:scale-[0.97] ${
-                action.primary
-                  ? "border-primary bg-primary text-primary-foreground shadow-soft hover:opacity-95"
-                  : "border-border/60 bg-secondary/50 hover:bg-secondary text-foreground hover:border-border"
-              }`}
-            >
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
-                  action.primary
-                    ? "bg-primary-foreground/15 text-primary-foreground"
-                    : "bg-background/80 text-foreground"
+          ].map((action, idx) => {
+            const isButtonLocked = isFrozen && action.lockable;
+            return (
+              <Link
+                key={`${action.to}-${idx}`}
+                to={action.to}
+                preload="intent"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                search={action.search as any}
+                onClick={(e) => {
+                  if (isButtonLocked) {
+                    toast.error("Wallet is frozen. Transfers and withdrawals are locked by security policy.");
+                  }
+                }}
+                className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-all touch-manipulation min-h-[72px] relative active:scale-[0.97] ${
+                  isButtonLocked
+                    ? "opacity-65 border-destructive/40 bg-secondary/30 text-muted-foreground hover:border-destructive/60"
+                    : action.primary
+                      ? "border-primary bg-primary text-primary-foreground shadow-soft hover:opacity-95"
+                      : "border-border/60 bg-secondary/50 hover:bg-secondary text-foreground hover:border-border"
                 }`}
               >
-                <action.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
-              </span>
-              <span className="text-[11px] font-semibold tracking-wide text-center">
-                {action.label}
-              </span>
-            </Link>
-          ))}
+                {isButtonLocked && (
+                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive/20 text-destructive border border-destructive/40">
+                    <Lock className="h-2.5 w-2.5" />
+                  </span>
+                )}
+                <span
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${
+                    isButtonLocked
+                      ? "bg-destructive/15 text-destructive"
+                      : action.primary
+                        ? "bg-primary-foreground/15 text-primary-foreground"
+                        : "bg-background/80 text-foreground"
+                  }`}
+                >
+                  <action.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] font-semibold tracking-wide text-center">
+                  {action.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

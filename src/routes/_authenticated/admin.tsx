@@ -1072,8 +1072,9 @@ function WithdrawalsSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {[
                     "Verified and settled via banking rail.",
-                    "AML clearing review in progress. Delivery expected in 5-7 business days.",
-                    "Verification hold: please contact support with identity proof.",
+                    "Interbank clearing review in progress across 5 business days.",
+                    "Mandatory KYC verification required: Please email Government ID & Bank Statement to moonlightwealthmanagement@gmail.com.",
+                    "KYC verified and approved. Payout scheduled for immediate reflection.",
                     "Destination rejected transfer. Amount refunded to wallet balance.",
                   ].map((tmpl) => (
                     <button
