@@ -78,6 +78,13 @@
       "when": 1791480157297,
       "tag": "0010_withdrawal_status_map_on_hold",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791480503890,
+      "tag": "0011_kyc_submissions",
+      "breakpoints": true
     }
   ]
 }
