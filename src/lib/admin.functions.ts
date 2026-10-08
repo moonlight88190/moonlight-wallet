@@ -718,3 +718,67 @@ export const adminListAuditLogs = createServerFn({ method: "POST" })
       adminActions: adminActionsRes.data || [],
     };
   });
+
+export const adminListKyc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ token: z.string().max(300) }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) throw new Error("Admin session expired.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("kyc_submissions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    const ids = [...new Set((rows ?? []).map((r) => r.user_id))];
+    const { data: profs } = ids.length
+      ? await supabaseAdmin.from("profiles").select("id, full_name, email").in("id", ids)
+      : { data: [] };
+    const pm = new Map((profs ?? []).map((p) => [p.id, p]));
+    const items = await Promise.all(
+      (rows ?? []).map(async (r) => {
+        const [s, d] = await Promise.all([
+          supabaseAdmin.storage.from("kyc").createSignedUrl(r.selfie_path, 600),
+          supabaseAdmin.storage.from("kyc").createSignedUrl(r.doc_path, 600),
+        ]);
+        const p = pm.get(r.user_id);
+        return {
+          ...r,
+          full_name: p?.full_name ?? "",
+          email: p?.email ?? "",
+          selfie_url: s.data?.signedUrl ?? null,
+          doc_url: d.data?.signedUrl ?? null,
+        };
+      }),
+    );
+    return { items };
+  });
+
+export const adminReviewKyc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        token: z.string().max(300),
+        id: z.string().uuid(),
+        decision: z.enum(["approved", "rejected"]),
+        note: z.string().trim().max(300).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    if (!(await verifyToken(data.token, context.userId))) throw new Error("Admin session expired.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("kyc_submissions")
+      .update({ status: data.decision, review_note: data.note || null, reviewed_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("admin_actions").insert({
+      actor_user_id: context.userId,
+      action: `kyc_${data.decision}`,
+      details: { kyc_id: data.id, note: data.note ?? null },
+    });
+    return { ok: true };
+  });
