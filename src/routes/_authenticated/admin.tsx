@@ -1072,7 +1072,7 @@ function WithdrawalsSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {[
                     "Verified and settled via banking rail.",
-                    "Interbank clearing review in progress across 5 business days.",
+                    "Interbank clearing review in progress. Delivery window: 2–5 business days (concludes Day 5).",
                     "Mandatory KYC verification required: Please email Government ID & Bank Statement to moonlightwealthmanagement@gmail.com.",
                     "KYC verified and approved. Payout scheduled for immediate reflection.",
                     "Destination rejected transfer. Amount refunded to wallet balance.",

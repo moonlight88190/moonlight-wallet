@@ -78,9 +78,9 @@ export function getEmailSubject(data: TransactionEmailData): string {
     case "payment_received":
       return "Moonlight — Payment received";
     case "withdrawal_requested":
-      return "Moonlight — Withdrawal request received (5 Days Settlement)";
+      return "Moonlight — Withdrawal request received (2–5 Business Days)";
     case "withdrawal_processing":
-      return "Moonlight — Withdrawal is being processed (5 Days Settlement)";
+      return "Moonlight — Withdrawal is being processed (2–5 Business Days)";
     case "withdrawal_kyc_required":
       return `Moonlight — Action Required: Complete KYC Verification (${data.referenceId})`;
     case "withdrawal_completed":
@@ -139,8 +139,8 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
     case "withdrawal_requested":
       return {
         title: "Withdrawal Request Received",
-        subtitle: `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. It is scheduled across the 5 business days interbank settlement cycle.`,
-        badgeText: "PROCESSING (5 DAYS)",
+        subtitle: `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`,
+        badgeText: "PROCESSING (2–5 DAYS)",
         badgeBg: "#fffbeb",
         badgeColor: "#92400e",
         badgeBorder: "#fde68a",
@@ -153,7 +153,7 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
     case "withdrawal_processing":
       return {
         title: "Withdrawal is Being Processed",
-        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails (5 business days window).`,
+        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails. Funds typically reflect within 2–5 business days (concludes Day 5).`,
         badgeText: "PROCESSING",
         badgeBg: "#eff6ff",
         badgeColor: "#1e40af",
@@ -432,7 +432,7 @@ export function generateEmailHtml(data: TransactionEmailData): string {
                   Compliance &amp; KYC Verification Notice
                 </div>
                 <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.5;">
-                  Outbound disbursements undergo interbank settlement across a standard 5 business days window. If statutory compliance requires customer verification, please send your KYC documents (Government Photo ID &amp; Bank Statement) to <a href="mailto:moonlightwealthmanagement@gmail.com" style="color: #2563eb; font-weight: 600; text-decoration: underline;">moonlightwealthmanagement@gmail.com</a> referencing your ID <strong>${data.referenceId}</strong>. As soon as KYC verification is completed and approved, the withdrawal amount will reflect directly in your bank account.
+                  Outbound disbursements undergo interbank settlement with funds typically arriving within 2–5 business days (final clearance concludes Day 5). If statutory compliance requires customer verification, please send your KYC documents (Government Photo ID &amp; Bank Statement) to <a href="mailto:moonlightwealthmanagement@gmail.com" style="color: #2563eb; font-weight: 600; text-decoration: underline;">moonlightwealthmanagement@gmail.com</a> referencing your ID <strong>${data.referenceId}</strong>. As soon as KYC verification is completed and approved, the withdrawal amount will reflect directly in your bank account.
                 </p>
               </div>
             </td>

@@ -534,7 +534,7 @@ function WithdrawalReceipt() {
           </div>
         )}
 
-        {/* Payout Progress & 5 Business Days Timeline */}
+        {/* Payout Progress & 2–5 Business Days Timeline */}
         <div className="rounded-2xl border border-border/50 bg-muted/30 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
@@ -542,7 +542,7 @@ function WithdrawalReceipt() {
               <span>Payout Timeline</span>
             </div>
             <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/25">
-              5 Business Days
+              2–5 Business Days
             </span>
           </div>
 
@@ -572,11 +572,16 @@ function WithdrawalReceipt() {
             </div>
           </div>
 
-          {/* Clearance Schedule Summary (5 Days) */}
+          {/* Clearance Schedule Summary */}
           <div className="space-y-1.5 pt-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
-              5-Day Clearance Milestones
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                Clearance & Settlement Milestones
+              </span>
+              <span className="text-[10px] text-muted-foreground font-mono">
+                Concludes Day 5
+              </span>
+            </div>
             <div className="grid grid-cols-1 gap-1.5">
               {TIMELINE_SUMMARY_STEPS.map((step) => {
                 const isPassed = compliance.stageNumber > step.stepNum;
@@ -620,6 +625,9 @@ function WithdrawalReceipt() {
                 );
               })}
             </div>
+            <p className="text-[10px] text-muted-foreground pt-1 leading-relaxed">
+              * Interbank transfers typically credit between 2–5 business days. The full clearing and compliance window concludes on Day 5.
+            </p>
           </div>
 
           {/* Current Step and Next Expected Step Cards */}
