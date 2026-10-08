@@ -1,3 +1,4 @@
+import { KycBanner } from "@/components/KycBanner";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
