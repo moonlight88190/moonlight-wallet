@@ -79,12 +79,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
-  { id: "upi", name: "UPI", icon: "upi", badge: "24–48 Hours" },
-  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "24–48 Hours" },
-  { id: "sepa", name: "SEPA", icon: "sepa", badge: "24–48 Hours" },
-  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "24–48 Hours" },
-  { id: "gcash", name: "GCash", icon: "gcash", badge: "24–48 Hours" },
-  { id: "pix", name: "Pix", icon: "pix", badge: "24–48 Hours" },
+  { id: "upi", name: "UPI", icon: "upi", badge: "5 Business Days" },
+  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "5 Business Days" },
+  { id: "sepa", name: "SEPA", icon: "sepa", badge: "5 Business Days" },
+  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "5 Business Days" },
+  { id: "gcash", name: "GCash", icon: "gcash", badge: "5 Business Days" },
+  { id: "pix", name: "Pix", icon: "pix", badge: "5 Business Days" },
 ];
 
 function Withdraw() {
@@ -575,15 +575,13 @@ function Withdraw() {
             <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <p className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 flex-wrap">
-                <span>48-Hour Security Clearance Active</span>
+                <span>Account Security Clearance Active</span>
                 <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300">
                   {remainingHours}h {remainingMinutes}m remaining
                 </span>
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Withdrawal operations unlock 48 hours after account creation to protect against
-                unauthorized transfers. Tap to view clearance details & unlock schedule.
-                Withdrawal operations unlock 48 hours after account creation to protect against unauthorized transfers. Tap to view clearance details & unlock schedule.
+                In accordance with statutory financial compliance and account protection protocols, newly registered wallets undergo a mandatory 48-hour security clearance window prior to outbound external bank disbursements. Tap to view clearance details &amp; schedule.
               </p>
             </div>
           </div>
@@ -873,16 +871,15 @@ function Withdraw() {
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3 w-full">
-                {/* 24-48 Hours Processing Window Notice */}
+                {/* 5 Business Days Settlement Window Notice */}
                 <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 flex items-start gap-2.5 text-xs">
                   <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="font-bold text-foreground">
-                      Standard Processing Window: 24 to 48 Hours
+                      Standard Settlement Window: 5 Business Days
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Withdrawal requests undergo multi-factor identity verification and are
-                      processed within 24 to 48 hours.
+                      Withdrawal requests undergo multi-factor regulatory clearance and are processed across 5 business days. If statutory KYC verification is required, you will be notified to submit documents to moonlightwealthmanagement@gmail.com.
                     </p>
                   </div>
                 </div>
@@ -1152,10 +1149,10 @@ function Withdraw() {
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
-              <span className="text-muted-foreground">Processing Window</span>
+              <span className="text-muted-foreground">Settlement Window</span>
               <span className="font-semibold text-primary flex items-center gap-1 font-mono text-xs">
                 <Clock className="h-3 w-3" />
-                24–48 Hours
+                5 Business Days
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">
@@ -1352,36 +1349,25 @@ function Withdraw() {
             {/* Why Can't You Withdraw Right Now */}
             <div className="space-y-2.5 text-muted-foreground leading-relaxed">
               <p className="font-semibold text-foreground text-xs">
-                Why is my withdrawal locked right now?
+                Why is outbound withdrawal temporarily restricted?
               </p>
-              <p className="font-semibold text-foreground text-xs">Why is my withdrawal locked right now?</p>
-              <div className="space-y-2 text-[11px]">
+              <div className="space-y-2.5 text-[11px]">
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   <span>
-                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety
-                    regulations, all newly registered accounts undergo a mandatory 48-hour cooling
-                    period to safeguard your wallet against unauthorized takeovers, fraudulent
-                    sign-ups, and sudden account drainage.
-                    <strong>Anti-Drain &amp; Identity Protection:</strong> Under financial safety regulations, all newly registered accounts undergo a mandatory 48-hour cooling period to safeguard your wallet against unauthorized takeovers, fraudulent sign-ups, and sudden account drainage.
+                    <strong>Anti-Fraud &amp; Asset Protection:</strong> Under statutory financial safety guidelines, all newly registered accounts undergo a mandatory 48-hour cooling-off period to safeguard your wallet against unauthorized takeovers, bot manipulation, and premature asset drainage.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   <span>
-                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic
-                    UPI and direct bank IMPS) require preliminary compliance verification before
-                    executing external bank settlements.
-                    <strong>Corridor Compliance:</strong> Outbound banking rails (including domestic UPI and direct bank IMPS) require preliminary compliance verification before executing external bank settlements.
+                    <strong>Corridor Clearance:</strong> Outbound banking rails (including domestic UPI and bank IMPS gateways) require introductory compliance authorization before processing external disbursements.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                   <span>
-                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are
-                    cooling down, internal peer-to-peer transfers to other Moonlight wallets remain
-                    active (up to $10.00 USD during the first 48 hours).
-                    <strong>Peer Transfers Active:</strong> While external bank withdrawals are cooling down, internal peer-to-peer transfers to other Moonlight wallets remain active (up to $10.00 USD during the first 48 hours).
+                    <strong>Internal Transfers Available:</strong> While external bank withdrawals are completing this cooling window, internal peer-to-peer transfers to other Moonlight wallets remain active (up to $10.00 USD during the introductory 48 hours).
                   </span>
                 </div>
               </div>

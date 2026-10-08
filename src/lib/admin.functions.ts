@@ -422,14 +422,20 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
     }
 
     // Trigger authoritative transactional email based on updated status
-    let eventType: "withdrawal_processing" | "withdrawal_completed" | "withdrawal_failed" | null =
-      null;
+    let eventType:
+      | "withdrawal_processing"
+      | "withdrawal_completed"
+      | "withdrawal_failed"
+      | "withdrawal_kyc_required"
+      | null = null;
     if (data.newStatus === "PROCESSING") {
       eventType = "withdrawal_processing";
     } else if (data.newStatus === "SUCCESSFUL") {
       eventType = "withdrawal_completed";
     } else if (data.newStatus === "FAILED" || data.newStatus === "CANCELLED") {
       eventType = "withdrawal_failed";
+    } else if (data.newStatus === "ON HOLD" || data.newStatus === "UNDER REVIEW") {
+      eventType = "withdrawal_kyc_required";
     }
 
     if (eventType) {

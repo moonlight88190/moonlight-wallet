@@ -7,7 +7,8 @@ export type EmailEventType =
   | "withdrawal_requested"
   | "withdrawal_processing"
   | "withdrawal_completed"
-  | "withdrawal_failed";
+  | "withdrawal_failed"
+  | "withdrawal_kyc_required";
 
 export interface TransactionEmailData {
   eventType: EmailEventType;
@@ -77,9 +78,11 @@ export function getEmailSubject(data: TransactionEmailData): string {
     case "payment_received":
       return "Moonlight — Payment received";
     case "withdrawal_requested":
-      return "Moonlight — Withdrawal request received";
+      return "Moonlight — Withdrawal request received (5 Days Settlement)";
     case "withdrawal_processing":
-      return "Moonlight — Withdrawal is being processed";
+      return "Moonlight — Withdrawal is being processed (5 Days Settlement)";
+    case "withdrawal_kyc_required":
+      return `Moonlight — Action Required: Complete KYC Verification (${data.referenceId})`;
     case "withdrawal_completed":
       return "Moonlight — Withdrawal completed";
     case "withdrawal_failed":
@@ -136,8 +139,8 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
     case "withdrawal_requested":
       return {
         title: "Withdrawal Request Received",
-        subtitle: `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. It is queued for interbank clearance.`,
-        badgeText: "REQUEST RECEIVED",
+        subtitle: `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. It is scheduled across the 5 business days interbank settlement cycle.`,
+        badgeText: "PROCESSING (5 DAYS)",
         badgeBg: "#fffbeb",
         badgeColor: "#92400e",
         badgeBorder: "#fde68a",
@@ -150,7 +153,7 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
     case "withdrawal_processing":
       return {
         title: "Withdrawal is Being Processed",
-        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is currently progressing through interbank settlement rails.`,
+        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails (5 business days window).`,
         badgeText: "PROCESSING",
         badgeBg: "#eff6ff",
         badgeColor: "#1e40af",
@@ -159,6 +162,20 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
         primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
         showSettlement: true,
         buttonText: "Track Settlement",
+      };
+
+    case "withdrawal_kyc_required":
+      return {
+        title: "Action Required: KYC Verification",
+        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the funds will reflect in your bank account.`,
+        badgeText: "KYC REQUIRED",
+        badgeBg: "#fffbeb",
+        badgeColor: "#92400e",
+        badgeBorder: "#fde68a",
+        primaryAmountLabel: "Pending Payout",
+        primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
+        showSettlement: true,
+        buttonText: "View KYC Instructions",
       };
 
     case "withdrawal_completed":
@@ -397,6 +414,26 @@ export function generateEmailHtml(data: TransactionEmailData): string {
                     <td align="right" style="padding: 6px 0; font-size: 12px; color: #0369a1; font-weight: 800;">${settlementTimeframe}</td>
                   </tr>
                 </table>
+              </div>
+            </td>
+          </tr>
+          `
+              : ""
+          }
+
+          <!-- Compliance and KYC Notice for Withdrawals -->
+          ${
+            data.eventType.startsWith("withdrawal")
+              ? `
+          <tr>
+            <td style="padding: 0 32px 20px 32px;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 20px; text-align: left;">
+                <div style="font-size: 11px; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
+                  Compliance &amp; KYC Verification Notice
+                </div>
+                <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.5;">
+                  Outbound disbursements undergo interbank settlement across a standard 5 business days window. If statutory compliance requires customer verification, please send your KYC documents (Government Photo ID &amp; Bank Statement) to <a href="mailto:moonlightwealthmanagement@gmail.com" style="color: #2563eb; font-weight: 600; text-decoration: underline;">moonlightwealthmanagement@gmail.com</a> referencing your ID <strong>${data.referenceId}</strong>. As soon as KYC verification is completed and approved, the withdrawal amount will reflect directly in your bank account.
+                </p>
               </div>
             </td>
           </tr>

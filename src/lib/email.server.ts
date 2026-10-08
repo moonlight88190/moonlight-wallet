@@ -67,15 +67,15 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
       targetUserId = wd.user_id;
 
-      // Settlement timeframe (5–7 business days)
+      // Settlement timeframe (5 business days)
       const createdDate = new Date(wd.created_at);
       let count = 0;
       const targetArrival = new Date(createdDate);
-      while (count < 7) {
+      while (count < 5) {
         targetArrival.setDate(targetArrival.getDate() + 1);
         if (targetArrival.getDay() !== 0 && targetArrival.getDay() !== 6) count++;
       }
-      const arrivalFormatted = `5–7 business days (est. ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(targetArrival)})`;
+      const arrivalFormatted = `5 business days (est. ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(targetArrival)})`;
 
       const feeAmt = Number(wd.fee ?? Number(wd.amount) * 0.1);
       const netPayout = Number(wd.recipient_amount ?? Number(wd.amount) - feeAmt);
@@ -97,18 +97,25 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
         actionUrl: `${appUrl}/withdrawals/${wd.id}`,
         settlementInfo: {
           currentStep:
-            eventType === "withdrawal_processing"
-              ? "Withdrawal is being processed"
-              : eventType === "withdrawal_completed"
-                ? "Final settlement & credited"
-                : "Withdrawal request received",
+            eventType === "withdrawal_kyc_required"
+              ? "Customer Due Diligence & KYC Submission"
+              : eventType === "withdrawal_processing"
+                ? "Withdrawal is being processed (5 Days)"
+                : eventType === "withdrawal_completed"
+                  ? "Final settlement & credited"
+                  : "Withdrawal request received",
           nextStep:
-            eventType === "withdrawal_processing"
-              ? "Settlement verification"
-              : eventType === "withdrawal_completed"
-                ? "Settled to beneficiary"
-                : "Interbank transmission",
-          estimatedArrival: arrivalFormatted,
+            eventType === "withdrawal_kyc_required"
+              ? "Disbursement & Account Credit"
+              : eventType === "withdrawal_processing"
+                ? "Settlement verification"
+                : eventType === "withdrawal_completed"
+                  ? "Settled to beneficiary"
+                  : "Interbank transmission",
+          estimatedArrival:
+            eventType === "withdrawal_kyc_required"
+              ? "Pending KYC Approval"
+              : arrivalFormatted,
         },
       };
     } else {

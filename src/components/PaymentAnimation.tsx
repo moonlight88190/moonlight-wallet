@@ -9,6 +9,10 @@ import {
   Clock,
   Zap,
   ShieldCheck,
+  Landmark,
+  Mail,
+  FileCheck2,
+  Lock,
 } from "lucide-react";
 import { BrandAsset, CountryFlag } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
@@ -106,112 +110,59 @@ function WithdrawalAnimationView({
     recipientCode.includes("@") ||
     destinationCurrency === "INR";
 
-  // Realistic clearance stages with 24–48 hours processing window
-  const withdrawalStages = isUPI
-    ? [
-        {
-          title: "Wallet Debit & Ledger Signature",
-          description: "Securing balance, deducting 10% fee & writing immutable double-entry ledger record",
-          pill: "Ledger Signed",
-          corridorStatus: "Debiting Balance",
-          progress: 20,
-        },
-        {
-          title: `Connecting ${paymentAsset.label} Network`,
-          description: "Establishing encrypted 256-bit TLS 1.3 socket with National Payment Gateway",
-          pill: "Gateway Connected",
-          corridorStatus: "Gateway Handshake",
-          progress: 42,
-        },
-        {
-          title: "VPA & Account Validation",
-          description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
-          pill: "Validated",
-          corridorStatus: "Validating Beneficiary",
-          progress: 65,
-        },
-        {
-          title: "Outbound Batch Allocation",
-          description: "Transaction queued for processing in the 24–48 hours settlement window",
-          pill: "24–48h Queue",
-          corridorStatus: "Batch Allocation",
-          progress: 86,
-        },
-        {
-          title: "Settlement Reference Confirmed",
-          description: "Payout tracking active. Funds dispatched within the 24–48 hours clearance window",
-          pill: "Queued (24–48h)",
-          corridorStatus: "Processing (24–48h)",
-          progress: 100,
-        },
-      ]
-    : [
-        {
-          title: "Wallet Debit & Ledger Signature",
-          description: "Securing balance, deducting fee & writing immutable double-entry ledger record",
-          pill: "Ledger Signed",
-          corridorStatus: "Debiting Balance",
-          progress: 20,
-        },
-        {
-          title: `Connecting ${paymentAsset.label} Gateway`,
-          description: "Establishing encrypted TLS 1.3 socket with national payment clearance switch",
-          pill: "Rail Connected",
-          corridorStatus: "Switch Handshake",
-          progress: 42,
-        },
-        {
-          title: "Beneficiary Account Validation",
-          description: `Validating recipient account credentials (${recipientCode}) with receiving institution`,
-          pill: "Account Validated",
-          corridorStatus: "Validating Account",
-          progress: 65,
-        },
-        {
-          title: "Outbound Batch Allocation",
-          description: "Transaction queued for processing in the 24–48 hours settlement window",
-          pill: "24–48h Queue",
-          corridorStatus: "Batch Allocation",
-          progress: 86,
-        },
-        {
-          title: "Settlement Reference Confirmed",
-          description: "Disbursement payload registered. Payout tracking active and scheduled for dispatch",
-          pill: "Dispatched",
-          corridorStatus: "Dispatched & Queued",
-          progress: 100,
-        },
-      ];
+  // Realistic clearance stages aligned with the 5 business days settlement window
+  const withdrawalStages = [
+    {
+      title: "Wallet Debit & Ledger Cryptographic Signature",
+      description: "Securing wallet balance, deducting fee & committing double-entry audit entry",
+      pill: "Ledger Signed",
+      corridorStatus: "Signing & Debiting",
+      progress: 25,
+      icon: ShieldCheck,
+    },
+    {
+      title: `Connecting ${paymentAsset.label} Network Gateway`,
+      description: "Establishing encrypted 256-bit TLS 1.3 interbank socket with National Payment Switch",
+      pill: "Gateway Connected",
+      corridorStatus: "Switch Handshake",
+      progress: 52,
+      icon: Zap,
+    },
+    {
+      title: "Beneficiary Route & Regulatory Clearance",
+      description: `Validating account credentials (${recipientCode}) against central bank compliance directory`,
+      pill: "Route Verified",
+      corridorStatus: "Validating Beneficiary",
+      progress: 78,
+      icon: FileCheck2,
+    },
+    {
+      title: "Queued for 5-Day Interbank Settlement",
+      description: "Payout registered in national clearing batch. Scheduled across 5 business days cycle",
+      pill: "5-Day Queue",
+      corridorStatus: "Queued (5 Days)",
+      progress: 100,
+      icon: Landmark,
+    },
+  ];
 
   const totalStages = withdrawalStages.length;
   const [visualStage, setVisualStage] = useState(0);
-  const [progressPercent, setProgressPercent] = useState(14);
+  const [progressPercent, setProgressPercent] = useState(15);
   const [showComplete, setShowComplete] = useState(false);
-  const backendDoneRef = useRef(isBackendDone);
-  backendDoneRef.current = isBackendDone;
 
-  // Authentic randomized stage delays generated uniquely per clearance session
-  // Simulates real-time network negotiation, TLS handshake, beneficiary route lookup, and batch allocation
-  const stageDurationsRef = useRef<number[]>([]);
-  if (stageDurationsRef.current.length === 0) {
-    stageDurationsRef.current = [
-      1250 + Math.floor(Math.random() * 550), // Stage 0: 1250–1800ms (Ledger signature)
-      1450 + Math.floor(Math.random() * 650), // Stage 1: 1450–2100ms (Gateway TLS handshake)
-      1600 + Math.floor(Math.random() * 750), // Stage 2: 1600–2350ms (Beneficiary validation)
-      1350 + Math.floor(Math.random() * 600), // Stage 3: 1350–1950ms (Batch allocation)
-      1200 + Math.floor(Math.random() * 500), // Stage 4: 1200–1700ms (Settlement reference)
-    ];
-  }
+  // Stage durations tuned for an engaging, cinematic sequence (~3.5 seconds total)
+  const stageDurationsRef = useRef<number[]>([850, 950, 1050, 800]);
 
-  // Institutional telemetry metrics generated per session for authentic banking credibility
+  // Telemetry metrics generated per session
   const telemetryRef = useRef({
     batchId: `BATCH-${Math.floor(1000 + Math.random() * 9000)}-${destinationCurrency}`,
-    gatewayLatency: Math.floor(46 + Math.random() * 62),
+    gatewayLatency: Math.floor(38 + Math.random() * 45),
     tlsCipher: "TLS_1.3_AES_256_GCM",
-    sessionHash: `0x${Math.random().toString(16).substring(2, 8).toUpperCase()}...${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
+    sessionHash: `0x${Math.random().toString(16).substring(2, 8).toUpperCase()}`,
   });
 
-  // Stage transition management with dynamic timings
+  // Advance through visual stages smoothly
   useEffect(() => {
     if (isFailed || isCancelled) return;
 
@@ -219,10 +170,8 @@ function WithdrawalAnimationView({
     const timeouts: NodeJS.Timeout[] = [];
 
     const scheduleNext = (index: number) => {
-      if (index >= totalStages - 1) {
-        return;
-      }
-      const dur = stageDurationsRef.current[index] || 1500;
+      if (index >= totalStages - 1) return;
+      const dur = stageDurationsRef.current[index] || 900;
       const t = setTimeout(() => {
         current = index + 1;
         setVisualStage(current);
@@ -238,7 +187,7 @@ function WithdrawalAnimationView({
     };
   }, [isFailed, isCancelled, totalStages]);
 
-  // Organic smooth micro-progress ticker simulating high-frequency interbank data streaming
+  // Smooth progress increment
   useEffect(() => {
     if (isFailed || isCancelled) return;
 
@@ -246,27 +195,25 @@ function WithdrawalAnimationView({
       ? 100
       : visualStage >= totalStages - 1
         ? 95
-        : withdrawalStages[visualStage]?.progress || 20;
+        : withdrawalStages[visualStage]?.progress || 25;
 
     const interval = setInterval(() => {
       setProgressPercent((prev) => {
         if (prev >= targetProgress) return prev;
         const diff = targetProgress - prev;
-        // Natural micro-jitter: increments smoothly between 0.5% and 2.5%
-        const step = Math.max(1, Math.min(diff, Math.floor(Math.random() * 3) + 1));
+        const step = Math.max(1, Math.min(diff, Math.floor(Math.random() * 3) + 2));
         return Math.min(targetProgress, prev + step);
       });
-    }, 90);
+    }, 70);
 
     return () => clearInterval(interval);
   }, [visualStage, isBackendDone, totalStages, isFailed, isCancelled, withdrawalStages]);
 
-  // When backend is completed and we've reached stage 4, transition to complete with natural seal delay
+  // Transition to completion once backend completes and stages finish
   useEffect(() => {
     if (isBackendDone && visualStage >= totalStages - 1) {
       setProgressPercent(100);
-      const sealDelay = 450 + Math.floor(Math.random() * 300);
-      const t = setTimeout(() => setShowComplete(true), sealDelay);
+      const t = setTimeout(() => setShowComplete(true), 400);
       return () => clearTimeout(t);
     }
     return undefined;
@@ -277,7 +224,7 @@ function WithdrawalAnimationView({
 
   const currentCorridorText =
     isComplete
-      ? "Clearing Handshake Complete"
+      ? "Clearing Batch Registered"
       : withdrawalStages[visualStage]?.corridorStatus || "In Transit";
 
   return (
@@ -287,27 +234,28 @@ function WithdrawalAnimationView({
       className="relative mx-auto w-full max-w-md animate-in fade-in duration-300 space-y-4"
     >
       {/* ─── Main Dispatch Card ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card p-5 sm:p-6 shadow-card space-y-5">
-        {/* Specular accent line */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-b from-card via-card to-card/95 p-5 sm:p-6 shadow-2xl space-y-5">
+        {/* Specular ambient top glow */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/15 rounded-full blur-2xl pointer-events-none" />
 
         {/* Top Header: Badge & Delivery Window */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1">
-            <Clock className="h-3.5 w-3.5 text-primary" />
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1 shadow-2xs">
+            <Clock className="h-3.5 w-3.5 text-primary animate-pulse" />
             <span className="text-[10px] font-bold tracking-wider text-primary uppercase">
-              Outbound Bank Dispatch
+              Outbound Bank Settlement
             </span>
           </div>
-          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
-            24–48 Hours Processing
+          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/25">
+            5 Business Days Window
           </span>
         </div>
 
         {/* Amount Hero */}
         <div className="text-center py-2 space-y-1">
           <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Total Withdrawn
+            Net Outbound Transfer
           </p>
           <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-mono">
             {formatMoney(destinationAmount, destinationCurrency)}
@@ -319,7 +267,7 @@ function WithdrawalAnimationView({
           )}
           {fee > 0 && (
             <p className="text-[11px] text-muted-foreground font-mono">
-              Processing Fee: {formatMoney(fee, sourceCurrency)}
+              Processing Fee: {formatMoney(fee, sourceCurrency)} (10%)
             </p>
           )}
         </div>
@@ -329,67 +277,69 @@ function WithdrawalAnimationView({
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-muted-foreground font-medium flex items-center gap-1.5">
               {!isTerminal && (
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
               )}
               {isComplete
-                ? "Dispatched & Confirmed"
+                ? "Dispatched & Scheduled"
                 : withdrawalStages[visualStage]?.title || "Processing..."}
             </span>
             <span className="font-mono font-bold text-primary text-xs">
               {progressPercent}%
             </span>
           </div>
-          <div className="h-2 w-full rounded-full bg-secondary overflow-hidden p-0.5">
+          <div className="h-2.5 w-full rounded-full bg-secondary/80 overflow-hidden p-0.5 border border-border/40">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-700 ease-out",
+                "h-full rounded-full transition-all duration-500 ease-out",
                 isComplete
-                  ? "bg-emerald-500"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]"
                   : isFailed
                     ? "bg-destructive"
-                    : "bg-gradient-to-r from-primary/80 to-primary",
+                    : "bg-gradient-to-r from-primary/80 via-primary to-cyan-400 shadow-[0_0_12px_rgba(59,130,246,0.4)]",
               )}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
 
-        {/* ─── Interactive Clearing Corridor (Visual Bridge) ─── */}
-        <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 space-y-3">
+        {/* ─── Interactive Clearing Corridor (Visual Bridge with Glow Particles) ─── */}
+        <div className="relative rounded-2xl border border-border/60 bg-muted/30 p-4 space-y-3 overflow-hidden">
           <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            <span>Clearing Pipeline</span>
-            <span className="text-primary font-mono">{currentCorridorText}</span>
+            <span>Interbank Transmission Rail</span>
+            <span className="text-primary font-mono font-bold">{currentCorridorText}</span>
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-1">
             {/* Origin Node: Moonlight Wallet */}
             <div className="flex flex-col items-center gap-1.5 flex-1 text-center">
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-sm">
-                <LogoMark className="h-6 w-6" />
-                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-bold">
+              <div className="relative flex h-13 w-13 items-center justify-center rounded-2xl bg-card border border-border/60 shadow-md">
+                <LogoMark className="h-7 w-7" />
+                <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-bold shadow-xs">
                   ✓
                 </span>
               </div>
               <span className="text-[11px] font-bold text-foreground truncate max-w-[90px]">
                 Moonlight
               </span>
-              <span className="text-[9px] text-muted-foreground">Balance Debited</span>
+              <span className="text-[9px] text-muted-foreground">Ledger Debited</span>
             </div>
 
-            {/* Pulsing Interbank Transmission Bridge */}
+            {/* Glowing Interbank Corridor Bridge */}
             <div className="flex-1 flex flex-col items-center px-1">
               <div className="relative w-full flex items-center justify-center py-2">
-                <div className="h-1.5 w-full rounded-full bg-secondary/80 overflow-hidden relative">
+                <div className="h-1.5 w-full rounded-full bg-secondary/90 overflow-hidden relative border border-border/30">
                   <div
                     className={cn(
-                      "h-full rounded-full bg-gradient-to-r from-primary/30 via-primary to-primary/30 transition-all duration-700",
-                      isComplete ? "w-full bg-emerald-500" : "w-3/4 animate-pulse",
+                      "h-full rounded-full transition-all duration-500",
+                      isComplete
+                        ? "w-full bg-emerald-500"
+                        : "w-3/4 bg-gradient-to-r from-primary/30 via-primary to-cyan-400 animate-pulse",
                     )}
                   />
                 </div>
-                <div className="absolute flex items-center justify-center rounded-full bg-card border border-border/60 px-2 py-0.5 shadow-sm text-[9px] font-mono text-muted-foreground">
+                <div className="absolute flex items-center justify-center rounded-full bg-card border border-primary/30 px-2 py-0.5 shadow-sm text-[9px] font-mono text-primary">
                   <ArrowRight
-                    className={cn("h-3 w-3 text-primary", !isComplete && "animate-pulse")}
+                    className={cn("h-3 w-3", !isComplete && "animate-pulse")}
                   />
                 </div>
               </div>
@@ -398,11 +348,11 @@ function WithdrawalAnimationView({
               </span>
             </div>
 
-            {/* Destination Node: External Rail */}
+            {/* Destination Node: External Bank / UPI Rail */}
             <div className="flex flex-col items-center gap-1.5 flex-1 text-center">
               <div
                 className={cn(
-                  "relative flex h-12 w-12 items-center justify-center rounded-2xl bg-card border shadow-sm transition-all duration-300 p-2 overflow-hidden",
+                  "relative flex h-13 w-13 items-center justify-center rounded-2xl bg-card border shadow-md transition-all duration-300 p-2 overflow-hidden",
                   isComplete
                     ? "border-emerald-500/50 ring-2 ring-emerald-500/20"
                     : "border-border/60",
@@ -415,7 +365,7 @@ function WithdrawalAnimationView({
                   imgClassName="max-h-full max-w-full object-contain object-center"
                 />
                 {isComplete && (
-                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-bold anim-success-scale">
+                  <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-white text-[9px] font-bold">
                     ✓
                   </span>
                 )}
@@ -423,41 +373,46 @@ function WithdrawalAnimationView({
               <span className="text-[11px] font-bold text-foreground truncate max-w-[100px]">
                 {paymentAsset.label}
               </span>
-              <span className="text-[9px] text-muted-foreground truncate max-w-[90px]">
+              <span className="text-[9px] text-muted-foreground truncate max-w-[90px] font-mono">
                 {recipientCode}
               </span>
             </div>
           </div>
         </div>
 
-        {/* ─── Real Banking Transit Milestones (5 Stages) ─── */}
+        {/* ─── Real Banking Transit Milestones (4 Clear Stages) ─── */}
         <div className="space-y-2 text-xs">
           {withdrawalStages.map((st, i) => {
             const isDone = isComplete || visualStage > i;
             const isCurrent = !isTerminal && visualStage === i;
+            const StepIcon = st.icon;
             return (
               <div
                 key={i}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl border p-2.5 transition-all duration-300",
+                  "flex items-center gap-3 rounded-2xl border p-2.5 transition-all duration-300",
                   isDone
                     ? "border-emerald-500/25 bg-emerald-500/[0.04]"
                     : isCurrent
-                      ? "border-primary/30 bg-primary/[0.04] shadow-xs"
+                      ? "border-primary/40 bg-primary/[0.06] shadow-sm"
                       : "border-border/30 bg-muted/20 opacity-40",
                 )}
               >
                 <div
                   className={cn(
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold transition-all shadow-xs",
                     isDone
                       ? "bg-emerald-500 text-white"
                       : isCurrent
-                        ? "bg-primary text-primary-foreground ring-2 ring-primary/20"
+                        ? "bg-primary text-primary-foreground ring-2 ring-primary/25"
                         : "bg-muted text-muted-foreground",
                   )}
                 >
-                  {isDone ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : i + 1}
+                  {isDone ? (
+                    <Check className="h-4 w-4 stroke-[3]" />
+                  ) : (
+                    <StepIcon className="h-3.5 w-3.5" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
@@ -475,15 +430,15 @@ function WithdrawalAnimationView({
                     </p>
                     <span
                       className={cn(
-                        "text-[9px] font-mono px-1.5 py-0.5 rounded",
+                        "text-[9px] font-mono px-2 py-0.5 rounded-full",
                         isDone
-                          ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                          ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-bold"
                           : isCurrent
-                            ? "text-primary bg-primary/10"
+                            ? "text-primary bg-primary/10 font-bold"
                             : "text-muted-foreground bg-muted/50",
                       )}
                     >
-                      {isDone ? "Done" : st.pill}
+                      {isDone ? "Cleared" : st.pill}
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5">
@@ -495,21 +450,23 @@ function WithdrawalAnimationView({
           })}
         </div>
 
-        {/* ─── Delivery Window Reassurance Card ─── */}
+        {/* ─── 5-Day Delivery Window Reassurance Card ─── */}
         <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
           <div className="flex items-center gap-2.5">
-            <Clock className="h-4 w-4 text-primary shrink-0" />
+            <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
+              <Clock className="h-4 w-4" />
+            </div>
             <div>
               <p className="font-semibold text-foreground text-[11px]">
-                Standard Withdrawal Processing Window
+                Standard Interbank Settlement Timeline
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Verified and processed within 24 to 48 hours
+                Verified and processed over 5 business days
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-bold text-primary font-mono shrink-0">
-            24–48h
+          <span className="text-[11px] font-bold text-primary font-mono shrink-0 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+            5 Days
           </span>
         </div>
 
@@ -520,9 +477,9 @@ function WithdrawalAnimationView({
             <span className="text-foreground font-semibold truncate">{telemetryRef.current.batchId}</span>
           </div>
           <div className="flex items-center gap-2.5 text-muted-foreground shrink-0 text-[9px]">
-            <span>Ping: {telemetryRef.current.gatewayLatency}ms</span>
+            <span>Latency: {telemetryRef.current.gatewayLatency}ms</span>
             <span className="hidden sm:inline text-border">·</span>
-            <span className="hidden sm:inline">{telemetryRef.current.tlsCipher}</span>
+            <span className="hidden sm:inline">ISO 20022</span>
           </div>
         </div>
 
@@ -549,14 +506,25 @@ function WithdrawalAnimationView({
         {/* ─── Terminal States & Actions ─── */}
         {isComplete ? (
           <div className="space-y-3 pt-2">
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center space-y-1">
-              <div className="flex items-center justify-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center space-y-2">
+              <div className="flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wide">
                 <Check className="h-4 w-4 stroke-[3]" />
-                <span>Withdrawal Scheduled for Processing</span>
+                <span>Withdrawal Submitted — Processing</span>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Your payout request has been registered and scheduled for 24–48 hours verification and clearance.
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Your payout request has been registered in the 5 business days interbank settlement cycle.
               </p>
+              <div className="rounded-xl bg-card/80 border border-emerald-500/20 p-2.5 text-[11px] text-muted-foreground text-left space-y-1">
+                <div className="flex items-center gap-1.5 text-foreground font-semibold text-[11px]">
+                  <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Email Confirmation & KYC Verification Notice</span>
+                </div>
+                <p className="text-[10px] leading-relaxed">
+                  A confirmation email has been dispatched. If statutory verification is required, you will be notified to submit KYC documents to{" "}
+                  <strong className="text-foreground font-semibold">moonlightwealthmanagement@gmail.com</strong>.
+                  As soon as KYC is verified, the withdrawal amount will reflect directly in your bank account.
+                </p>
+              </div>
             </div>
 
             {onViewReceipt && (
@@ -566,7 +534,17 @@ function WithdrawalAnimationView({
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-xs font-bold tracking-wider uppercase text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer touch-manipulation"
               >
                 <Receipt className="h-4 w-4" />
-                <span>View Settlement Record</span>
+                <span>Track 5-Day Settlement Steps</span>
+              </button>
+            )}
+
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="w-full text-center py-2 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+              >
+                Return to Wallet
               </button>
             )}
           </div>
