@@ -71,6 +71,13 @@
       "when": 1791092275666,
       "tag": "0009_add_admin_region_override",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791480157297,
+      "tag": "0010_withdrawal_status_map_on_hold",
+      "breakpoints": true
     }
   ]
 }
