@@ -104,6 +104,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_submissions: {
+        Row: {
+          created_at: string
+          doc_path: string
+          doc_type: string
+          id: string
+          review_note: string | null
+          reviewed_at: string | null
+          selfie_path: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_path: string
+          doc_type: string
+          id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          selfie_path: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_path?: string
+          doc_type?: string
+          id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          selfie_path?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ledger_entries: {
         Row: {
           amount_usd: number
