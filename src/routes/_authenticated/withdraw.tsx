@@ -79,12 +79,12 @@ export const Route = createFileRoute("/_authenticated/withdraw")({
 
 /* ─── Rail chips shown in step 1 ─── */
 const RAIL_OPTIONS = [
-  { id: "upi", name: "UPI", icon: "upi", badge: "5 Business Days" },
-  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "5 Business Days" },
-  { id: "sepa", name: "SEPA", icon: "sepa", badge: "5 Business Days" },
-  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "5 Business Days" },
-  { id: "gcash", name: "GCash", icon: "gcash", badge: "5 Business Days" },
-  { id: "pix", name: "Pix", icon: "pix", badge: "5 Business Days" },
+  { id: "upi", name: "UPI", icon: "upi", badge: "2–5 Business Days" },
+  { id: "in-bank", name: "Indian Bank", icon: "sbi", badge: "2–5 Business Days" },
+  { id: "sepa", name: "SEPA", icon: "sepa", badge: "2–5 Business Days" },
+  { id: "faster-payments", name: "Faster Payments", icon: "faster-payments", badge: "2–5 Business Days" },
+  { id: "gcash", name: "GCash", icon: "gcash", badge: "2–5 Business Days" },
+  { id: "pix", name: "Pix", icon: "pix", badge: "2–5 Business Days" },
 ];
 
 function Withdraw() {
@@ -871,15 +871,15 @@ function Withdraw() {
             {/* UPI */}
             {selectedMethod.id.includes("upi") && (
               <div className="space-y-3 w-full">
-                {/* 5 Business Days Settlement Window Notice */}
+                {/* 2–5 Business Days Settlement Window Notice */}
                 <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 flex items-start gap-2.5 text-xs">
                   <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="font-bold text-foreground">
-                      Standard Settlement Window: 5 Business Days
+                      Standard Settlement Window: 2–5 Business Days
                     </span>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Withdrawal requests undergo multi-factor regulatory clearance and are processed across 5 business days. If statutory KYC verification is required, you will be notified to submit documents to moonlightwealthmanagement@gmail.com.
+                      Withdrawal requests undergo multi-factor regulatory clearance and typically reflect within 2–5 business days (final clearing window concludes on Day 5). If statutory KYC verification is required, you will be notified to submit documents to moonlightwealthmanagement@gmail.com.
                     </p>
                   </div>
                 </div>
@@ -1152,7 +1152,7 @@ function Withdraw() {
               <span className="text-muted-foreground">Settlement Window</span>
               <span className="font-semibold text-primary flex items-center gap-1 font-mono text-xs">
                 <Clock className="h-3 w-3" />
-                5 Business Days
+                2–5 Business Days
               </span>
             </div>
             <div className="flex justify-between pt-2 pb-2">

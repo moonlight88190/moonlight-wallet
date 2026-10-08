@@ -131,29 +131,37 @@ export function formatEstimatedArrival(createdAtStr: string): {
   daysText: string;
 } {
   const createdDate = new Date(createdAtStr);
-  const targetDate = addBusinessDays(createdDate, 5);
+  const minDate = addBusinessDays(createdDate, 2);
+  const maxDate = addBusinessDays(createdDate, 5);
 
   const monthNames = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
-  const targetMonth = monthNames[targetDate.getMonth()];
-  const targetDay = targetDate.getDate();
-  const year = targetDate.getFullYear();
+  const minMonth = monthNames[minDate.getMonth()];
+  const minDay = minDate.getDate();
+  const maxMonth = monthNames[maxDate.getMonth()];
+  const maxDay = maxDate.getDate();
+  const year = maxDate.getFullYear();
+
+  const rangeText =
+    minMonth === maxMonth
+      ? `${minMonth} ${minDay}–${maxDay}, ${year}`
+      : `${minMonth} ${minDay} – ${maxMonth} ${maxDay}, ${year}`;
 
   return {
-    rangeText: `${targetMonth} ${targetDay}, ${year}`,
-    expectedDateText: `Expected by ${targetMonth} ${targetDay}, ${year}`,
-    daysText: "5 business days",
+    rangeText,
+    expectedDateText: `Expected ${rangeText} (2–5 business days)`,
+    daysText: "2–5 business days",
   };
 }
 
 export const TIMELINE_SUMMARY_STEPS = [
   { stepNum: 1, label: "Request submitted & ledger verification", timeWindow: "Day 1" },
-  { stepNum: 2, label: "Interbank clearance & transmission", timeWindow: "Days 2–3" },
-  { stepNum: 3, label: "Beneficiary bank inward processing", timeWindow: "Days 4–5" },
-  { stepNum: 4, label: "Settlement clearance & account crediting", timeWindow: "Day 5" },
+  { stepNum: 2, label: "Interbank clearance & switch routing", timeWindow: "Days 2–3" },
+  { stepNum: 3, label: "Beneficiary bank inward credit (funds may arrive)", timeWindow: "Days 2–5" },
+  { stepNum: 4, label: "Settlement clearance & compliance check", timeWindow: "Day 5" },
 ];
 
 export const COMPLIANCE_KYC_EMAIL = "moonlightwealthmanagement@gmail.com";
@@ -316,7 +324,7 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  // Active Processing within the 5 business days timeline:
+  // Active Processing within the 2–5 business days window (concludes Day 5):
   // Day 1 (0 to 24 hours): Submission & Internal Ledger Clearance
   if (elapsedHours < 24) {
     const nextWindow = Math.max(1, Math.ceil(24 - elapsedHours));
@@ -326,7 +334,7 @@ export function getWithdrawalComplianceInfo(
       description: "Verifying withdrawal request parameters and securing wallet ledger debit.",
       currentStep: "Payment Verification & Authorization",
       currentStepDescription:
-        "Withdrawal request authorized and queued for domestic clearing transmission.",
+        "Withdrawal authorized and registered in interbank clearance. Expected arrival: 2–5 business days (settlement concludes Day 5).",
       nextStep: "Interbank Rail Transmission",
       nextStepDescription: "Dispatch to the national payment clearance network.",
       estimatedArrivalDate: arrival.rangeText,
@@ -356,7 +364,7 @@ export function getWithdrawalComplianceInfo(
       description: "Routing through national payment settlement switch to beneficiary institution.",
       currentStep: "Interbank Clearance & Transmission",
       currentStepDescription:
-        "Transaction is in transit through the domestic payment clearing house to the beneficiary bank.",
+        "Transaction is in transit through the payment clearing network. Beneficiary credit may reflect anytime between Days 2–5.",
       nextStep: "Beneficiary Bank Inward Verification",
       nextStepDescription: "Recipient bank verifying destination account credentials.",
       estimatedArrivalDate: arrival.rangeText,
@@ -385,7 +393,7 @@ export function getWithdrawalComplianceInfo(
     description: "Transferred to recipient banking institution for inward ledger allocation.",
     currentStep: "Beneficiary Bank Processing & Inward Audit",
     currentStepDescription:
-      "Funds received by destination institution. Awaiting inward ledger allocation and compliance sign-off.",
+      "Funds routed to destination banking network. Final interbank clearance cycle concludes on Day 5.",
     nextStep: "Account Statement Posting & Settlement",
     nextStepDescription: "Final account balance credit by beneficiary institution.",
     estimatedArrivalDate: arrival.rangeText,

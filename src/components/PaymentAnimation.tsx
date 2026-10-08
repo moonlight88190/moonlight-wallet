@@ -137,10 +137,10 @@ function WithdrawalAnimationView({
       icon: FileCheck2,
     },
     {
-      title: "Queued for 5-Day Interbank Settlement",
-      description: "Payout registered in national clearing batch. Scheduled across 5 business days cycle",
-      pill: "5-Day Queue",
-      corridorStatus: "Queued (5 Days)",
+      title: "Dispatched to Interbank Settlement Rail",
+      description: "Payout registered in national clearing network. Typical arrival: 2–5 business days (cycle concludes Day 5)",
+      pill: "2–5 Day Rail",
+      corridorStatus: "Clearing Rail (2–5 Days)",
       progress: 100,
       icon: Landmark,
     },
@@ -248,7 +248,7 @@ function WithdrawalAnimationView({
             </span>
           </div>
           <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/25">
-            5 Business Days Window
+            2–5 Business Days Window
           </span>
         </div>
 
@@ -450,7 +450,7 @@ function WithdrawalAnimationView({
           })}
         </div>
 
-        {/* ─── 5-Day Delivery Window Reassurance Card ─── */}
+        {/* ─── 2–5 Business Days Delivery Window Reassurance Card ─── */}
         <div className="flex items-center justify-between rounded-2xl bg-muted/40 border border-border/50 p-3.5 text-xs">
           <div className="flex items-center gap-2.5">
             <div className="h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center text-primary shrink-0">
@@ -458,15 +458,15 @@ function WithdrawalAnimationView({
             </div>
             <div>
               <p className="font-semibold text-foreground text-[11px]">
-                Standard Interbank Settlement Timeline
+                Interbank Settlement Window
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Verified and processed over 5 business days
+                Funds typically arrive within 2–5 business days (clearing concludes Day 5)
               </p>
             </div>
           </div>
           <span className="text-[11px] font-bold text-primary font-mono shrink-0 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-            5 Days
+            2–5 Days
           </span>
         </div>
 
@@ -512,7 +512,7 @@ function WithdrawalAnimationView({
                 <span>Withdrawal Submitted — Processing</span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Your payout request has been registered in the 5 business days interbank settlement cycle.
+                Your payout request has been registered with the clearing network. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).
               </p>
               <div className="rounded-xl bg-card/80 border border-emerald-500/20 p-2.5 text-[11px] text-muted-foreground text-left space-y-1">
                 <div className="flex items-center gap-1.5 text-foreground font-semibold text-[11px]">
@@ -534,7 +534,7 @@ function WithdrawalAnimationView({
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-xs font-bold tracking-wider uppercase text-primary-foreground shadow-md hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer touch-manipulation"
               >
                 <Receipt className="h-4 w-4" />
-                <span>Track 5-Day Settlement Steps</span>
+                <span>Track Settlement Progress</span>
               </button>
             )}
 

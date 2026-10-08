@@ -67,15 +67,23 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
       targetUserId = wd.user_id;
 
-      // Settlement timeframe (5 business days)
+      // Settlement timeframe (2–5 business days, concludes Day 5)
       const createdDate = new Date(wd.created_at);
-      let count = 0;
-      const targetArrival = new Date(createdDate);
-      while (count < 5) {
-        targetArrival.setDate(targetArrival.getDate() + 1);
-        if (targetArrival.getDay() !== 0 && targetArrival.getDay() !== 6) count++;
+      let countMin = 0;
+      const minArrival = new Date(createdDate);
+      while (countMin < 2) {
+        minArrival.setDate(minArrival.getDate() + 1);
+        if (minArrival.getDay() !== 0 && minArrival.getDay() !== 6) countMin++;
       }
-      const arrivalFormatted = `5 business days (est. ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(targetArrival)})`;
+      let countMax = 0;
+      const maxArrival = new Date(createdDate);
+      while (countMax < 5) {
+        maxArrival.setDate(maxArrival.getDate() + 1);
+        if (maxArrival.getDay() !== 0 && maxArrival.getDay() !== 6) countMax++;
+      }
+      const minFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(minArrival);
+      const maxFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(maxArrival);
+      const arrivalFormatted = `2–5 business days (${minFmt} – ${maxFmt})`;
 
       const feeAmt = Number(wd.fee ?? Number(wd.amount) * 0.1);
       const netPayout = Number(wd.recipient_amount ?? Number(wd.amount) - feeAmt);
@@ -100,7 +108,7 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
             eventType === "withdrawal_kyc_required"
               ? "Customer Due Diligence & KYC Submission"
               : eventType === "withdrawal_processing"
-                ? "Withdrawal is being processed (5 Days)"
+                ? "Withdrawal is being processed (2–5 Days)"
                 : eventType === "withdrawal_completed"
                   ? "Final settlement & credited"
                   : "Withdrawal request received",

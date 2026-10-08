@@ -532,7 +532,7 @@ function Receipt() {
               </div>
             ) : complianceInfo.isHold ? (
               <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                Standard operational clearing review in progress. Delivery remains expected within 5 business days.
+                Standard operational clearing review in progress. Delivery expected within 2–5 business days (clearing window concludes Day 5).
               </p>
             ) : null}
           </div>
