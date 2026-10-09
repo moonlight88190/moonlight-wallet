@@ -85,6 +85,13 @@
       "when": 1791480503890,
       "tag": "0011_kyc_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791517583021,
+      "tag": "0012_kyc_per_withdrawal_only",
+      "breakpoints": true
     }
   ]
 }
