@@ -31,6 +31,7 @@ import {
   FileText,
   CreditCard,
   History,
+  IdCard,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,8 @@ import {
   adminListTransactions,
   adminGlobalSearch,
   adminListAuditLogs,
+  adminListKyc,
+  adminReviewKyc,
 } from "@/lib/admin.functions";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -145,6 +148,7 @@ type Section =
   | "users"
   | "controls"
   | "search"
+  | "kyc"
   | "activity";
 
 const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
@@ -155,6 +159,7 @@ const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "transactions", label: "Transactions", icon: List },
   { id: "controls", label: "Account Controls", icon: ShieldCheck },
   { id: "search", label: "Global Search", icon: Search },
+  { id: "kyc", label: "KYC Review", icon: IdCard },
   { id: "activity", label: "Security & Audit", icon: Activity },
 ];
 
@@ -391,6 +396,7 @@ function Admin() {
             }}
           />
         )}
+        {section === "kyc" && <KycSection token={token} />}
         {section === "activity" && <ActivitySection token={token} />}
       </main>
     </div>
