@@ -1,4 +1,3 @@
-import { KycBanner } from "@/components/KycBanner";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -86,7 +85,6 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-2 animate-fade-up">
-      <KycBanner />
       {/* ═══════════════════════════════════════
            1. MODERN ACCOUNT & BALANCE CARD
          ═══════════════════════════════════════ */}

@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS withdrawals_enforce_kyc ON public.withdrawals;

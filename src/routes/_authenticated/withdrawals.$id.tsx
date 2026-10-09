@@ -389,9 +389,19 @@ function WithdrawalReceipt() {
                 </button>
               </div>
 
+              <Link
+                to="/kyc"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-card font-semibold text-xs py-2.5 min-h-[44px]"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Complete KYC</span>
+              </Link>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Upload your live or recent photo and ID in Complete KYC, and also email the same photos to the address above.
+              </p>
               {/* Action: Open Email Client */}
               <a
-                href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Payout Ref: ${wd.reference}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Team,\n\nPlease find attached my identity verification (KYC) documents for my withdrawal payout.\n\nWithdrawal Reference: ${wd.reference}\nFull Name: ${wd.full_name}\nAmount: ${formatMoney(grossAmount, displayCurrency)}\nPayout Method: ${displayMethod}\nDestination: ${wd.upi_id || wd.phone || displayMethod}\n\nAttached Documents:\n1. Government-issued Photo ID (Passport / National ID / Driving License)\n2. Bank Statement / Account Proof\n\nThank you,\n${wd.full_name}`)}`}
+                href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Payout Ref: ${wd.reference}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Team,\n\nPlease find attached my identity verification (KYC) documents for my withdrawal payout.\n\nWithdrawal Reference: ${wd.reference}\nFull Name: ${wd.full_name}\nAmount: ${formatMoney(grossAmount, displayCurrency)}\nPayout Method: ${displayMethod}\nDestination: ${wd.upi_id || wd.phone || displayMethod}\n\nAttached Documents:\n1. Live or recent photo matching the document below\n2. ID document (School ID / College ID / Library ID / Aadhaar / PAN / Driving Licence)\n\nThank you,\n${wd.full_name}`)}`}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs py-2.5 shadow-sm transition-colors cursor-pointer"
               >
                 <Mail className="h-3.5 w-3.5" />
