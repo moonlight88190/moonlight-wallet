@@ -31,6 +31,7 @@ import {
   FileText,
   CreditCard,
   History,
+  IdCard,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,8 @@ import {
   adminListTransactions,
   adminGlobalSearch,
   adminListAuditLogs,
+  adminListKyc,
+  adminReviewKyc,
 } from "@/lib/admin.functions";
 import { formatMoney } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -145,6 +148,7 @@ type Section =
   | "users"
   | "controls"
   | "search"
+  | "kyc"
   | "activity";
 
 const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
@@ -155,6 +159,7 @@ const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "transactions", label: "Transactions", icon: List },
   { id: "controls", label: "Account Controls", icon: ShieldCheck },
   { id: "search", label: "Global Search", icon: Search },
+  { id: "kyc", label: "KYC Review", icon: IdCard },
   { id: "activity", label: "Security & Audit", icon: Activity },
 ];
 
@@ -391,6 +396,7 @@ function Admin() {
             }}
           />
         )}
+        {section === "kyc" && <KycSection token={token} />}
         {section === "activity" && <ActivitySection token={token} />}
       </main>
     </div>
@@ -2604,6 +2610,187 @@ function ActivitySection({ token }: { token: string }) {
           })
         )}
       </div>
+    </div>
+  );
+}
+
+type KycItem = {
+  id: string;
+  user_id: string;
+  doc_type: string;
+  status: string;
+  review_note: string | null;
+  created_at: string;
+  full_name: string;
+  email: string;
+  selfie_url: string | null;
+  doc_url: string | null;
+};
+
+const DOC_LABELS: Record<string, string> = {
+  aadhaar: "Aadhaar",
+  pan: "PAN Card",
+  driving_license: "Driving Licence",
+  school_id: "School ID",
+  college_id: "College ID",
+  library_id: "Library ID",
+};
+
+function KycSection({ token }: { token: string }) {
+  const listFn = useServerFn(adminListKyc);
+  const reviewFn = useServerFn(adminReviewKyc);
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<KycItem[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [note, setNote] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const res = await listFn({ data: { token } });
+      setItems(res.items as KycItem[]);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, listFn]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function review(id: string, decision: "approved" | "rejected") {
+    setBusyId(id);
+    try {
+      await reviewFn({ data: { token, id, decision, note: note[id]?.trim() || undefined } });
+      toast.success(decision === "approved" ? "KYC approved" : "KYC rejected");
+      await load();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          Review submitted identity photos and documents.
+        </p>
+        <button
+          type="button"
+          onClick={load}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card hover:bg-secondary cursor-pointer"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+        </button>
+      </div>
+
+      {loading && items.length === 0 ? (
+        <div className="p-8 text-center text-xs text-muted-foreground rounded-2xl border border-border bg-card">
+          <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
+          Loading submissions...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="p-8 text-center text-xs text-muted-foreground rounded-2xl border border-border bg-card">
+          No KYC submissions yet.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((k) => (
+            <div key={k.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold">{k.full_name || "Unnamed user"}</p>
+                  <p className="text-[11px] text-muted-foreground">{k.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-border px-2.5 py-1 text-[11px] font-medium">
+                    {DOC_LABELS[k.doc_type] ?? k.doc_type}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                      k.status === "approved" && "bg-success/15 text-success",
+                      k.status === "rejected" && "bg-destructive/15 text-destructive",
+                      k.status === "pending" && "bg-gold/15 text-gold",
+                    )}
+                  >
+                    {k.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={k.selfie_url ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block overflow-hidden rounded-xl border border-border bg-background"
+                >
+                  {k.selfie_url ? (
+                    <img src={k.selfie_url} alt="User photo" className="h-40 w-full object-contain" />
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-[11px] text-muted-foreground">Photo unavailable</div>
+                  )}
+                  <p className="p-1.5 text-center text-[10px] text-muted-foreground">Live photo</p>
+                </a>
+                <a
+                  href={k.doc_url ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block overflow-hidden rounded-xl border border-border bg-background"
+                >
+                  {k.doc_url ? (
+                    <img src={k.doc_url} alt="ID document" className="h-40 w-full object-contain" />
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-[11px] text-muted-foreground">Document unavailable</div>
+                  )}
+                  <p className="p-1.5 text-center text-[10px] text-muted-foreground">ID document</p>
+                </a>
+              </div>
+
+              {k.review_note && (
+                <p className="text-[11px] text-muted-foreground">Note: {k.review_note}</p>
+              )}
+
+              {k.status === "pending" && (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Review note (optional)"
+                    value={note[k.id] ?? ""}
+                    onChange={(e) => setNote((n) => ({ ...n, [k.id]: e.target.value }))}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={busyId === k.id}
+                      onClick={() => review(k.id, "approved")}
+                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-success text-success-foreground text-sm font-semibold disabled:opacity-50 cursor-pointer"
+                    >
+                      {busyId === k.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === k.id}
+                      onClick={() => review(k.id, "rejected")}
+                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-50 cursor-pointer"
+                    >
+                      {busyId === k.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
