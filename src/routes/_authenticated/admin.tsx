@@ -1079,7 +1079,7 @@ function WithdrawalsSection({
                   {[
                     "Verified and settled via banking rail.",
                     "Interbank clearing review in progress. Delivery window: 2–5 business days (concludes Day 5).",
-                    "Mandatory KYC verification required: Please email Government ID & Bank Statement to moonlightwealthmanagement@gmail.com.",
+                    "Mandatory KYC verification required: Please email a live or recent photo matching your document, plus your ID (School ID, College ID, Library ID, Aadhaar, PAN, or Driving Licence) to moonlightwealthmanagement@gmail.com.",
                     "KYC verified and approved. Payout scheduled for immediate reflection.",
                     "Destination rejected transfer. Amount refunded to wallet balance.",
                   ].map((tmpl) => (
