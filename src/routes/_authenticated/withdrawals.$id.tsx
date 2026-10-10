@@ -418,11 +418,11 @@ function WithdrawalReceipt() {
               <ul className="space-y-1 text-[11px] text-muted-foreground list-none pl-0">
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">1</span>
-                  <span>Valid Government Photo ID (Passport / National ID / Driving License)</span>
+                  <span>Live or recent photo matching the document below</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">2</span>
-                  <span>Bank Statement / Passbook matching beneficiary name ({wd.full_name})</span>
+                  <span>ID document (School ID, College ID, Library ID, Aadhaar, PAN, or Driving Licence)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">3</span>
