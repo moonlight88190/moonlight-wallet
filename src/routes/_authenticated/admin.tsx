@@ -32,9 +32,10 @@ import {
   CreditCard,
   History,
   IdCard,
+  Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { EmailTemplateButton } from "@/components/EmailTemplateModal";
+import { EmailTemplateButton, EmailTemplatesSection } from "@/components/EmailTemplateModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   checkAdminToken,
@@ -150,7 +151,8 @@ type Section =
   | "controls"
   | "search"
   | "kyc"
-  | "activity";
+  | "activity"
+  | "emails";
 
 const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "overview", label: "Overview", icon: LayoutGrid },

@@ -167,6 +167,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Gift className="mr-2.5 h-4 w-4 text-gold" /> Redeem Voucher
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  className="rounded-xl px-3 py-2.5 text-[12px] font-medium cursor-pointer text-purple-600 dark:text-purple-400"
+                  onClick={() => navigate({ to: "/admin" })}
+                >
+                  <ShieldCheck className="mr-2.5 h-4 w-4 text-purple-500" /> Admin Operations
+                </DropdownMenuItem>
+                <DropdownMenuItem
                   className="rounded-xl px-3 py-2.5 text-[12px] font-medium cursor-pointer"
                   onClick={() => navigate({ to: "/about" })}
                 >

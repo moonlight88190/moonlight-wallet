@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   Mail,
   Copy,
   Check,
@@ -17,6 +10,7 @@ import {
   ArrowUpRight,
   Sparkles,
   Info,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -562,9 +556,30 @@ export function EmailTemplateModal({
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onOpenChange]);
+
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-border bg-card">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onOpenChange(false);
+      }}
+    >
+      <div
+        className="w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border border-border bg-card shadow-2xl relative animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Header */}
         <div className="p-5 border-b border-border bg-secondary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-0.5">
@@ -572,16 +587,16 @@ export function EmailTemplateModal({
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Mail className="h-4 w-4" />
               </div>
-              <DialogTitle className="text-base font-bold text-foreground">
+              <h2 className="text-base font-bold text-foreground">
                 Email Notification Template
-              </DialogTitle>
+              </h2>
               <span className="text-[10px] uppercase font-mono font-bold bg-primary/15 text-primary px-2 py-0.5 rounded-full">
                 Auto-Filled
               </span>
             </div>
-            <DialogDescription className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Official HTML email pre-populated with this transaction's details. Ready to copy in 1 tap.
-            </DialogDescription>
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -620,6 +635,15 @@ export function EmailTemplateModal({
                   <span>1-Tap Copy HTML</span>
                 </>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-secondary hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer ml-1"
+              title="Close modal"
+            >
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -882,8 +906,8 @@ export function EmailTemplateModal({
             </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 
@@ -911,6 +935,7 @@ export function EmailTemplateButton({
       <button
         type="button"
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           setOpen(true);
         }}
@@ -940,5 +965,332 @@ export function EmailTemplateButton({
         />
       )}
     </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// STANDALONE EMAIL TEMPLATES SUITE COMPONENT
+// ─────────────────────────────────────────────
+
+export function EmailTemplatesSection() {
+  const [tab, setTab] = useState<EmailTemplateType>("money_received");
+  const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
+
+  const [mrRecipient, setMrRecipient] = useState("Jane Doe");
+  const [mrSender, setMrSender] = useState("Acme Corp");
+  const [mrAmount, setMrAmount] = useState("1,500.00");
+  const [mrCurrency, setMrCurrency] = useState("USD");
+  const [mrDate, setMrDate] = useState(new Date().toLocaleString());
+  const [mrRef, setMrRef] = useState("TXN-9843-0211");
+
+  const [wdRecipient, setWdRecipient] = useState("Jane Doe");
+  const [wdAmount, setWdAmount] = useState("500.00");
+  const [wdCurrency, setWdCurrency] = useState("USD");
+  const [wdMethod, setWdMethod] = useState("UPI / Instant Payout");
+  const [wdDate, setWdDate] = useState(new Date().toLocaleString());
+  const [wdRef, setWdRef] = useState("MLW-8392-1049");
+  const [wdStatus, setWdStatus] = useState("SUCCESSFUL");
+
+  const [kycRecipient, setKycRecipient] = useState("Jane Doe");
+  const [kycAmount, setKycAmount] = useState("2,500.00");
+  const [kycCurrency, setKycCurrency] = useState("USD");
+  const [kycSender, setKycSender] = useState("John Smith");
+  const [kycRef, setKycRef] = useState("TXN-5541-9920");
+  const [kycDate, setKycDate] = useState(new Date().toLocaleString());
+
+  const generatedHtml = useMemo(() => {
+    if (tab === "money_received") {
+      return buildMoneyReceivedHtml({
+        recipientName: mrRecipient,
+        senderName: mrSender,
+        amount: mrAmount,
+        currency: mrCurrency,
+        date: mrDate,
+        reference: mrRef,
+      });
+    }
+    if (tab === "withdrawal") {
+      return buildWithdrawalHtml({
+        recipientName: wdRecipient,
+        amount: wdAmount,
+        currency: wdCurrency,
+        method: wdMethod,
+        date: wdDate,
+        reference: wdRef,
+        status: wdStatus,
+      });
+    }
+    return buildKycHoldHtml({
+      recipientName: kycRecipient,
+      amount: kycAmount,
+      currency: kycCurrency,
+      senderName: kycSender,
+      reference: kycRef,
+      date: kycDate,
+    });
+  }, [
+    tab,
+    mrRecipient,
+    mrSender,
+    mrAmount,
+    mrCurrency,
+    mrDate,
+    mrRef,
+    wdRecipient,
+    wdAmount,
+    wdCurrency,
+    wdMethod,
+    wdDate,
+    wdRef,
+    wdStatus,
+    kycRecipient,
+    kycAmount,
+    kycCurrency,
+    kycSender,
+    kycRef,
+    kycDate,
+  ]);
+
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(generatedHtml);
+    setCopied(true);
+    toast.success("✅ HTML email copied to clipboard! Paste directly into Gmail or Outlook.");
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Email Notification Center</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Official company HTML templates with Moonlight branding and email client compatibility.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-md cursor-pointer"
+        >
+          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
+        <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+        <div className="text-xs space-y-1">
+          <p className="font-semibold text-foreground">💡 1-Tap Auto-Filled Email Templates on Every Row</p>
+          <p className="text-muted-foreground leading-relaxed">
+            You don't need to manually type customer details! An <span className="font-bold text-purple-600 dark:text-purple-400">"Email Template"</span> button is placed directly on every transaction in the <strong>Transactions</strong> and <strong>Withdrawals</strong> tabs. Clicking it opens the pre-filled email with that transaction's exact amount, currency, reference ID, and dates ready to copy in 1 tap.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 flex-wrap border-b border-border pb-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setTab("money_received")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
+              tab === "money_received"
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            💰 Money Received
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("withdrawal")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
+              tab === "withdrawal"
+                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            🏦 Withdrawal
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("kyc_hold")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer",
+              tab === "kyc_hold"
+                ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            🔒 KYC Hold (5-Digit Key)
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-xl bg-secondary p-0.5">
+          <button
+            type="button"
+            onClick={() => setPreviewMode("visual")}
+            className={cn(
+              "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors",
+              previewMode === "visual" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground",
+            )}
+          >
+            Visual Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => setPreviewMode("html")}
+            className={cn(
+              "px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors",
+              previewMode === "html" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground",
+            )}
+          >
+            HTML Code
+          </button>
+        </div>
+      </div>
+
+      {tab === "kyc_hold" && (
+        <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3.5 text-xs space-y-1.5">
+          <p className="font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider text-[11px]">
+            📋 5-Digit Key Verification Flow Included
+          </p>
+          <p className="text-purple-800 dark:text-purple-200 text-[11px] leading-relaxed">
+            The email explains that once KYC is verified, a 5-digit key is sent to the sender ({kycSender}). The recipient contacts them, obtains the key, and submits it to Moonlight for instant fund release. If unreachable, Moonlight also sends a key directly.
+          </p>
+        </div>
+      )}
+
+      {/* Inputs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-secondary/30 p-4 rounded-2xl border border-border">
+        {tab === "money_received" && (
+          <>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Recipient Name</label>
+              <input value={mrRecipient} onChange={(e) => setMrRecipient(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender Name</label>
+              <input value={mrSender} onChange={(e) => setMrSender(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
+              <input value={mrAmount} onChange={(e) => setMrAmount(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Currency</label>
+              <input value={mrCurrency} onChange={(e) => setMrCurrency(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs uppercase" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Date</label>
+              <input value={mrDate} onChange={(e) => setMrDate(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Reference ID</label>
+              <input value={mrRef} onChange={(e) => setMrRef(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+          </>
+        )}
+
+        {tab === "withdrawal" && (
+          <>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Recipient Name</label>
+              <input value={wdRecipient} onChange={(e) => setWdRecipient(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
+              <input value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Currency</label>
+              <input value={wdCurrency} onChange={(e) => setWdCurrency(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs uppercase" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Payout Method</label>
+              <input value={wdMethod} onChange={(e) => setWdMethod(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Status</label>
+              <select value={wdStatus} onChange={(e) => setWdStatus(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-2 text-xs font-semibold">
+                <option value="SUCCESSFUL">SUCCESSFUL</option>
+                <option value="PROCESSING">PROCESSING</option>
+                <option value="ON HOLD">ON HOLD</option>
+                <option value="UNDER REVIEW">UNDER REVIEW</option>
+                <option value="FAILED">FAILED</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Reference ID</label>
+              <input value={wdRef} onChange={(e) => setWdRef(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+          </>
+        )}
+
+        {tab === "kyc_hold" && (
+          <>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Recipient Name</label>
+              <input value={kycRecipient} onChange={(e) => setKycRecipient(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender Name</label>
+              <input value={kycSender} onChange={(e) => setKycSender(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
+              <input value={kycAmount} onChange={(e) => setKycAmount(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Currency</label>
+              <input value={kycCurrency} onChange={(e) => setKycCurrency(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs uppercase" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Reference ID</label>
+              <input value={kycRef} onChange={(e) => setKycRef(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Date</label>
+              <input value={kycDate} onChange={(e) => setKycDate(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs" />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Preview Card */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-4 py-2 border-b border-border bg-secondary/30 flex items-center justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {previewMode === "visual" ? "Visual Render" : "HTML Source Code"}
+          </span>
+          <button
+            type="button"
+            onClick={copy}
+            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <Copy className="h-3 w-3" />
+            <span>{copied ? "Copied!" : "Copy HTML"}</span>
+          </button>
+        </div>
+
+        {previewMode === "visual" ? (
+          <div className="p-4 bg-muted/30 flex justify-center">
+            <iframe
+              title="Email Visual Preview"
+              srcDoc={generatedHtml}
+              className="w-full max-w-[650px] h-[520px] rounded-xl border border-border shadow-sm bg-white"
+              sandbox="allow-same-origin"
+            />
+          </div>
+        ) : (
+          <pre className="p-4 text-[11px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-[520px] leading-relaxed select-all">
+            {generatedHtml}
+          </pre>
+        )}
+      </div>
+    </div>
   );
 }
