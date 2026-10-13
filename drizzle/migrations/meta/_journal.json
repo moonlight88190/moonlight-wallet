@@ -71,6 +71,27 @@
       "when": 1791092275666,
       "tag": "0009_add_admin_region_override",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791480157297,
+      "tag": "0010_withdrawal_status_map_on_hold",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791480503890,
+      "tag": "0011_kyc_submissions",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791517583021,
+      "tag": "0012_kyc_per_withdrawal_only",
+      "breakpoints": true
     }
   ]
 }

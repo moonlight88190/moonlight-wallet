@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin-access'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedMarketsRouteImport } from './routes/_authenticated/markets'
 import { Route as AuthenticatedReceiveRouteImport } from './routes/_authenticated/receive'
 import { Route as AuthenticatedRedeemRouteImport } from './routes/_authenticated/redeem'
@@ -78,6 +79,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMarketsRoute = AuthenticatedMarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-access': typeof AuthenticatedAdminAccessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/markets': typeof AuthenticatedMarketsRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-access': typeof AuthenticatedAdminAccessRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/markets': typeof AuthenticatedMarketsRoute
   '/receive': typeof AuthenticatedReceiveRoute
   '/redeem': typeof AuthenticatedRedeemRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/markets': typeof AuthenticatedMarketsRoute
   '/_authenticated/receive': typeof AuthenticatedReceiveRoute
   '/_authenticated/redeem': typeof AuthenticatedRedeemRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-access'
     | '/dashboard'
+    | '/kyc'
     | '/markets'
     | '/receive'
     | '/redeem'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin-access'
     | '/dashboard'
+    | '/kyc'
     | '/markets'
     | '/receive'
     | '/redeem'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/admin-access'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kyc'
     | '/_authenticated/markets'
     | '/_authenticated/receive'
     | '/_authenticated/redeem'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/markets': {
       id: '/_authenticated/markets'
       path: '/markets'
@@ -387,6 +406,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarketsRoute: typeof AuthenticatedMarketsRoute
   AuthenticatedReceiveRoute: typeof AuthenticatedReceiveRoute
   AuthenticatedRedeemRoute: typeof AuthenticatedRedeemRoute
@@ -401,6 +421,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarketsRoute: AuthenticatedMarketsRoute,
   AuthenticatedReceiveRoute: AuthenticatedReceiveRoute,
   AuthenticatedRedeemRoute: AuthenticatedRedeemRoute,

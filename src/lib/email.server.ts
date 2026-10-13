@@ -23,7 +23,9 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
     isServiceRole,
   } = params;
 
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabaseAdmin = _admin as any;
 
   const resendApiKey = process.env["RESEND_API_KEY"] || "";
   const resendFromEmail = process.env["RESEND_FROM_EMAIL"] || "Moonlight <onboarding@resend.dev>";
