@@ -25,7 +25,6 @@ import { BrandAsset, GiftCardImage, CountryFlag } from "@/components/AssetCompon
 import { resolvePaymentAsset } from "@/lib/assets";
 import { resolveTransactionRoute } from "@/lib/routes";
 import { LogoMark } from "@/components/Logo";
-import { EmailTemplateButton } from "@/components/EmailTemplateModal";
 import { cn } from "@/lib/utils";
 import {
   getWithdrawalComplianceInfo,
@@ -260,10 +259,10 @@ function Receipt() {
   // Compliance info for withdrawals
   const complianceInfo = isWithdrawal
     ? getWithdrawalComplianceInfo(rawData.created_at, rawData.status, {
-        isUPI,
-        method: rawData.recipient_name || rawData.route || undefined,
-        route: rawData.route || undefined,
-      })
+      isUPI,
+      method: rawData.recipient_name || rawData.route || undefined,
+      route: rawData.route || undefined,
+    })
     : null;
   // Counterparty resolution for direct Pay Back / Send Again actions
   const myWalletId = wallet.data?.id;
@@ -303,30 +302,6 @@ function Receipt() {
           Activity
         </Link>
         <div className="flex items-center gap-1.5">
-          <EmailTemplateButton
-            data={{
-              type: isWithdrawal
-                ? "withdrawal"
-                : rawData.status?.toUpperCase() === "ON HOLD"
-                  ? "kyc_hold"
-                  : "money_received",
-              recipientName:
-                counterpartyName ||
-                rawData.recipient_name ||
-                rawData.full_name ||
-                profile.data?.full_name ||
-                "Valued Customer",
-              senderName: rawData.sender_name || "Moonlight Financial",
-              amount: netAmount,
-              currency: recipientCurrency || currency,
-              reference: rawData.reference || rawData.reference_code || id,
-              date: new Date(rawData.created_at).toLocaleString(),
-              status: rawData.status || "COMPLETED",
-              method: rawData.method || rawData.route || "Transfer",
-            }}
-            variant="compact"
-            label="Email Template"
-          />
           <button
             onClick={handleShare}
             aria-label="Share receipt"
