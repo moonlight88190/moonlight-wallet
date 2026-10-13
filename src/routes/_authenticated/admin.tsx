@@ -1174,9 +1174,11 @@ function WithdrawalsSection({
                 <EmailTemplateButton
                   data={{
                     type:
-                      w.status === "ON HOLD" || w.status === "UNDER REVIEW"
-                        ? "kyc_hold"
-                        : "kyc_approved_key",
+                      w.status === "REJECTED"
+                        ? "kyc_rejected"
+                        : w.status === "ON HOLD" || w.status === "UNDER REVIEW"
+                          ? "kyc_hold"
+                          : "kyc_approved_key",
                     recipientName: w.full_name || w.email || "Valued Customer",
                     senderName: "Brooklyn",
                     amount: w.amount,
@@ -2423,9 +2425,11 @@ function TransactionsSection({ token }: { token: string }) {
                   <EmailTemplateButton
                     data={{
                       type:
-                        statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
-                          ? "kyc_hold"
-                          : "kyc_approved_key",
+                        statusUpper === "REJECTED"
+                          ? "kyc_rejected"
+                          : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
+                            ? "kyc_hold"
+                            : "kyc_approved_key",
                       recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
                       senderName: tx.sender_name || "Brooklyn",
                       amount: tx.amount,

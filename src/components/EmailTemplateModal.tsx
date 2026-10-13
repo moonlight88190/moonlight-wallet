@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Mail,
   Copy,
@@ -7,6 +7,7 @@ import {
   Code,
   ShieldAlert,
   KeyRound,
+  XCircle,
   X,
   ExternalLink,
   Sparkles,
@@ -14,14 +15,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { UPI_LOGO_DATA_URI } from "@/lib/upi-logo-data";
 
 export const LOGO_URL =
   "https://b17cedb7-4b7b-485c-807a-ccc6dd6383b9.lovableproject.com/__l5e/assets-v1/17db28e8-0752-4d7d-b01c-7f7f7fa7fdaa/moonlight-logo.png";
-export const UPI_LOGO_URL =
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/320px-UPI-Logo-vector.svg.png";
+export const UPI_LOGO_URL = UPI_LOGO_DATA_URI;
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
-export type EmailTemplateType = "kyc_hold" | "kyc_approved_key";
+export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "kyc_rejected";
 
 export interface EmailContextData {
   type?: EmailTemplateType;
@@ -424,6 +425,211 @@ export function buildKycApprovedKeyEmailHtml(params: {
 </html>`;
 }
 
+/**
+ * TEMPLATE 3: KYC Verification Failed — Action Required
+ * Informs customer that verification failed because photo was not taken live or did not match ID.
+ * Strongly recommends using School/College ID as student photos are recent and easiest to verify.
+ */
+export function buildKycRejectedEmailHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+}) {
+  const { recipientName, amount, currency, method, destination, reference, date } = params;
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("gpay") ||
+    method.toLowerCase().includes("phonepe");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KYC Verification Failed · Action Required — Moonlight Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail</p>
+          </td>
+        </tr>
+
+        <!-- Red Alert Failure Banner -->
+        <tr>
+          <td style="background:#dc2626;padding:12px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+              ❌ Identity Verification Failed · Action Required to Disburse Funds
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td style="padding:36px 32px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.65;">
+              Our compliance desk reviewed your submitted KYC documents for withdrawal reference <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>, but your identity verification <strong style="color:#f87171;">could not be approved</strong>.
+            </p>
+
+            <!-- Rejection Reason Notice -->
+            <div style="background:#261219;border-left:4px solid #ef4444;border-radius:10px;padding:18px 20px;margin-bottom:26px;">
+              <p style="margin:0 0 8px;font-size:13px;color:#fca5a5;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                Why Your Submission Was Rejected:
+              </p>
+              <ul style="margin:0;padding-left:18px;font-size:13px;color:#fecdd3;line-height:1.7;">
+                <li><strong>Photo not taken live:</strong> The selfie photo was not captured live (e.g. photo taken of a screen/paper photo, older gallery photo, or digital scan).</li>
+                <li><strong>Facial mismatch:</strong> The face in the selfie did not clearly match the photograph on the identification document.</li>
+              </ul>
+            </div>
+
+            <!-- School / College ID Recommendation Box -->
+            <div style="background:#131d33;border:1.5px solid #3b82f6;border-radius:14px;padding:22px 20px;margin-bottom:26px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="30" style="vertical-align:top;font-size:22px;">🎓</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#60a5fa;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Pro Tip: Use Your School ID or College ID Card
+                    </h3>
+                    <p style="margin:0 0 10px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                      We strongly advise you to submit your official <strong>School ID</strong> or <strong>College ID</strong> card for this re-verification.
+                    </p>
+                    <p style="margin:0;font-size:12px;color:#93c5fd;line-height:1.6;">
+                      <em>Why this works best:</em> Student IDs are significantly easier to verify because student photos are the most recent and up-to-date. Older government IDs often have dated childhood photos that trigger automated facial mismatch rejections.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Resubmission Checklist -->
+            <div style="background:#1a1e30;border:1px solid #2f3650;border-radius:14px;padding:20px;margin-bottom:26px;">
+              <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:1px;">
+                📋 What to Send for Immediate Approval:
+              </p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="26" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#dc2626;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">1</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#e2e8f0;line-height:1.5;">
+                    <strong style="color:#ffffff;">Fresh Live Selfie:</strong> Take a clear, front-facing live photo right now in a well-lit room with no sunglasses, caps, or filters.
+                  </td>
+                </tr>
+                <tr>
+                  <td width="26" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#dc2626;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">2</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#e2e8f0;line-height:1.5;">
+                    <strong style="color:#ffffff;">School or College ID Card:</strong> A clear photo of your School ID, College ID, or Library ID where the photo matches your live selfie.
+                  </td>
+                </tr>
+                <tr>
+                  <td width="26" style="vertical-align:top;">
+                    <div style="background:#dc2626;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">3</div>
+                  </td>
+                  <td style="font-size:12px;color:#e2e8f0;line-height:1.5;">
+                    <strong style="color:#ffffff;">Reference ID:</strong> Reply directly to this email or send to <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a> with Ref: <code style="font-family:'IBM Plex Mono',monospace;color:#fbbf24;">${reference}</code>.
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Held Payout Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
+              <tr>
+                <td style="padding:22px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">Pending Held Payout</p>
+                  <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#f87171;letter-spacing:-0.5px;">
+                    ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
+                  </p>
+                  
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${
+                          isUpi
+                            ? `<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          ${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Details Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:26px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:12px 16px;font-size:13px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:700;">${reference}</td>
+              </tr>
+              <tr style="background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">KYC Status</td>
+                <td style="padding:12px 16px;font-size:12px;color:#f87171;font-weight:700;">REJECTED — RESUBMISSION REQUIRED</td>
+              </tr>
+            </table>
+
+            <!-- Reassurance Note -->
+            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;">
+                ⚡ <strong>Priority Re-review:</strong> Upon receiving your new live selfie and school/college ID, your payout of ${amount} ${currency} will be prioritized and cleared immediately.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Institutional Footer -->
+        <tr>
+          <td style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;">
+              Moonlight Financial Clearing Operations · Internal Institutional Ledger
+            </p>
+            <p style="margin:0;color:#475569;font-size:10px;">
+              Closed-loop digital clearing simulation. For assistance, contact compliance desk at ${COMPLIANCE_EMAIL}.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // ─────────────────────────────────────────────
 // BULLETPROOF DIRECT OVERLAY EMAIL MODAL
 // ─────────────────────────────────────────────
@@ -440,7 +646,11 @@ export function EmailTemplateModal({
   initialData,
 }: EmailTemplateModalProps) {
   const [tab, setTab] = useState<EmailTemplateType>(
-    initialData?.type === "kyc_approved_key" ? "kyc_approved_key" : "kyc_hold",
+    initialData?.type === "kyc_approved_key"
+      ? "kyc_approved_key"
+      : initialData?.type === "kyc_rejected"
+        ? "kyc_rejected"
+        : "kyc_hold",
   );
   const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
 
@@ -458,6 +668,7 @@ export function EmailTemplateModal({
   useEffect(() => {
     if (initialData) {
       if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
+      else if (initialData.type === "kyc_rejected") setTab("kyc_rejected");
       else setTab("kyc_hold");
 
       if (initialData.recipientName) setRecipient(initialData.recipientName);
@@ -494,9 +705,20 @@ export function EmailTemplateModal({
         date,
       });
     }
-    return buildKycApprovedKeyEmailHtml({
+    if (tab === "kyc_approved_key") {
+      return buildKycApprovedKeyEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+      });
+    }
+    return buildKycRejectedEmailHtml({
       recipientName: recipient,
-      senderName: sender,
       amount,
       currency,
       method,
@@ -558,7 +780,7 @@ export function EmailTemplateModal({
           </button>
         </div>
 
-        {/* Template Selector (ONLY 2 TEMPLATES) */}
+        {/* Template Selector (3 SPECIALIZED CLEARANCE TEMPLATES) */}
         <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center justify-between flex-wrap gap-2 shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <button
@@ -586,6 +808,19 @@ export function EmailTemplateModal({
             >
               <KeyRound className="h-3.5 w-3.5" />
               <span>2. KYC Approved (5-Digit Sender Key)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("kyc_rejected")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                tab === "kyc_rejected"
+                  ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+              )}
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              <span>3. KYC Failed (School/College ID)</span>
             </button>
           </div>
 
@@ -722,7 +957,9 @@ export function EmailTemplateModal({
           <p className="text-[11px] text-muted-foreground">
             {tab === "kyc_hold"
               ? "Template 1: Withdrawal On Hold with exact text & document checklist matching activity page."
-              : "Template 2: Post-KYC Approval with 5-digit key requirement sent to original sender (Brooklyn)."}
+              : tab === "kyc_approved_key"
+                ? "Template 2: Post-KYC Approval with 5-digit key requirement sent to original sender (Brooklyn)."
+                : "Template 3: KYC Failed / Retry with School or College ID recommendation for latest photos."}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -833,9 +1070,20 @@ export function EmailTemplatesSection() {
         date,
       });
     }
-    return buildKycApprovedKeyEmailHtml({
+    if (tab === "kyc_approved_key") {
+      return buildKycApprovedKeyEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+      });
+    }
+    return buildKycRejectedEmailHtml({
       recipientName: recipient,
-      senderName: sender,
       amount,
       currency,
       method,
@@ -876,10 +1124,11 @@ export function EmailTemplatesSection() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
         <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-foreground">💡 2 Specialized Clearance Templates</p>
+          <p className="font-semibold text-foreground">💡 3 Specialized Clearance Templates</p>
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains the exact required documents (Live photo + matching ID) and guidance matching the activity page.<br />
-            2. <strong>KYC Approved:</strong> Sent after KYC verification. Explains the 5-digit key sent to the sender (e.g. Brooklyn) to complete the loop and prevent fraud.
+            2. <strong>KYC Approved:</strong> Sent after KYC verification. Explains the 5-digit key sent to the sender (e.g. Brooklyn) to complete the loop and prevent fraud.<br />
+            3. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID, and strongly recommends School/College ID for fresh, verifiable photos.
           </p>
         </div>
       </div>
@@ -911,6 +1160,19 @@ export function EmailTemplatesSection() {
           >
             <KeyRound className="h-3.5 w-3.5" />
             <span>2. KYC Approved (5-Digit Sender Key)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("kyc_rejected")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              tab === "kyc_rejected"
+                ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <XCircle className="h-3.5 w-3.5" />
+            <span>3. KYC Failed (School/College ID)</span>
           </button>
         </div>
 
