@@ -89,6 +89,52 @@ function buildItemizedTableHtml(
 }
 
 // ─────────────────────────────────────────────
+// EMAIL SUBJECT LINES
+// ─────────────────────────────────────────────
+
+export function getKycEmailSubject(
+  type: EmailTemplateType,
+  reference: string,
+  amount?: string,
+  currency?: string,
+): string {
+  switch (type) {
+    case "kyc_hold":
+      return `Action Required: Identity Verification Needed — Payout Ref: ${reference}`;
+    case "kyc_approved_key":
+      return `KYC Approved — Final Security Step to Release Your Payout (${amount || ""} ${currency || ""}) — Ref: ${reference}`;
+    case "kyc_rejected":
+      return `Re-submit Verification Documents — Payout Ref: ${reference}`;
+    default:
+      return `Moonlight Financial — Action Required — Ref: ${reference}`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// SHARED MOBILE-FIRST RESPONSIVE CSS BLOCK
+// ─────────────────────────────────────────────
+
+const MOBILE_EMAIL_STYLES = `
+  <style type="text/css">
+    @media only screen and (max-width: 620px) {
+      .email-wrapper { padding: 12px 4px !important; }
+      .email-card { border-radius: 14px !important; width: 100% !important; }
+      .email-header { padding: 20px 18px !important; }
+      .email-body { padding: 22px 16px !important; }
+      .email-footer { padding: 18px 16px !important; }
+      .email-logo { width: 100px !important; }
+      .email-amount { font-size: 26px !important; }
+      .email-amount-sub { font-size: 15px !important; }
+      .email-table-cell { display: block !important; width: 100% !important; padding: 8px 12px !important; }
+      .email-action-btn { padding: 14px 20px !important; font-size: 13px !important; }
+    }
+    @media only screen and (max-width: 390px) {
+      .email-amount { font-size: 22px !important; }
+    }
+  </style>
+`;
+
+// ─────────────────────────────────────────────
 // HTML EMAIL GENERATORS
 // ─────────────────────────────────────────────
 
@@ -129,20 +175,23 @@ export function buildKycHoldEmailHtml(params: {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Mandatory KYC Verification Required — Moonlight Financial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
 </head>
 <body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
 
         <!-- Brand Header -->
         <tr>
-          <td style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
-            <img src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
             <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail</p>
           </td>
         </tr>
@@ -310,15 +359,16 @@ export function buildKycHoldEmailHtml(params: {
           </td>
         </tr>
 
-        <!-- Institutional Footer -->
+        <!-- Footer -->
         <tr>
-          <td style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
-            <p style="margin:0 0 6px;color:#64748b;font-size:11px;">
-              Moonlight Financial Clearing Operations · Internal Institutional Ledger
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Compliance Notification
             </p>
-            <p style="margin:0;color:#475569;font-size:10px;">
-              Closed-loop digital clearing simulation. For support or dispute resolution, contact compliance desk at ${COMPLIANCE_EMAIL}.
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial regarding your pending withdrawal. For support or dispute resolution, contact our compliance desk at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
             </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
           </td>
         </tr>
 
@@ -369,15 +419,18 @@ export function buildKycApprovedKeyEmailHtml(params: {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>KYC Verified — 5-Digit Security Key Required — Moonlight Financial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
 </head>
 <body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
 
         <!-- Brand Header -->
         <tr>
@@ -541,15 +594,16 @@ export function buildKycApprovedKeyEmailHtml(params: {
           </td>
         </tr>
 
-        <!-- Institutional Footer -->
+        <!-- Footer -->
         <tr>
-          <td style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
-            <p style="margin:0 0 6px;color:#64748b;font-size:11px;">
-              Moonlight Financial Clearing Operations · Internal Institutional Ledger
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Compliance Notification
             </p>
-            <p style="margin:0;color:#475569;font-size:10px;">
-              Closed-loop digital clearing simulation. For assistance, reply directly to this mail or contact ${COMPLIANCE_EMAIL}.
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial regarding your pending withdrawal. For assistance, reply directly to this email or contact <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
             </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
           </td>
         </tr>
 
@@ -598,15 +652,18 @@ export function buildKycRejectedEmailHtml(params: {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>KYC Verification Failed · Action Required — Moonlight Financial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
 </head>
 <body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
 
         <!-- Brand Header -->
         <tr>
@@ -789,15 +846,16 @@ export function buildKycRejectedEmailHtml(params: {
           </td>
         </tr>
 
-        <!-- Institutional Footer -->
+        <!-- Footer -->
         <tr>
-          <td style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
-            <p style="margin:0 0 6px;color:#64748b;font-size:11px;">
-              Moonlight Financial Clearing Operations · Internal Institutional Ledger
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Compliance Notification
             </p>
-            <p style="margin:0;color:#475569;font-size:10px;">
-              Closed-loop digital clearing simulation. For assistance, contact compliance desk at ${COMPLIANCE_EMAIL}.
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial regarding your pending withdrawal. For assistance, contact our compliance desk at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
             </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
           </td>
         </tr>
 
@@ -846,6 +904,9 @@ export function EmailTemplateModal({
   );
 
   const [copied, setCopied] = useState(false);
+  const [copiedSubject, setCopiedSubject] = useState(false);
+
+  const getSubject = () => getKycEmailSubject(tab, reference, amount, currency);
 
   useEffect(() => {
     if (initialData) {
@@ -934,10 +995,21 @@ export function EmailTemplateModal({
     try {
       await navigator.clipboard.writeText(generatedHtml);
       setCopied(true);
-      toast.success("✅ Professional HTML email copied! Paste directly into Gmail, Outlook, or webmail.");
+      toast.success("✅ HTML email copied! Paste directly into Gmail or Outlook.");
       setTimeout(() => setCopied(false), 2500);
     } catch {
       toast.error("Failed to copy. Please manually select and copy the HTML.");
+    }
+  };
+
+  const copySubject = async () => {
+    try {
+      await navigator.clipboard.writeText(getSubject());
+      setCopiedSubject(true);
+      toast.success("✅ Email subject copied!");
+      setTimeout(() => setCopiedSubject(false), 2500);
+    } catch {
+      toast.error("Failed to copy subject.");
     }
   };
 
@@ -1071,14 +1143,25 @@ export function EmailTemplateModal({
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={copyToClipboard}
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer"
-            >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={copySubject}
+                title={getSubject()}
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-foreground text-xs font-semibold transition-all shadow-xs cursor-pointer"
+              >
+                {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Mail className="h-3.5 w-3.5" />}
+                <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={copyToClipboard}
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1181,15 +1264,20 @@ export function EmailTemplateModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-3 border-t border-border bg-card flex items-center justify-between shrink-0">
-          <p className="text-[11px] text-muted-foreground">
-            {tab === "kyc_hold"
-              ? "Template 1: Withdrawal On Hold with exact text & document checklist matching activity page."
-              : tab === "kyc_approved_key"
-                ? "Template 2: Post-KYC Approval with 5-digit key requirement sent to original sender (Brooklyn)."
-                : "Template 3: KYC Failed / Retry with School or College ID recommendation for latest photos."}
+        <div className="px-5 py-3 border-t border-border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shrink-0">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <span className="font-semibold text-foreground block">Subject: </span>
+            <span className="font-mono text-[10px] text-muted-foreground">{getSubject()}</span>
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={copySubject}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-xs font-semibold transition-all cursor-pointer"
+            >
+              {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Mail className="h-3.5 w-3.5" />}
+              <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+            </button>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
@@ -1322,12 +1410,26 @@ export function EmailTemplatesSection() {
   }, [tab, recipient, sender, amount, currency, method, destination, reference, date]);
 
   const [copied, setCopied] = useState(false);
+  const [copiedSubject, setCopiedSubject] = useState(false);
+
+  const getSubject = () => getKycEmailSubject(tab, reference, amount, currency);
 
   const copy = async () => {
     await navigator.clipboard.writeText(generatedHtml);
     setCopied(true);
-    toast.success("✅ Official HTML email copied! Paste directly into Gmail or Outlook.");
+    toast.success("✅ HTML email copied! Paste directly into Gmail or Outlook.");
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const copySubject = async () => {
+    try {
+      await navigator.clipboard.writeText(getSubject());
+      setCopiedSubject(true);
+      toast.success("✅ Email subject copied!");
+      setTimeout(() => setCopiedSubject(false), 2500);
+    } catch {
+      toast.error("Failed to copy subject.");
+    }
   };
 
   return (
@@ -1339,14 +1441,25 @@ export function EmailTemplatesSection() {
             Official company HTML templates with embedded UPI logos and IBM Plex typography.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={copy}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-md cursor-pointer"
-        >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={copySubject}
+            title={getSubject()}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold transition-all cursor-pointer"
+          >
+            {copiedSubject ? <Check className="h-4 w-4 text-emerald-500" /> : <Mail className="h-4 w-4" />}
+            <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={copy}
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-md cursor-pointer"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
@@ -1490,6 +1603,22 @@ export function EmailTemplatesSection() {
             className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono"
           />
         </div>
+      </div>
+
+      {/* Subject line preview */}
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Email Subject</p>
+          <p className="text-xs text-foreground font-medium truncate">{getSubject()}</p>
+        </div>
+        <button
+          type="button"
+          onClick={copySubject}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-xs font-semibold transition-all cursor-pointer shrink-0"
+        >
+          {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Mail className="h-3.5 w-3.5" />}
+          <span>{copiedSubject ? "Copied!" : "Copy Subject"}</span>
+        </button>
       </div>
 
       {/* Preview Card */}

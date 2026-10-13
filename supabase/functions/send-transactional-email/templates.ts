@@ -291,23 +291,39 @@ export function generateEmailHtml(data: TransactionEmailData): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>${config.title} — Moonlight Financial</title>
   <!--[if mso]>
   <style type="text/css">
     body, table, td, a { font-family: Arial, sans-serif !important; }
   </style>
   <![endif]-->
+  <style type="text/css">
+    @media only screen and (max-width: 620px) {
+      .email-wrapper { padding: 12px 4px !important; }
+      .email-card { border-radius: 14px !important; width: 100% !important; }
+      .email-header-cell { padding: 18px 16px !important; }
+      .email-body-cell { padding: 20px 16px !important; }
+      .email-footer-cell { padding: 18px 16px !important; }
+      .email-amount { font-size: 26px !important; }
+      .email-btn { padding: 12px 20px !important; font-size: 13px !important; }
+    }
+    @media only screen and (max-width: 390px) {
+      .email-amount { font-size: 22px !important; }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; padding: 32px 12px;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; padding: 32px 12px;">
     <tr>
       <td align="center">
         <!-- Main Card Container (Max 600px) -->
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);">
+        <table class="email-card" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);">
           
           <!-- Moonlight Brand Header -->
           <tr>
-            <td style="background-color: #090e17; padding: 28px 32px; text-align: left;">
+            <td class="email-header-cell" style="background-color: #090e17; padding: 28px 32px; text-align: left;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
@@ -436,7 +452,7 @@ export function generateEmailHtml(data: TransactionEmailData): string {
                 This transactional email was sent to <strong style="color: #64748b;">${data.recipientEmail}</strong> for your authenticated account activity.
               </p>
               <p style="margin: 0; font-size: 10px; color: #cbd5e1; line-height: 1.4;">
-                Closed-loop simulation: This environment simulates digital financial settlement rails for demonstration purposes. Funds are not connected to real-world fiat settlement without authorization.
+                This is an official notification from Moonlight Financial. If you have questions, please contact us at <a href="mailto:moonlightwealthmanagement@gmail.com" style="color: #94a3b8; text-decoration: underline;">moonlightwealthmanagement@gmail.com</a>.
               </p>
               <div style="margin-top: 14px; font-size: 10px; color: #cbd5e1;">
                 &copy; 2026 Moonlight Technologies Inc. All rights reserved.
