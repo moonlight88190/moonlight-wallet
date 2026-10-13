@@ -34,9 +34,17 @@ import {
   IdCard,
   Mail,
   KeyRound,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Layers,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EmailTemplateButton, EmailTemplatesSection } from "@/components/EmailTemplateModal";
+import {
+  consolidate7DayWithdrawals,
+  type ConsolidatedWithdrawalBatch,
+} from "@/lib/withdrawal-consolidation";
 import { supabase } from "@/integrations/supabase/client";
 import {
   verifyAdminCode,
@@ -918,7 +926,9 @@ function WithdrawalsSection({
   const updateNoteFn = useServerFn(adminUpdateWithdrawalNote);
   const [filter, setFilter] = useState<string>("ALL");
   const [q, setQ] = useState<string>("");
-  const [selectedWd, setSelectedWd] = useState<WithdrawalItem | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<ConsolidatedWithdrawalBatch | null>(null);
+  const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
+
   type WithdrawalStatus =
     | "PROCESSING"
     | "SUCCESSFUL"
@@ -941,39 +951,56 @@ function WithdrawalsSection({
     "CANCELLED",
   ];
 
+  const consolidatedBatches = useMemo(() => {
+    return consolidate7DayWithdrawals(withdrawals as any);
+  }, [withdrawals]);
+
+  const toggleExpand = (batchId: string) => {
+    setExpandedBatches((prev) => ({ ...prev, [batchId]: !prev[batchId] }));
+  };
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return withdrawals.filter((w) => {
-      const matchesFilter = filter === "ALL" || w.status === filter;
+    return consolidatedBatches.filter((b) => {
+      const matchesFilter = filter === "ALL" || b.status === filter;
       const matchesQuery =
         !s ||
         [
-          w.reference,
-          w.full_name,
-          w.email,
-          w.method,
-          w.upi_id || "",
-          w.provider || "",
-          w.reason || "",
-        ].some((v) => v.toLowerCase().includes(s));
+          b.primaryReference,
+          b.beneficiaryName,
+          b.email,
+          b.method,
+          b.upiId || "",
+          b.provider || "",
+          b.reason || "",
+          ...b.withdrawals.map((w) => w.reference),
+        ].some((v) => (v || "").toLowerCase().includes(s));
       return matchesFilter && matchesQuery;
     });
-  }, [withdrawals, filter, q]);
+  }, [consolidatedBatches, filter, q]);
 
   async function handleUpdateStatus() {
-    if (!selectedWd) return;
+    if (!selectedBatch) return;
     setBusy(true);
     try {
-      await updateStatusFn({
-        data: {
-          token,
-          withdrawalId: selectedWd.id,
-          newStatus,
-          reason: statusReason.trim() || undefined,
-        },
-      });
-      toast.success(`Withdrawal status updated to ${newStatus} & note saved.`);
-      setSelectedWd(null);
+      await Promise.all(
+        selectedBatch.withdrawals.map((w) =>
+          updateStatusFn({
+            data: {
+              token,
+              withdrawalId: w.id,
+              newStatus,
+              reason: statusReason.trim() || undefined,
+            },
+          }),
+        ),
+      );
+      toast.success(
+        selectedBatch.count > 1
+          ? `All ${selectedBatch.count} withdrawals in 7-day batch updated to ${newStatus} & note saved.`
+          : `Withdrawal status updated to ${newStatus} & note saved.`,
+      );
+      setSelectedBatch(null);
       setStatusReason("");
       onDone();
     } catch (e) {
@@ -984,18 +1011,26 @@ function WithdrawalsSection({
   }
 
   async function handleUpdateNoteOnly() {
-    if (!selectedWd) return;
+    if (!selectedBatch) return;
     setBusy(true);
     try {
-      await updateNoteFn({
-        data: {
-          token,
-          withdrawalId: selectedWd.id,
-          note: statusReason.trim(),
-        },
-      });
-      toast.success("Moonlight custom note saved to user receipt.");
-      setSelectedWd(null);
+      await Promise.all(
+        selectedBatch.withdrawals.map((w) =>
+          updateNoteFn({
+            data: {
+              token,
+              withdrawalId: w.id,
+              note: statusReason.trim(),
+            },
+          }),
+        ),
+      );
+      toast.success(
+        selectedBatch.count > 1
+          ? `Moonlight note saved to all ${selectedBatch.count} user receipts in batch.`
+          : "Moonlight custom note saved to user receipt.",
+      );
+      setSelectedBatch(null);
       setStatusReason("");
       onDone();
     } catch (e) {
@@ -1005,18 +1040,26 @@ function WithdrawalsSection({
     }
   }
 
-  async function handleQuickStatus(w: WithdrawalItem, status: WithdrawalStatus) {
+  async function handleQuickBatchStatus(b: ConsolidatedWithdrawalBatch, status: WithdrawalStatus) {
     setBusy(true);
     try {
-      await updateStatusFn({
-        data: {
-          token,
-          withdrawalId: w.id,
-          newStatus: status,
-          reason: w.reason || `Marked as ${status} via direct admin action.`,
-        },
-      });
-      toast.success(`Withdrawal ${w.reference} marked as ${status}.`);
+      await Promise.all(
+        b.withdrawals.map((w) =>
+          updateStatusFn({
+            data: {
+              token,
+              withdrawalId: w.id,
+              newStatus: status,
+              reason: b.reason || `Marked as ${status} via direct admin action.`,
+            },
+          }),
+        ),
+      );
+      toast.success(
+        b.count > 1
+          ? `All ${b.count} withdrawals in 7-day batch ${b.primaryReference} marked as ${status}.`
+          : `Withdrawal ${b.primaryReference} marked as ${status}.`,
+      );
       onDone();
     } catch (e) {
       toast.error((e as Error).message);
@@ -1056,101 +1099,187 @@ function WithdrawalsSection({
       </div>
 
       <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-        {filtered.map((w) => (
-          <div key={w.id} className="p-4 sm:p-5 space-y-3">
+        {filtered.map((batch) => (
+          <div key={batch.id} className="p-4 sm:p-5 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono font-bold text-xs bg-secondary px-2.5 py-1 rounded-md">
-                  {w.reference}
+                  {batch.primaryReference}
                 </span>
                 <span
                   className={cn(
                     "text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase",
-                    w.status === "PROCESSING" &&
+                    batch.status === "PROCESSING" &&
                       "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-                    w.status === "SUCCESSFUL" &&
+                    batch.status === "SUCCESSFUL" &&
                       "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-                    (w.status === "FAILED" || w.status === "CANCELLED") &&
+                    (batch.status === "FAILED" || batch.status === "CANCELLED") &&
                       "bg-destructive/15 text-destructive",
-                    (w.status === "ON HOLD" || w.status === "UNDER REVIEW") &&
+                    (batch.status === "ON HOLD" || batch.status === "UNDER REVIEW") &&
                       "bg-purple-500/15 text-purple-600 dark:text-purple-400",
                   )}
                 >
-                  {w.status}
+                  {batch.status}
                 </span>
+
+                {batch.count > 1 && (
+                  <span className="bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 shrink-0" />
+                    Combined 7-Day ({batch.count} withdrawals)
+                  </span>
+                )}
+
                 <span className="text-xs text-muted-foreground">
-                  {new Date(w.created_at).toLocaleString()}
+                  {new Date(batch.latestCreatedAt).toLocaleString()}
                 </span>
               </div>
               <div className="text-right">
-                <p className="text-base font-bold tabular-nums">
-                  {formatMoney(Number(w.amount), w.currency)}
+                <p className="text-base font-bold tabular-nums text-foreground">
+                  {formatMoney(Number(batch.totalAmount), batch.currency)}
                 </p>
                 <p className="text-[11px] text-muted-foreground tabular-nums">
-                  USD {formatMoney(Number(w.amount_usd), "USD")}
+                  USD {formatMoney(Number(batch.totalAmountUsd), "USD")}
                 </p>
+                {batch.count > 1 && (
+                  <span className="text-[10px] text-purple-500 font-medium">
+                    ⚡ {batch.count} payouts merged
+                  </span>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-secondary/30 p-3 rounded-xl">
               <div>
                 <p className="text-muted-foreground">Beneficiary / Email:</p>
-                <p className="font-semibold text-foreground truncate">{w.full_name}</p>
-                <p className="text-muted-foreground truncate">{w.email}</p>
+                <p className="font-semibold text-foreground truncate">{batch.beneficiaryName}</p>
+                <p className="text-muted-foreground truncate">{batch.email}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Payout Channel:</p>
-                <p className="font-semibold text-foreground">{w.method}</p>
-                {w.provider && <p className="text-primary font-medium">{w.provider}</p>}
+                <p className="font-semibold text-foreground">{batch.method}</p>
+                {batch.provider && <p className="text-primary font-medium">{batch.provider}</p>}
               </div>
               <div>
                 <p className="text-muted-foreground">Destination Account / UPI:</p>
                 <p className="font-mono font-semibold text-foreground truncate">
-                  {w.upi_id || w.email || "N/A"}
+                  {batch.upiId || batch.email || "N/A"}
                 </p>
               </div>
             </div>
 
             {/* Custom Moonlight Note on User Receipt */}
-            {w.reason && (
+            {batch.reason && (
               <div className="flex items-start gap-2 rounded-xl border border-primary/25 bg-primary/8 p-3 text-xs">
                 <MessageSquare className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
                   <span className="font-semibold text-primary block text-[11px] uppercase tracking-wider">
                     Moonlight Note on User Receipt:
                   </span>
-                  <p className="text-foreground leading-relaxed mt-0.5">{w.reason}</p>
+                  <p className="text-foreground leading-relaxed mt-0.5">{batch.reason}</p>
                 </div>
+              </div>
+            )}
+
+            {/* 7-Day Itemized Sub-Withdrawals Toggle & Panel */}
+            {batch.count > 1 && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(batch.id)}
+                  className="flex items-center justify-between w-full text-xs font-semibold py-2 px-3 rounded-xl bg-secondary/50 hover:bg-secondary border border-border/40 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5 text-purple-500" />
+                    <span>
+                      {expandedBatches[batch.id] ? "Hide" : "Show"} Itemized 7-Day Breakdown ({batch.count} combined payouts · Total {formatMoney(batch.totalAmount, batch.currency)})
+                    </span>
+                  </div>
+                  {expandedBatches[batch.id] ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+
+                {expandedBatches[batch.id] && (
+                  <div className="rounded-xl border border-border/60 bg-secondary/30 p-3 space-y-2 text-xs animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-border/40 text-[11px]">
+                      <span className="font-semibold text-muted-foreground uppercase tracking-wider">
+                        Consolidated Withdrawals (Last 7 Days)
+                      </span>
+                      <span className="font-mono font-bold text-foreground">
+                        Sum: {formatMoney(batch.totalAmount, batch.currency)}
+                      </span>
+                    </div>
+                    <div className="divide-y divide-border/40">
+                      {batch.withdrawals.map((subW) => (
+                        <div
+                          key={subW.id}
+                          className="py-2 flex items-center justify-between gap-2 flex-wrap"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                              {subW.reference}
+                            </span>
+                            {subW.reference === batch.primaryReference && (
+                              <span className="text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full uppercase">
+                                Primary Ref
+                              </span>
+                            )}
+                            <span className="text-[11px] text-muted-foreground">
+                              {new Date(subW.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-secondary text-foreground">
+                              {subW.status}
+                            </span>
+                            <span className="font-mono font-bold text-xs text-foreground">
+                              {formatMoney(Number(subW.amount), subW.currency)}
+                            </span>
+                            <Link
+                              to="/withdrawals/$id"
+                              params={{ id: subW.id }}
+                              className="text-[11px] text-primary hover:underline font-medium inline-flex items-center gap-0.5"
+                            >
+                              Inspect <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40">
               <div className="flex items-center gap-1.5 flex-wrap">
-                {w.status === "PROCESSING" && (
+                {batch.status === "PROCESSING" && (
                   <>
                     <button
                       disabled={busy}
-                      onClick={() => handleQuickStatus(w, "SUCCESSFUL")}
+                      onClick={() => handleQuickBatchStatus(batch, "SUCCESSFUL")}
                       className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-3 w-3" />
-                      <span>Approve</span>
+                      <span>{batch.count > 1 ? `Approve All (${batch.count})` : "Approve"}</span>
                     </button>
                     <button
                       disabled={busy}
-                      onClick={() => handleQuickStatus(w, "UNDER REVIEW")}
+                      onClick={() => handleQuickBatchStatus(batch, "UNDER REVIEW")}
                       className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <Clock className="h-3 w-3" />
-                      <span>Review</span>
+                      <span>{batch.count > 1 ? `Review All (${batch.count})` : "Review"}</span>
                     </button>
                     <button
                       disabled={busy}
-                      onClick={() => handleQuickStatus(w, "ON HOLD")}
+                      onClick={() => handleQuickBatchStatus(batch, "ON HOLD")}
                       className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-[11px] font-semibold text-amber-600 dark:text-amber-400 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <AlertCircle className="h-3 w-3" />
-                      <span>Hold</span>
+                      <span>{batch.count > 1 ? `Hold All (${batch.count})` : "Hold"}</span>
                     </button>
                   </>
                 )}
@@ -1159,42 +1288,52 @@ function WithdrawalsSection({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
-                    setSelectedWd(w);
+                    setSelectedBatch(batch);
                     setNewStatus(
-                      w.status === "PROCESSING" ? "SUCCESSFUL" : (w.status as WithdrawalStatus),
+                      batch.status === "PROCESSING" ? "SUCCESSFUL" : (batch.status as WithdrawalStatus),
                     );
-                    setStatusReason(w.reason || "");
+                    setStatusReason(batch.reason || "");
                   }}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-colors cursor-pointer shadow-2xs"
                 >
                   <FileText className="h-3.5 w-3.5" />
-                  <span>Modify Status &amp; Note</span>
+                  <span>
+                    {batch.count > 1 ? `Modify Batch (${batch.count})` : "Modify Status & Note"}
+                  </span>
                 </button>
 
                 <EmailTemplateButton
                   data={{
                     type:
-                      w.status === "REJECTED"
+                      batch.status === "REJECTED"
                         ? "kyc_rejected"
-                        : w.status === "ON HOLD" || w.status === "UNDER REVIEW"
+                        : batch.status === "ON HOLD" || batch.status === "UNDER REVIEW"
                           ? "kyc_hold"
                           : "kyc_approved_key",
-                    recipientName: w.full_name || w.email || "Valued Customer",
+                    recipientName: batch.beneficiaryName || batch.email || "Valued Customer",
                     senderName: "Brooklyn",
-                    amount: w.amount,
-                    currency: w.currency,
-                    reference: w.reference,
-                    date: new Date(w.created_at).toLocaleString(),
-                    status: w.status,
-                    method: w.method || "Unified Payments Interface (UPI)",
-                    destination: w.upi_id || w.email || "Bank Account",
+                    amount: batch.totalAmount,
+                    currency: batch.currency,
+                    reference: batch.primaryReference,
+                    date: new Date(batch.latestCreatedAt).toLocaleString(),
+                    status: batch.status,
+                    method: batch.method || "Unified Payments Interface (UPI)",
+                    destination: batch.upiId || batch.email || "Bank Account",
+                    batchCount: batch.count,
+                    itemizedWithdrawals: batch.withdrawals.map((w) => ({
+                      reference: w.reference,
+                      amount: w.amount,
+                      currency: w.currency,
+                      date: new Date(w.created_at).toLocaleString(),
+                      status: w.status,
+                    })),
                   }}
-                  label="Email Template"
+                  label={batch.count > 1 ? `Combined Email (${batch.count})` : "Email Template"}
                 />
 
                 <Link
                   to="/withdrawals/$id"
-                  params={{ id: w.id }}
+                  params={{ id: batch.id }}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-secondary/60 hover:bg-secondary text-xs font-medium text-foreground transition-colors cursor-pointer"
                 >
                   <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1211,20 +1350,31 @@ function WithdrawalsSection({
         )}
       </div>
 
-      {selectedWd && (
+      {selectedBatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4">
           <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="space-y-1">
               <h3 className="font-semibold text-base flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
-                <span>Update Withdrawal Status &amp; Add Custom Note</span>
+                <span>
+                  {selectedBatch.count > 1
+                    ? `Update 7-Day Batch (${selectedBatch.count} Withdrawals)`
+                    : "Update Withdrawal Status & Add Custom Note"}
+                </span>
               </h3>
               <p className="text-xs text-muted-foreground">
-                Ref:{" "}
-                <span className="font-mono font-bold text-foreground">{selectedWd.reference}</span>{" "}
-                · {selectedWd.full_name} (
-                {formatMoney(Number(selectedWd.amount), selectedWd.currency)})
+                Primary Ref:{" "}
+                <span className="font-mono font-bold text-foreground">
+                  {selectedBatch.primaryReference}
+                </span>{" "}
+                · {selectedBatch.beneficiaryName} (
+                {formatMoney(Number(selectedBatch.totalAmount), selectedBatch.currency)})
               </p>
+              {selectedBatch.count > 1 && (
+                <div className="rounded-xl bg-purple-500/10 border border-purple-500/25 p-2.5 text-xs text-purple-700 dark:text-purple-300">
+                  ⚡ <strong>Consolidated 7-Day Settlement:</strong> Updating status or saving a note will apply to all {selectedBatch.count} merged withdrawals under primary ID {selectedBatch.primaryReference}.
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -1247,7 +1397,7 @@ function WithdrawalsSection({
             {(newStatus === "FAILED" || newStatus === "CANCELLED") && (
               <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                 ⚠️ Transitioning to FAILED or CANCELLED will automatically refund{" "}
-                {formatMoney(Number(selectedWd.amount_usd), "USD")} back to the user's wallet balance!
+                {formatMoney(Number(selectedBatch.totalAmountUsd), "USD")} back to the user's wallet balance!
               </p>
             )}
 
@@ -1297,7 +1447,7 @@ function WithdrawalsSection({
             <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border/40">
               <button
                 type="button"
-                onClick={() => setSelectedWd(null)}
+                onClick={() => setSelectedBatch(null)}
                 className="h-11 px-4 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors cursor-pointer sm:w-auto"
               >
                 Cancel

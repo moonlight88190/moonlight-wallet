@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,12 +16,18 @@ import {
   ShieldCheck,
   ExternalLink,
   Mail,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
 import { formatMoney, convert, getRate } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  find7DayBatchForWithdrawal,
+  type ConsolidatedWithdrawalBatch,
+} from "@/lib/withdrawal-consolidation";
 import {
   BrandAsset,
   PaymentMethodIcon,
@@ -111,6 +117,41 @@ function WithdrawalReceipt() {
   });
 
   const wd = wdQuery.data;
+
+  // Query all customer withdrawals to identify 7-day consolidation cluster
+  const relatedWdsQuery = useQuery({
+    queryKey: ["withdrawal-related-7d", wd?.user_id, wd?.wallet_id, wd?.email, wd?.upi_id],
+    enabled: !!wd,
+    queryFn: async () => {
+      if (!wd) return [];
+      let query = supabase.from("withdrawals").select("*");
+      if (wd.user_id) {
+        query = query.eq("user_id", wd.user_id);
+      } else if (wd.wallet_id) {
+        query = query.eq("wallet_id", wd.wallet_id);
+      } else if (wd.email) {
+        query = query.eq("email", wd.email);
+      } else if (wd.upi_id) {
+        query = query.eq("upi_id", wd.upi_id);
+      } else {
+        return [wd];
+      }
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) {
+        return [wd];
+      }
+      return data;
+    },
+  });
+
+  const batch = useMemo(() => {
+    if (!wd) return null;
+    const allWds =
+      relatedWdsQuery.data && relatedWdsQuery.data.length > 0 ? relatedWdsQuery.data : [wd];
+    return find7DayBatchForWithdrawal(wd, allWds);
+  }, [wd, relatedWdsQuery.data]);
+
+  const isConsolidated = !!batch && batch.count > 1;
 
   const copyRef = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -209,6 +250,25 @@ function WithdrawalReceipt() {
     displayPayoutCurrency !== payoutCurrency
       ? convert(rawNet, payoutCurrency, displayPayoutCurrency, ratesMap)
       : rawNet;
+
+  // Batch consolidated economics (combining 7-day payments)
+  const batchRawGross = isConsolidated ? batch.totalAmount : rawGross;
+  const batchRawFee = isConsolidated ? batch.totalFee : rawFee;
+  const batchRawNet = batchRawGross - batchRawFee;
+
+  const effectiveGross =
+    displayCurrency !== wd.currency
+      ? convert(batchRawGross, wd.currency, displayCurrency, ratesMap)
+      : batchRawGross;
+  const effectiveFee =
+    displayCurrency !== wd.currency
+      ? effectiveGross * 0.1
+      : batchRawFee;
+  const effectiveNet =
+    displayPayoutCurrency !== payoutCurrency
+      ? convert(batchRawNet, payoutCurrency, displayPayoutCurrency, ratesMap)
+      : batchRawNet;
+
   const displayMethod =
     isUPI &&
       (wd.upi_id?.includes("@upi") || wd.upi_id?.includes("@bhim")) &&
@@ -327,6 +387,30 @@ function WithdrawalReceipt() {
           </span>
         </div>
 
+        {/* ─── 7-Day Consolidation Batch Banner (When multiple withdrawals in 7 days) ─── */}
+        {isConsolidated && (
+          <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3.5 sm:p-4 space-y-2">
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                <Layers className="h-4 w-4" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-foreground">
+                    Combined 7-Day Settlement Batch
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-bold">
+                    {batch.count} Payouts Combined
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  All {batch.count} withdrawals initiated within a 7-day period have been unified into this single settlement ID (<span className="font-mono font-semibold text-foreground">{batch.primaryReference}</span>). Total payments are added together so you receive one consolidated settlement and receipt.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ─── Mandatory KYC Verification Action Card ─── */}
         {compliance.isKycRequired && (
           <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-amber-500/10 to-amber-500/5 p-4 sm:p-5 space-y-3.5 shadow-md">
@@ -434,11 +518,16 @@ function WithdrawalReceipt() {
         {/* Primary Amount & Method Visual */}
         <div className="text-center py-2 space-y-1">
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-            Total Withdrawn
+            {isConsolidated ? `Total Withdrawn (Combined ${batch.count} Requests)` : "Total Withdrawn"}
           </p>
           <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground font-mono">
-            {formatMoney(grossAmount, displayCurrency)}
+            {formatMoney(effectiveGross, displayCurrency)}
           </div>
+          {isConsolidated && (
+            <p className="text-[11px] text-primary font-medium">
+              ⚡ Combined 7-day sum of {batch.count} payouts (This request: {formatMoney(grossAmount, displayCurrency)})
+            </p>
+          )}
           <div className="inline-flex items-center gap-2 rounded-full bg-secondary/70 border border-border/50 px-3 py-1 mt-2">
             <PaymentMethodIcon id={paymentAsset.id} size="xs" />
             <span className="text-xs font-medium text-foreground">{displayMethod}</span>
@@ -447,25 +536,34 @@ function WithdrawalReceipt() {
 
         {/* Settlement Breakdown */}
         <div className="rounded-2xl bg-muted/40 border border-border/50 p-4 space-y-2.5 text-xs">
-          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pb-1 border-b border-border/30">
-            Settlement Breakdown
+          <div className="flex justify-between items-center pb-1 border-b border-border/30">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {isConsolidated ? `Settlement Breakdown (${batch.count} Combined)` : "Settlement Breakdown"}
+            </span>
+            {isConsolidated && (
+              <span className="text-[10px] font-mono font-bold text-primary">
+                Combined 7-Day Total
+              </span>
+            )}
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Requested Payout</span>
+            <span className="text-muted-foreground">
+              {isConsolidated ? `Requested Payouts (${batch.count} total)` : "Requested Payout"}
+            </span>
             <span className="font-mono font-medium text-foreground">
-              {formatMoney(grossAmount, displayCurrency)}
+              {formatMoney(effectiveGross, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Processing Fee (10% standard)</span>
             <span className="font-mono font-medium text-muted-foreground">
-              -{formatMoney(feeAmount, displayCurrency)}
+              -{formatMoney(effectiveFee, displayCurrency)}
             </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-border/30">
             <span className="font-semibold text-foreground">Net Dispatched Amount</span>
             <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-              {formatMoney(netSettlement, displayPayoutCurrency)}
+              {formatMoney(effectiveNet, displayPayoutCurrency)}
             </span>
           </div>
         </div>
@@ -510,6 +608,88 @@ function WithdrawalReceipt() {
             </div>
           </div>
         </div>
+
+        {/* Itemized 7-Day Withdrawals Breakdown (When Consolidated) */}
+        {isConsolidated && (
+          <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" />
+                <span className="text-xs font-bold text-foreground">
+                  Itemized 7-Day Withdrawals ({batch.count})
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-mono">
+                Combined into 1 Payment
+              </span>
+            </div>
+            <div className="space-y-2">
+              {batch.withdrawals.map((item, idx) => {
+                const isCurrent = item.id === wd.id || item.reference === wd.reference;
+                const isPrimary =
+                  item.reference === batch.primaryReference || item.id === batch.primaryReference;
+                const itemGross = Number(item.amount);
+                const itemDisplayAmt =
+                  displayCurrency !== item.currency
+                    ? convert(itemGross, item.currency, displayCurrency, ratesMap)
+                    : itemGross;
+
+                return (
+                  <div
+                    key={item.id || item.reference || idx}
+                    className={cn(
+                      "p-3 rounded-xl border text-xs flex items-center justify-between gap-3 transition-colors",
+                      isCurrent
+                        ? "bg-primary/10 border-primary/40 ring-1 ring-primary/30"
+                        : "bg-muted/30 border-border/40 hover:bg-muted/50",
+                    )}
+                  >
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-mono font-semibold text-foreground text-[11px] truncate">
+                          {item.reference || `WD-${item.id?.slice(0, 8)}`}
+                        </span>
+                        {isPrimary && (
+                          <span className="text-[9px] bg-primary text-primary-foreground px-1.5 py-0.2 rounded font-bold uppercase">
+                            Primary ID
+                          </span>
+                        )}
+                        {isCurrent && !isPrimary && (
+                          <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.2 rounded font-semibold uppercase">
+                            This Record
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(item.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-mono font-bold text-foreground text-xs">
+                        {formatMoney(itemDisplayAmt, displayCurrency)}
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase">
+                        {item.status || "PROCESSING"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="pt-2 border-t border-border/30 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground font-medium">Combined Batch Total:</span>
+              <span className="font-mono font-bold text-foreground">
+                {formatMoney(effectiveGross, displayCurrency)}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Indian Bank & UPI Rail Strip (When Applicable) */}
         {(isUPI || isIndianBank) && (
@@ -694,13 +874,27 @@ function WithdrawalReceipt() {
         <div className="pt-3 border-t border-border/40 flex items-center justify-between text-xs">
           <div className="space-y-0.5">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Settlement Reference
+              {isConsolidated ? "Combined Settlement Reference ID" : "Settlement Reference"}
             </span>
-            <p className="font-mono font-semibold text-foreground text-xs">{wd.reference}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono font-semibold text-foreground text-xs">
+                {isConsolidated ? batch.primaryReference : wd.reference}
+              </p>
+              {isConsolidated && (
+                <span className="text-[9px] bg-primary/15 text-primary px-1.5 py-0.2 rounded font-bold uppercase">
+                  Primary ID
+                </span>
+              )}
+            </div>
+            {isConsolidated && wd.reference !== batch.primaryReference && (
+              <p className="text-[10px] text-muted-foreground font-mono">
+                Individual record ref: {wd.reference}
+              </p>
+            )}
           </div>
           <button
             type="button"
-            onClick={() => copyRef(wd.reference)}
+            onClick={() => copyRef(isConsolidated ? batch.primaryReference : wd.reference)}
             className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors cursor-pointer"
           >
             {copied ? (
