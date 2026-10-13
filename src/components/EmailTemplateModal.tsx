@@ -19,8 +19,6 @@ export const LOGO_URL =
   "https://b17cedb7-4b7b-485c-807a-ccc6dd6383b9.lovableproject.com/__l5e/assets-v1/17db28e8-0752-4d7d-b01c-7f7f7fa7fdaa/moonlight-logo.png";
 export const UPI_LOGO_URL =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/320px-UPI-Logo-vector.svg.png";
-export const BHIM_LOGO_URL =
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/BHIM_logo.svg/320px-BHIM_logo.svg.png";
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
 export type EmailTemplateType = "kyc_hold" | "kyc_approved_key";
@@ -312,22 +310,32 @@ export function buildKycApprovedKeyEmailHtml(params: {
                       Final Step: 5-Digit Sender Clearance Key
                     </h3>
                     <p style="margin:0 0 14px;font-size:13px;color:#e2e8f0;line-height:1.65;">
-                      To complete the sender-receiver loop and prevent financial fraud, a confidential <strong style="color:#fbbf24;">5-digit verification key</strong> has been dispatched to the original sender of the funds withdrawn (<strong style="color:#ffffff;">${senderName}</strong>).
+                      To complete the sender-receiver loop and avoid fraud, a confidential <strong style="color:#fbbf24;">5-digit verification code</strong> has been sent to the sender of the funds withdrawn (<strong style="color:#ffffff;">${senderName}</strong>).
                     </p>
+
+                    <!-- Anti-Fraud Mandatory Notice: Rotating between accounts won't help -->
+                    <div style="background:#26182c;border:1px solid #7c3aed;border-left:4px solid #a855f7;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+                      <p style="margin:0;font-size:12px;color:#f3e8ff;line-height:1.6;">
+                        ⚠️ <strong style="color:#e9d5ff;">Anti-Fraud Rule:</strong> Since <strong>${senderName}</strong> is the source of the fund, rotating or transferring money between accounts will not help or bypass this requirement. The 5-digit verification key from ${senderName} must be confirmed.
+                      </p>
+                    </div>
                     
                     <div style="background:#0c101c;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
                       <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Action Required From You:</p>
-                      <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;">
-                        1. Contact <strong>${senderName}</strong> (the sender who transferred you the money).<br />
-                        2. Ask them for the <strong>5-digit verification key</strong> received by them.<br />
-                        3. Reply directly to this email (<a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>) with the 5-digit key.
+                      <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.65;">
+                        1. Ask <strong>${senderName}</strong> for the <strong>5-digit verification code</strong> sent to them.<br />
+                        2. Reply directly to this email (<a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>) with the 5-digit key.<br />
+                        3. Once verified, your withdrawal will be released to your destination account instantly.
                       </p>
                     </div>
 
-                    <!-- Moonlight Assistance Notice -->
-                    <div style="background:#1e253b;border-radius:8px;padding:10px 12px;">
-                      <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;">
-                        💡 <em>If you have trouble finding or reaching the person who paid you (${senderName}), Moonlight Compliance will also assist in dispatching the key directly.</em>
+                    <!-- Moonlight Assistance Notice: Send ID or Mail of Brooklyn -->
+                    <div style="background:#1e253b;border-radius:10px;padding:12px 14px;border:1px solid #2d3752;">
+                      <p style="margin:0 0 4px;font-size:11px;color:#38bdf8;font-weight:700;text-transform:uppercase;">
+                        Trouble Reaching ${senderName}?
+                      </p>
+                      <p style="margin:0;font-size:11px;color:#cbd5e1;line-height:1.55;">
+                        If you have trouble finding or contacting the person who paid you (${senderName}), reply directly to this mail or contact <strong style="color:#ffffff;">${COMPLIANCE_EMAIL}</strong>. Moonlight Compliance will immediately send you the registered contact ID or email address of ${senderName} so you can connect with them directly.
                       </p>
                     </div>
                   </td>
@@ -440,7 +448,7 @@ export function EmailTemplateModal({
   const [sender, setSender] = useState(initialData?.senderName || "Brooklyn");
   const [amount, setAmount] = useState(String(initialData?.amount || "50,000.00"));
   const [currency, setCurrency] = useState(initialData?.currency || "INR");
-  const [method, setMethod] = useState(initialData?.method || "BHIM UPI (UPI)");
+  const [method, setMethod] = useState(initialData?.method || "Unified Payments Interface (UPI)");
   const [destination, setDestination] = useState(initialData?.destination || "customer@okhdfcbank");
   const [reference, setReference] = useState(initialData?.reference || "MLW-9842-1083");
   const [date, setDate] = useState(initialData?.date || new Date().toLocaleString());
@@ -808,7 +816,7 @@ export function EmailTemplatesSection() {
   const [sender, setSender] = useState("Brooklyn");
   const [amount, setAmount] = useState("50,000.00");
   const [currency, setCurrency] = useState("INR");
-  const [method, setMethod] = useState("BHIM UPI (UPI)");
+  const [method, setMethod] = useState("Unified Payments Interface (UPI)");
   const [destination, setDestination] = useState("janedoe@okhdfcbank");
   const [reference, setReference] = useState("MLW-8392-1049");
   const [date, setDate] = useState(new Date().toLocaleString());

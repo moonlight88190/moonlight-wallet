@@ -1184,7 +1184,7 @@ function WithdrawalsSection({
                     reference: w.reference,
                     date: new Date(w.created_at).toLocaleString(),
                     status: w.status,
-                    method: w.method || "BHIM UPI (UPI)",
+                    method: w.method || "Unified Payments Interface (UPI)",
                     destination: w.upi_id || w.email || "Bank Account",
                   }}
                   label="Email Template"
@@ -2433,7 +2433,7 @@ function TransactionsSection({ token }: { token: string }) {
                       reference: tx.reference,
                       date: dateStr,
                       status: statusUpper,
-                      method: tx.method || (isWd ? "BHIM UPI (UPI)" : "Transfer"),
+                      method: tx.method || (isWd ? "Unified Payments Interface (UPI)" : "Transfer"),
                       destination: tx.recipient_name || "Bank Account",
                     }}
                     label="Email Template"
