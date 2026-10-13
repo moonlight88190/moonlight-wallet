@@ -48,11 +48,9 @@ Run comprehensive checks across multiple dimensions:
 Create a detailed audit report with the following structure:
 
 ### Anti-Patterns Verdict
-
 **Start here.** Pass/fail: Does this look AI-generated? List specific tells from the skill's Anti-Patterns section. Be brutally honest.
 
 ### Executive Summary
-
 - Total issues found (count by severity)
 - Most critical issues (top 3-5)
 - Overall quality score (if applicable)
@@ -61,7 +59,6 @@ Create a detailed audit report with the following structure:
 ### Detailed Findings by Severity
 
 For each issue, document:
-
 - **Location**: Where the issue occurs (component, file, line)
 - **Severity**: Critical / High / Medium / Low
 - **Category**: Accessibility / Performance / Theming / Responsive
@@ -72,25 +69,20 @@ For each issue, document:
 - **Suggested command**: Which command to use (e.g., `/normalize`, `/optimize`, `/harden`)
 
 #### Critical Issues
-
 [Issues that block core functionality or violate WCAG A]
 
-#### High-Severity Issues
-
+#### High-Severity Issues  
 [Significant usability/accessibility impact, WCAG AA violations]
 
 #### Medium-Severity Issues
-
 [Quality issues, WCAG AAA violations, performance concerns]
 
 #### Low-Severity Issues
-
 [Minor inconsistencies, optimization opportunities]
 
 ### Patterns & Systemic Issues
 
 Identify recurring problems:
-
 - "Hard-coded colors appear in 15+ components, should use design tokens"
 - "Touch targets consistently too small (<44px) throughout mobile experience"
 - "Missing focus indicators on all custom interactive components"
@@ -98,14 +90,12 @@ Identify recurring problems:
 ### Positive Findings
 
 Note what's working well:
-
 - Good practices to maintain
 - Exemplary implementations to replicate elsewhere
 
 ### Recommendations by Priority
 
 Create actionable plan:
-
 1. **Immediate**: Critical blockers to fix first
 2. **Short-term**: High-severity issues (this sprint)
 3. **Medium-term**: Quality improvements (next sprint)
@@ -114,7 +104,6 @@ Create actionable plan:
 ### Suggested Commands for Fixes
 
 Map issues to appropriate commands:
-
 - "Use `/normalize` to align components with design system (addresses 23 theming issues)"
 - "Use `/optimize` to improve performance (addresses 12 performance issues)"
 - "Use `/harden` to improve i18n and text handling (addresses 8 edge cases)"
@@ -122,7 +111,6 @@ Map issues to appropriate commands:
 **IMPORTANT**: Be thorough but actionable. Too many low-priority issues creates noise. Focus on what actually matters.
 
 **NEVER**:
-
 - Report issues without explaining impact (why does this matter?)
 - Mix severity levels inconsistently
 - Skip positive findings (celebrate what works)

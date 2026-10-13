@@ -521,8 +521,8 @@ export function generateEmailHtml(data: TransactionEmailData): string {
               <p style="margin: 0 0 10px 0; font-size: 11px; color: #94a3b8; line-height: 1.5;">
                 This transactional email was sent to <strong style="color: #64748b;">${data.recipientEmail}</strong> for your authenticated account activity.
               </p>
-              <p style="margin: 0; font-size: 10px; color: #cbd5e1; line-height: 1.4;">
-                Closed-loop simulation: This environment simulates digital financial settlement rails for demonstration purposes. Funds are not connected to real-world fiat settlement without authorization.
+              <p style="margin: 0; font-size: 10px; color: #94a3b8; line-height: 1.4;">
+                Official financial settlement communication. Moonlight Financial Technology manages authorized electronic payout disbursements across national banking and clearing networks.
               </p>
               <div style="margin-top: 14px; font-size: 10px; color: #cbd5e1;">
                 &copy; 2026 Moonlight Technologies Inc. All rights reserved.
