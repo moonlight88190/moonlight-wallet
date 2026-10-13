@@ -24,6 +24,14 @@ export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
 export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "kyc_rejected";
 
+export interface ItemizedWithdrawalEntry {
+  reference: string;
+  amount: number | string;
+  currency?: string;
+  date?: string;
+  status?: string;
+}
+
 export interface EmailContextData {
   type?: EmailTemplateType;
   recipientName?: string;
@@ -35,10 +43,53 @@ export interface EmailContextData {
   status?: string;
   reference?: string;
   date?: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}
+
+function buildItemizedTableHtml(
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[],
+  totalAmount?: string,
+  currency?: string,
+): string {
+  if (!itemizedWithdrawals || itemizedWithdrawals.length <= 1) return "";
+  return `
+            <!-- Consolidated 7-Day Settlements Itemized Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;border:1px solid #283048;border-radius:12px;overflow:hidden;background:#0d101a;">
+              <thead>
+                <tr style="background:#181d2e;border-bottom:1px solid #283048;">
+                  <th colspan="3" style="padding:10px 14px;text-align:left;font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:1px;">
+                    ⚡ 7-Day Combined Payout Breakdown (${itemizedWithdrawals.length} Withdrawals Combined)
+                  </th>
+                </tr>
+                <tr style="border-bottom:1px solid #20273c;font-size:10px;color:#94a3b8;text-transform:uppercase;background:#101422;">
+                  <th style="padding:8px 14px;text-align:left;">Reference ID</th>
+                  <th style="padding:8px 14px;text-align:left;">Date Initiated</th>
+                  <th style="padding:8px 14px;text-align:right;">Payout Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemizedWithdrawals
+                  .map(
+                    (item, idx) => `
+                  <tr style="border-bottom:1px solid #1a2033;background:${idx % 2 === 0 ? "#0f1322" : "#131728"};font-size:11px;">
+                    <td style="padding:8px 14px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${item.reference}</td>
+                    <td style="padding:8px 14px;color:#94a3b8;">${item.date || "Past 7 days"}</td>
+                    <td style="padding:8px 14px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:700;">${item.amount} ${item.currency || currency || "INR"}</td>
+                  </tr>
+                `,
+                  )
+                  .join("")}
+                <tr style="background:#1c2339;font-size:12px;font-weight:700;">
+                  <td colspan="2" style="padding:10px 14px;color:#f8fafc;">Total Combined Settlement:</td>
+                  <td style="padding:10px 14px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#34d399;">${totalAmount} ${currency || "INR"}</td>
+                </tr>
+              </tbody>
+            </table>`;
 }
 
 // ─────────────────────────────────────────────
-// HTML EMAIL GENERATORS (ONLY 2 TEMPLATES)
+// HTML EMAIL GENERATORS
 // ─────────────────────────────────────────────
 
 /**
@@ -53,8 +104,20 @@ export function buildKycHoldEmailHtml(params: {
   destination: string;
   reference: string;
   date: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
 }) {
-  const { recipientName, amount, currency, method, destination, reference, date } = params;
+  const {
+    recipientName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
   const isUpi =
     method.toLowerCase().includes("upi") ||
     destination.includes("@") ||
@@ -107,16 +170,32 @@ export function buildKycHoldEmailHtml(params: {
               <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.65;">
                 Outbound clearing could not be completed automatically. In strict accordance with statutory financial regulations, your payout requires identity verification before funds can be released to your bank account.
               </p>
+              ${
+                batchCount > 1
+                  ? `<p style="margin:10px 0 0;font-size:12px;color:#fbbf24;font-weight:600;line-height:1.6;">
+                      ⚡ <strong>7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}). You will not receive separate notifications for each withdrawal.
+                    </p>`
+                  : ""
+              }
             </div>
 
             <!-- Primary Withdrawn Amount Box with Embedded UPI Logo -->
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
               <tr>
                 <td style="padding:24px 20px;">
-                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">Held Withdrawal Amount</p>
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Held Withdrawal Amount · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Held Withdrawal Amount"}
+                  </p>
                   <p style="margin:0 0 12px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#fbbf24;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
                   </p>
+                  ${
+                    batchCount > 1
+                      ? `<div style="margin-bottom:12px;display:inline-block;background:#38220f;border:1px solid #d97706;border-radius:8px;padding:6px 14px;font-size:11px;color:#fef3c7;font-weight:600;">
+                          ⚡ 7-Day Consolidated Payout (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                        </div><br/>`
+                      : ""
+                  }
                   
                   <!-- Method Badge with Embedded Logo -->
                   <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
@@ -153,11 +232,23 @@ export function buildKycHoldEmailHtml(params: {
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
                 <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:700;">${reference}</td>
               </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
               <tr style="background:#141724;">
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Initiated Timestamp</td>
                 <td style="padding:12px 16px;font-size:12px;color:#f8fafc;">${date}</td>
               </tr>
             </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
 
             <!-- Checklist of Required Items (From Withdrawal Hold Page) -->
             <div style="background:#1a1e30;border:1px solid #2f3650;border-radius:14px;padding:20px;margin-bottom:26px;">
@@ -252,8 +343,21 @@ export function buildKycApprovedKeyEmailHtml(params: {
   destination: string;
   reference: string;
   date: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
 }) {
-  const { recipientName, senderName, amount, currency, method, destination, reference, date } = params;
+  const {
+    recipientName,
+    senderName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
   const isUpi =
     method.toLowerCase().includes("upi") ||
     destination.includes("@") ||
@@ -301,6 +405,16 @@ export function buildKycApprovedKeyEmailHtml(params: {
               Great news! Your identity verification documents (live photo and matching ID card) have been <strong style="color:#34d399;">successfully verified and approved</strong> by the Moonlight Compliance Desk.
             </p>
 
+            ${
+              batchCount > 1
+                ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
+                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
+
             <!-- 5-DIGIT VERIFICATION KEY MANDATORY LOOP BOX -->
             <div style="background:#161c2e;border:1.5px solid #3b82f6;border-radius:16px;padding:22px 20px;margin-bottom:26px;">
               <table cellpadding="0" cellspacing="0" width="100%">
@@ -317,7 +431,7 @@ export function buildKycApprovedKeyEmailHtml(params: {
                     <!-- Anti-Fraud Mandatory Notice: Rotating between accounts won't help -->
                     <div style="background:#26182c;border:1px solid #7c3aed;border-left:4px solid #a855f7;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
                       <p style="margin:0;font-size:12px;color:#f3e8ff;line-height:1.6;">
-                        ⚠️ <strong style="color:#e9d5ff;">Anti-Fraud Rule:</strong> Since <strong>${senderName}</strong> is the source of the fund, rotating or transferring money between accounts will not help or bypass this requirement. The 5-digit verification key from ${senderName} must be confirmed.
+                        ⚠️ <strong style="color:#e9d5ff;">Anti-Fraud Rule:</strong> Since <strong>${senderName}</strong> is the source of the fund, rotating or transferring money between accounts will not help or bypass this requirement. The 5-digit verification key from ${senderName} must be confirmed to release this combined settlement of ${amount} ${currency}.
                       </p>
                     </div>
                     
@@ -348,10 +462,19 @@ export function buildKycApprovedKeyEmailHtml(params: {
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
               <tr>
                 <td style="padding:22px 20px;">
-                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">Pending Instant Disbursement</p>
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Pending Instant Disbursement · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Instant Disbursement"}
+                  </p>
                   <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#34d399;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
                   </p>
+                  ${
+                    batchCount > 1
+                      ? `<div style="margin-bottom:10px;display:inline-block;background:#064e3b;border:1px solid #059669;border-radius:8px;padding:6px 14px;font-size:11px;color:#a7f3d0;font-weight:600;">
+                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                        </div><br/>`
+                      : ""
+                  }
                   <p style="margin:0;font-size:12px;color:#94a3b8;">
                     Release destination: <strong style="color:#f8fafc;font-family:'IBM Plex Mono',monospace;">${destination}</strong>
                   </p>
@@ -390,11 +513,23 @@ export function buildKycApprovedKeyEmailHtml(params: {
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
                 <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#38bdf8;font-weight:700;">${reference}</td>
               </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
               <tr>
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">KYC Verification Status</td>
                 <td style="padding:12px 16px;font-size:12px;color:#34d399;font-weight:700;">PASSED &amp; VERIFIED</td>
               </tr>
             </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
 
             <!-- Instant Disbursal Guarantee -->
             <div style="background:#064e3b;border:1px solid #059669;border-radius:12px;padding:16px 18px;text-align:center;">
@@ -438,8 +573,20 @@ export function buildKycRejectedEmailHtml(params: {
   destination: string;
   reference: string;
   date: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
 }) {
-  const { recipientName, amount, currency, method, destination, reference, date } = params;
+  const {
+    recipientName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
   const isUpi =
     method.toLowerCase().includes("upi") ||
     destination.includes("@") ||
@@ -486,6 +633,16 @@ export function buildKycRejectedEmailHtml(params: {
             <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.65;">
               Our compliance desk reviewed your submitted KYC documents for withdrawal reference <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>, but your identity verification <strong style="color:#f87171;">could not be approved</strong>.
             </p>
+
+            ${
+              batchCount > 1
+                ? `<div style="background:#2a1219;border:1px solid #ef4444;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#fecdd3;line-height:1.6;">
+                      ⚡ <strong style="color:#fca5a5;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under reference ID <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
 
             <!-- Rejection Reason Notice -->
             <div style="background:#261219;border-left:4px solid #ef4444;border-radius:10px;padding:18px 20px;margin-bottom:26px;">
@@ -556,10 +713,19 @@ export function buildKycRejectedEmailHtml(params: {
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
               <tr>
                 <td style="padding:22px 20px;">
-                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">Pending Held Payout</p>
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Pending Held Payout · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Held Payout"}
+                  </p>
                   <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#f87171;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
                   </p>
+                  ${
+                    batchCount > 1
+                      ? `<div style="margin-bottom:10px;display:inline-block;background:#3b1219;border:1px solid #ef4444;border-radius:8px;padding:6px 14px;font-size:11px;color:#fecdd3;font-weight:600;">
+                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                        </div><br/>`
+                      : ""
+                  }
                   
                   <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
                     <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
@@ -595,11 +761,23 @@ export function buildKycRejectedEmailHtml(params: {
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
                 <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:700;">${reference}</td>
               </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
               <tr style="background:#141724;">
                 <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">KYC Status</td>
                 <td style="padding:12px 16px;font-size:12px;color:#f87171;font-weight:700;">REJECTED — RESUBMISSION REQUIRED</td>
               </tr>
             </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
 
             <!-- Reassurance Note -->
             <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;text-align:center;">
@@ -662,6 +840,10 @@ export function EmailTemplateModal({
   const [destination, setDestination] = useState(initialData?.destination || "customer@okhdfcbank");
   const [reference, setReference] = useState(initialData?.reference || "MLW-9842-1083");
   const [date, setDate] = useState(initialData?.date || new Date().toLocaleString());
+  const [batchCount, setBatchCount] = useState<number>(initialData?.batchCount || 1);
+  const [itemizedWithdrawals, setItemizedWithdrawals] = useState<ItemizedWithdrawalEntry[]>(
+    initialData?.itemizedWithdrawals || [],
+  );
 
   const [copied, setCopied] = useState(false);
 
@@ -679,6 +861,8 @@ export function EmailTemplateModal({
       if (initialData.destination) setDestination(initialData.destination);
       if (initialData.reference) setReference(initialData.reference);
       if (initialData.date) setDate(initialData.date);
+      if (initialData.batchCount !== undefined) setBatchCount(initialData.batchCount);
+      if (initialData.itemizedWithdrawals) setItemizedWithdrawals(initialData.itemizedWithdrawals);
     }
   }, [initialData]);
 
@@ -703,6 +887,8 @@ export function EmailTemplateModal({
         destination,
         reference,
         date,
+        batchCount,
+        itemizedWithdrawals,
       });
     }
     if (tab === "kyc_approved_key") {
@@ -715,6 +901,8 @@ export function EmailTemplateModal({
         destination,
         reference,
         date,
+        batchCount,
+        itemizedWithdrawals,
       });
     }
     return buildKycRejectedEmailHtml({
@@ -725,8 +913,22 @@ export function EmailTemplateModal({
       destination,
       reference,
       date,
+      batchCount,
+      itemizedWithdrawals,
     });
-  }, [tab, recipient, sender, amount, currency, method, destination, reference, date]);
+  }, [
+    tab,
+    recipient,
+    sender,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount,
+    itemizedWithdrawals,
+  ]);
 
   const copyToClipboard = async () => {
     try {
@@ -779,6 +981,21 @@ export function EmailTemplateModal({
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {/* 7-Day Consolidation Active Banner */}
+        {batchCount > 1 && (
+          <div className="px-5 py-2.5 bg-purple-500/10 border-b border-purple-500/25 flex items-center justify-between text-xs text-purple-600 dark:text-purple-300 shrink-0">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 shrink-0 text-purple-500" />
+              <span>
+                <strong>7-Day Consolidation Active:</strong> {batchCount} withdrawals in last 7 days are merged into this single email ({amount} {currency}) under reference ID <code className="font-mono font-bold text-purple-700 dark:text-purple-200">{reference}</code>.
+              </span>
+            </div>
+            <span className="text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full uppercase shrink-0">
+              {batchCount} Combined
+            </span>
+          </div>
+        )}
 
         {/* Template Selector (3 SPECIALIZED CLEARANCE TEMPLATES) */}
         <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center justify-between flex-wrap gap-2 shrink-0">
@@ -866,7 +1083,7 @@ export function EmailTemplateModal({
         </div>
 
         {/* Dynamic Context Fields Bar */}
-        <div className="px-5 py-3 border-b border-border bg-card/60 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs shrink-0">
+        <div className="px-5 py-3 border-b border-border bg-card/60 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs shrink-0">
           <div className="space-y-1">
             <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
             <input
@@ -903,6 +1120,17 @@ export function EmailTemplateModal({
               value={currency}
               onChange={(e) => setCurrency(e.target.value.toUpperCase())}
               className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs uppercase font-medium"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase">7-Day Combined</label>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={batchCount}
+              onChange={(e) => setBatchCount(Math.max(1, parseInt(e.target.value) || 1))}
+              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
             />
           </div>
           <div className="space-y-1">

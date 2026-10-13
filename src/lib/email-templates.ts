@@ -28,6 +28,7 @@ export interface TransactionEmailData {
   note?: string | undefined;
   failureReason?: string | undefined;
   actionUrl: string;
+  batchCount?: number | undefined;
   settlementInfo?: {
     currentStep: string;
     nextStep: string;
@@ -138,13 +139,23 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
 
     case "withdrawal_requested":
       return {
-        title: "Withdrawal Request Received",
-        subtitle: `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`,
-        badgeText: "PROCESSING (2–5 DAYS)",
+        title:
+          data.batchCount && data.batchCount > 1
+            ? "Consolidated 7-Day Withdrawal Received"
+            : "Withdrawal Request Received",
+        subtitle:
+          data.batchCount && data.batchCount > 1
+            ? `We have combined ${data.batchCount} withdrawals requested over the last 7 days into this single consolidated payout of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`
+            : `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`,
+        badgeText:
+          data.batchCount && data.batchCount > 1
+            ? `COMBINED 7-DAY (${data.batchCount})`
+            : "PROCESSING (2–5 DAYS)",
         badgeBg: "#fffbeb",
         badgeColor: "#92400e",
         badgeBorder: "#fde68a",
-        primaryAmountLabel: "Requested Amount",
+        primaryAmountLabel:
+          data.batchCount && data.batchCount > 1 ? "Combined 7-Day Amount" : "Requested Amount",
         primaryAmount: formatEmailMoney(data.amount, cur),
         showSettlement: true,
         buttonText: "View Settlement Slip",
@@ -152,13 +163,23 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
 
     case "withdrawal_processing":
       return {
-        title: "Withdrawal is Being Processed",
-        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails. Funds typically reflect within 2–5 business days (concludes Day 5).`,
-        badgeText: "PROCESSING",
+        title:
+          data.batchCount && data.batchCount > 1
+            ? "7-Day Consolidated Withdrawal Processing"
+            : "Withdrawal is Being Processed",
+        subtitle:
+          data.batchCount && data.batchCount > 1
+            ? `Your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is progressing through national settlement rails. Funds typically reflect within 2–5 business days.`
+            : `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails. Funds typically reflect within 2–5 business days (concludes Day 5).`,
+        badgeText:
+          data.batchCount && data.batchCount > 1 ? `COMBINED (${data.batchCount})` : "PROCESSING",
         badgeBg: "#eff6ff",
         badgeColor: "#1e40af",
         badgeBorder: "#bfdbfe",
-        primaryAmountLabel: "Settlement Amount",
+        primaryAmountLabel:
+          data.batchCount && data.batchCount > 1
+            ? "Combined Settlement Amount"
+            : "Settlement Amount",
         primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
         showSettlement: true,
         buttonText: "Track Settlement",
@@ -166,13 +187,25 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
 
     case "withdrawal_kyc_required":
       return {
-        title: "Action Required: KYC Verification",
-        subtitle: `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the funds will reflect in your bank account.`,
-        badgeText: "KYC REQUIRED",
+        title:
+          data.batchCount && data.batchCount > 1
+            ? "Action Required: KYC Verification (7-Day Consolidated Batch)"
+            : "Action Required: KYC Verification",
+        subtitle:
+          data.batchCount && data.batchCount > 1
+            ? `Your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the combined payout will reflect in your bank account.`
+            : `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the funds will reflect in your bank account.`,
+        badgeText:
+          data.batchCount && data.batchCount > 1
+            ? `KYC REQUIRED (${data.batchCount} COMBINED)`
+            : "KYC REQUIRED",
         badgeBg: "#fffbeb",
         badgeColor: "#92400e",
         badgeBorder: "#fde68a",
-        primaryAmountLabel: "Pending Payout",
+        primaryAmountLabel:
+          data.batchCount && data.batchCount > 1
+            ? "Combined Pending Payout"
+            : "Pending Payout",
         primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
         showSettlement: true,
         buttonText: "View KYC Instructions",
@@ -180,13 +213,25 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
 
     case "withdrawal_completed":
       return {
-        title: "Withdrawal Completed",
-        subtitle: `Your payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} has settled and been credited to your beneficiary account.`,
-        badgeText: "SETTLED",
+        title:
+          data.batchCount && data.batchCount > 1
+            ? "7-Day Consolidated Withdrawal Completed"
+            : "Withdrawal Completed",
+        subtitle:
+          data.batchCount && data.batchCount > 1
+            ? `Your combined 7-day payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} (${data.batchCount} requests combined into this single disbursement) has settled and been credited to your beneficiary account.`
+            : `Your payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} has settled and been credited to your beneficiary account.`,
+        badgeText:
+          data.batchCount && data.batchCount > 1
+            ? `COMBINED SETTLED (${data.batchCount})`
+            : "SETTLED",
         badgeBg: "#ecfdf5",
         badgeColor: "#065f46",
         badgeBorder: "#a7f3d0",
-        primaryAmountLabel: "Settled Payout",
+        primaryAmountLabel:
+          data.batchCount && data.batchCount > 1
+            ? "Combined Settled Payout"
+            : "Settled Payout",
         primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
         showSettlement: false,
         buttonText: "View Settlement Record",
@@ -275,6 +320,13 @@ export function generateEmailHtml(data: TransactionEmailData): string {
   }
 
   rows.push({ label: "Reference ID", value: data.referenceId, isMono: true });
+  if (data.batchCount && data.batchCount > 1) {
+    rows.push({
+      label: "7-Day Consolidation",
+      value: `⚡ Combined ${data.batchCount} withdrawals into 1 payment`,
+      isHighlight: true,
+    });
+  }
   rows.push({ label: "Date & Time", value: dateFormatted });
   rows.push({ label: "Status", value: data.statusText || config.badgeText });
 

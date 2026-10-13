@@ -69,6 +69,82 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
       targetUserId = wd.user_id;
 
+      // Check 7-day consolidation window for customer withdrawals:
+      // If the customer has multiple withdrawals within a 7-day window:
+      // 1. Suppress separate emails for non-primary withdrawals so each withdrawal doesn't have a separate mail.
+      // 2. For the primary (newest) withdrawal, combine all payment amounts into one withdrawal ID and dispatch 1 unified email.
+      let batchCount = 1;
+      let effectiveGrossAmount = Number(wd.amount);
+      let effectiveFeeAmount = Number(wd.fee ?? Number(wd.amount) * 0.1);
+      let effectiveReferenceId = wd.reference || `WD-${wd.id.slice(0, 8).toUpperCase()}`;
+
+      if (wd.user_id || wd.wallet_id || wd.email || wd.upi_id) {
+        try {
+          const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+          const targetTime = new Date(wd.created_at).getTime();
+
+          let clusterQuery = supabaseAdmin.from("withdrawals").select("*");
+          if (wd.user_id) {
+            clusterQuery = clusterQuery.eq("user_id", wd.user_id);
+          } else if (wd.wallet_id) {
+            clusterQuery = clusterQuery.eq("wallet_id", wd.wallet_id);
+          } else if (wd.email) {
+            clusterQuery = clusterQuery.eq("email", wd.email);
+          } else if (wd.upi_id) {
+            clusterQuery = clusterQuery.eq("upi_id", wd.upi_id);
+          }
+
+          const { data: userWds } = await clusterQuery;
+          if (userWds && userWds.length > 1) {
+            // Find withdrawals falling within the 7-day rolling window of this target withdrawal
+            const cluster = userWds.filter((w: any) => {
+              const diff = Math.abs(new Date(w.created_at).getTime() - targetTime);
+              return diff <= sevenDaysMs;
+            });
+
+            if (cluster.length > 1) {
+              // Sort by created_at descending (newest is primary reference)
+              cluster.sort(
+                (a: any, b: any) =>
+                  new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+              );
+              const primaryWd = cluster[0];
+
+              // If this withdrawal is NOT the primary one, suppress sending a separate email!
+              if (wd.id !== primaryWd.id) {
+                console.log(
+                  `[EmailServer] Suppressing separate email for withdrawal ${wd.id || wd.reference}; consolidated into 7-day batch under primary withdrawal ${primaryWd.id || primaryWd.reference}.`,
+                );
+                return {
+                  success: true,
+                  message: `Consolidated into 7-day batch (${cluster.length} withdrawals). Separate email suppressed. Primary reference: ${primaryWd.reference || primaryWd.id}`,
+                };
+              }
+
+              // This is the primary withdrawal! Combine the payments together:
+              batchCount = cluster.length;
+              effectiveGrossAmount = cluster.reduce(
+                (sum: number, w: any) => sum + Number(w.amount || 0),
+                0,
+              );
+              effectiveFeeAmount = cluster.reduce(
+                (sum: number, w: any) =>
+                  sum + Number(w.fee ?? Math.round(Number(w.amount || 0) * 0.1)),
+                0,
+              );
+              effectiveReferenceId =
+                primaryWd.reference || `WD-${primaryWd.id.slice(0, 8).toUpperCase()}`;
+
+              console.log(
+                `[EmailServer] Consolidated ${cluster.length} withdrawals across 7 days for user. Combined total: ${effectiveGrossAmount} ${wd.currency}, Primary Reference: ${effectiveReferenceId}`,
+              );
+            }
+          }
+        } catch (clusterErr) {
+          console.warn("[EmailServer] Error checking 7-day withdrawal cluster:", clusterErr);
+        }
+      }
+
       // Settlement timeframe (2–5 business days, concludes Day 5)
       const createdDate = new Date(wd.created_at);
       let countMin = 0;
@@ -87,24 +163,25 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
       const maxFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(maxArrival);
       const arrivalFormatted = `2–5 business days (${minFmt} – ${maxFmt})`;
 
-      const feeAmt = Number(wd.fee ?? Number(wd.amount) * 0.1);
-      const netPayout = Number(wd.recipient_amount ?? Number(wd.amount) - feeAmt);
+      const feeAmt = effectiveFeeAmount;
+      const netPayout = Number(effectiveGrossAmount - feeAmt);
 
       emailData = {
         eventType,
         recipientEmail: "",
-        amount: Number(wd.amount),
+        amount: effectiveGrossAmount,
         currency: wd.currency || "USD",
         fee: feeAmt,
         netCredited: netPayout,
         paymentMethod: wd.method || wd.provider || "Corridor Rail",
         counterparty: wd.full_name,
         counterpartyCode: wd.upi_id || undefined,
-        referenceId: wd.reference || `WD-${wd.id.slice(0, 8).toUpperCase()}`,
+        referenceId: effectiveReferenceId,
         dateStr: wd.created_at,
         statusText: wd.status,
         failureReason: wd.reason || undefined,
         actionUrl: `${appUrl}/withdrawals/${wd.id}`,
+        batchCount: batchCount > 1 ? batchCount : undefined,
         settlementInfo: {
           currentStep:
             eventType === "withdrawal_kyc_required"
