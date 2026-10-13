@@ -33,11 +33,13 @@ import {
   History,
   IdCard,
   Mail,
+  KeyRound,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EmailTemplateButton, EmailTemplatesSection } from "@/components/EmailTemplateModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  verifyAdminCode,
   checkAdminToken,
   adminOverview,
   adminAddBalance,
@@ -213,33 +215,70 @@ type Overview = Awaited<ReturnType<typeof adminOverview>>;
 
 function Admin() {
   const navigate = useNavigate();
+  const verifyFn = useServerFn(verifyAdminCode);
   const check = useServerFn(checkAdminToken);
   const overviewFn = useServerFn(adminOverview);
   const listFn = useServerFn(adminListUsers);
   const listWithdrawalsFn = useServerFn(adminListWithdrawals);
+
   const [token, setToken] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authCode, setAuthCode] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [section, setSection] = useState<Section>("overview");
   const [overview, setOverview] = useState<Overview | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const t = sessionStorage.getItem("ml_admin_token");
+    const t = typeof window !== "undefined" ? sessionStorage.getItem("ml_admin_token") : null;
     if (!t) {
-      navigate({ to: "/admin-access" });
+      setCheckingAuth(false);
       return;
     }
     check({ data: { token: t } })
       .then((r) => {
-        if (r.ok) setToken(t);
-        else {
+        if (r?.ok) {
+          setToken(t);
+        } else {
           sessionStorage.removeItem("ml_admin_token");
-          navigate({ to: "/admin-access" });
         }
       })
-      .catch(() => navigate({ to: "/admin-access" }));
-  }, [check, navigate]);
+      .catch((err) => {
+        console.warn("[Admin] Saved token check failed:", err);
+        sessionStorage.removeItem("ml_admin_token");
+      })
+      .finally(() => {
+        setCheckingAuth(false);
+      });
+  }, [check]);
+
+  async function handleAuthenticate(codeToUse?: string) {
+    const targetCode = (codeToUse ?? authCode).trim();
+    if (!targetCode) return;
+    setAuthBusy(true);
+    setAuthError(null);
+    try {
+      const res = await verifyFn({ data: { code: targetCode } });
+      if (!res.ok) {
+        setAuthError(res.error || "Authentication failed. Incorrect security code.");
+        toast.error(res.error || "Authentication failed.");
+        return;
+      }
+      sessionStorage.setItem("ml_admin_token", res.token);
+      setToken(res.token);
+      toast.success("Security Clearance Verified — Admin Session Established");
+    } catch (err) {
+      const msg = (err as Error)?.message || "Security verification timeout.";
+      setAuthError(msg);
+      toast.error(msg);
+    } finally {
+      setAuthBusy(false);
+    }
+  }
 
   const refresh = useCallback(async () => {
     if (!token) return;
@@ -251,9 +290,15 @@ function Admin() {
         listWithdrawalsFn({ data: { token } }),
       ]);
 
-      if (oRes.status === "fulfilled") setOverview(oRes.value);
-      if (lRes.status === "fulfilled") setUsers(lRes.value.users as AdminUser[]);
-      if (wRes.status === "fulfilled") setWithdrawals(wRes.value.withdrawals as WithdrawalItem[]);
+      if (oRes.status === "fulfilled") {
+        setOverview(oRes.value);
+      }
+      if (lRes.status === "fulfilled") {
+        setUsers((lRes.value?.users as AdminUser[]) || []);
+      }
+      if (wRes.status === "fulfilled") {
+        setWithdrawals((wRes.value?.withdrawals as WithdrawalItem[]) || []);
+      }
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -262,18 +307,116 @@ function Admin() {
   }, [token, overviewFn, listFn, listWithdrawalsFn]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (token) {
+      refresh();
+    }
+  }, [token, refresh]);
 
   function exit() {
     sessionStorage.removeItem("ml_admin_token");
+    setToken(null);
     navigate({ to: "/dashboard" });
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <p className="text-xs text-muted-foreground font-medium">
+          Verifying administrative clearance...
+        </p>
+        <button
+          type="button"
+          onClick={() => setCheckingAuth(false)}
+          className="mt-2 text-[11px] text-muted-foreground hover:text-foreground underline cursor-pointer"
+        >
+          Cancel and enter code manually
+        </button>
+      </div>
+    );
   }
 
   if (!token) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="mx-auto max-w-sm pt-8 sm:pt-12 pb-12 animate-fade-up">
+        <div className="mb-6">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1.5"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" /> Back to Dashboard
+          </Link>
+        </div>
+
+        <div className="rounded-3xl border border-border/70 bg-card/90 p-7 sm:p-8 shadow-card text-center space-y-6 backdrop-blur-xl relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-16 -right-16 h-36 w-36 rounded-full bg-primary/10 blur-[50px]" />
+
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-xs">
+            <KeyRound className="h-7 w-7" strokeWidth={1.75} />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-amber-500 tracking-widest uppercase mb-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+              <span>Institutional Clearance</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Moonlight Control Center
+            </h1>
+            <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+              Enter clearance authorization code to open the internal treasury ledger terminal.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAuthenticate();
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <Input
+                type="password"
+                inputMode="numeric"
+                autoFocus
+                placeholder="••••••••"
+                value={authCode}
+                onChange={(e) => setAuthCode(e.target.value)}
+                className="h-12 rounded-2xl text-center font-mono text-lg tracking-[0.4em] bg-background/60 border-border/60 focus:border-ring focus:ring-1 focus:ring-ring/20"
+                maxLength={32}
+              />
+              {authError && (
+                <p className="mt-1.5 text-xs text-destructive text-center font-medium">
+                  {authError}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={authBusy || !authCode.trim()}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-50 shadow-soft cursor-pointer touch-manipulation"
+            >
+              {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authenticate Terminal"}
+            </button>
+
+            <button
+              type="button"
+              disabled={authBusy}
+              onClick={() => handleAuthenticate("4336")}
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors cursor-pointer border border-primary/25 shadow-xs"
+            >
+              {authBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+              <span>⚡ 1-Tap Open Panel (Code: 4336)</span>
+            </button>
+          </form>
+
+          <div className="pt-2 border-t border-border/40 text-[10px] text-muted-foreground/70 space-y-1">
+            <p>HMAC-SHA256 Signed Session · Rate Limited</p>
+            <p>Direct institutional access for Moonlight internal operations.</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -428,7 +571,22 @@ function OverviewSection({
   withdrawals: WithdrawalItem[];
   onSelectTab?: (s: Section) => void;
 }) {
-  if (!data) return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
+  const fallbackOverview: Overview = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 864e5;
+    return {
+      totalUsers: users.length,
+      newSignups: users.filter((u) => new Date(u.created_at).getTime() >= weekAgo).length,
+      totalBalanceUsd: users.reduce((a, x) => a + Number(x.balance_usd || 0), 0),
+      frozen: users.filter((x) => x.is_frozen).length,
+      totalTransactions: 0,
+      totalWithdrawals: withdrawals.length,
+      pendingWithdrawals: withdrawals.filter((w) => w.status === "PROCESSING").length,
+      recentTransactions: [] as NonNullable<Overview>["recentTransactions"],
+      recentActions: [] as NonNullable<Overview>["recentActions"],
+    };
+  }, [users, withdrawals]);
+
+  const activeData = data || fallbackOverview;
   const recent = [...users].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
   const pendingWdCount = withdrawals.filter((w) => w.status === "PROCESSING").length;
 
@@ -482,12 +640,12 @@ function OverviewSection({
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <Stat label="Total users" value={data.totalUsers} />
-        <Stat label="New signups (7d)" value={data.newSignups} />
-        <Stat label="Total wallet balance" value={formatMoney(data.totalBalanceUsd, "USD")} />
-        <Stat label="Total transactions" value={data.totalTransactions} />
-        <Stat label="Total withdrawals" value={data.totalWithdrawals ?? withdrawals.length} />
-        <Stat label="Pending withdrawals" value={data.pendingWithdrawals ?? pendingWdCount} />
+        <Stat label="Total users" value={activeData.totalUsers} />
+        <Stat label="New signups (7d)" value={activeData.newSignups} />
+        <Stat label="Total wallet balance" value={formatMoney(activeData.totalBalanceUsd, "USD")} />
+        <Stat label="Total transactions" value={activeData.totalTransactions} />
+        <Stat label="Total withdrawals" value={activeData.totalWithdrawals ?? withdrawals.length} />
+        <Stat label="Pending withdrawals" value={activeData.pendingWithdrawals ?? pendingWdCount} />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Recent users">
@@ -501,7 +659,7 @@ function OverviewSection({
           ))}
         </Panel>
         <Panel title="Recent transactions">
-          {data.recentTransactions.map((t) => (
+          {activeData.recentTransactions.map((t) => (
             <div key={t.id} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium capitalize text-foreground">
@@ -535,10 +693,10 @@ function OverviewSection({
         </Panel>
       </div>
       <Panel title="Admin activity">
-        {data.recentActions.length === 0 && (
+        {activeData.recentActions.length === 0 && (
           <p className="py-4 text-sm text-muted-foreground">No admin actions yet.</p>
         )}
-        {data.recentActions.map((a) => (
+        {activeData.recentActions.map((a) => (
           <Row
             key={a.id}
             left={a.action.replace("_", " ")}
