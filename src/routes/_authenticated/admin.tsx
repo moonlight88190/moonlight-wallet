@@ -31,8 +31,12 @@ import {
   FileText,
   CreditCard,
   History,
+  Mail,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { EmailTemplateButton } from "@/components/EmailTemplateModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   checkAdminToken,
@@ -145,7 +149,8 @@ type Section =
   | "users"
   | "controls"
   | "search"
-  | "activity";
+  | "activity"
+  | "emails";
 
 const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "overview", label: "Overview", icon: LayoutGrid },
@@ -156,6 +161,7 @@ const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "controls", label: "Account Controls", icon: ShieldCheck },
   { id: "search", label: "Global Search", icon: Search },
   { id: "activity", label: "Security & Audit", icon: Activity },
+  { id: "emails", label: "Email Templates", icon: Mail },
 ];
 
 type AdminUser = {
@@ -392,6 +398,7 @@ function Admin() {
           />
         )}
         {section === "activity" && <ActivitySection token={token} />}
+        {section === "emails" && <EmailTemplatesSection />}
       </main>
     </div>
   );
@@ -491,12 +498,35 @@ function OverviewSection({
         </Panel>
         <Panel title="Recent transactions">
           {data.recentTransactions.map((t) => (
-            <Row
-              key={t.id}
-              left={`${t.sender_name ?? "Moonlight"} → ${t.recipient_name ?? "Moonlight"}`}
-              sub={`${t.kind.replace("_", " ")} · ${new Date(t.created_at).toLocaleString()}`}
-              right={formatMoney(Number(t.amount), t.currency)}
-            />
+            <div key={t.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium capitalize text-foreground">
+                  {`${t.sender_name ?? "Moonlight"} → ${t.recipient_name ?? "Moonlight"}`}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {`${t.kind.replace("_", " ")} · ${new Date(t.created_at).toLocaleString()}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-sm font-semibold tabular-nums text-foreground">
+                  {formatMoney(Number(t.amount), t.currency)}
+                </span>
+                <EmailTemplateButton
+                  data={{
+                    type: t.kind === "withdrawal" ? "withdrawal" : "money_received",
+                    recipientName: t.recipient_name || "Valued Customer",
+                    senderName: t.sender_name || "Moonlight Financial",
+                    amount: t.amount,
+                    currency: t.currency,
+                    reference: t.reference,
+                    date: new Date(t.created_at).toLocaleString(),
+                    status: "COMPLETED",
+                  }}
+                  variant="compact"
+                  label="Email"
+                />
+              </div>
+            </div>
           ))}
         </Panel>
       </div>
@@ -987,6 +1017,24 @@ function WithdrawalsSection({
                   <FileText className="h-3.5 w-3.5" />
                   <span>Modify Status &amp; Note</span>
                 </button>
+
+                <EmailTemplateButton
+                  data={{
+                    type:
+                      w.status === "ON HOLD" || w.status === "UNDER REVIEW"
+                        ? "kyc_hold"
+                        : "withdrawal",
+                    recipientName: w.full_name || w.email || "Valued Customer",
+                    senderName: "Moonlight Settlement Desk",
+                    amount: w.amount,
+                    currency: w.currency,
+                    reference: w.reference,
+                    date: new Date(w.created_at).toLocaleString(),
+                    status: w.status,
+                    method: w.method || "Payout Rail",
+                  }}
+                  label="Email Template"
+                />
 
                 <Link
                   to="/withdrawals/$id"
@@ -2218,6 +2266,25 @@ function TransactionsSection({ token }: { token: string }) {
                     )}
                   </div>
 
+                  <EmailTemplateButton
+                    data={{
+                      type: isWd
+                        ? "withdrawal"
+                        : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
+                          ? "kyc_hold"
+                          : "money_received",
+                      recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
+                      senderName: tx.sender_name || "Moonlight Financial",
+                      amount: tx.amount,
+                      currency: tx.currency,
+                      reference: tx.reference,
+                      date: dateStr,
+                      status: statusUpper,
+                      method: tx.method || (isWd ? "Withdrawal" : "Transfer"),
+                    }}
+                    label="Email Template"
+                  />
+
                   <Link
                     to={isWd ? "/withdrawals/$id" : "/transactions/$id"}
                     params={{ id: tx.id }}
@@ -2604,6 +2671,603 @@ function ActivitySection({ token }: { token: string }) {
           })
         )}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// EMAIL TEMPLATES SECTION
+// ─────────────────────────────────────────────
+
+const LOGO_URL =
+  "https://b17cedb7-4b7b-485c-807a-ccc6dd6383b9.lovableproject.com/__l5e/assets-v1/17db28e8-0752-4d7d-b01c-7f7f7fa7fdaa/moonlight-logo.png";
+const SITE_URL = "https://moonlight.lovableproject.com";
+
+function buildMoneyReceivedHtml(params: {
+  recipientName: string;
+  senderName: string;
+  amount: string;
+  currency: string;
+  date: string;
+  reference: string;
+}) {
+  const { recipientName, senderName, amount, currency, date, reference } = params;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money Received — Moonlight Wallet</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#12121a;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+            <img src="${LOGO_URL}" alt="Moonlight" width="140" style="display:block;margin:0 auto 4px;" />
+            <p style="margin:0;color:#ffffff80;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Moonlight Wallet</p>
+          </td>
+        </tr>
+
+        <!-- Green bar -->
+        <tr>
+          <td style="background:#16a34a;padding:14px 40px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">✅ Money Received Successfully</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px;">
+            <p style="margin:0 0 6px;font-size:15px;color:#1a1a2e;">Hello <strong>${recipientName}</strong>,</p>
+            <p style="margin:0 0 28px;font-size:14px;color:#6b7280;line-height:1.6;">Great news — a payment has been deposited into your Moonlight Wallet. Here are the details:</p>
+
+            <!-- Amount box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:28px;">
+              <tr>
+                <td style="padding:24px;text-align:center;">
+                  <p style="margin:0 0 4px;font-size:13px;color:#16a34a;text-transform:uppercase;font-weight:600;letter-spacing:1px;">Amount Received</p>
+                  <p style="margin:0;font-size:36px;font-weight:800;color:#15803d;letter-spacing:-1px;">${amount} <span style="font-size:18px;">${currency}</span></p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Detail rows -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;width:40%;">From</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-weight:600;">${senderName}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Date</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;border-top:1px solid #e5e7eb;">${date}</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Reference</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-family:monospace;border-top:1px solid #e5e7eb;">${reference}</td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 28px;font-size:13px;color:#6b7280;line-height:1.7;">The funds are now available in your Moonlight Wallet. You can view your updated balance, transfer funds, or withdraw at any time by logging into your account.</p>
+
+            <!-- CTA -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+              <tr>
+                <td style="background:#12121a;border-radius:50px;padding:14px 32px;text-align:center;">
+                  <a href="${SITE_URL}/dashboard" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.5px;">View My Wallet →</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">If you didn't expect this payment, please contact our support team immediately.</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #e5e7eb;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} Moonlight Financial. All rights reserved.</p>
+            <p style="margin:0;font-size:11px;color:#d1d5db;">This is an automated notification. Please do not reply to this email.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildWithdrawalHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  method: string;
+  date: string;
+  reference: string;
+  status: string;
+}) {
+  const { recipientName, amount, currency, method, date, reference, status } = params;
+  const statusColor = status === "SUCCESSFUL" ? "#16a34a" : status === "PROCESSING" ? "#d97706" : "#dc2626";
+  const statusBg = status === "SUCCESSFUL" ? "#f0fdf4" : status === "PROCESSING" ? "#fffbeb" : "#fef2f2";
+  const statusBorder = status === "SUCCESSFUL" ? "#bbf7d0" : status === "PROCESSING" ? "#fde68a" : "#fecaca";
+  const statusIcon = status === "SUCCESSFUL" ? "✅" : status === "PROCESSING" ? "⏳" : "❌";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Withdrawal Update — Moonlight Wallet</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#12121a;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+            <img src="${LOGO_URL}" alt="Moonlight" width="140" style="display:block;margin:0 auto 4px;" />
+            <p style="margin:0;color:#ffffff80;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Moonlight Wallet</p>
+          </td>
+        </tr>
+
+        <!-- Status bar -->
+        <tr>
+          <td style="background:${statusColor};padding:14px 40px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${statusIcon} Withdrawal ${status}</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px;">
+            <p style="margin:0 0 6px;font-size:15px;color:#1a1a2e;">Hello <strong>${recipientName}</strong>,</p>
+            <p style="margin:0 0 28px;font-size:14px;color:#6b7280;line-height:1.6;">Your withdrawal request has been updated. Please review the details below:</p>
+
+            <!-- Amount box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:${statusBg};border:1px solid ${statusBorder};border-radius:12px;margin-bottom:28px;">
+              <tr>
+                <td style="padding:24px;text-align:center;">
+                  <p style="margin:0 0 4px;font-size:13px;color:${statusColor};text-transform:uppercase;font-weight:600;letter-spacing:1px;">Withdrawal Amount</p>
+                  <p style="margin:0;font-size:36px;font-weight:800;color:${statusColor};letter-spacing:-1px;">${amount} <span style="font-size:18px;">${currency}</span></p>
+                  <p style="margin:6px 0 0;font-size:12px;color:${statusColor};font-weight:600;">${status}</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Detail rows -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;width:40%;">Method</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-weight:600;">${method}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Date</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;border-top:1px solid #e5e7eb;">${date}</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Reference</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-family:monospace;border-top:1px solid #e5e7eb;">${reference}</td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 28px;font-size:13px;color:#6b7280;line-height:1.7;">${status === "SUCCESSFUL" ? "Your funds have been sent to your chosen payment method. Please allow your bank 1–3 business days to process the transfer depending on your region and payment rail." : status === "PROCESSING" ? "Your withdrawal is currently being processed by our clearing team. You will receive another update as soon as it is completed." : "Unfortunately your withdrawal could not be completed at this time. Your funds have been returned to your Moonlight Wallet balance. Please contact support if you need assistance."}</p>
+
+            <!-- CTA -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+              <tr>
+                <td style="background:#12121a;border-radius:50px;padding:14px 32px;text-align:center;">
+                  <a href="${SITE_URL}/dashboard" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.5px;">Go to Dashboard →</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Questions? Contact our support team at support@moonlightwallet.com</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #e5e7eb;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} Moonlight Financial. All rights reserved.</p>
+            <p style="margin:0;font-size:11px;color:#d1d5db;">This is an automated notification. Please do not reply to this email.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildKycHoldHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  senderName: string;
+  reference: string;
+  date: string;
+}) {
+  const { recipientName, amount, currency, senderName, reference, date } = params;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Action Required: KYC Verification — Moonlight Wallet</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#12121a;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
+            <img src="${LOGO_URL}" alt="Moonlight" width="140" style="display:block;margin:0 auto 4px;" />
+            <p style="margin:0;color:#ffffff80;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Moonlight Wallet</p>
+          </td>
+        </tr>
+
+        <!-- Warning bar -->
+        <tr>
+          <td style="background:#7c3aed;padding:14px 40px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">⚠️ Action Required — Transaction On Hold</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="background:#ffffff;padding:40px;">
+            <p style="margin:0 0 6px;font-size:15px;color:#1a1a2e;">Hello <strong>${recipientName}</strong>,</p>
+            <p style="margin:0 0 28px;font-size:14px;color:#6b7280;line-height:1.6;">An incoming payment to your Moonlight Wallet has been placed on hold pending identity verification (KYC). Please review the details and take action below:</p>
+
+            <!-- Amount box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf5ff;border:1px solid #ddd6fe;border-radius:12px;margin-bottom:28px;">
+              <tr>
+                <td style="padding:24px;text-align:center;">
+                  <p style="margin:0 0 4px;font-size:13px;color:#7c3aed;text-transform:uppercase;font-weight:600;letter-spacing:1px;">Amount On Hold</p>
+                  <p style="margin:0;font-size:36px;font-weight:800;color:#6d28d9;letter-spacing:-1px;">${amount} <span style="font-size:18px;">${currency}</span></p>
+                  <p style="margin:6px 0 0;font-size:12px;color:#7c3aed;font-weight:600;">From: ${senderName}</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Detail rows -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;width:40%;">Sender</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-weight:600;">${senderName}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Date</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;border-top:1px solid #e5e7eb;">${date}</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Reference</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1a1a2e;font-family:monospace;border-top:1px solid #e5e7eb;">${reference}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 16px;font-size:12px;color:#6b7280;border-top:1px solid #e5e7eb;">Status</td>
+                <td style="padding:12px 16px;font-size:13px;font-weight:700;color:#7c3aed;border-top:1px solid #e5e7eb;">🔒 ON HOLD — KYC Required</td>
+              </tr>
+            </table>
+
+            <!-- How it works box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;margin-bottom:28px;">
+              <tr>
+                <td style="padding:24px;">
+                  <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#92400e;">📋 How to unlock your funds</p>
+                  <p style="margin:0 0 10px;font-size:13px;color:#78350f;line-height:1.7;"><strong>Step 1:</strong> Complete your KYC (identity verification) inside your Moonlight Wallet account.</p>
+                  <p style="margin:0 0 10px;font-size:13px;color:#78350f;line-height:1.7;"><strong>Step 2:</strong> Once your KYC is approved, Moonlight will issue a <strong>5-digit verification key</strong> to the person who sent you this payment (<strong>${senderName}</strong>).</p>
+                  <p style="margin:0 0 10px;font-size:13px;color:#78350f;line-height:1.7;"><strong>Step 3:</strong> Contact <strong>${senderName}</strong> and ask them to share their 5-digit key with you.</p>
+                  <p style="margin:0 0 10px;font-size:13px;color:#78350f;line-height:1.7;"><strong>Step 4:</strong> Submit the key to Moonlight so we can confirm both parties are correct. Once verified, your funds will be released instantly.</p>
+                  <p style="margin:0;font-size:12px;color:#92400e;font-style:italic;">💡 If you have trouble reaching ${senderName}, Moonlight will also send you a separate key directly for additional verification.</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+              <tr>
+                <td style="background:#7c3aed;border-radius:50px;padding:14px 32px;text-align:center;">
+                  <a href="${SITE_URL}/dashboard" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.5px;">Complete KYC Now →</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Need help? Reach us at support@moonlightwallet.com — we're here 24/7.</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #e5e7eb;border-radius:0 0 16px 16px;padding:24px 40px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} Moonlight Financial. All rights reserved.</p>
+            <p style="margin:0;font-size:11px;color:#d1d5db;">This is an automated notification. Please do not reply to this email.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+type EmailTab = "received" | "withdrawal" | "kyc";
+
+function CopyButton({ getText }: { getText: () => string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(getText()).then(() => {
+      setCopied(true);
+      toast.success("HTML email copied to clipboard — ready to paste!");
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+  return (
+    <button
+      onClick={copy}
+      className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-primary text-primary-foreground text-xs font-bold tracking-wider uppercase shadow-soft hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer touch-manipulation"
+    >
+      {copied ? (
+        <><Check className="h-4 w-4" /> Copied!</>
+      ) : (
+        <><Copy className="h-4 w-4" /> Copy HTML Email</>
+      )}
+    </button>
+  );
+}
+
+function EmailTemplatesSection() {
+  const [tab, setTab] = useState<EmailTab>("received");
+
+  // Editable fields — money received
+  const [mrRecipient, setMrRecipient] = useState("[Customer Name]");
+  const [mrSender, setMrSender] = useState("[Sender Name]");
+  const [mrAmount, setMrAmount] = useState("0.00");
+  const [mrCurrency, setMrCurrency] = useState("USD");
+  const [mrDate, setMrDate] = useState(new Date().toLocaleString());
+  const [mrRef, setMrRef] = useState("ML-XXXX-XXXX");
+
+  // Editable fields — withdrawal
+  const [wdRecipient, setWdRecipient] = useState("[Customer Name]");
+  const [wdAmount, setWdAmount] = useState("0.00");
+  const [wdCurrency, setWdCurrency] = useState("USD");
+  const [wdMethod, setWdMethod] = useState("Bank Transfer");
+  const [wdDate, setWdDate] = useState(new Date().toLocaleString());
+  const [wdRef, setWdRef] = useState("ML-XXXX-XXXX");
+  const [wdStatus, setWdStatus] = useState("SUCCESSFUL");
+
+  // Editable fields — kyc hold
+  const [kycRecipient, setKycRecipient] = useState("[Customer Name]");
+  const [kycAmount, setKycAmount] = useState("0.00");
+  const [kycCurrency, setKycCurrency] = useState("USD");
+  const [kycSender, setKycSender] = useState("[Sender Name]");
+  const [kycRef, setKycRef] = useState("ML-XXXX-XXXX");
+  const [kycDate, setKycDate] = useState(new Date().toLocaleString());
+
+  const tabs: { id: EmailTab; label: string; color: string }[] = [
+    { id: "received", label: "💰 Money Received", color: "emerald" },
+    { id: "withdrawal", label: "🏦 Withdrawal", color: "amber" },
+    { id: "kyc", label: "🔒 KYC Hold", color: "purple" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Email Templates</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Fill in the fields, then click <strong>Copy HTML Email</strong> — paste directly into Gmail, Outlook, or any email client.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          <Mail className="h-3 w-3" /> 3 Templates
+        </span>
+      </div>
+
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
+        <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+        <div className="text-xs space-y-1">
+          <p className="font-semibold text-foreground">💡 1-Tap Auto-Filled Email Templates Available on Every Row</p>
+          <p className="text-muted-foreground leading-relaxed">
+            You don't need to manually type customer details! An <span className="font-bold text-purple-600 dark:text-purple-400">"Email Template"</span> button is now placed directly next to every row in the <strong>Transactions</strong> and <strong>Withdrawals</strong> tabs. Clicking it opens the pre-filled email with that transaction's exact amount, currency, reference ID, and dates ready to copy in 1 tap.
+          </p>
+        </div>
+      </div>
+
+      {/* Tab switcher */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer",
+              tab === t.id
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "border border-border bg-card text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ─── Money Received ─── */}
+      {tab === "received" && (
+        <div className="space-y-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/10 p-5">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">💰 Money Received Email</p>
+              <p className="text-[11px] text-muted-foreground">Sent when a customer successfully receives a payment into their wallet.</p>
+            </div>
+            <CopyButton
+              getText={() =>
+                buildMoneyReceivedHtml({
+                  recipientName: mrRecipient,
+                  senderName: mrSender,
+                  amount: mrAmount,
+                  currency: mrCurrency,
+                  date: mrDate,
+                  reference: mrRef,
+                })
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              ["Recipient Name", mrRecipient, setMrRecipient],
+              ["Sender Name", mrSender, setMrSender],
+              ["Amount", mrAmount, setMrAmount],
+              ["Currency", mrCurrency, setMrCurrency],
+              ["Date", mrDate, setMrDate],
+              ["Reference", mrRef, setMrRef],
+            ] as [string, string, (v: string) => void][]).map(([label, value, setter]) => (
+              <div key={label} className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</label>
+                <input
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-background overflow-hidden">
+            <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">HTML Preview (read-only)</p>
+            <pre className="p-4 text-[10px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 leading-relaxed">{buildMoneyReceivedHtml({ recipientName: mrRecipient, senderName: mrSender, amount: mrAmount, currency: mrCurrency, date: mrDate, reference: mrRef })}</pre>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Withdrawal ─── */}
+      {tab === "withdrawal" && (
+        <div className="space-y-4 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/10 p-5">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">🏦 Withdrawal Email</p>
+              <p className="text-[11px] text-muted-foreground">Sent to inform the customer of their withdrawal status update.</p>
+            </div>
+            <CopyButton
+              getText={() =>
+                buildWithdrawalHtml({
+                  recipientName: wdRecipient,
+                  amount: wdAmount,
+                  currency: wdCurrency,
+                  method: wdMethod,
+                  date: wdDate,
+                  reference: wdRef,
+                  status: wdStatus,
+                })
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              ["Recipient Name", wdRecipient, setWdRecipient],
+              ["Amount", wdAmount, setWdAmount],
+              ["Currency", wdCurrency, setWdCurrency],
+              ["Payment Method", wdMethod, setWdMethod],
+              ["Date", wdDate, setWdDate],
+              ["Reference", wdRef, setWdRef],
+            ] as [string, string, (v: string) => void][]).map(([label, value, setter]) => (
+              <div key={label} className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</label>
+                <input
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            ))}
+            <div className="space-y-1">
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
+              <select
+                value={wdStatus}
+                onChange={(e) => setWdStatus(e.target.value)}
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option>SUCCESSFUL</option>
+                <option>PROCESSING</option>
+                <option>FAILED</option>
+                <option>ON HOLD</option>
+              </select>
+            </div>
+          </div>
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/40 bg-background overflow-hidden">
+            <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">HTML Preview (read-only)</p>
+            <pre className="p-4 text-[10px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 leading-relaxed">{buildWithdrawalHtml({ recipientName: wdRecipient, amount: wdAmount, currency: wdCurrency, method: wdMethod, date: wdDate, reference: wdRef, status: wdStatus })}</pre>
+          </div>
+        </div>
+      )}
+
+      {/* ─── KYC Hold ─── */}
+      {tab === "kyc" && (
+        <div className="space-y-4 rounded-2xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/40 dark:bg-purple-950/10 p-5">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">🔒 KYC Transaction Hold Email</p>
+              <p className="text-[11px] text-muted-foreground">Sent when a transaction is placed on hold pending KYC verification. Explains the 5-digit key process.</p>
+            </div>
+            <CopyButton
+              getText={() =>
+                buildKycHoldHtml({
+                  recipientName: kycRecipient,
+                  amount: kycAmount,
+                  currency: kycCurrency,
+                  senderName: kycSender,
+                  reference: kycRef,
+                  date: kycDate,
+                })
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              ["Recipient Name", kycRecipient, setKycRecipient],
+              ["Sender Name", kycSender, setKycSender],
+              ["Amount", kycAmount, setKycAmount],
+              ["Currency", kycCurrency, setKycCurrency],
+              ["Date", kycDate, setKycDate],
+              ["Reference", kycRef, setKycRef],
+            ] as [string, string, (v: string) => void][]).map(([label, value, setter]) => (
+              <div key={label} className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</label>
+                <input
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* KYC process info card */}
+          <div className="rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50 dark:bg-purple-950/20 p-4 space-y-2">
+            <p className="text-[11px] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider">📋 What this email tells the customer</p>
+            <ul className="space-y-1.5 text-[11px] text-purple-700 dark:text-purple-400">
+              <li>1. Complete KYC inside Moonlight Wallet</li>
+              <li>2. On approval → a 5-digit key is sent to the sender ({kycSender})</li>
+              <li>3. Customer contacts sender to get their 5-digit key</li>
+              <li>4. Submit key to Moonlight → funds released instantly</li>
+              <li>5. If sender unreachable → Moonlight also provides a key directly</li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-purple-200 dark:border-purple-900/40 bg-background overflow-hidden">
+            <p className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">HTML Preview (read-only)</p>
+            <pre className="p-4 text-[10px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 leading-relaxed">{buildKycHoldHtml({ recipientName: kycRecipient, amount: kycAmount, currency: kycCurrency, senderName: kycSender, reference: kycRef, date: kycDate })}</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
