@@ -31,6 +31,7 @@ import {
 } from "@/components/AssetComponents";
 import { resolvePaymentAsset, INDIAN_BANKS } from "@/lib/assets";
 import { LogoMark } from "@/components/Logo";
+import { EmailTemplateButton } from "@/components/EmailTemplateModal";
 import { cn } from "@/lib/utils";
 import { getWithdrawalComplianceInfo, TIMELINE_SUMMARY_STEPS } from "@/lib/compliance";
 
@@ -242,6 +243,24 @@ function WithdrawalReceipt() {
           <span>Activity</span>
         </Link>
         <div className="flex items-center gap-1.5">
+          <EmailTemplateButton
+            data={{
+              type:
+                wd.status === "ON HOLD" || wd.status === "UNDER REVIEW"
+                  ? "kyc_hold"
+                  : "withdrawal",
+              recipientName: wd.full_name || wd.email || "Valued Customer",
+              senderName: "Moonlight Settlement Desk",
+              amount: grossAmount,
+              currency: displayCurrency,
+              reference: wd.reference,
+              date: formattedDate,
+              status: wd.status,
+              method: displayMethod,
+            }}
+            variant="compact"
+            label="Email Template"
+          />
           <button
             type="button"
             onClick={handleShare}

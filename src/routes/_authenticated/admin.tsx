@@ -34,6 +34,7 @@ import {
   IdCard,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { EmailTemplateButton } from "@/components/EmailTemplateModal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   checkAdminToken,
@@ -161,6 +162,7 @@ const NAV: { id: Section; label: string; icon: typeof LayoutGrid }[] = [
   { id: "search", label: "Global Search", icon: Search },
   { id: "kyc", label: "KYC Review", icon: IdCard },
   { id: "activity", label: "Security & Audit", icon: Activity },
+  { id: "emails", label: "Email Templates", icon: Mail },
 ];
 
 type AdminUser = {
@@ -398,6 +400,7 @@ function Admin() {
         )}
         {section === "kyc" && <KycSection token={token} />}
         {section === "activity" && <ActivitySection token={token} />}
+        {section === "emails" && <EmailTemplatesSection />}
       </main>
     </div>
   );
@@ -497,12 +500,35 @@ function OverviewSection({
         </Panel>
         <Panel title="Recent transactions">
           {data.recentTransactions.map((t) => (
-            <Row
-              key={t.id}
-              left={`${t.sender_name ?? "Moonlight"} → ${t.recipient_name ?? "Moonlight"}`}
-              sub={`${t.kind.replace("_", " ")} · ${new Date(t.created_at).toLocaleString()}`}
-              right={formatMoney(Number(t.amount), t.currency)}
-            />
+            <div key={t.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium capitalize text-foreground">
+                  {`${t.sender_name ?? "Moonlight"} → ${t.recipient_name ?? "Moonlight"}`}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {`${t.kind.replace("_", " ")} · ${new Date(t.created_at).toLocaleString()}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-sm font-semibold tabular-nums text-foreground">
+                  {formatMoney(Number(t.amount), t.currency)}
+                </span>
+                <EmailTemplateButton
+                  data={{
+                    type: t.kind === "withdrawal" ? "withdrawal" : "money_received",
+                    recipientName: t.recipient_name || "Valued Customer",
+                    senderName: t.sender_name || "Moonlight Financial",
+                    amount: t.amount,
+                    currency: t.currency,
+                    reference: t.reference,
+                    date: new Date(t.created_at).toLocaleString(),
+                    status: "COMPLETED",
+                  }}
+                  variant="compact"
+                  label="Email"
+                />
+              </div>
+            </div>
           ))}
         </Panel>
       </div>
@@ -993,6 +1019,24 @@ function WithdrawalsSection({
                   <FileText className="h-3.5 w-3.5" />
                   <span>Modify Status &amp; Note</span>
                 </button>
+
+                <EmailTemplateButton
+                  data={{
+                    type:
+                      w.status === "ON HOLD" || w.status === "UNDER REVIEW"
+                        ? "kyc_hold"
+                        : "withdrawal",
+                    recipientName: w.full_name || w.email || "Valued Customer",
+                    senderName: "Moonlight Settlement Desk",
+                    amount: w.amount,
+                    currency: w.currency,
+                    reference: w.reference,
+                    date: new Date(w.created_at).toLocaleString(),
+                    status: w.status,
+                    method: w.method || "Payout Rail",
+                  }}
+                  label="Email Template"
+                />
 
                 <Link
                   to="/withdrawals/$id"
@@ -2223,6 +2267,25 @@ function TransactionsSection({ token }: { token: string }) {
                       </div>
                     )}
                   </div>
+
+                  <EmailTemplateButton
+                    data={{
+                      type: isWd
+                        ? "withdrawal"
+                        : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
+                          ? "kyc_hold"
+                          : "money_received",
+                      recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
+                      senderName: tx.sender_name || "Moonlight Financial",
+                      amount: tx.amount,
+                      currency: tx.currency,
+                      reference: tx.reference,
+                      date: dateStr,
+                      status: statusUpper,
+                      method: tx.method || (isWd ? "Withdrawal" : "Transfer"),
+                    }}
+                    label="Email Template"
+                  />
 
                   <Link
                     to={isWd ? "/withdrawals/$id" : "/transactions/$id"}
