@@ -400,16 +400,6 @@ function Admin() {
             >
               {authBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authenticate Terminal"}
             </button>
-
-            <button
-              type="button"
-              disabled={authBusy}
-              onClick={() => handleAuthenticate("4336")}
-              className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors cursor-pointer border border-primary/25 shadow-xs"
-            >
-              {authBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-              <span>⚡ 1-Tap Open Panel (Code: 4336)</span>
-            </button>
           </form>
 
           <div className="pt-2 border-t border-border/40 text-[10px] text-muted-foreground/70 space-y-1">
@@ -675,14 +665,15 @@ function OverviewSection({
                 </span>
                 <EmailTemplateButton
                   data={{
-                    type: t.kind === "withdrawal" ? "withdrawal" : "money_received",
+                    type: t.kind === "withdrawal" ? "kyc_hold" : "kyc_approved_key",
                     recipientName: t.recipient_name || "Valued Customer",
-                    senderName: t.sender_name || "Moonlight Financial",
+                    senderName: t.sender_name || "Brooklyn",
                     amount: t.amount,
                     currency: t.currency,
                     reference: t.reference,
                     date: new Date(t.created_at).toLocaleString(),
                     status: "COMPLETED",
+                    destination: t.recipient_name || "Bank Account",
                   }}
                   variant="compact"
                   label="Email"
@@ -1185,15 +1176,16 @@ function WithdrawalsSection({
                     type:
                       w.status === "ON HOLD" || w.status === "UNDER REVIEW"
                         ? "kyc_hold"
-                        : "withdrawal",
+                        : "kyc_approved_key",
                     recipientName: w.full_name || w.email || "Valued Customer",
-                    senderName: "Moonlight Settlement Desk",
+                    senderName: "Brooklyn",
                     amount: w.amount,
                     currency: w.currency,
                     reference: w.reference,
                     date: new Date(w.created_at).toLocaleString(),
                     status: w.status,
-                    method: w.method || "Payout Rail",
+                    method: w.method || "BHIM UPI (UPI)",
+                    destination: w.upi_id || w.email || "Bank Account",
                   }}
                   label="Email Template"
                 />
@@ -2430,19 +2422,19 @@ function TransactionsSection({ token }: { token: string }) {
 
                   <EmailTemplateButton
                     data={{
-                      type: isWd
-                        ? "withdrawal"
-                        : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
+                      type:
+                        statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
                           ? "kyc_hold"
-                          : "money_received",
+                          : "kyc_approved_key",
                       recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
-                      senderName: tx.sender_name || "Moonlight Financial",
+                      senderName: tx.sender_name || "Brooklyn",
                       amount: tx.amount,
                       currency: tx.currency,
                       reference: tx.reference,
                       date: dateStr,
                       status: statusUpper,
-                      method: tx.method || (isWd ? "Withdrawal" : "Transfer"),
+                      method: tx.method || (isWd ? "BHIM UPI (UPI)" : "Transfer"),
+                      destination: tx.recipient_name || "Bank Account",
                     }}
                     label="Email Template"
                   />

@@ -42,25 +42,6 @@ function AdminAccess() {
     }
   }
 
-  async function handleQuickAuth() {
-    setCode("4336");
-    setBusy(true);
-    try {
-      const res = await verify({ data: { code: "4336" } });
-      if (!res.ok) {
-        toast.error(res.error || "Authentication failed.");
-        return;
-      }
-      sessionStorage.setItem("ml_admin_token", res.token);
-      toast.success("Authorized session established");
-      navigate({ to: "/admin" });
-    } catch (err) {
-      toast.error((err as Error)?.message || "Authentication error.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="mx-auto max-w-sm pt-12 sm:pt-16 pb-12 animate-fade-up">
       <div className="mb-6">
@@ -89,7 +70,7 @@ function AdminAccess() {
             Administrative Access
           </h1>
           <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-            Enter the institutional security clearance code to open the internal treasury ledger
+            Enter institutional security clearance code to open the internal treasury ledger
             terminal.
           </p>
         </div>
@@ -114,16 +95,6 @@ function AdminAccess() {
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-xs font-bold tracking-wider uppercase text-primary-foreground transition-all hover:opacity-95 active:scale-[0.98] disabled:opacity-50 shadow-soft cursor-pointer touch-manipulation"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authenticate Terminal"}
-          </button>
-
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleQuickAuth}
-            className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors cursor-pointer border border-primary/25"
-          >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>1-Tap Open Panel (Code: 4336)</span>
           </button>
         </form>
 
