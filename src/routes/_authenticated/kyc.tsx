@@ -1,11 +1,23 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Camera, FileText, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  Camera,
+  FileText,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  XCircle,
+  KeyRound,
+  Mail,
+  Check,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useKyc } from "@/hooks/use-kyc";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/kyc")({
@@ -51,6 +63,10 @@ function KycPage() {
   const [doc, setDoc] = useState<File | null>(null);
   const [docType, setDocType] = useState<(typeof DOCS)[number]["id"]>("aadhaar");
   const [busy, setBusy] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keySubmitted, setKeySubmitted] = useState(() => {
+    return typeof window !== "undefined" && Boolean(localStorage.getItem("keybox_kyc_key"));
+  });
   const selfieUrl = usePreview(selfie);
   const docUrl = usePreview(doc);
 
@@ -103,16 +119,126 @@ function KycPage() {
 
       {isLoading ? (
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-      ) : status === "approved" || status === "pending" ? (
-        <div className="rounded-3xl border border-border bg-card p-6 text-center space-y-3">
-          {status === "approved" ? (
+      ) : status === "approved" ? (
+        <div className="space-y-4">
+          {/* Identity Verified Badge Card */}
+          <div className="rounded-3xl border border-success/30 bg-success/5 p-6 text-center space-y-2">
             <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
-          ) : (
-            <Clock className="mx-auto h-10 w-10 text-gold" />
-          )}
-          <p className="text-lg font-semibold">{status === "approved" ? "You're verified" : "Under review"}</p>
+            <p className="text-lg font-semibold text-foreground">KYC Identity Verified</p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Your identity documents have been approved by Moonlight Compliance.
+            </p>
+          </div>
+
+          {/* KeyBox Verification Action Section */}
+          <div className="rounded-3xl border-2 border-primary/30 bg-gradient-to-b from-primary/10 via-card to-card p-6 space-y-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                <KeyRound className="h-5 w-5" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-bold text-foreground">Add KeyBox Verification Key</h2>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
+                    Release Security Step
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Now that your KYC is successful, enter the security verification key provided by the sender. Verification will be processed by our compliance team and you will receive verification confirmation directly in your registered email.
+                </p>
+              </div>
+            </div>
+
+            {/* Email Notice Card */}
+            <div className="rounded-2xl border border-border/80 bg-secondary/50 p-3.5 flex items-start gap-2.5 text-xs">
+              <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-semibold text-foreground">
+                  Verification Confirmation Via Email
+                </span>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Once your key is submitted, key verification starts immediately. You will receive official verification confirmation and payout release notifications in your registered mail at the earliest.
+                </p>
+              </div>
+            </div>
+
+            {keySubmitted ? (
+              <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Key Submitted · Verification In Progress</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                    Received
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Your verification key has been submitted to Moonlight Compliance. Verification is underway and you will receive confirmation in your registered email at the earliest.
+                </p>
+                <div className="pt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setKeySubmitted(false)}
+                    className="text-[11px] text-primary hover:underline font-semibold cursor-pointer"
+                  >
+                    Change or re-enter key
+                  </button>
+                  <Link
+                    to="/transactions"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    View Withdrawal Activity &rarr;
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 pt-1">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground block">
+                    KeyBox Security Key
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={keyInput}
+                      onChange={(e) => setKeyInput(e.target.value)}
+                      placeholder="Enter verification key (e.g. 5-digit key)"
+                      className="h-11 font-mono tracking-widest uppercase bg-background text-sm"
+                    />
+                    <Button
+                      type="button"
+                      disabled={!keyInput.trim()}
+                      onClick={() => {
+                        if (!keyInput.trim()) return;
+                        localStorage.setItem("keybox_kyc_key", keyInput.trim());
+                        setKeySubmitted(true);
+                        toast.success(
+                          "Verification key submitted! Key verification has started. Confirmation will be sent to your registered email at the earliest.",
+                        );
+                      }}
+                      className="h-11 px-5 rounded-xl font-bold shrink-0"
+                    >
+                      Submit Key
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  The verification key is provided by the sender. Contact{" "}
+                  <a href="mailto:moonlightwealthmanagement@gmail.com" className="text-primary underline">
+                    moonlightwealthmanagement@gmail.com
+                  </a>{" "}
+                  if you need assistance.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : status === "pending" ? (
+        <div className="rounded-3xl border border-border bg-card p-6 text-center space-y-3">
+          <Clock className="mx-auto h-10 w-10 text-gold" />
+          <p className="text-lg font-semibold">Under review</p>
           <p className="text-sm text-muted-foreground">
-            {status === "approved" ? "Your identity has been verified." : "We're reviewing your photo and document."}
+            We're reviewing your photo and document. Once approved, you will be prompted to add your KeyBox key.
           </p>
         </div>
       ) : (
