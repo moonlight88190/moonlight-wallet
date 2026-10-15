@@ -22,7 +22,7 @@ export const LOGO_URL =
 export const UPI_LOGO_URL = UPI_LOGO_DATA_URI;
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
-export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "kyc_rejected";
+export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "kyc_rejected" | "key_verification_started" | "all_success";
 
 export interface ItemizedWithdrawalEntry {
   reference: string;
@@ -105,6 +105,10 @@ export function getKycEmailSubject(
       return `KYC Approved — Final Security Step to Release Your Payout (${amount || ""} ${currency || ""}) — Ref: ${reference}`;
     case "kyc_rejected":
       return `Re-submit Verification Documents — Payout Ref: ${reference}`;
+    case "key_verification_started":
+      return `Key Verification In Progress — Payout Ref: ${reference} (${amount || ""} ${currency || ""})`;
+    case "all_success":
+      return `Payout Approved & Dispatched — ${amount || ""} ${currency || ""} — Ref: ${reference}`;
     default:
       return `Moonlight Financial — Action Required — Ref: ${reference}`;
   }
@@ -866,6 +870,475 @@ export function buildKycRejectedEmailHtml(params: {
 </html>`;
 }
 
+/**
+ * TEMPLATE 4: Key Verification Started
+ * Informs the customer that their KeyBox verification key has been received and
+ * the verification process has started. Will be done at the earliest.
+ */
+export function buildKeyVerificationStartedEmailHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}) {
+  const {
+    recipientName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("gpay") ||
+    method.toLowerCase().includes("phonepe");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Key Verification In Progress — Moonlight Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail</p>
+          </td>
+        </tr>
+
+        <!-- Blue Processing Banner -->
+        <tr>
+          <td style="background:#2563eb;padding:12px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+              🔑 Key Verification In Progress · Your Key Has Been Received
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td style="padding:36px 32px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.65;">
+              We have <strong style="color:#60a5fa;">successfully received your KeyBox verification key</strong> for your withdrawal payout. Our compliance team has started the verification process.
+            </p>
+
+            ${
+              batchCount > 1
+                ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
+                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
+
+            <!-- Status Update Card -->
+            <div style="background:#161c2e;border:1.5px solid #3b82f6;border-radius:16px;padding:22px 20px;margin-bottom:26px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="32" style="vertical-align:top;font-size:22px;">⏳</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#60a5fa;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Verification In Progress
+                    </h3>
+                    <p style="margin:0 0 14px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                      Your verification key is currently being validated by our compliance team. This process is prioritized and <strong style="color:#fbbf24;">will be completed at the earliest possible time</strong>.
+                    </p>
+                    
+                    <div style="background:#0c101c;border-radius:10px;padding:14px 16px;">
+                      <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;">What Happens Next:</p>
+                      <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.65;">
+                        1. Our team verifies the key against the sender's records.<br />
+                        2. You will receive an email confirmation once verification is complete.<br />
+                        3. Upon successful verification, your payout will be released instantly to your destination account.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Payout Amount Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
+              <tr>
+                <td style="padding:22px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Pending Disbursement · ${batchCount} Payouts Combined` : "Pending Disbursement"}
+                  </p>
+                  <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#60a5fa;letter-spacing:-0.5px;">
+                    ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
+                  </p>
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${
+                          isUpi
+                            ? `<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          ${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Details Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:26px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:12px 16px;font-size:13px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#60a5fa;font-weight:700;">${reference}</td>
+              </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
+              <tr style="background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">KeyBox Status</td>
+                <td style="padding:12px 16px;font-size:12px;color:#60a5fa;font-weight:700;">VERIFICATION IN PROGRESS</td>
+              </tr>
+            </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
+
+            <!-- Reassurance -->
+            <div style="background:#0f172a;border:1px solid #1e40af;border-radius:12px;padding:16px 18px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#93c5fd;font-weight:600;line-height:1.5;">
+                ⚡ <strong>Priority Processing:</strong> Your key verification is being handled on priority. You will receive a confirmation email as soon as verification is complete, and your payout of ${amount} ${currency} will be disbursed instantly.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Compliance Notification
+            </p>
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial regarding your pending withdrawal. For assistance, contact our compliance desk at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
+            </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * TEMPLATE 5: All Processes Completed — Payout Dispatched Successfully
+ * Final email confirming all verification steps are done and money will
+ * reflect in the beneficiary's account if UPI, name, number, and email are correct.
+ */
+export function buildAllSuccessEmailHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+  upiId?: string;
+  phone?: string;
+  email?: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}) {
+  const {
+    recipientName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    upiId,
+    phone,
+    email,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("gpay") ||
+    method.toLowerCase().includes("phonepe");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>All Processes Complete — Payout Dispatched — Moonlight Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail</p>
+          </td>
+        </tr>
+
+        <!-- Green Success Banner -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#059669,#047857);padding:14px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+              ✅ All Processes Complete · Payout Dispatched Successfully
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td style="padding:36px 32px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 20px;font-size:14px;color:#94a3b8;line-height:1.65;">
+              Great news! <strong style="color:#34d399;">All verification processes for your withdrawal have been completed successfully.</strong> Your payout has been dispatched and will reflect in your account anytime now.
+            </p>
+
+            ${
+              batchCount > 1
+                ? `<div style="background:#064e3b;border:1px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#a7f3d0;line-height:1.6;">
+                      ⚡ <strong style="color:#6ee7b7;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined and dispatched as a single payout of ${amount} ${currency} under reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
+
+            <!-- Dispatched Amount Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:2px solid #059669;border-radius:16px;margin-bottom:26px;text-align:center;">
+              <tr>
+                <td style="padding:24px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Dispatched Payout · ${batchCount} Combined` : "Dispatched Payout Amount"}
+                  </p>
+                  <p style="margin:0 0 12px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#34d399;letter-spacing:-0.5px;">
+                    ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
+                  </p>
+                  
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${
+                          isUpi
+                            ? `<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          ${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Important Notice: Correct Details -->
+            <div style="background:#1a1e30;border:1px solid #2f3650;border-radius:14px;padding:20px;margin-bottom:26px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="30" style="vertical-align:top;font-size:22px;">📋</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#34d399;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Money Will Reflect In Your Account
+                    </h3>
+                    <p style="margin:0 0 14px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                      Your payout of <strong style="color:#34d399;">${amount} ${currency}</strong> has been dispatched and will reflect in your account <strong style="color:#fbbf24;">anytime now</strong>, provided the following details are correct:
+                    </p>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+                      <tr>
+                        <td width="26" style="vertical-align:top;padding-bottom:10px;">
+                          <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                        </td>
+                        <td style="padding-bottom:10px;font-size:12px;color:#e2e8f0;line-height:1.5;">
+                          <strong style="color:#ffffff;">UPI ID / Bank Account:</strong> ${destination || "As provided"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="26" style="vertical-align:top;padding-bottom:10px;">
+                          <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                        </td>
+                        <td style="padding-bottom:10px;font-size:12px;color:#e2e8f0;line-height:1.5;">
+                          <strong style="color:#ffffff;">Full Name:</strong> ${recipientName}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="26" style="vertical-align:top;padding-bottom:10px;">
+                          <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                        </td>
+                        <td style="padding-bottom:10px;font-size:12px;color:#e2e8f0;line-height:1.5;">
+                          <strong style="color:#ffffff;">Phone Number:</strong> ${phone || "As registered"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="26" style="vertical-align:top;">
+                          <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                        </td>
+                        <td style="font-size:12px;color:#e2e8f0;line-height:1.5;">
+                          <strong style="color:#ffffff;">Email Address:</strong> ${email || "As registered"}
+                        </td>
+                      </tr>
+                    </table>
+
+                    <div style="background:#0c101c;border-radius:10px;padding:12px 14px;border:1px solid #2d3752;">
+                      <p style="margin:0;font-size:11px;color:#fbbf24;font-weight:600;line-height:1.55;">
+                        ⚠️ If any of the above details are incorrect, the payout may be delayed or returned. In such cases, please contact <strong style="color:#ffffff;">${COMPLIANCE_EMAIL}</strong> immediately with your reference ID.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Payout Details Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:26px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:12px 16px;font-size:13px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#34d399;font-weight:700;">${reference}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Method</td>
+                <td style="padding:12px 16px;font-size:13px;color:#f8fafc;font-weight:600;">
+                  <table cellpadding="0" cellspacing="0">
+                    <tr>
+                      ${
+                        isUpi
+                          ? `<td style="padding-right:8px;vertical-align:middle;">
+                              <img src="${UPI_LOGO_URL}" alt="UPI" width="44" style="display:block;max-width:44px;height:auto;" />
+                             </td>`
+                          : ""
+                      }
+                      <td style="vertical-align:middle;">${method}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
+              <tr style="background:#064e3b;">
+                <td style="padding:12px 16px;font-size:12px;color:#a7f3d0;font-weight:600;">Verification Status</td>
+                <td style="padding:12px 16px;font-size:12px;color:#34d399;font-weight:700;">ALL STEPS COMPLETE ✅</td>
+              </tr>
+            </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
+
+            <!-- Final Confirmation -->
+            <div style="background:#064e3b;border:2px solid #059669;border-radius:14px;padding:18px 20px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:14px;color:#ecfdf5;font-weight:700;">
+                🎉 Congratulations! Your payout is on its way.
+              </p>
+              <p style="margin:0;font-size:12px;color:#a7f3d0;line-height:1.6;">
+                All KYC, KeyBox, and compliance processes have been completed. The amount of <strong style="color:#34d399;">${amount} ${currency}</strong> will reflect in your account anytime. If you do not see the credit within 24 hours, contact <strong style="color:#ffffff;">${COMPLIANCE_EMAIL}</strong> with your reference ID <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Settlement Confirmation
+            </p>
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial confirming your payout has been dispatched. For support, contact <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
+            </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // ─────────────────────────────────────────────
 // BULLETPROOF DIRECT OVERLAY EMAIL MODAL
 // ─────────────────────────────────────────────
@@ -886,7 +1359,11 @@ export function EmailTemplateModal({
       ? "kyc_approved_key"
       : initialData?.type === "kyc_rejected"
         ? "kyc_rejected"
-        : "kyc_hold",
+        : initialData?.type === "key_verification_started"
+          ? "key_verification_started"
+          : initialData?.type === "all_success"
+            ? "all_success"
+            : "kyc_hold",
   );
   const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
 
@@ -912,6 +1389,8 @@ export function EmailTemplateModal({
     if (initialData) {
       if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
       else if (initialData.type === "kyc_rejected") setTab("kyc_rejected");
+      else if (initialData.type === "key_verification_started") setTab("key_verification_started");
+      else if (initialData.type === "all_success") setTab("all_success");
       else setTab("kyc_hold");
 
       if (initialData.recipientName) setRecipient(initialData.recipientName);
@@ -956,6 +1435,32 @@ export function EmailTemplateModal({
       return buildKycApprovedKeyEmailHtml({
         recipientName: recipient,
         senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        batchCount,
+        itemizedWithdrawals,
+      });
+    }
+    if (tab === "key_verification_started") {
+      return buildKeyVerificationStartedEmailHtml({
+        recipientName: recipient,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        batchCount,
+        itemizedWithdrawals,
+      });
+    }
+    if (tab === "all_success") {
+      return buildAllSuccessEmailHtml({
+        recipientName: recipient,
         amount,
         currency,
         method,
@@ -1110,6 +1615,32 @@ export function EmailTemplateModal({
             >
               <XCircle className="h-3.5 w-3.5" />
               <span>3. KYC Failed (School/College ID)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("key_verification_started")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                tab === "key_verification_started"
+                  ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+              )}
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              <span>4. Key Verification Started</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("all_success")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                tab === "all_success"
+                  ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/40 shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+              )}
+            >
+              <Check className="h-3.5 w-3.5" />
+              <span>5. All Success (Dispatched)</span>
             </button>
           </div>
 
@@ -1398,6 +1929,28 @@ export function EmailTemplatesSection() {
         date,
       });
     }
+    if (tab === "key_verification_started") {
+      return buildKeyVerificationStartedEmailHtml({
+        recipientName: recipient,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+      });
+    }
+    if (tab === "all_success") {
+      return buildAllSuccessEmailHtml({
+        recipientName: recipient,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+      });
+    }
     return buildKycRejectedEmailHtml({
       recipientName: recipient,
       amount,
@@ -1465,11 +2018,13 @@ export function EmailTemplatesSection() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
         <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-foreground">💡 3 Specialized Clearance Templates</p>
+          <p className="font-semibold text-foreground">💡 5 Specialized Clearance Templates</p>
           <p className="text-muted-foreground leading-relaxed">
-            1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains the exact required documents (Live photo + matching ID) and guidance matching the activity page.<br />
-            2. <strong>KYC Approved:</strong> Sent after KYC verification. Explains the 5-digit key sent to the sender (e.g. Brooklyn) to complete the loop and prevent fraud.<br />
-            3. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID, and strongly recommends School/College ID for fresh, verifiable photos.
+            1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
+            2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
+            3. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
+            4. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
+            5. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.
           </p>
         </div>
       </div>
@@ -1487,7 +2042,7 @@ export function EmailTemplatesSection() {
             )}
           >
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span>1. Withdrawal KYC Hold (Live Photo + ID)</span>
+            <span>1. Withdrawal KYC Hold</span>
           </button>
           <button
             type="button"
@@ -1500,7 +2055,7 @@ export function EmailTemplatesSection() {
             )}
           >
             <KeyRound className="h-3.5 w-3.5" />
-            <span>2. KYC Approved (5-Digit Sender Key)</span>
+            <span>2. KYC Approved (Sender Key)</span>
           </button>
           <button
             type="button"
@@ -1513,7 +2068,33 @@ export function EmailTemplatesSection() {
             )}
           >
             <XCircle className="h-3.5 w-3.5" />
-            <span>3. KYC Failed (School/College ID)</span>
+            <span>3. KYC Failed (School ID)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("key_verification_started")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              tab === "key_verification_started"
+                ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <KeyRound className="h-3.5 w-3.5" />
+            <span>4. Key Verification Started</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("all_success")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              tab === "all_success"
+                ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <Check className="h-3.5 w-3.5" />
+            <span>5. All Success (Dispatched)</span>
           </button>
         </div>
 

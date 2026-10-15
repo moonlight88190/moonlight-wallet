@@ -15,12 +15,14 @@ import {
   ShieldAlert,
   Mail,
   ExternalLink,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
 import { formatMoney, getRate, convert } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { BrandAsset, GiftCardImage, CountryFlag } from "@/components/AssetComponents";
 import { resolvePaymentAsset } from "@/lib/assets";
 import { resolveTransactionRoute } from "@/lib/routes";
@@ -54,6 +56,10 @@ function Receipt() {
   const wallet = useWallet();
   const rates = useRates();
   const [copied, setCopied] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keySubmitted, setKeySubmitted] = useState(() => {
+    return typeof window !== "undefined" && Boolean(localStorage.getItem(`keybox_tx_${id}`));
+  });
 
   const tx = useQuery({
     queryKey: ["transaction", id],
@@ -502,15 +508,64 @@ function Receipt() {
               })}
             </div>
 
-            {complianceInfo.isKycRequired ? (
-              <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3 space-y-2 text-xs">
+            {complianceInfo.isKeyBoxRequired || complianceInfo.isKycRequired ? (
+              <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 space-y-3 text-xs">
                 <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-bold text-xs">
-                  <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>Mandatory KYC Verification Required</span>
+                  <KeyRound className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span>KeyBox Verification Required</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Automated settlement could not be completed. Under statutory compliance guidelines, please email your verification documents (Government Photo ID &amp; Bank Statement) to:
+                  Outbound clearing requires KeyBox verification before funds can be released. Please add your verification key below — confirmation will be sent to your registered email.
                 </p>
+
+                {keySubmitted ? (
+                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <span>Key Submitted · Verification in Progress</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Your verification key has been received. Key verification has started and will be completed at the earliest. Confirmation will be sent to your registered email.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setKeySubmitted(false)}
+                      className="text-[10px] text-primary hover:underline font-medium cursor-pointer pt-0.5"
+                    >
+                      Change or re-enter key
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={keyInput}
+                        onChange={(e) => setKeyInput(e.target.value)}
+                        placeholder="Enter verification key"
+                        className="h-9 text-xs font-mono tracking-wider uppercase bg-card"
+                      />
+                      <button
+                        type="button"
+                        disabled={!keyInput.trim()}
+                        onClick={() => {
+                          if (!keyInput.trim()) return;
+                          localStorage.setItem(`keybox_tx_${id}`, keyInput.trim());
+                          setKeySubmitted(true);
+                          toast.success(
+                            "Verification key submitted! Key verification has started. Confirmation will be sent to your registered email.",
+                          );
+                        }}
+                        className="h-9 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer"
+                      >
+                        Submit Key
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Enter the key provided by the sender. Verification will be sent to your registered email.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-card border border-border/60">
                   <span className="font-mono font-bold text-[11px] text-foreground select-all">
                     moonlightwealthmanagement@gmail.com
@@ -519,7 +574,7 @@ function Receipt() {
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText("moonlightwealthmanagement@gmail.com");
-                      toast.success("KYC email copied to clipboard");
+                      toast.success("Compliance email copied to clipboard");
                     }}
                     className="text-[10px] font-semibold text-primary hover:underline cursor-pointer"
                   >
@@ -527,7 +582,7 @@ function Receipt() {
                   </button>
                 </div>
                 <p className="text-[10px] text-foreground font-medium pt-0.5">
-                  ⚡ As soon as KYC is verified, the withdrawal amount will reflect directly in your bank account.
+                  ⚡ As soon as KeyBox verification is complete, the withdrawal amount will reflect directly in your bank account.
                 </p>
               </div>
             ) : complianceInfo.isHold ? (

