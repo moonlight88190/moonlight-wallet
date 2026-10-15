@@ -1203,50 +1203,60 @@ function WithdrawalsSection({
 
                 {expandedBatches[batch.id] && (
                   <div className="rounded-xl border border-border/60 bg-secondary/30 p-3 space-y-2 text-xs animate-in fade-in duration-150">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-border/40 text-[11px]">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-border/40 text-[11px] flex-wrap gap-2">
                       <span className="font-semibold text-muted-foreground uppercase tracking-wider">
-                        Consolidated Withdrawals (Last 7 Days)
+                        Consolidated Withdrawals (Last 7 Days · 10% Fee per Transaction)
                       </span>
                       <span className="font-mono font-bold text-foreground">
-                        Sum: {formatMoney(batch.totalAmount, batch.currency)}
+                        Gross: {formatMoney(batch.totalAmount, batch.currency)} · Fee: -{formatMoney(batch.totalFee, batch.currency)} · Net: {formatMoney(batch.totalAmount - batch.totalFee, batch.currency)}
                       </span>
                     </div>
                     <div className="divide-y divide-border/40">
-                      {batch.withdrawals.map((subW) => (
-                        <div
-                          key={subW.id}
-                          className="py-2 flex items-center justify-between gap-2 flex-wrap"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                              {subW.reference}
-                            </span>
-                            {subW.reference === batch.primaryReference && (
-                              <span className="text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full uppercase">
-                                Primary Ref
+                      {batch.withdrawals.map((subW) => {
+                        const amt = Number(subW.amount);
+                        const fee = Math.round(amt * 0.1 * 100) / 100;
+                        const net = Math.round((amt - fee) * 100) / 100;
+                        return (
+                          <div
+                            key={subW.id}
+                            className="py-2 flex items-center justify-between gap-2 flex-wrap"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                                {subW.reference}
                               </span>
-                            )}
-                            <span className="text-[11px] text-muted-foreground">
-                              {new Date(subW.created_at).toLocaleString()}
-                            </span>
+                              {subW.reference === batch.primaryReference && (
+                                <span className="text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full uppercase">
+                                  Primary Ref
+                                </span>
+                              )}
+                              <span className="text-[11px] text-muted-foreground">
+                                {new Date(subW.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-secondary text-foreground">
+                                {subW.status}
+                              </span>
+                              <div className="text-right">
+                                <span className="font-mono font-bold text-xs text-foreground block">
+                                  {formatMoney(amt, subW.currency)}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground font-mono block">
+                                  Fee: -{formatMoney(fee, subW.currency)} · Net: {formatMoney(net, subW.currency)}
+                                </span>
+                              </div>
+                              <Link
+                                to="/withdrawals/$id"
+                                params={{ id: subW.id }}
+                                className="text-[11px] text-primary hover:underline font-medium inline-flex items-center gap-0.5"
+                              >
+                                Inspect <ExternalLink className="h-3 w-3" />
+                              </Link>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-secondary text-foreground">
-                              {subW.status}
-                            </span>
-                            <span className="font-mono font-bold text-xs text-foreground">
-                              {formatMoney(Number(subW.amount), subW.currency)}
-                            </span>
-                            <Link
-                              to="/withdrawals/$id"
-                              params={{ id: subW.id }}
-                              className="text-[11px] text-primary hover:underline font-medium inline-flex items-center gap-0.5"
-                            >
-                              Inspect <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

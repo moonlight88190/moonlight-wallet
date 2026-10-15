@@ -53,36 +53,55 @@ function buildItemizedTableHtml(
   currency?: string,
 ): string {
   if (!itemizedWithdrawals || itemizedWithdrawals.length <= 1) return "";
+
+  const totalNum = parseFloat(String(totalAmount || "0").replace(/,/g, "")) || 0;
+  const totalFeeNum = Math.round(totalNum * 0.10 * 100) / 100;
+  const totalNetNum = Math.round((totalNum - totalFeeNum) * 100) / 100;
+  const curr = currency || "INR";
+
   return `
-            <!-- Consolidated 7-Day Settlements Itemized Table -->
+            <!-- Consolidated 7-Day Settlements Itemized Table with 10% Fee per Transaction -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;border:1px solid #283048;border-radius:12px;overflow:hidden;background:#0d101a;">
               <thead>
                 <tr style="background:#181d2e;border-bottom:1px solid #283048;">
-                  <th colspan="3" style="padding:10px 14px;text-align:left;font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:1px;">
-                    ⚡ 7-Day Combined Payout Breakdown (${itemizedWithdrawals.length} Withdrawals Combined)
+                  <th colspan="4" style="padding:10px 14px;text-align:left;font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:1px;">
+                    ⚡ 7-Day Combined Payout Breakdown (${itemizedWithdrawals.length} Withdrawals · 10% Fee Deducted per Transaction)
                   </th>
                 </tr>
                 <tr style="border-bottom:1px solid #20273c;font-size:10px;color:#94a3b8;text-transform:uppercase;background:#101422;">
-                  <th style="padding:8px 14px;text-align:left;">Reference ID</th>
-                  <th style="padding:8px 14px;text-align:left;">Date Initiated</th>
-                  <th style="padding:8px 14px;text-align:right;">Payout Amount</th>
+                  <th style="padding:8px 12px;text-align:left;">Reference ID</th>
+                  <th style="padding:8px 12px;text-align:right;">Requested</th>
+                  <th style="padding:8px 12px;text-align:right;">10% Fee</th>
+                  <th style="padding:8px 12px;text-align:right;">Net Payout</th>
                 </tr>
               </thead>
               <tbody>
                 ${itemizedWithdrawals
-                  .map(
-                    (item, idx) => `
+                  .map((item, idx) => {
+                    const amt = parseFloat(String(item.amount || "0").replace(/,/g, "")) || 0;
+                    const fee = Math.round(amt * 0.10 * 100) / 100;
+                    const net = Math.round((amt - fee) * 100) / 100;
+                    return `
                   <tr style="border-bottom:1px solid #1a2033;background:${idx % 2 === 0 ? "#0f1322" : "#131728"};font-size:11px;">
-                    <td style="padding:8px 14px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${item.reference}</td>
-                    <td style="padding:8px 14px;color:#94a3b8;">${item.date || "Past 7 days"}</td>
-                    <td style="padding:8px 14px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:700;">${item.amount} ${item.currency || currency || "INR"}</td>
+                    <td style="padding:8px 12px;font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${item.reference}</td>
+                    <td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f8fafc;">${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${item.currency || curr}</td>
+                    <td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f87171;">-${fee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#34d399;font-weight:700;">${net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
-                `,
-                  )
+                `;
+                  })
                   .join("")}
+                <tr style="background:#141826;border-top:1px solid #283048;font-size:11px;">
+                  <td colspan="2" style="padding:8px 12px;color:#94a3b8;">Total Requested (${itemizedWithdrawals.length} Payouts Combined):</td>
+                  <td colspan="2" style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:700;">${totalNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}</td>
+                </tr>
+                <tr style="background:#141826;font-size:11px;">
+                  <td colspan="2" style="padding:8px 12px;color:#f87171;">Combined 10% Fee (10% on every transaction):</td>
+                  <td colspan="2" style="padding:8px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#f87171;font-weight:700;">-${totalFeeNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}</td>
+                </tr>
                 <tr style="background:#1c2339;font-size:12px;font-weight:700;">
-                  <td colspan="2" style="padding:10px 14px;color:#f8fafc;">Total Combined Settlement:</td>
-                  <td style="padding:10px 14px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#34d399;">${totalAmount} ${currency || "INR"}</td>
+                  <td colspan="2" style="padding:10px 12px;color:#34d399;">Total Net Settlement Dispatched:</td>
+                  <td colspan="2" style="padding:10px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#34d399;">${totalNetNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}</td>
                 </tr>
               </tbody>
             </table>`;

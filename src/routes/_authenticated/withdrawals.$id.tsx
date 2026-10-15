@@ -248,18 +248,12 @@ function WithdrawalReceipt() {
     displayCurrency !== wd.currency
       ? convert(rawGross, wd.currency, displayCurrency, ratesMap)
       : rawGross;
-  const feeAmount =
-    displayCurrency !== wd.currency
-      ? grossAmount * 0.1
-      : rawFee;
-  const netSettlement =
-    displayPayoutCurrency !== payoutCurrency
-      ? convert(rawNet, payoutCurrency, displayPayoutCurrency, ratesMap)
-      : rawNet;
+  const feeAmount = grossAmount * 0.1;
+  const netSettlement = grossAmount - feeAmount;
 
-  // Batch consolidated economics (combining 7-day payments)
+  // Batch consolidated economics (taking 10% charge on every transaction of the 7 days)
   const batchRawGross = isConsolidated ? batch.totalAmount : rawGross;
-  const batchRawFee = isConsolidated ? batch.totalFee : rawFee;
+  const batchRawFee = isConsolidated ? batch.totalFee : feeAmount;
   const batchRawNet = batchRawGross - batchRawFee;
 
   const effectiveGross =
@@ -270,10 +264,7 @@ function WithdrawalReceipt() {
     displayCurrency !== wd.currency
       ? effectiveGross * 0.1
       : batchRawFee;
-  const effectiveNet =
-    displayPayoutCurrency !== payoutCurrency
-      ? convert(batchRawNet, payoutCurrency, displayPayoutCurrency, ratesMap)
-      : batchRawNet;
+  const effectiveNet = effectiveGross - effectiveFee;
 
   const displayMethod =
     isUPI &&
@@ -632,8 +623,12 @@ function WithdrawalReceipt() {
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Processing Fee (10% standard)</span>
-            <span className="font-mono font-medium text-muted-foreground">
+            <span className="text-muted-foreground">
+              {isConsolidated
+                ? `10% Fee (${batch.count} Payouts × 10% Each)`
+                : "Processing Fee (10% standard)"}
+            </span>
+            <span className="font-mono font-medium text-rose-500 dark:text-rose-400">
               -{formatMoney(effectiveFee, displayCurrency)}
             </span>
           </div>
@@ -747,23 +742,40 @@ function WithdrawalReceipt() {
                         })}
                       </p>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 space-y-0.5">
                       <div className="font-mono font-bold text-foreground text-xs">
                         {formatMoney(itemDisplayAmt, displayCurrency)}
                       </div>
-                      <span className="text-[10px] font-mono text-muted-foreground uppercase">
-                        {item.status || "PROCESSING"}
-                      </span>
+                      <div className="text-[10px] font-mono text-rose-500 dark:text-rose-400">
+                        10% Fee: -{formatMoney(itemDisplayAmt * 0.1, displayCurrency)}
+                      </div>
+                      <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                        Net: {formatMoney(itemDisplayAmt * 0.9, displayCurrency)}
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="pt-2 border-t border-border/30 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground font-medium">Combined Batch Total:</span>
-              <span className="font-mono font-bold text-foreground">
-                {formatMoney(effectiveGross, displayCurrency)}
-              </span>
+            <div className="pt-2.5 border-t border-border/30 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground font-medium">Combined Gross ({batch.count} Payouts):</span>
+                <span className="font-mono font-bold text-foreground">
+                  {formatMoney(effectiveGross, displayCurrency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Total 10% Fee (10% on every transaction):</span>
+                <span className="font-mono font-semibold text-rose-500 dark:text-rose-400">
+                  -{formatMoney(effectiveFee, displayCurrency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t border-border/20 font-bold">
+                <span className="text-emerald-700 dark:text-emerald-400">Net Combined Settlement:</span>
+                <span className="font-mono text-sm text-emerald-600 dark:text-emerald-400">
+                  {formatMoney(effectiveNet, displayPayoutCurrency)}
+                </span>
+              </div>
             </div>
           </div>
         )}
