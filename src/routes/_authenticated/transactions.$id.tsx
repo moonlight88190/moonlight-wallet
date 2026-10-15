@@ -510,12 +510,23 @@ function Receipt() {
 
             {complianceInfo.isKeyBoxRequired || complianceInfo.isKycRequired ? (
               <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 space-y-3 text-xs">
+                {/* KYC Completed Banner */}
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-500/15 border border-emerald-500/35 px-2.5 py-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    <span>KYC Verification Completed &amp; Approved</span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-800 dark:text-emerald-200">
+                    Step 1 Done
+                  </span>
+                </div>
+
                 <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-bold text-xs">
                   <KeyRound className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>KeyBox Verification Required</span>
+                  <span>Action Required: Enter KeyBox Verification Key</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Outbound clearing requires KeyBox verification before funds can be released. Please add your verification key below — confirmation will be sent to your registered email.
+                  Your KYC identity verification is <strong>complete and approved</strong>! To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender.
                 </p>
 
                 {keySubmitted ? (
@@ -561,7 +572,7 @@ function Receipt() {
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      Enter the key provided by the sender. Verification will be sent to your registered email.
+                      Enter the 5-digit verification key provided by the sender. Once verified, your funds will reflect directly in your account.
                     </p>
                   </div>
                 )}

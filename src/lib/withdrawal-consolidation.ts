@@ -20,6 +20,7 @@ export interface WithdrawalRecord {
   amount_usd?: number | string;
   fee?: number | string;
   fee_usd?: number | string;
+  net_amount?: number | string;
   method: string;
   provider?: string | null;
   upi_id?: string | null;
@@ -157,11 +158,17 @@ function createBatchFromCluster(
   for (const w of cluster) {
     const amt = Number(w.amount) || 0;
     const amtUsd = Number(w.amount_usd) || 0;
-    const fee = Number(w.fee || w.fee_usd) || 0;
+    // Apply 10% fee on every transaction in the 7-day batch (not just one)
+    const txFee = Math.round(amt * 0.10 * 100) / 100;
+    const txFeeUsd = Math.round(amtUsd * 0.10 * 100) / 100;
+
+    w.fee = txFee;
+    w.fee_usd = txFeeUsd;
+    w.net_amount = Math.round((amt - txFee) * 100) / 100;
 
     totalAmount += amt;
     totalAmountUsd += amtUsd;
-    totalFee += fee;
+    totalFee += txFee;
 
     const st = (w.status || "").toUpperCase();
     if (st === "ON HOLD") hasHold = true;
