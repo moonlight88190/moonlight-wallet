@@ -300,18 +300,18 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers KeyBox Verification Requirement
+  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers KeyBox Verification Requirement (after KYC)
   if (elapsedHours >= 120 || isExplicitHold) {
     return {
       statusLabel: "KEYBOX VERIFICATION REQUIRED",
-      stageTitle: "Action Required — KeyBox Verification",
+      stageTitle: "KYC Completed — KeyBox Key Required",
       description:
-        "Outbound interbank settlement is on hold pending KeyBox verification. Please add your verification key — verification confirmation will be sent to your registered email.",
-      currentStep: "KeyBox Verification & Release Authorization",
+        "Your KYC identity verification has passed successfully. Outbound payout release now requires your KeyBox verification key from the sender to release the funds.",
+      currentStep: "KYC Approved · Enter KeyBox Verification Key",
       currentStepDescription:
-        "Outbound clearing requires KeyBox verification before funds can be released. Add your verification key to proceed — verification confirmation will be sent to your registered email. As soon as verified, the funds will reflect in your bank account.",
+        "KYC verification is completed and approved. To finalize payout release, please enter the KeyBox verification key provided by the sender. Once verified, funds will reflect in your bank account.",
       nextStep: "Disbursement & Final Bank Credit",
-      nextStepDescription: "Amount will immediately reflect in your bank account upon verification of your KeyBox key.",
+      nextStepDescription: "Amount will immediately reflect in your destination account upon verification of your KeyBox key.",
       estimatedArrivalDate: arrival.rangeText,
       estimatedDaysText: "Pending KeyBox Verification",
       progressPercent: 80,

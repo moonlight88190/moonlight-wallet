@@ -420,6 +420,17 @@ function WithdrawalReceipt() {
         {/* ─── Mandatory KeyBox Verification Action Card ─── */}
         {compliance.isKeyBoxRequired && (
           <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-amber-500/10 to-amber-500/5 p-4 sm:p-5 space-y-3.5 shadow-md">
+            {/* KYC Completed Success Banner */}
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-500/15 border border-emerald-500/35 px-3 py-2 text-xs">
+              <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>KYC Verification Completed &amp; Approved</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/25 text-emerald-800 dark:text-emerald-200">
+                Step 1 Done
+              </span>
+            </div>
+
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
@@ -427,13 +438,13 @@ function WithdrawalReceipt() {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground text-sm tracking-tight flex items-center gap-2">
-                    <span>KeyBox Verification Required</span>
+                    <span>Action Required: Enter KeyBox Verification Key</span>
                     <span className="bg-amber-500/25 text-amber-800 dark:text-amber-200 text-[10px] font-mono px-2 py-0.5 rounded-full uppercase font-bold">
-                      Pending Action
+                      Final Step
                     </span>
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    Outbound clearing requires KeyBox verification before funds can be released. Please add your verification key below — confirmation will be sent to your registered email.
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Your KYC identity verification is <strong>complete and approved</strong>! To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender.
                   </p>
                 </div>
               </div>
@@ -444,10 +455,10 @@ function WithdrawalReceipt() {
               <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <div className="space-y-0.5">
                 <span className="font-semibold text-foreground">
-                  Verification via Email
+                  Verification Confirmation via Email
                 </span>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  You will receive an email from Moonlight Financial with your KeyBox verification status. You can also contact the compliance desk directly below.
+                  Once your key is entered, verification starts immediately. You will receive an official confirmation email from Moonlight Financial once key verification is completed.
                 </p>
               </div>
             </div>
@@ -506,7 +517,7 @@ function WithdrawalReceipt() {
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Enter the key provided by the sender. Verification will be sent to your registered email.
+                    Enter the 5-digit verification key provided by the sender. Once verified, your payout will be dispatched directly to your destination account.
                   </p>
                 </div>
               )}
@@ -553,20 +564,20 @@ function WithdrawalReceipt() {
             {/* Steps to add key */}
             <div className="space-y-1.5 text-xs pt-0.5">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                Steps to Complete KeyBox Verification:
+                Steps to Complete Settlement:
               </span>
               <ul className="space-y-1.5 text-[11px] text-muted-foreground list-none pl-0">
                 <li className="flex items-center gap-2">
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">1</span>
-                  <span><strong className="text-foreground">Add Your Key:</strong> Enter the verification key you received from the sender</span>
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">✓</span>
+                  <span><strong className="text-emerald-600 dark:text-emerald-400">KYC Completed:</strong> Your selfie and ID document have been reviewed and approved</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">2</span>
-                  <span><strong className="text-foreground">Email Verification:</strong> You will receive a confirmation email from Moonlight Financial once key is verified</span>
+                  <span><strong className="text-foreground">Enter KeyBox Key:</strong> Enter the 5-digit verification key from the sender above to authorize payment release</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold">3</span>
-                  <span>Payout Reference ID: <strong className="font-mono text-foreground">{wd.reference}</strong></span>
+                  <span><strong className="text-foreground">Disbursement:</strong> You will receive an email confirmation and money will reflect directly in your account</span>
                 </li>
               </ul>
             </div>
