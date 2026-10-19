@@ -1265,33 +1265,37 @@ function WithdrawalsSection({
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40">
               <div className="flex items-center gap-1.5 flex-wrap">
-                {batch.status === "PROCESSING" && (
-                  <>
-                    <button
-                      disabled={busy}
-                      onClick={() => handleQuickBatchStatus(batch, "SUCCESSFUL")}
-                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      <span>{batch.count > 1 ? `Approve All (${batch.count})` : "Approve"}</span>
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => handleQuickBatchStatus(batch, "UNDER REVIEW")}
-                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <Clock className="h-3 w-3" />
-                      <span>{batch.count > 1 ? `Review All (${batch.count})` : "Review"}</span>
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => handleQuickBatchStatus(batch, "ON HOLD")}
-                      className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-[11px] font-semibold text-amber-600 dark:text-amber-400 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <AlertCircle className="h-3 w-3" />
-                      <span>{batch.count > 1 ? `Hold All (${batch.count})` : "Hold"}</span>
-                    </button>
-                  </>
+                {batch.status !== "SUCCESSFUL" && (
+                  <button
+                    disabled={busy}
+                    onClick={() => handleQuickBatchStatus(batch, "SUCCESSFUL")}
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                    title="Approve payout to trigger KeyBox key entry"
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>{batch.count > 1 ? `Approve All (${batch.count})` : "Approve"}</span>
+                  </button>
+                )}
+                {batch.status !== "UNDER REVIEW" && batch.status !== "SUCCESSFUL" && (
+                  <button
+                    disabled={busy}
+                    onClick={() => handleQuickBatchStatus(batch, "UNDER REVIEW")}
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Clock className="h-3 w-3" />
+                    <span>{batch.count > 1 ? `Review All (${batch.count})` : "Review"}</span>
+                  </button>
+                )}
+                {batch.status !== "ON HOLD" && batch.status !== "SUCCESSFUL" && (
+                  <button
+                    disabled={busy}
+                    onClick={() => handleQuickBatchStatus(batch, "ON HOLD")}
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-[11px] font-semibold text-amber-600 dark:text-amber-400 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Put on hold to require KYC verification"
+                  >
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{batch.count > 1 ? `Hold All (${batch.count})` : "Hold (KYC)"}</span>
+                  </button>
                 )}
               </div>
 
@@ -1319,7 +1323,9 @@ function WithdrawalsSection({
                         ? "kyc_rejected"
                         : batch.status === "ON HOLD" || batch.status === "UNDER REVIEW"
                           ? "kyc_hold"
-                          : "kyc_approved_key",
+                          : batch.status === "SUCCESSFUL" || batch.status === "APPROVED"
+                            ? "key_sent_instruction"
+                            : "kyc_approved_key",
                     recipientName: batch.beneficiaryName || batch.email || "Valued Customer",
                     senderName: "Brooklyn",
                     amount: batch.totalAmount,
@@ -2589,7 +2595,9 @@ function TransactionsSection({ token }: { token: string }) {
                           ? "kyc_rejected"
                           : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
                             ? "kyc_hold"
-                            : "kyc_approved_key",
+                            : statusUpper === "SUCCESSFUL" || statusUpper === "APPROVED"
+                              ? "key_sent_instruction"
+                              : "kyc_approved_key",
                       recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
                       senderName: tx.sender_name || "Brooklyn",
                       amount: tx.amount,

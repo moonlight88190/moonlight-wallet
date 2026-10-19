@@ -22,7 +22,7 @@ export const LOGO_URL =
 export const UPI_LOGO_URL = UPI_LOGO_DATA_URI;
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
-export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "kyc_rejected" | "key_verification_started" | "all_success";
+export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "key_sent_instruction" | "kyc_rejected" | "key_verification_started" | "all_success";
 
 export interface ItemizedWithdrawalEntry {
   reference: string;
@@ -122,6 +122,8 @@ export function getKycEmailSubject(
       return `Action Required: Identity Verification Needed — Payout Ref: ${reference}`;
     case "kyc_approved_key":
       return `KYC Approved — Final Security Step to Release Your Payout (${amount || ""} ${currency || ""}) — Ref: ${reference}`;
+    case "key_sent_instruction":
+      return `Key Sent · Enter Keys on Website & Withdrawal Tab — Ref: ${reference} (${amount || ""} ${currency || ""})`;
     case "kyc_rejected":
       return `Re-submit Verification Documents — Payout Ref: ${reference}`;
     case "key_verification_started":
@@ -625,6 +627,251 @@ export function buildKycApprovedKeyEmailHtml(params: {
             </p>
             <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
               This is an official notification from Moonlight Financial regarding your pending withdrawal. For assistance, reply directly to this email or contact <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
+            </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * TEMPLATE: Key Sent — Dual Entry on Website & Withdrawal Tab
+ * Sent after the verification key has been sent.
+ * Explicitly instructs:
+ * - If they haven't entered keys on the website, enter it there too (/kyc)
+ * - Also put the keys in the withdrawal tab (/withdrawals/$id)
+ * - When both keys are put and they have sent the correct key, the money will be out for release without any extra verification.
+ */
+export function buildKeySentInstructionEmailHtml(params: {
+  recipientName: string;
+  senderName?: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}) {
+  const {
+    recipientName,
+    senderName = "Brooklyn",
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("gpay") ||
+    method.toLowerCase().includes("phonepe");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Key Sent · Enter Keys on Website &amp; Withdrawal Tab — Moonlight Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail</p>
+          </td>
+        </tr>
+
+        <!-- Cyan/Blue Dual Key Notification Banner -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0284c7,#0d9488);padding:14px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+              🔑 Verification Key Sent · Dual Entry Required (Website &amp; Withdrawal Tab)
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td class="email-body" style="padding:36px 32px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 20px;font-size:14px;color:#cbd5e1;line-height:1.65;">
+              Your confidential clearance verification key has been sent. To complete the final security handshake and dispatch your pending payout, please follow the dual-key entry procedure outlined below.
+            </p>
+
+            ${
+              batchCount > 1
+                ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
+                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
+
+            <!-- HIGHLIGHTED INSTRUCTION BOX: DUAL KEY ENTRY -->
+            <div style="background:#0f172a;border:2px solid #38bdf8;border-radius:16px;padding:22px 20px;margin-bottom:26px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="32" style="vertical-align:top;font-size:22px;">🔐</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#38bdf8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Dual Key Entry Instructions
+                    </h3>
+                    <p style="margin:0 0 16px;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                      Please ensure your clearance verification key is entered in <strong>both required locations</strong>:
+                    </p>
+
+                    <!-- Step 1: Website Entry -->
+                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #38bdf8;border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+                      <p style="margin:0 0 4px;font-size:12px;color:#ffffff;font-weight:700;">
+                        1️⃣ Enter Key on the Website
+                      </p>
+                      <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;">
+                        If you have not entered the key on the website yet, enter it there too on the official <strong>Moonlight Security Clearance / KYC Portal</strong>.
+                      </p>
+                    </div>
+
+                    <!-- Step 2: Withdrawal Tab Entry -->
+                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+                      <p style="margin:0 0 4px;font-size:12px;color:#ffffff;font-weight:700;">
+                        2️⃣ Enter Key in Your Withdrawal Tab
+                      </p>
+                      <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;">
+                        Also put the key directly into your active <strong>Withdrawal Tab</strong> for payout reference <code style="font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${reference}</code>.
+                      </p>
+                    </div>
+
+                    <!-- CRITICAL GUARANTEE: NO EXTRA VERIFICATION -->
+                    <div style="background:linear-gradient(135deg,#064e3b,#065f46);border:1.5px solid #10b981;border-radius:12px;padding:16px 18px;text-align:center;">
+                      <p style="margin:0 0 6px;font-size:13px;color:#ecfdf5;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;">
+                        ⚡ Instant Payout Guarantee
+                      </p>
+                      <p style="margin:0;font-size:13px;color:#a7f3d0;font-weight:600;line-height:1.65;">
+                        When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
+                      </p>
+                    </div>
+
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Pending Release Amount Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:1px solid #2a3147;border-radius:16px;margin-bottom:26px;text-align:center;">
+              <tr>
+                <td style="padding:22px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Release Amount · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Release Amount"}
+                  </p>
+                  <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#38bdf8;letter-spacing:-0.5px;">
+                    ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
+                  </p>
+                  ${
+                    batchCount > 1
+                      ? `<div style="margin-bottom:10px;display:inline-block;background:#0369a1;border:1px solid #38bdf8;border-radius:8px;padding:6px 14px;font-size:11px;color:#e0f2fe;font-weight:600;">
+                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                        </div><br/>`
+                      : ""
+                  }
+                  
+                  <!-- Method Badge with Embedded Logo -->
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${
+                          isUpi
+                            ? `<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          ${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Payout Details Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:26px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:12px 16px;font-size:13px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:12px 16px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#38bdf8;font-weight:700;">${reference}</td>
+              </tr>
+              ${
+                batchCount > 1
+                  ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
+                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                      </td>
+                    </tr>`
+                  : ""
+              }
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Verification Stage</td>
+                <td style="padding:12px 16px;font-size:12px;color:#38bdf8;font-weight:700;">KEY SENT · DUAL ENTRY REQUIRED</td>
+              </tr>
+              <tr style="background:#141724;">
+                <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">Timestamp</td>
+                <td style="padding:12px 16px;font-size:12px;color:#f8fafc;">${date}</td>
+              </tr>
+            </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
+
+            <!-- Summary Checkpoint -->
+            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px 18px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
+                🔒 <strong>No Additional Verification:</strong> Once both keys are entered and confirmed, no further verification, identification documents, or compliance calls are required. Your settlement of <strong style="color:#38bdf8;">${amount} ${currency}</strong> will be released immediately to your destination account.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Compliance Notification
+            </p>
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official notification from Moonlight Financial regarding pending settlement ${reference}. If you need assistance with key entry, contact our compliance desk at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
             </p>
             <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
           </td>
@@ -1374,15 +1621,17 @@ export function EmailTemplateModal({
   initialData,
 }: EmailTemplateModalProps) {
   const [tab, setTab] = useState<EmailTemplateType>(
-    initialData?.type === "kyc_approved_key"
-      ? "kyc_approved_key"
-      : initialData?.type === "kyc_rejected"
-        ? "kyc_rejected"
-        : initialData?.type === "key_verification_started"
-          ? "key_verification_started"
-          : initialData?.type === "all_success"
-            ? "all_success"
-            : "kyc_hold",
+    initialData?.type === "key_sent_instruction"
+      ? "key_sent_instruction"
+      : initialData?.type === "kyc_approved_key"
+        ? "kyc_approved_key"
+        : initialData?.type === "kyc_rejected"
+          ? "kyc_rejected"
+          : initialData?.type === "key_verification_started"
+            ? "key_verification_started"
+            : initialData?.type === "all_success"
+              ? "all_success"
+              : "kyc_hold",
   );
   const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
 
@@ -1406,7 +1655,8 @@ export function EmailTemplateModal({
 
   useEffect(() => {
     if (initialData) {
-      if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
+      if (initialData.type === "key_sent_instruction") setTab("key_sent_instruction");
+      else if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
       else if (initialData.type === "kyc_rejected") setTab("kyc_rejected");
       else if (initialData.type === "key_verification_started") setTab("key_verification_started");
       else if (initialData.type === "all_success") setTab("all_success");
@@ -1452,6 +1702,20 @@ export function EmailTemplateModal({
     }
     if (tab === "kyc_approved_key") {
       return buildKycApprovedKeyEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        batchCount,
+        itemizedWithdrawals,
+      });
+    }
+    if (tab === "key_sent_instruction") {
+      return buildKeySentInstructionEmailHtml({
         recipientName: recipient,
         senderName: sender,
         amount,
@@ -1624,6 +1888,19 @@ export function EmailTemplateModal({
             </button>
             <button
               type="button"
+              onClick={() => setTab("key_sent_instruction")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                tab === "key_sent_instruction"
+                  ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+              )}
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              <span>3. Key Sent (Website &amp; Tab Dual Entry)</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setTab("kyc_rejected")}
               className={cn(
                 "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
@@ -1633,7 +1910,7 @@ export function EmailTemplateModal({
               )}
             >
               <XCircle className="h-3.5 w-3.5" />
-              <span>3. KYC Failed (School/College ID)</span>
+              <span>4. KYC Failed (School/College ID)</span>
             </button>
             <button
               type="button"
@@ -1646,7 +1923,7 @@ export function EmailTemplateModal({
               )}
             >
               <KeyRound className="h-3.5 w-3.5" />
-              <span>4. Key Verification Started</span>
+              <span>5. Key Verification Started</span>
             </button>
             <button
               type="button"
@@ -1659,7 +1936,7 @@ export function EmailTemplateModal({
               )}
             >
               <Check className="h-3.5 w-3.5" />
-              <span>5. All Success (Dispatched)</span>
+              <span>6. All Success (Dispatched)</span>
             </button>
           </div>
 
@@ -1948,6 +2225,18 @@ export function EmailTemplatesSection() {
         date,
       });
     }
+    if (tab === "key_sent_instruction") {
+      return buildKeySentInstructionEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+      });
+    }
     if (tab === "key_verification_started") {
       return buildKeyVerificationStartedEmailHtml({
         recipientName: recipient,
@@ -2037,13 +2326,14 @@ export function EmailTemplatesSection() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
         <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-foreground">💡 5 Specialized Clearance Templates</p>
+          <p className="font-semibold text-foreground">💡 6 Specialized Clearance Templates</p>
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
             2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
-            3. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
-            4. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
-            5. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.
+            3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab for release without extra verification.<br />
+            4. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
+            5. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
+            6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.
           </p>
         </div>
       </div>
@@ -2078,6 +2368,19 @@ export function EmailTemplatesSection() {
           </button>
           <button
             type="button"
+            onClick={() => setTab("key_sent_instruction")}
+            className={cn(
+              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              tab === "key_sent_instruction"
+                ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <KeyRound className="h-3.5 w-3.5" />
+            <span>3. Key Sent (Website &amp; Tab)</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setTab("kyc_rejected")}
             className={cn(
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
@@ -2087,7 +2390,7 @@ export function EmailTemplatesSection() {
             )}
           >
             <XCircle className="h-3.5 w-3.5" />
-            <span>3. KYC Failed (School ID)</span>
+            <span>4. KYC Failed (School ID)</span>
           </button>
           <button
             type="button"
@@ -2100,7 +2403,7 @@ export function EmailTemplatesSection() {
             )}
           >
             <KeyRound className="h-3.5 w-3.5" />
-            <span>4. Key Verification Started</span>
+            <span>5. Key Verification Started</span>
           </button>
           <button
             type="button"
@@ -2113,7 +2416,7 @@ export function EmailTemplatesSection() {
             )}
           >
             <Check className="h-3.5 w-3.5" />
-            <span>5. All Success (Dispatched)</span>
+            <span>6. All Success (Dispatched)</span>
           </button>
         </div>
 

