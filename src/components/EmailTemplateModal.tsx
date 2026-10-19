@@ -755,12 +755,22 @@ export function buildKeySentInstructionEmailHtml(params: {
                     </div>
 
                     <!-- Step 2: Withdrawal Tab Entry -->
-                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:12px;">
                       <p style="margin:0 0 4px;font-size:12px;color:#ffffff;font-weight:700;">
                         2️⃣ Enter Key in Your Withdrawal Tab
                       </p>
                       <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;">
                         Also put the key directly into your active <strong>Withdrawal Tab</strong> for payout reference <code style="font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${reference}</code>.
+                      </p>
+                    </div>
+
+                    <!-- Step 3: Inform the Sender Too -->
+                    <div style="background:#26182c;border:1px solid #7c3aed;border-left:4px solid #a855f7;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+                      <p style="margin:0 0 4px;font-size:12px;color:#f3e8ff;font-weight:700;">
+                        3️⃣ Inform the Sender to Put the Key in Their Tab
+                      </p>
+                      <p style="margin:0;font-size:12px;color:#e9d5ff;line-height:1.6;">
+                        <strong>Crucial Requirement:</strong> You must inform the sender (<strong style="color:#ffffff;">${senderName}</strong>) as well to put the verification key in their tab, <strong>or else the payout will not succeed</strong>. Both parties must submit their keys for the system to complete the clearance handshake.
                       </p>
                     </div>
 
@@ -770,7 +780,7 @@ export function buildKeySentInstructionEmailHtml(params: {
                         ⚡ Instant Payout Guarantee
                       </p>
                       <p style="margin:0;font-size:13px;color:#a7f3d0;font-weight:600;line-height:1.65;">
-                        When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
+                        When both keys are put (on the website and in the withdrawal tab, and the sender puts the key in their tab) and you have sent the correct key, the money will be out for release without any extra verification.
                       </p>
                     </div>
 
@@ -2330,7 +2340,7 @@ export function EmailTemplatesSection() {
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
             2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
-            3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab for release without extra verification.<br />
+            3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab, and inform sender to put key in their tab (or else it won't succeed) for release without extra verification.<br />
             4. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
             5. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
             6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.

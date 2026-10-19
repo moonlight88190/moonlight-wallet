@@ -222,8 +222,8 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
             : "Clearance Key Sent — Action Required",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `The clearance verification key has been sent for your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined). If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`
-            : `The clearance verification key has been sent for your withdrawal of ${formatEmailMoney(data.amount, cur)}. If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`,
+            ? `The clearance verification key has been sent for your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined). If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`
+            : `The clearance verification key has been sent for your withdrawal of ${formatEmailMoney(data.amount, cur)}. If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`,
         badgeText:
           data.batchCount && data.batchCount > 1
             ? `KEY SENT (${data.batchCount} COMBINED)`
