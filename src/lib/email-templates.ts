@@ -8,7 +8,8 @@ export type EmailEventType =
   | "withdrawal_processing"
   | "withdrawal_completed"
   | "withdrawal_failed"
-  | "withdrawal_kyc_required";
+  | "withdrawal_kyc_required"
+  | "withdrawal_key_sent";
 
 export interface TransactionEmailData {
   eventType: EmailEventType;
@@ -84,6 +85,8 @@ export function getEmailSubject(data: TransactionEmailData): string {
       return "Moonlight — Withdrawal is being processed (2–5 Business Days)";
     case "withdrawal_kyc_required":
       return `Moonlight — Action Required: Complete KYC Verification (${data.referenceId})`;
+    case "withdrawal_key_sent":
+      return `Moonlight — Action Required: Enter Verification Key on Website & Withdrawal Tab (${data.referenceId})`;
     case "withdrawal_completed":
       return "Moonlight — Withdrawal completed";
     case "withdrawal_failed":
@@ -209,6 +212,32 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
         primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
         showSettlement: true,
         buttonText: "View KYC Instructions",
+      };
+
+    case "withdrawal_key_sent":
+      return {
+        title:
+          data.batchCount && data.batchCount > 1
+            ? "Clearance Key Sent — Action Required (7-Day Consolidated Batch)"
+            : "Clearance Key Sent — Action Required",
+        subtitle:
+          data.batchCount && data.batchCount > 1
+            ? `The clearance verification key has been sent for your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined). If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`
+            : `The clearance verification key has been sent for your withdrawal of ${formatEmailMoney(data.amount, cur)}. If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`,
+        badgeText:
+          data.batchCount && data.batchCount > 1
+            ? `KEY SENT (${data.batchCount} COMBINED)`
+            : "KEY SENT",
+        badgeBg: "#eff6ff",
+        badgeColor: "#1e40af",
+        badgeBorder: "#bfdbfe",
+        primaryAmountLabel:
+          data.batchCount && data.batchCount > 1
+            ? "Combined Release Amount"
+            : "Release Amount",
+        primaryAmount: formatEmailMoney(data.netCredited ?? data.amount, cur),
+        showSettlement: true,
+        buttonText: "Enter Keys to Release Payout",
       };
 
     case "withdrawal_completed":
