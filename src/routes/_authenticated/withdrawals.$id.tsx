@@ -573,22 +573,51 @@ function WithdrawalReceipt() {
               </div>
             </div>
 
-            {/* Critical Dual Key Instructions Notice (Website + Withdrawal Tab) */}
-            <div className="rounded-xl border border-amber-500/35 bg-card/90 p-3.5 space-y-2 text-xs">
+            {/* Critical Dual Key & Sender Tab Instructions Notice */}
+            <div className="rounded-xl border border-amber-500/35 bg-card/90 p-3.5 space-y-2.5 text-xs">
               <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold text-xs uppercase tracking-wider">
                 <KeyRound className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>Dual Key Entry &amp; Automatic Release Requirement:</span>
+                <span>Dual Key Entry &amp; Sender Tab Confirmation Required:</span>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                1. <strong>On Website:</strong> If you haven't entered the key on the website yet,{" "}
-                <Link to="/kyc" className="text-primary font-semibold underline">
-                  enter it on the website (KYC &amp; Security Tab)
-                </Link>.
-                <br />
-                2. <strong>In Withdrawal Tab:</strong> Also enter the key below in this withdrawal tab.
-                <br />
-                3. <strong>Instant Payout Release:</strong> <strong>When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.</strong>
-              </p>
+              <div className="space-y-2 text-[11px] text-muted-foreground leading-relaxed">
+                <p>
+                  1. <strong>On Website:</strong> If you haven't entered the key on the website yet,{" "}
+                  <Link to="/kyc" className="text-primary font-semibold underline">
+                    enter it on the website (KYC &amp; Security Tab)
+                  </Link>.
+                </p>
+                <p>
+                  2. <strong>In Withdrawal Tab:</strong> Also enter the key below in this withdrawal tab.
+                </p>
+                {/* MANDATORY SENDER TAB ACTION NOTICE */}
+                <div className="rounded-lg bg-amber-500/15 border border-amber-500/35 p-2.5 text-amber-900 dark:text-amber-200">
+                  <p className="font-bold text-xs text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1">
+                    <span>⚠️ Important: You Must Inform the Sender Too</span>
+                  </p>
+                  <p className="text-[11px] leading-relaxed">
+                    You have to inform the sender as well to put the verification key in their tab, <strong>or else the payout will not succeed</strong>. Both sides must register their keys for the clearance loop to validate.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const msg = `Hi, please enter the 5-digit verification key in your Moonlight tab too for withdrawal ${wd.reference}, or else the payout cannot succeed. Once both keys are entered, it releases immediately without extra verification!`;
+                        navigator.clipboard.writeText(msg);
+                        toast.success("Copied reminder message for sender!");
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-950 dark:text-amber-100 text-[11px] font-semibold transition-colors cursor-pointer border border-amber-500/30"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span>Copy Reminder to Send to Sender</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/25 p-2.5 text-emerald-900 dark:text-emerald-300">
+                  <p className="font-semibold text-[11px] leading-relaxed">
+                    ⚡ <strong>Automatic Release Guarantee:</strong> When both keys are put (on the website and in the withdrawal tab, with the sender confirming in their tab) and you have sent the correct key, the money will be out for release without any extra verification.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Email Notification Notice */}
@@ -599,7 +628,7 @@ function WithdrawalReceipt() {
                   Verification Confirmation via Email
                 </span>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Once your key is entered, key matching begins immediately. You will receive an official confirmation email from Moonlight Financial once verified.
+                  Once your key is entered and the sender inputs their key, key matching begins immediately. You will receive an official confirmation email from Moonlight Financial once verified.
                 </p>
               </div>
             </div>
@@ -622,7 +651,7 @@ function WithdrawalReceipt() {
                     <span>Key Submitted in Withdrawal Tab · Verification in Progress</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Your verification key has been received in this withdrawal tab. When both keys are put (on the website and here) and the correct key is verified, the money will be out for release without any extra verification.
+                    Your verification key has been received in this withdrawal tab. Make sure you also entered it on the website, and remember to <strong>inform the sender too to put the key in their tab, or else it will not succeed</strong>. When both keys are put and the correct key is verified, the money will be out for release without any extra verification.
                   </p>
                   <div className="pt-1 flex items-center justify-between flex-wrap gap-2">
                     <button
@@ -643,12 +672,12 @@ function WithdrawalReceipt() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <Input
                       value={keyInput}
                       onChange={(e) => setKeyInput(e.target.value)}
                       placeholder="Enter 5-digit verification key"
-                      className="h-9 text-xs font-mono tracking-wider uppercase bg-secondary/50"
+                      className="h-10 sm:h-9 text-xs font-mono tracking-wider uppercase bg-secondary/50 flex-1 min-w-0"
                     />
                     <button
                       type="button"
@@ -662,9 +691,10 @@ function WithdrawalReceipt() {
                           "Verification key submitted in withdrawal tab! When both keys are put and verified, money will be out for release without extra verification.",
                         );
                       }}
-                      className="h-9 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer"
+                      className="h-10 sm:h-9 px-4 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      Submit Key
+                      <KeyRound className="h-3.5 w-3.5" />
+                      <span>Submit Key</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground">

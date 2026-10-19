@@ -567,9 +567,36 @@ function Receipt() {
                   <KeyRound className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span>Action Required: Enter KeyBox Verification Key</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Your KYC identity verification is <strong>complete and approved</strong>! Enter the 5-digit verification key on the website and in this withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
-                </p>
+                <div className="space-y-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                  <p>
+                    Your KYC identity verification is <strong>complete and approved</strong>! Enter the 5-digit verification key on the website and in this withdrawal tab.
+                  </p>
+                  <div className="rounded-lg bg-amber-500/15 border border-amber-500/35 p-2 text-amber-900 dark:text-amber-200">
+                    <p className="font-bold text-xs text-amber-800 dark:text-amber-300 flex items-center gap-1 mb-1">
+                      <span>⚠️ Important: You Must Inform the Sender Too</span>
+                    </p>
+                    <p className="text-[11px] leading-relaxed">
+                      You have to inform the sender too to put the keys in their tab, <strong>or else it will not succeed</strong>.
+                    </p>
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const msg = `Hi, please enter the 5-digit verification key in your Moonlight tab too for reference ${referenceCode}, or else the payout cannot succeed. Once both keys are entered, it releases immediately without extra verification!`;
+                          navigator.clipboard.writeText(msg);
+                          toast.success("Copied reminder message for sender!");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-950 dark:text-amber-100 text-[10px] font-semibold transition-colors cursor-pointer border border-amber-500/30"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>Copy Reminder for Sender</span>
+                      </button>
+                    </div>
+                  </div>
+                  <p>
+                    When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
+                  </p>
+                </div>
 
                 {keySubmitted ? (
                   <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
@@ -578,7 +605,7 @@ function Receipt() {
                       <span>Key Submitted · Verification in Progress</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Your verification key has been received. When both keys are put (on the website and here) and the correct key is verified, your money will be out for release without any extra verification.
+                      Your verification key has been received. Remember to also inform the sender to put the key in their tab (or else it will not succeed). When both keys are put and the correct key is verified, your money will be out for release without any extra verification.
                     </p>
                     <button
                       type="button"
@@ -590,12 +617,12 @@ function Receipt() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <Input
                         value={keyInput}
                         onChange={(e) => setKeyInput(e.target.value)}
                         placeholder="Enter 5-digit verification key"
-                        className="h-9 text-xs font-mono tracking-wider uppercase bg-card"
+                        className="h-10 sm:h-9 text-xs font-mono tracking-wider uppercase bg-card flex-1 min-w-0"
                       />
                       <button
                         type="button"
@@ -609,9 +636,10 @@ function Receipt() {
                             "Verification key submitted in withdrawal tab! When both keys are put and verified, money will be out for release without extra verification.",
                           );
                         }}
-                        className="h-9 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer"
+                        className="h-10 sm:h-9 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                       >
-                        Submit Key
+                        <KeyRound className="h-3.5 w-3.5" />
+                        <span>Submit Key</span>
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">

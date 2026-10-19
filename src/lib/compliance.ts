@@ -253,10 +253,10 @@ export function getWithdrawalComplianceInfo(
       statusLabel: "KEYBOX VERIFICATION REQUIRED",
       stageTitle: "KYC Approved — Enter KeyBox Verification Key",
       description:
-        "Your KYC identity verification has passed successfully. To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender. Once both keys are entered and verified, the money will be out for release without any extra verification.",
+        "Your KYC identity verification has passed successfully. To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender on the website and in this withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. Once both keys are entered and verified, the money will be out for release without any extra verification.",
       currentStep: "KYC Approved · Enter KeyBox Verification Key",
       currentStepDescription:
-        "KYC verification is completed and approved. Please enter the verification key on the website and in this withdrawal tab. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.",
+        "KYC verification is completed and approved. Please enter the verification key on the website and in this withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.",
       nextStep: "Disbursement & Instant Fund Release",
       nextStepDescription:
         "Funds will be released immediately to your destination account without any extra verification upon key matching.",
