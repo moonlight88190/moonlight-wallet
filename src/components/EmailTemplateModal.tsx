@@ -14,6 +14,7 @@ import {
   Info,
   ChevronDown,
   SlidersHorizontal,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,14 @@ export const LOGO_URL =
 export const UPI_LOGO_URL = UPI_LOGO_DATA_URI;
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
-export type EmailTemplateType = "kyc_hold" | "kyc_approved_key" | "key_sent_instruction" | "kyc_rejected" | "key_verification_started" | "all_success";
+export type EmailTemplateType =
+  | "kyc_hold"
+  | "kyc_approved_key"
+  | "key_sent_instruction"
+  | "kyc_rejected"
+  | "key_verification_started"
+  | "all_success"
+  | "first_transfer_clearance";
 
 export interface ItemizedWithdrawalEntry {
   reference: string;
@@ -46,6 +54,8 @@ export interface EmailContextData {
   reference?: string;
   date?: string;
   batchCount?: number;
+  recipientEmail?: string;
+  recipientPhone?: string;
   itemizedWithdrawals?: ItemizedWithdrawalEntry[];
 }
 
@@ -132,6 +142,8 @@ export function getKycEmailSubject(
       return `Key Verification In Progress — Payout Ref: ${reference} (${amount || ""} ${currency || ""})`;
     case "all_success":
       return `Payout Approved & Dispatched — ${amount || ""} ${currency || ""} — Ref: ${reference}`;
+    case "first_transfer_clearance":
+      return `First International Transfer & Withdrawal: Final Clearance Notice (5–7 Days) — Ref: ${reference}`;
     default:
       return `Moonlight Financial — Action Required — Ref: ${reference}`;
   }
@@ -1623,6 +1635,352 @@ export function buildAllSuccessEmailHtml(params: {
 </html>`;
 }
 
+/**
+ * TEMPLATE 7: First International Transfer Clearance (5–7 Business Days)
+ * Reassures the customer that their first international transfer & withdrawal takes time,
+ * but if their details (Gmail, Name, Phone Number, UPI ID) are correct, money will arrive
+ * in 5–7 days with NO more recipient verification needed. Highlights that the sender must comply
+ * with our request if Indian banks inquire about sender details / AML protocols as this is the final stretch.
+ */
+export function buildFirstTransferClearanceEmailHtml(params: {
+  recipientName: string;
+  senderName?: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}) {
+  const {
+    recipientName,
+    senderName = "Brooklyn",
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    recipientEmail = "customer@gmail.com",
+    recipientPhone = "+91 98765 43210",
+    batchCount = 1,
+    itemizedWithdrawals,
+  } = params;
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("gpay") ||
+    method.toLowerCase().includes("phonepe");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>First International Transfer & Withdrawal: Final Clearance Notice — Moonlight Financial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  ${MOBILE_EMAIL_STYLES}
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail · Cross-Border Clearing</p>
+          </td>
+        </tr>
+
+        <!-- Sapphire / Cyan International Transfer Banner -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0284c7,#0369a1);padding:14px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+              🌐 First International Transfer &amp; Withdrawal · Final Clearance Stretch (5–7 Days)
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td class="email-body" style="padding:36px 32px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 18px;font-size:14px;color:#cbd5e1;line-height:1.65;">
+              We are contacting you with an important update regarding your withdrawal under payout reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+            </p>
+
+            <!-- First Transfer Context Notice -->
+            <div style="background:#0c1929;border:1px solid #0284c7;border-radius:14px;padding:18px 20px;margin-bottom:22px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="30" style="vertical-align:top;font-size:22px;padding-right:12px;">⏳</td>
+                  <td>
+                    <h3 style="margin:0 0 6px;font-size:14px;color:#38bdf8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      First International Transfer Notice
+                    </h3>
+                    <p style="margin:0;font-size:13px;color:#e2e8f0;line-height:1.65;">
+                      Since this is your <strong style="color:#ffffff;">first international transfer and withdrawal using Moonlight</strong>, your payout is processing through our authorized cross-border corridor. First-time international settlements require initial interbank corridor verification and correspondent clearance, which is why it takes additional time compared to recurring transactions.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Assurance Card (5-7 Days + No More Recipient Verification) -->
+            <div style="background:#064e3b;border:2px solid #059669;border-radius:14px;padding:20px;margin-bottom:22px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="30" style="vertical-align:top;font-size:24px;padding-right:12px;">🛡️</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:14px;color:#6ee7b7;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Guaranteed Delivery In 5–7 Days
+                    </h3>
+                    <p style="margin:0 0 12px;font-size:13px;color:#ecfdf5;line-height:1.65;">
+                      Please be completely assured: <strong style="color:#34d399;">As long as your Gmail address, full legal name, phone number, and UPI ID are correct, you will receive your money in 5 to 7 days from now.</strong>
+                    </p>
+                    <div style="background:#042f24;border-radius:10px;padding:12px 14px;border:1px solid #059669;">
+                      <p style="margin:0;font-size:12px;color:#a7f3d0;font-weight:600;line-height:1.55;">
+                        ✅ <strong style="color:#ffffff;">NO MORE VERIFICATION IS NEEDED FROM YOUR SIDE.</strong> All your KYC documentation, identity checks, and recipient verification steps are fully completed and approved. You are not required to submit any additional documents.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Important Sender Compliance Notice (AML & Indian Bank Regulatory Rule) -->
+            <div style="background:#1e1a0f;border:2px solid #d97706;border-radius:14px;padding:20px;margin-bottom:24px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="30" style="vertical-align:top;font-size:22px;padding-right:12px;">⚖️</td>
+                  <td>
+                    <h3 style="margin:0 0 8px;font-size:13px;color:#fbbf24;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Final Process: Sender Regulatory Compliance Protocol
+                    </h3>
+                    <p style="margin:0 0 12px;font-size:12px;color:#fef3c7;line-height:1.65;">
+                      While no further verification is needed from you, <strong style="color:#ffffff;">the sender (${senderName}) must comply with our requests if the Indian receiving/partner bank asks the sender for details or origin confirmation regarding the money.</strong>
+                    </p>
+                    <p style="margin:0 0 10px;font-size:12px;color:#cbd5e1;line-height:1.6;">
+                      This is a mandatory standard process for <strong style="color:#fde68a;">International Financial Safety and Anti-Money Laundering (AML)</strong> compliance governing cross-border inward remittances into India.
+                    </p>
+                    <div style="background:#13120b;border-radius:8px;padding:10px 12px;border:1px solid #78350f;">
+                      <p style="margin:0;font-size:11px;color:#fde047;line-height:1.5;">
+                        ⚡ <strong>Final Stretch:</strong> This is the final stretch and concluding process of your transfer. Once interbank clearance protocols conclude, your funds will be credited directly to your UPI/bank account.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            ${
+              batchCount > 1
+                ? `<div style="background:#2e1065;border:1px solid #7c3aed;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#e9d5ff;line-height:1.6;">
+                      ⚡ <strong style="color:#c084fc;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been merged into this single settlement of ${amount} ${currency} under Reference <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                    </p>
+                  </div>`
+                : ""
+            }
+
+            <!-- Payout Amount Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:2px solid #0284c7;border-radius:16px;margin-bottom:24px;text-align:center;">
+              <tr>
+                <td style="padding:22px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    ${batchCount > 1 ? `Consolidated Payout Amount (${batchCount} Withdrawals)` : "Cleared Payout Amount"}
+                  </p>
+                  <p class="email-amount" style="margin:0 0 12px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#38bdf8;letter-spacing:-0.5px;">
+                    ${amount} <span class="email-amount-sub" style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
+                  </p>
+                  
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${
+                          isUpi
+                            ? `<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          ${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Four-Point Beneficiary Details Verification Card -->
+            <div style="background:#131728;border:1px solid #283048;border-radius:14px;padding:20px;margin-bottom:24px;">
+              <h3 style="margin:0 0 12px;font-size:13px;color:#f8fafc;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">
+                🔍 Beneficiary Details On Record (Verification Checklist)
+              </h3>
+              <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;line-height:1.5;">
+                As long as the following 4 details are accurate, your funds will reach your account within 5–7 days with zero additional verification required:
+              </p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0 8px;">
+                <tr>
+                  <td width="26" style="vertical-align:middle;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="font-size:12px;color:#94a3b8;width:32%;">1. Gmail / Email:</td>
+                  <td style="font-size:12px;color:#f8fafc;font-weight:600;font-family:'IBM Plex Mono',monospace;">${recipientEmail}</td>
+                </tr>
+                <tr>
+                  <td width="26" style="vertical-align:middle;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="font-size:12px;color:#94a3b8;">2. Full Legal Name:</td>
+                  <td style="font-size:12px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+                </tr>
+                <tr>
+                  <td width="26" style="vertical-align:middle;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="font-size:12px;color:#94a3b8;">3. Phone Number:</td>
+                  <td style="font-size:12px;color:#f8fafc;font-weight:600;font-family:'IBM Plex Mono',monospace;">${recipientPhone}</td>
+                </tr>
+                <tr>
+                  <td width="26" style="vertical-align:middle;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="font-size:12px;color:#94a3b8;">4. UPI ID / Destination:</td>
+                  <td style="font-size:12px;color:#38bdf8;font-weight:700;font-family:'IBM Plex Mono',monospace;">${destination}</td>
+                </tr>
+              </table>
+
+              <div style="margin-top:12px;padding:10px 12px;background:#0d101a;border-radius:8px;border:1px solid #1e2438;">
+                <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;">
+                  ℹ️ If you spot any typo in your Gmail, Name, Phone Number, or UPI ID, email our compliance desk immediately at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a> citing Ref: <strong style="color:#ffffff;">${reference}</strong>.
+                </p>
+              </div>
+            </div>
+
+            <!-- Visual 4-Stage Progress Tracker -->
+            <div style="background:#0f121e;border:1px solid #23283b;border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+              <p style="margin:0 0 12px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+                Cleared Pipeline Status (Final Stretch)
+              </p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:10px;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="padding-bottom:10px;font-size:12px;color:#e2e8f0;">
+                    <strong style="color:#34d399;">Stage 1:</strong> Transfer Initiated &amp; Identity Approved
+                  </td>
+                  <td align="right" style="padding-bottom:10px;font-size:10px;color:#34d399;font-weight:700;font-family:'IBM Plex Mono',monospace;">COMPLETED</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:10px;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="padding-bottom:10px;font-size:12px;color:#e2e8f0;">
+                    <strong style="color:#34d399;">Stage 2:</strong> Recipient Verification &amp; Security Keys
+                  </td>
+                  <td align="right" style="padding-bottom:10px;font-size:10px;color:#34d399;font-weight:700;font-family:'IBM Plex Mono',monospace;">NO ACTION NEEDED</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:10px;">
+                    <div style="background:#0284c7;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">⚡</div>
+                  </td>
+                  <td style="padding-bottom:10px;font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#38bdf8;">Stage 3:</strong> International Corridor Clearing &amp; Anti-Money Laundering Safety Protocol
+                  </td>
+                  <td align="right" style="padding-bottom:10px;font-size:10px;color:#38bdf8;font-weight:700;font-family:'IBM Plex Mono',monospace;">FINAL STRETCH</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;">
+                    <div style="background:#334155;color:#94a3b8;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">🏁</div>
+                  </td>
+                  <td style="font-size:12px;color:#94a3b8;">
+                    <strong style="color:#cbd5e1;">Stage 4:</strong> Payout Dispatched &amp; Credited to UPI/Bank
+                  </td>
+                  <td align="right" style="font-size:10px;color:#fbbf24;font-weight:700;font-family:'IBM Plex Mono',monospace;">ETA 5–7 DAYS</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Transaction Reference Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:24px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:10px 16px;font-size:12px;color:#f8fafc;font-weight:600;">${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Sender</td>
+                <td style="padding:10px 16px;font-size:12px;color:#f8fafc;font-weight:600;">${senderName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:10px 16px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:10px 16px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#38bdf8;font-weight:700;">${reference}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Expected Settlement</td>
+                <td style="padding:10px 16px;font-size:12px;color:#34d399;font-weight:700;">5 to 7 Business Days</td>
+              </tr>
+              <tr style="background:#0c1929;">
+                <td style="padding:10px 16px;font-size:12px;color:#93c5fd;font-weight:600;">Clearance Phase</td>
+                <td style="padding:10px 16px;font-size:12px;color:#38bdf8;font-weight:700;">FINAL STRETCH · CORRESPONDENT AML REVIEW</td>
+              </tr>
+            </table>
+
+            ${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
+
+            <!-- Final Reassurance Box -->
+            <div style="background:#0c101c;border:1px solid #1e2438;border-radius:12px;padding:16px 18px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:13px;color:#f8fafc;font-weight:600;">
+                You are in good hands.
+              </p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
+                Our clearing officers are overseeing the international corridor clearance. No action is required from you as long as your details are accurate. If you have any questions, reach out to our team at <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a> citing Reference ID <strong style="color:#ffffff;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Cross-Border Clearing Notification
+            </p>
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official communication regarding your cross-border payout. For compliance inquiries, contact <a href="mailto:${COMPLIANCE_EMAIL}" style="color:#38bdf8;text-decoration:none;">${COMPLIANCE_EMAIL}</a>.
+            </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // ─────────────────────────────────────────────
 // BULLETPROOF DIRECT OVERLAY EMAIL MODAL
 // ─────────────────────────────────────────────
@@ -1639,17 +1997,19 @@ export function EmailTemplateModal({
   initialData,
 }: EmailTemplateModalProps) {
   const [tab, setTab] = useState<EmailTemplateType>(
-    initialData?.type === "key_sent_instruction"
-      ? "key_sent_instruction"
-      : initialData?.type === "kyc_approved_key"
-        ? "kyc_approved_key"
-        : initialData?.type === "kyc_rejected"
-          ? "kyc_rejected"
-          : initialData?.type === "key_verification_started"
-            ? "key_verification_started"
-            : initialData?.type === "all_success"
-              ? "all_success"
-              : "kyc_hold",
+    initialData?.type === "first_transfer_clearance"
+      ? "first_transfer_clearance"
+      : initialData?.type === "key_sent_instruction"
+        ? "key_sent_instruction"
+        : initialData?.type === "kyc_approved_key"
+          ? "kyc_approved_key"
+          : initialData?.type === "kyc_rejected"
+            ? "kyc_rejected"
+            : initialData?.type === "key_verification_started"
+              ? "key_verification_started"
+              : initialData?.type === "all_success"
+                ? "all_success"
+                : "kyc_hold",
   );
   const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
 
@@ -1662,6 +2022,8 @@ export function EmailTemplateModal({
   const [reference, setReference] = useState(initialData?.reference || "MLW-9842-1083");
   const [date, setDate] = useState(initialData?.date || new Date().toLocaleString());
   const [batchCount, setBatchCount] = useState<number>(initialData?.batchCount || 1);
+  const [recipientEmail, setRecipientEmail] = useState(initialData?.recipientEmail || "customer@gmail.com");
+  const [recipientPhone, setRecipientPhone] = useState(initialData?.recipientPhone || "+91 98765 43210");
   const [itemizedWithdrawals, setItemizedWithdrawals] = useState<ItemizedWithdrawalEntry[]>(
     initialData?.itemizedWithdrawals || [],
   );
@@ -1674,7 +2036,8 @@ export function EmailTemplateModal({
 
   useEffect(() => {
     if (initialData) {
-      if (initialData.type === "key_sent_instruction") setTab("key_sent_instruction");
+      if (initialData.type === "first_transfer_clearance") setTab("first_transfer_clearance");
+      else if (initialData.type === "key_sent_instruction") setTab("key_sent_instruction");
       else if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
       else if (initialData.type === "kyc_rejected") setTab("kyc_rejected");
       else if (initialData.type === "key_verification_started") setTab("key_verification_started");
@@ -1690,6 +2053,8 @@ export function EmailTemplateModal({
       if (initialData.reference) setReference(initialData.reference);
       if (initialData.date) setDate(initialData.date);
       if (initialData.batchCount !== undefined) setBatchCount(initialData.batchCount);
+      if (initialData.recipientEmail) setRecipientEmail(initialData.recipientEmail);
+      if (initialData.recipientPhone) setRecipientPhone(initialData.recipientPhone);
       if (initialData.itemizedWithdrawals) setItemizedWithdrawals(initialData.itemizedWithdrawals);
     }
   }, [initialData]);
@@ -1773,6 +2138,22 @@ export function EmailTemplateModal({
         itemizedWithdrawals,
       });
     }
+    if (tab === "first_transfer_clearance") {
+      return buildFirstTransferClearanceEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        recipientEmail,
+        recipientPhone,
+        batchCount,
+        itemizedWithdrawals,
+      });
+    }
     return buildKycRejectedEmailHtml({
       recipientName: recipient,
       amount,
@@ -1795,6 +2176,8 @@ export function EmailTemplateModal({
     reference,
     date,
     batchCount,
+    recipientEmail,
+    recipientPhone,
     itemizedWithdrawals,
   ]);
 
@@ -1964,6 +2347,20 @@ export function EmailTemplateModal({
                 <span>6. Dispatched</span>
                 <span className="hidden md:inline">(All Done)</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setTab("first_transfer_clearance")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "first_transfer_clearance"
+                    ? "bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <Globe className="h-3.5 w-3.5 shrink-0" />
+                <span>7. 1st Transfer</span>
+                <span className="hidden md:inline">(5-7 Days &amp; AML)</span>
+              </button>
             </div>
           </div>
 
@@ -2046,7 +2443,7 @@ export function EmailTemplateModal({
 
           {/* Expandable input fields */}
           {showContextFields && (
-            <div className="px-3 sm:px-5 pb-3 pt-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs border-t border-border/40 animate-fade-in">
+            <div className="px-3 sm:px-5 pb-3 pt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-2.5 text-xs border-t border-border/40 animate-fade-in">
               <div className="space-y-1">
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
                 <input
@@ -2056,7 +2453,7 @@ export function EmailTemplateModal({
                   className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
                 />
               </div>
-              {tab === "kyc_approved_key" && (
+              {(tab === "kyc_approved_key" || tab === "key_sent_instruction" || tab === "first_transfer_clearance") && (
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender</label>
                   <input
@@ -2067,6 +2464,24 @@ export function EmailTemplateModal({
                   />
                 </div>
               )}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Gmail / Email</label>
+                <input
+                  type="text"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">Phone Number</label>
+                <input
+                  type="text"
+                  value={recipientPhone}
+                  onChange={(e) => setRecipientPhone(e.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-mono font-medium"
+                />
+              </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
                 <input
@@ -2257,6 +2672,8 @@ export function EmailTemplatesSection() {
   const [destination, setDestination] = useState("janedoe@okhdfcbank");
   const [reference, setReference] = useState("MLW-8392-1049");
   const [date, setDate] = useState(new Date().toLocaleString());
+  const [recipientEmail, setRecipientEmail] = useState("janedoe@gmail.com");
+  const [recipientPhone, setRecipientPhone] = useState("+91 98765 43210");
 
   const generatedHtml = useMemo(() => {
     if (tab === "kyc_hold") {
@@ -2316,6 +2733,20 @@ export function EmailTemplatesSection() {
         date,
       });
     }
+    if (tab === "first_transfer_clearance") {
+      return buildFirstTransferClearanceEmailHtml({
+        recipientName: recipient,
+        senderName: sender,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        recipientEmail,
+        recipientPhone,
+      });
+    }
     return buildKycRejectedEmailHtml({
       recipientName: recipient,
       amount,
@@ -2325,7 +2756,7 @@ export function EmailTemplatesSection() {
       reference,
       date,
     });
-  }, [tab, recipient, sender, amount, currency, method, destination, reference, date]);
+  }, [tab, recipient, sender, amount, currency, method, destination, reference, date, recipientEmail, recipientPhone]);
 
   const [copied, setCopied] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
@@ -2383,14 +2814,15 @@ export function EmailTemplatesSection() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
         <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-foreground">💡 6 Specialized Clearance Templates</p>
+          <p className="font-semibold text-foreground">💡 7 Specialized Clearance Templates</p>
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
             2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
             3. <strong>Key Sent (Website &amp; Tab):</strong> Dual-key instructions: enter on website and withdrawal tab, and inform sender to put key in their tab (or else it won't succeed) for release without extra verification.<br />
             4. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
             5. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
-            6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.
+            6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.<br />
+            7. <strong>1st Transfer Clearance (5–7 Days):</strong> First international transfer &amp; withdrawal update. Reassures customer that if Gmail, Name, Number &amp; UPI are correct they will get funds in 5–7 days with no more recipient verification, noting sender must comply with Indian bank AML/safety inquiries in this final stretch.
           </p>
         </div>
       </div>
@@ -2480,6 +2912,20 @@ export function EmailTemplatesSection() {
             <span>6. Dispatched</span>
             <span className="hidden md:inline">(All Done)</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setTab("first_transfer_clearance")}
+            className={cn(
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+              tab === "first_transfer_clearance"
+                ? "bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <Globe className="h-3.5 w-3.5 shrink-0" />
+            <span>7. 1st Transfer</span>
+            <span className="hidden md:inline">(5-7 Days &amp; AML)</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-1 rounded-xl bg-secondary p-0.5">
@@ -2509,7 +2955,7 @@ export function EmailTemplatesSection() {
       </div>
 
       {/* Inputs Configuration Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3">
         <div className="space-y-1">
           <label className="text-[10px] font-semibold text-muted-foreground uppercase">Beneficiary</label>
           <input
@@ -2518,9 +2964,9 @@ export function EmailTemplatesSection() {
             className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs"
           />
         </div>
-        {tab === "kyc_approved_key" && (
+        {(tab === "kyc_approved_key" || tab === "key_sent_instruction" || tab === "first_transfer_clearance") && (
           <div className="space-y-1">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender (Brooklyn)</label>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Sender</label>
             <input
               value={sender}
               onChange={(e) => setSender(e.target.value)}
@@ -2528,6 +2974,22 @@ export function EmailTemplatesSection() {
             />
           </div>
         )}
+        <div className="space-y-1">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase">Gmail / Email</label>
+          <input
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase">Phone Number</label>
+          <input
+            value={recipientPhone}
+            onChange={(e) => setRecipientPhone(e.target.value)}
+            className="h-9 w-full rounded-xl border border-input bg-background px-3 text-xs font-mono"
+          />
+        </div>
         <div className="space-y-1">
           <label className="text-[10px] font-semibold text-muted-foreground uppercase">Amount</label>
           <input
