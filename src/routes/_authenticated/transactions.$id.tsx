@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ChevronLeft,
   Copy,
@@ -34,6 +35,7 @@ import {
   getWithdrawalComplianceInfo,
   TIMELINE_SUMMARY_STEPS as TIMELINE_STEPS,
 } from "@/lib/compliance";
+import { submitWithdrawalKey } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/transactions/$id")({
   head: () => ({
@@ -57,8 +59,11 @@ function Receipt() {
   const profile = useProfile();
   const wallet = useWallet();
   const rates = useRates();
+  const queryClient = useQueryClient();
+  const submitKeyFn = useServerFn(submitWithdrawalKey);
   const [copied, setCopied] = useState(false);
   const [keyInput, setKeyInput] = useState("");
+  const [submittingKey, setSubmittingKey] = useState(false);
   const [keySubmitted, setKeySubmitted] = useState(() => {
     return typeof window !== "undefined" && Boolean(localStorage.getItem(`keybox_tx_${id}`));
   });
@@ -270,6 +275,7 @@ function Receipt() {
       isUPI,
       method: rawData.recipient_name || rawData.route || undefined,
       route: rawData.route || undefined,
+      keySubmitted,
     })
     : null;
   // Counterparty resolution for direct Pay Back / Send Again actions
@@ -352,15 +358,23 @@ function Receipt() {
                   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase shrink-0",
                   complianceInfo.isSuccess
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : complianceInfo.isHold
-                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      : !complianceInfo.isProcessing
-                        ? "bg-destructive/10 text-destructive"
-                        : "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                    : complianceInfo.statusLabel === "KEY NEEDED" || complianceInfo.isKeyBoxRequired
+                      ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/35"
+                      : complianceInfo.statusLabel === "KYC HOLD" || complianceInfo.isKycRequired
+                        ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/35"
+                        : complianceInfo.isHold
+                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                          : !complianceInfo.isProcessing
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400",
                 )}
               >
                 {complianceInfo.isSuccess ? (
                   <CheckCircle2 className="h-3 w-3" />
+                ) : complianceInfo.statusLabel === "KEY NEEDED" || complianceInfo.isKeyBoxRequired ? (
+                  <KeyRound className="h-3 w-3 text-amber-600 dark:text-amber-400 animate-pulse" />
+                ) : complianceInfo.statusLabel === "KYC HOLD" || complianceInfo.isKycRequired ? (
+                  <ShieldAlert className="h-3 w-3 text-amber-600 dark:text-amber-400 animate-pulse" />
                 ) : complianceInfo.isHold ? (
                   <Lock className="h-3 w-3" />
                 ) : !complianceInfo.isProcessing ? (
@@ -550,7 +564,7 @@ function Receipt() {
                   ⚡ Once your KYC is approved by compliance, you will proceed to the next step to enter your sender clearance key.
                 </p>
               </div>
-            ) : complianceInfo.isKeyBoxRequired ? (
+            ) : (complianceInfo.isKeyBoxRequired || keySubmitted) ? (
               <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 space-y-3 text-xs">
                 {/* KYC Completed Banner */}
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-500/15 border border-emerald-500/35 px-2.5 py-1.5 text-xs">
@@ -626,20 +640,36 @@ function Receipt() {
                       />
                       <button
                         type="button"
-                        disabled={!keyInput.trim()}
-                        onClick={() => {
-                          if (!keyInput.trim()) return;
-                          localStorage.setItem(`keybox_tx_${id}`, keyInput.trim());
-                          localStorage.setItem("keybox_kyc_key", keyInput.trim());
-                          setKeySubmitted(true);
-                          toast.success(
-                            "Verification key submitted in withdrawal tab! When both keys are put and verified, money will be out for release without extra verification.",
-                          );
+                        disabled={!keyInput.trim() || submittingKey}
+                        onClick={async () => {
+                          const val = keyInput.trim();
+                          if (!val) return;
+                          setSubmittingKey(true);
+                          try {
+                            localStorage.setItem(`keybox_tx_${id}`, val);
+                            localStorage.setItem("keybox_kyc_key", val);
+                            setKeySubmitted(true);
+                            await submitKeyFn({
+                              data: {
+                                withdrawalId: (rawData as any).id,
+                                key: val,
+                              },
+                            });
+                            await queryClient.invalidateQueries({ queryKey: ["transaction", id] });
+                            await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+                            toast.success(
+                              "Verification key submitted! Payout status has returned to Processing. Funds will release without extra verification upon matching.",
+                            );
+                          } catch (err) {
+                            toast.error((err as Error).message || "Failed to submit verification key");
+                          } finally {
+                            setSubmittingKey(false);
+                          }
                         }}
                         className="h-10 sm:h-9 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         <KeyRound className="h-3.5 w-3.5" />
-                        <span>Submit Key</span>
+                        <span>{submittingKey ? "Submitting..." : "Submit Key"}</span>
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">

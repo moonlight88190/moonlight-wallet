@@ -937,6 +937,7 @@ function WithdrawalsSection({
     | "FAILED"
     | "ON HOLD"
     | "UNDER REVIEW"
+    | "KEY NEEDED"
     | "CANCELLED";
 
   const [newStatus, setNewStatus] = useState<WithdrawalStatus>("SUCCESSFUL");
@@ -946,10 +947,10 @@ function WithdrawalsSection({
   const statuses = [
     "ALL",
     "PROCESSING",
-    "SUCCESSFUL",
-    "FAILED",
     "ON HOLD",
     "UNDER REVIEW",
+    "SUCCESSFUL",
+    "FAILED",
     "CANCELLED",
   ];
 
@@ -964,7 +965,11 @@ function WithdrawalsSection({
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return consolidatedBatches.filter((b) => {
-      const matchesFilter = filter === "ALL" || b.status === filter;
+      const matchesFilter =
+        filter === "ALL" ||
+        b.status === filter ||
+        (filter === "UNDER REVIEW" && (b.status === "KEY NEEDED" || b.status === "UNDER REVIEW")) ||
+        (filter === "ON HOLD" && (b.status === "HOLD" || b.status === "KYC HOLD" || b.status === "ON HOLD"));
       const matchesQuery =
         !s ||
         [
@@ -1042,7 +1047,11 @@ function WithdrawalsSection({
     }
   }
 
-  async function handleQuickBatchStatus(b: ConsolidatedWithdrawalBatch, status: WithdrawalStatus) {
+  async function handleQuickBatchStatus(
+    b: ConsolidatedWithdrawalBatch,
+    status: WithdrawalStatus,
+    customReason?: string,
+  ) {
     setBusy(true);
     try {
       await Promise.all(
@@ -1052,15 +1061,21 @@ function WithdrawalsSection({
               token,
               withdrawalId: w.id,
               newStatus: status,
-              reason: b.reason || `Marked as ${status} via direct admin action.`,
+              reason: customReason || b.reason || `Marked as ${status} via direct admin action.`,
             },
           }),
         ),
       );
+      const readable =
+        status === "ON HOLD"
+          ? "KYC Hold"
+          : status === "UNDER REVIEW" || status === "KEY NEEDED"
+            ? "Key Needed"
+            : status;
       toast.success(
         b.count > 1
-          ? `All ${b.count} withdrawals in 7-day batch ${b.primaryReference} marked as ${status}.`
-          : `Withdrawal ${b.primaryReference} marked as ${status}.`,
+          ? `All ${b.count} withdrawals in 7-day batch ${b.primaryReference} marked as ${readable}.`
+          : `Withdrawal ${b.primaryReference} marked as ${readable}.`,
       );
       onDone();
     } catch (e) {
@@ -1094,7 +1109,19 @@ function WithdrawalsSection({
                   : "bg-secondary text-muted-foreground hover:text-foreground",
               )}
             >
-              {st}
+              {st === "ON HOLD"
+                ? "KYC Hold"
+                : st === "UNDER REVIEW"
+                  ? "Key Needed"
+                  : st === "ALL"
+                    ? "All"
+                    : st === "PROCESSING"
+                      ? "Processing"
+                      : st === "SUCCESSFUL"
+                        ? "Successful"
+                        : st === "FAILED"
+                          ? "Failed"
+                          : "Cancelled"}
             </button>
           ))}
         </div>
@@ -1117,12 +1144,25 @@ function WithdrawalsSection({
                       "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
                     (batch.status === "FAILED" || batch.status === "CANCELLED") &&
                       "bg-destructive/15 text-destructive",
-                    (batch.status === "ON HOLD" || batch.status === "UNDER REVIEW") &&
-                      "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+                    batch.status === "ON HOLD" &&
+                      "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30",
+                    (batch.status === "UNDER REVIEW" || batch.status === "KEY NEEDED") &&
+                      "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30",
                   )}
                 >
-                  {batch.status}
+                  {batch.status === "ON HOLD"
+                    ? "KYC HOLD"
+                    : batch.status === "UNDER REVIEW" || batch.status === "KEY NEEDED"
+                      ? "KEY NEEDED"
+                      : batch.status}
                 </span>
+
+                {batch.reason?.toLowerCase().includes("key submitted") && (
+                  <span className="bg-blue-500/15 border border-blue-500/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 shrink-0" />
+                    Key Submitted
+                  </span>
+                )}
 
                 {batch.count > 1 && (
                   <span className="bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
@@ -1267,36 +1307,87 @@ function WithdrawalsSection({
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40">
               <div className="flex items-center gap-1.5 flex-wrap">
-                {batch.status !== "SUCCESSFUL" && (
-                  <button
-                    disabled={busy}
-                    onClick={() => handleQuickBatchStatus(batch, "SUCCESSFUL")}
-                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
-                    title="Approve payout to trigger KeyBox key entry"
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>{batch.count > 1 ? `Approve All (${batch.count})` : "Approve"}</span>
-                  </button>
-                )}
-                {batch.status !== "UNDER REVIEW" && batch.status !== "SUCCESSFUL" && (
-                  <button
-                    disabled={busy}
-                    onClick={() => handleQuickBatchStatus(batch, "UNDER REVIEW")}
-                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    <Clock className="h-3 w-3" />
-                    <span>{batch.count > 1 ? `Review All (${batch.count})` : "Review"}</span>
-                  </button>
-                )}
+                {/* Step 1: Put on KYC Hold */}
                 {batch.status !== "ON HOLD" && batch.status !== "SUCCESSFUL" && (
                   <button
                     disabled={busy}
-                    onClick={() => handleQuickBatchStatus(batch, "ON HOLD")}
+                    onClick={() =>
+                      handleQuickBatchStatus(
+                        batch,
+                        "ON HOLD",
+                        "Outbound clearing on hold pending mandatory KYC verification.",
+                      )
+                    }
                     className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-[11px] font-semibold text-amber-600 dark:text-amber-400 transition-colors cursor-pointer disabled:opacity-50"
-                    title="Put on hold to require KYC verification"
+                    title="Put on KYC hold to require identity verification"
                   >
                     <AlertCircle className="h-3 w-3" />
-                    <span>{batch.count > 1 ? `Hold All (${batch.count})` : "Hold (KYC)"}</span>
+                    <span>{batch.count > 1 ? `Hold KYC All (${batch.count})` : "Hold (KYC)"}</span>
+                  </button>
+                )}
+
+                {/* Step 2: KYC Successful -> Advance to 5-Digit Key Hold */}
+                {batch.status !== "UNDER REVIEW" && batch.status !== "SUCCESSFUL" && (
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      handleQuickBatchStatus(
+                        batch,
+                        "UNDER REVIEW",
+                        "KYC approved. 5-digit verification key required.",
+                      )
+                    }
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-[11px] font-semibold text-purple-600 dark:text-purple-400 transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+                    title="Approve KYC and advance to 5-digit key hold (Key Needed)"
+                  >
+                    <KeyRound className="h-3 w-3" />
+                    <span>
+                      {batch.count > 1
+                        ? `Approve KYC (Require Key All)`
+                        : "Approve KYC (Require Key)"}
+                    </span>
+                  </button>
+                )}
+
+                {/* Step 3: Key Received -> Return to Processing */}
+                {(batch.status === "UNDER REVIEW" || batch.status === "ON HOLD") && (
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      handleQuickBatchStatus(
+                        batch,
+                        "PROCESSING",
+                        "Verification key received. Clearing in progress.",
+                      )
+                    }
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20 text-[11px] font-semibold text-blue-600 dark:text-blue-400 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Mark key as received and return withdrawal to Processing"
+                  >
+                    <Clock className="h-3 w-3" />
+                    <span>
+                      {batch.count > 1 ? `Key Received (Process All)` : "Key Received → Processing"}
+                    </span>
+                  </button>
+                )}
+
+                {/* Step 4: Final Settlement Approval (ONLY after admin approves release) */}
+                {batch.status !== "SUCCESSFUL" && (
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      handleQuickBatchStatus(
+                        batch,
+                        "SUCCESSFUL",
+                        "Settlement cleared and funds dispatched to destination account.",
+                      )
+                    }
+                    className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                    title="Final settlement: Release funds and mark as dispatched / credited"
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>
+                      {batch.count > 1 ? `Final Settle All (${batch.count})` : "Approve & Settle"}
+                    </span>
                   </button>
                 )}
               </div>
@@ -1306,7 +1397,13 @@ function WithdrawalsSection({
                   onClick={() => {
                     setSelectedBatch(batch);
                     setNewStatus(
-                      batch.status === "PROCESSING" ? "SUCCESSFUL" : (batch.status as WithdrawalStatus),
+                      batch.status === "ON HOLD"
+                        ? "UNDER REVIEW"
+                        : batch.status === "UNDER REVIEW"
+                          ? "PROCESSING"
+                          : batch.status === "PROCESSING"
+                            ? "UNDER REVIEW"
+                            : (batch.status as WithdrawalStatus),
                     );
                     setStatusReason(batch.reason || "");
                   }}
@@ -1323,11 +1420,13 @@ function WithdrawalsSection({
                     type:
                       batch.status === "REJECTED"
                         ? "kyc_rejected"
-                        : batch.status === "ON HOLD" || batch.status === "UNDER REVIEW"
+                        : batch.status === "ON HOLD"
                           ? "kyc_hold"
-                          : batch.status === "SUCCESSFUL" || batch.status === "APPROVED"
-                            ? "key_sent_instruction"
-                            : "kyc_approved_key",
+                          : batch.status === "UNDER REVIEW" || batch.status === "KEY NEEDED"
+                            ? "kyc_approved_key"
+                            : batch.status === "SUCCESSFUL"
+                              ? "key_sent_instruction"
+                              : "first_international_transfer_clearance",
                     recipientName: batch.beneficiaryName || batch.email || "Valued Customer",
                     senderName: "Brooklyn",
                     amount: batch.totalAmount,
@@ -1404,13 +1503,12 @@ function WithdrawalsSection({
                 onChange={(e) => setNewStatus(e.target.value as WithdrawalStatus)}
                 className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-medium"
               >
-                {["PROCESSING", "SUCCESSFUL", "FAILED", "ON HOLD", "UNDER REVIEW", "CANCELLED"].map(
-                  (st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ),
-                )}
+                <option value="PROCESSING">PROCESSING (Interbank Clearing / Key Submitted)</option>
+                <option value="ON HOLD">ON HOLD (KYC Identity Verification Required)</option>
+                <option value="UNDER REVIEW">KEY NEEDED (5-Digit Key Hold / KYC Approved)</option>
+                <option value="SUCCESSFUL">SUCCESSFUL (Final Settlement Dispatched &amp; Credited)</option>
+                <option value="FAILED">FAILED (Cancel &amp; Refund to Wallet Balance)</option>
+                <option value="CANCELLED">CANCELLED (Cancel &amp; Refund to Wallet Balance)</option>
               </select>
             </div>
 

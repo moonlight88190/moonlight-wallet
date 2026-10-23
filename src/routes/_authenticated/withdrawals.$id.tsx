@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   ChevronLeft,
   Copy,
@@ -45,6 +46,7 @@ import { resolvePaymentAsset, INDIAN_BANKS } from "@/lib/assets";
 import { LogoMark } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { getWithdrawalComplianceInfo, TIMELINE_SUMMARY_STEPS } from "@/lib/compliance";
+import { submitWithdrawalKey } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/withdrawals/$id")({
   head: () => ({
@@ -66,8 +68,11 @@ function WithdrawalReceipt() {
   const profile = useProfile();
   const wallet = useWallet();
   const rates = useRates();
+  const queryClient = useQueryClient();
+  const submitKeyFn = useServerFn(submitWithdrawalKey);
   const [copied, setCopied] = useState(false);
   const [keyInput, setKeyInput] = useState("");
+  const [submittingKey, setSubmittingKey] = useState(false);
   const [keySubmitted, setKeySubmitted] = useState(() => {
     return typeof window !== "undefined" && Boolean(localStorage.getItem(`keybox_wd_${id}`));
   });
@@ -230,6 +235,7 @@ function WithdrawalReceipt() {
     isUPI,
     method: wd.method,
     route: wd.route,
+    keySubmitted,
   });
 
   // Fee and settlement economics
@@ -381,18 +387,24 @@ function WithdrawalReceipt() {
             )}
             <span className="uppercase">
               {compliance.isKeyBoxRequired
-                ? "KEYBOX VERIFICATION REQUIRED"
+                ? "KEY NEEDED"
                 : compliance.isKycRequired
-                  ? "ON HOLD · KYC VERIFICATION REQUIRED"
-                  : statusUpper}
+                  ? "KYC HOLD"
+                  : compliance.isSuccess
+                    ? "SETTLED"
+                    : statusUpper === "PROCESSING" || compliance.isProcessing
+                      ? "PROCESSING"
+                      : statusUpper}
             </span>
           </div>
           <span className="text-[11px] font-medium opacity-90">
             {compliance.isSuccess
               ? "Settled"
-              : compliance.isKeyBoxRequired || compliance.isKycRequired
-                ? "Action Required"
-                : compliance.estimatedDaysText}
+              : compliance.isKeyBoxRequired
+                ? "Key Needed"
+                : compliance.isKycRequired
+                  ? "KYC Action Required"
+                  : compliance.estimatedDaysText}
           </span>
         </div>
 
@@ -540,8 +552,8 @@ function WithdrawalReceipt() {
           </div>
         )}
 
-        {/* ─── Mandatory KeyBox Verification Action Card (When Admin Approves) ─── */}
-        {compliance.isKeyBoxRequired && (
+        {/* ─── Mandatory KeyBox Verification Action Card (When Key Needed or Key Submitted) ─── */}
+        {(compliance.isKeyBoxRequired || keySubmitted) && (
           <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-amber-500/10 to-amber-500/5 p-4 sm:p-5 space-y-3.5 shadow-md">
             {/* KYC Completed Success Banner */}
             <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-500/15 border border-emerald-500/35 px-3 py-2 text-xs">
@@ -563,7 +575,7 @@ function WithdrawalReceipt() {
                   <h3 className="font-bold text-foreground text-sm tracking-tight flex items-center gap-2">
                     <span>Action Required: Enter KeyBox Verification Key</span>
                     <span className="bg-amber-500/25 text-amber-800 dark:text-amber-200 text-[10px] font-mono px-2 py-0.5 rounded-full uppercase font-bold">
-                      Final Step
+                      Step 2
                     </span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -651,7 +663,7 @@ function WithdrawalReceipt() {
                     <span>Key Submitted in Withdrawal Tab · Verification in Progress</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Your verification key has been received in this withdrawal tab. Make sure you also entered it on the website, and remember to <strong>inform the sender too to put the key in their tab, or else it will not succeed</strong>. When both keys are put and the correct key is verified, the money will be out for release without any extra verification.
+                    Your verification key has been received in this withdrawal tab and status has returned to Processing. Make sure you also entered it on the website, and remember to <strong>inform the sender too to put the key in their tab, or else it will not succeed</strong>. When both keys are put and the correct key is verified, the money will be out for release without any extra verification.
                   </p>
                   <div className="pt-1 flex items-center justify-between flex-wrap gap-2">
                     <button
@@ -681,20 +693,36 @@ function WithdrawalReceipt() {
                     />
                     <button
                       type="button"
-                      disabled={!keyInput.trim()}
-                      onClick={() => {
-                        if (!keyInput.trim()) return;
-                        localStorage.setItem(`keybox_wd_${id}`, keyInput.trim());
-                        localStorage.setItem("keybox_kyc_key", keyInput.trim());
-                        setKeySubmitted(true);
-                        toast.success(
-                          "Verification key submitted in withdrawal tab! When both keys are put and verified, money will be out for release without extra verification.",
-                        );
+                      disabled={!keyInput.trim() || submittingKey}
+                      onClick={async () => {
+                        const val = keyInput.trim();
+                        if (!val) return;
+                        setSubmittingKey(true);
+                        try {
+                          localStorage.setItem(`keybox_wd_${id}`, val);
+                          localStorage.setItem("keybox_kyc_key", val);
+                          setKeySubmitted(true);
+                          await submitKeyFn({
+                            data: {
+                              withdrawalId: wd.id,
+                              key: val,
+                            },
+                          });
+                          await queryClient.invalidateQueries({ queryKey: ["withdrawal-detail", id] });
+                          await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+                          toast.success(
+                            "Verification key submitted! Payout status has returned to Processing. Funds will be released without extra verification once matched.",
+                          );
+                        } catch (err) {
+                          toast.error((err as Error).message || "Failed to submit verification key");
+                        } finally {
+                          setSubmittingKey(false);
+                        }
                       }}
                       className="h-10 sm:h-9 px-4 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <KeyRound className="h-3.5 w-3.5" />
-                      <span>Submit Key</span>
+                      <span>{submittingKey ? "Submitting..." : "Submit Key"}</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
