@@ -682,6 +682,8 @@ function OverviewSection({
                     date: new Date(t.created_at).toLocaleString(),
                     status: "COMPLETED",
                     destination: t.recipient_name || "Bank Account",
+                    recipientEmail: (t as any).email || undefined,
+                    recipientPhone: (t as any).phone || undefined,
                   }}
                   variant="compact"
                   label="Email"
@@ -1335,6 +1337,8 @@ function WithdrawalsSection({
                     status: batch.status,
                     method: batch.method || "Unified Payments Interface (UPI)",
                     destination: batch.upiId || batch.email || "Bank Account",
+                    recipientEmail: batch.email,
+                    recipientPhone: batch.withdrawals[0]?.phone || undefined,
                     batchCount: batch.count,
                     itemizedWithdrawals: batch.withdrawals.map((w) => ({
                       reference: w.reference,
@@ -2607,6 +2611,8 @@ function TransactionsSection({ token }: { token: string }) {
                       status: statusUpper,
                       method: tx.method || (isWd ? "Unified Payments Interface (UPI)" : "Transfer"),
                       destination: tx.recipient_name || "Bank Account",
+                      recipientEmail: (tx as any).email || undefined,
+                      recipientPhone: (tx as any).phone || undefined,
                     }}
                     label="Email Template"
                   />
