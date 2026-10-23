@@ -51,6 +51,22 @@ export function TxRow({
   const txCurrency = isIndianRail && v.currency === "EUR" ? "INR" : (v.currency || tx.currency || "USD");
   const flagCode = isIndianRail ? "IN" : txCurrency;
 
+  const statusLower = (tx.status || "").toLowerCase();
+  const isKycHold = statusLower === "on hold" || statusLower === "hold" || statusLower === "kyc hold" || statusLower === "kyc required";
+  const isKeyHold = statusLower === "under review" || statusLower === "key needed" || statusLower === "key hold" || statusLower === "key required";
+  const isProcessing = statusLower === "processing";
+  const isFailed = statusLower === "failed" || statusLower === "cancelled" || statusLower === "rejected";
+
+  const statusLabel = isKycHold
+    ? "KYC Hold"
+    : isKeyHold
+      ? "Key Needed"
+      : isProcessing
+        ? "Processing"
+        : isFailed
+          ? statusLower === "cancelled" ? "Cancelled" : "Failed"
+          : tx.status;
+
   return (
     <Link
       to={tx.kind === "withdrawal" ? "/withdrawals/$id" : "/transactions/$id"}
@@ -78,8 +94,19 @@ export function TxRow({
         <div className="text-[11px] text-muted-foreground mt-0.5">
           {d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
           {d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
-          {tx.status !== "completed" && (
-            <span className="ml-1.5 capitalize text-gold">· {tx.status}</span>
+          {tx.status !== "completed" && tx.status !== "successful" && tx.status !== "settled" && (
+            <span
+              className={cn(
+                "ml-1.5",
+                isKycHold && "text-amber-600 dark:text-amber-400 font-semibold",
+                isKeyHold && "text-amber-600 dark:text-amber-400 font-semibold",
+                isProcessing && "text-gold font-medium",
+                isFailed && "text-destructive font-medium",
+                !isKycHold && !isKeyHold && !isProcessing && !isFailed && "capitalize text-gold",
+              )}
+            >
+              · {statusLabel}
+            </span>
           )}
         </div>
       </div>
