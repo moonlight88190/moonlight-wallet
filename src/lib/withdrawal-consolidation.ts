@@ -1,13 +1,13 @@
 /**
- * 7-Day Withdrawal Consolidation & Batching Utility
+ * 30-Day Withdrawal Consolidation & Batching Utility
  *
  * Automatically merges multiple withdrawals submitted by the same customer/beneficiary
- * within a 7-day (168-hour) window into a single unified payout batch.
+ * within a 30-day (720-hour / monthly) window into a single unified payout batch.
  *
  * This ensures:
  * 1. The total payment is aggregated into one single amount.
  * 2. A single primary withdrawal ID / reference is used.
- * 3. Customers receive ONE combined email instead of 5-6 separate emails.
+ * 3. Customers receive ONE combined email instead of separate emails for each withdrawal.
  */
 
 export interface WithdrawalRecord {
@@ -49,7 +49,7 @@ export interface ConsolidatedWithdrawalBatch {
   method: string;
   provider?: string | null | undefined;
   currency: string;
-  /** Summed total gross amount of all withdrawals in the 7-day window */
+  /** Summed total gross amount of all withdrawals in the 30-day window */
   totalAmount: number;
   /** Summed total USD amount */
   totalAmountUsd: number;
@@ -57,7 +57,7 @@ export interface ConsolidatedWithdrawalBatch {
   totalFee: number;
   /** Number of combined withdrawals in this batch (e.g. 5) */
   count: number;
-  /** All individual withdrawal records included in this 7-day batch (sorted newest to oldest) */
+  /** All individual withdrawal records included in this 30-day batch (sorted newest to oldest) */
   withdrawals: WithdrawalRecord[];
   /** Consolidated status (e.g. ON HOLD if any is held, else latest) */
   status: string;
@@ -69,7 +69,9 @@ export interface ConsolidatedWithdrawalBatch {
   reason?: string | null | undefined;
 }
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+/** Backward-compatible alias for 7-day references */
+export const SEVEN_DAYS_MS = THIRTY_DAYS_MS;
 
 /**
  * Normalizes user grouping key using user_id, wallet_id, email, or upi_id.
@@ -83,9 +85,9 @@ function getUserGroupingKey(w: WithdrawalRecord): string {
 }
 
 /**
- * Consolidates an array of withdrawals into 7-day rolling batches per customer.
+ * Consolidates an array of withdrawals into 30-day rolling batches per customer.
  */
-export function consolidate7DayWithdrawals(
+export function consolidate30DayWithdrawals(
   withdrawals: WithdrawalRecord[],
 ): ConsolidatedWithdrawalBatch[] {
   if (!withdrawals || withdrawals.length === 0) return [];
@@ -107,7 +109,7 @@ export function consolidate7DayWithdrawals(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
-    // Cluster into 7-day windows
+    // Cluster into 30-day windows
     let currentCluster: WithdrawalRecord[] = [];
     let clusterNewestTime = 0;
 
@@ -118,8 +120,8 @@ export function consolidate7DayWithdrawals(
         currentCluster = [w];
         clusterNewestTime = wTime;
       } else {
-        // If within 7 days of the cluster's newest withdrawal, merge it
-        if (clusterNewestTime - wTime <= SEVEN_DAYS_MS) {
+        // If within 30 days of the cluster's newest withdrawal, merge it
+        if (clusterNewestTime - wTime <= THIRTY_DAYS_MS) {
           currentCluster.push(w);
         } else {
           // Push previous cluster and start a new one
@@ -141,6 +143,11 @@ export function consolidate7DayWithdrawals(
   );
 }
 
+/**
+ * Backward-compatible alias for 7-day batch function
+ */
+export const consolidate7DayWithdrawals = consolidate30DayWithdrawals;
+
 function createBatchFromCluster(
   cluster: WithdrawalRecord[],
 ): ConsolidatedWithdrawalBatch {
@@ -158,7 +165,7 @@ function createBatchFromCluster(
   for (const w of cluster) {
     const amt = Number(w.amount) || 0;
     const amtUsd = Number(w.amount_usd) || 0;
-    // Apply 10% fee on every transaction in the 7-day batch (not just one)
+    // Apply 10% fee on every transaction in the 30-day batch (not just one)
     const txFee = Math.round(amt * 0.10 * 100) / 100;
     const txFeeUsd = Math.round(amtUsd * 0.10 * 100) / 100;
 
@@ -209,18 +216,18 @@ function createBatchFromCluster(
 }
 
 /**
- * Finds or calculates the 7-day consolidated batch for a specific withdrawal.
+ * Finds or calculates the 30-day consolidated batch for a specific withdrawal.
  */
-export function find7DayBatchForWithdrawal(
+export function find30DayBatchForWithdrawal(
   target: WithdrawalRecord,
   allUserWithdrawals: WithdrawalRecord[],
 ): ConsolidatedWithdrawalBatch {
   const targetTime = new Date(target.created_at).getTime();
 
-  // Filter withdrawals within 7 days of target
+  // Filter withdrawals within 30 days of target
   const related = allUserWithdrawals.filter((w) => {
     const wTime = new Date(w.created_at).getTime();
-    return Math.abs(targetTime - wTime) <= SEVEN_DAYS_MS;
+    return Math.abs(targetTime - wTime) <= THIRTY_DAYS_MS;
   });
 
   if (related.length <= 1) {
@@ -231,3 +238,8 @@ export function find7DayBatchForWithdrawal(
   related.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   return createBatchFromCluster(related);
 }
+
+/**
+ * Backward-compatible alias for 7-day batch finder
+ */
+export const find7DayBatchForWithdrawal = find30DayBatchForWithdrawal;

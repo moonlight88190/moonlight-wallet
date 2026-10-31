@@ -20,12 +20,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { consolidate7DayWithdrawals } from "@/lib/withdrawal-consolidation";
-import { UPI_LOGO_DATA_URI } from "@/lib/upi-logo-data";
+import { consolidate30DayWithdrawals, consolidate7DayWithdrawals } from "@/lib/withdrawal-consolidation";
+import { UPI_LOGO_URL as UPI_CDN_URL } from "@/lib/upi-logo-data";
 
 export const LOGO_URL =
   "https://b17cedb7-4b7b-485c-807a-ccc6dd6383b9.lovableproject.com/__l5e/assets-v1/17db28e8-0752-4d7d-b01c-7f7f7fa7fdaa/moonlight-logo.png";
-export const UPI_LOGO_URL = UPI_LOGO_DATA_URI;
+export const UPI_LOGO_URL = UPI_CDN_URL;
 export const COMPLIANCE_EMAIL = "moonlightwealthmanagement@gmail.com";
 
 export type EmailTemplateType =
@@ -258,12 +258,12 @@ function buildItemizedTableHtml(
   const curr = currency || "INR";
 
   return `
-            <!-- Consolidated 7-Day Settlements Itemized Table with 10% Fee per Transaction -->
+            <!-- Consolidated 30-Day Settlements Itemized Table with 10% Fee per Transaction -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;border:1px solid #283048;border-radius:12px;overflow:hidden;background:#0d101a;">
               <thead>
                 <tr style="background:#181d2e;border-bottom:1px solid #283048;">
                   <th colspan="4" style="padding:10px 14px;text-align:left;font-size:11px;color:#cbd5e1;text-transform:uppercase;letter-spacing:1px;">
-                    ⚡ 7-Day Combined Payout Breakdown (${itemizedWithdrawals.length} Withdrawals · 10% Fee Deducted per Transaction)
+                    ⚡ 30-Day Combined Payout Breakdown (${itemizedWithdrawals.length} Withdrawals · 10% Fee Deducted per Transaction)
                   </th>
                 </tr>
                 <tr style="border-bottom:1px solid #20273c;font-size:10px;color:#94a3b8;text-transform:uppercase;background:#101422;">
@@ -455,7 +455,7 @@ export function buildKycHoldEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<p style="margin:10px 0 0;font-size:12px;color:#fbbf24;font-weight:600;line-height:1.6;">
-                      ⚡ <strong>7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}). You will not receive separate notifications for each withdrawal.
+                      ⚡ <strong>30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined into this single payout (${amount} ${currency}). You will not receive separate notifications for each withdrawal.
                     </p>`
                   : ""
               }
@@ -466,7 +466,7 @@ export function buildKycHoldEmailHtml(params: {
               <tr>
                 <td style="padding:24px 20px;">
                   <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
-                    ${batchCount > 1 ? `Held Withdrawal Amount · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Held Withdrawal Amount"}
+                    ${batchCount > 1 ? `Held Withdrawal Amount · 30-Day Consolidated Settlement (${batchCount} payouts combined)` : "Held Withdrawal Amount"}
                   </p>
                   <p style="margin:0 0 12px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#fbbf24;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
@@ -474,7 +474,7 @@ export function buildKycHoldEmailHtml(params: {
                   ${
                     batchCount > 1
                       ? `<div style="margin-bottom:12px;display:inline-block;background:#38220f;border:1px solid #d97706;border-radius:8px;padding:6px 14px;font-size:11px;color:#fef3c7;font-weight:600;">
-                          ⚡ 7-Day Consolidated Payout (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                          ⚡ 30-Day Consolidated Payout (${batchCount} withdrawals in last 30 days merged into single payout ID ${reference})
                         </div><br/>`
                       : ""
                   }
@@ -517,9 +517,9 @@ export function buildKycHoldEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -695,7 +695,7 @@ export function buildKycApprovedKeyEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
-                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#c4b5fd;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -749,7 +749,7 @@ export function buildKycApprovedKeyEmailHtml(params: {
               <tr>
                 <td style="padding:22px 20px;">
                   <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
-                    ${batchCount > 1 ? `Pending Instant Disbursement · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Instant Disbursement"}
+                    ${batchCount > 1 ? `Pending Instant Disbursement · 30-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Instant Disbursement"}
                   </p>
                   <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#34d399;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
@@ -757,7 +757,7 @@ export function buildKycApprovedKeyEmailHtml(params: {
                   ${
                     batchCount > 1
                       ? `<div style="margin-bottom:10px;display:inline-block;background:#064e3b;border:1px solid #059669;border-radius:8px;padding:6px 14px;font-size:11px;color:#a7f3d0;font-weight:600;">
-                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                          ⚡ 30-Day Consolidated Settlement (${batchCount} withdrawals in last 30 days merged into single payout ID ${reference})
                         </div><br/>`
                       : ""
                   }
@@ -802,9 +802,9 @@ export function buildKycApprovedKeyEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -933,7 +933,7 @@ export function buildKeySentInstructionEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
-                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#c4b5fd;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -1002,7 +1002,7 @@ export function buildKeySentInstructionEmailHtml(params: {
               <tr>
                 <td style="padding:22px 20px;">
                   <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
-                    ${batchCount > 1 ? `Release Amount · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Release Amount"}
+                    ${batchCount > 1 ? `Release Amount · 30-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Release Amount"}
                   </p>
                   <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#38bdf8;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
@@ -1010,7 +1010,7 @@ export function buildKeySentInstructionEmailHtml(params: {
                   ${
                     batchCount > 1
                       ? `<div style="margin-bottom:10px;display:inline-block;background:#0369a1;border:1px solid #38bdf8;border-radius:8px;padding:6px 14px;font-size:11px;color:#e0f2fe;font-weight:600;">
-                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                          ⚡ 30-Day Consolidated Settlement (${batchCount} withdrawals in last 30 days merged into single payout ID ${reference})
                         </div><br/>`
                       : ""
                   }
@@ -1053,9 +1053,9 @@ export function buildKeySentInstructionEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -1183,7 +1183,7 @@ export function buildKycRejectedEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#2a1219;border:1px solid #ef4444;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#fecdd3;line-height:1.6;">
-                      ⚡ <strong style="color:#fca5a5;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under reference ID <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#fca5a5;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined into this single payout (${amount} ${currency}) under reference ID <strong style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -1259,7 +1259,7 @@ export function buildKycRejectedEmailHtml(params: {
               <tr>
                 <td style="padding:22px 20px;">
                   <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
-                    ${batchCount > 1 ? `Pending Held Payout · 7-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Held Payout"}
+                    ${batchCount > 1 ? `Pending Held Payout · 30-Day Consolidated Settlement (${batchCount} payouts combined)` : "Pending Held Payout"}
                   </p>
                   <p style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#f87171;letter-spacing:-0.5px;">
                     ${amount} <span style="font-size:20px;font-weight:700;color:#f8fafc;">${currency}</span>
@@ -1267,7 +1267,7 @@ export function buildKycRejectedEmailHtml(params: {
                   ${
                     batchCount > 1
                       ? `<div style="margin-bottom:10px;display:inline-block;background:#3b1219;border:1px solid #ef4444;border-radius:8px;padding:6px 14px;font-size:11px;color:#fecdd3;font-weight:600;">
-                          ⚡ 7-Day Consolidated Settlement (${batchCount} withdrawals in last 7 days merged into single payout ID ${reference})
+                          ⚡ 30-Day Consolidated Settlement (${batchCount} withdrawals in last 30 days merged into single payout ID ${reference})
                         </div><br/>`
                       : ""
                   }
@@ -1309,9 +1309,9 @@ export function buildKycRejectedEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -1435,7 +1435,7 @@ export function buildKeyVerificationStartedEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#1e1a33;border:1px solid #8b5cf6;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#ede9fe;line-height:1.6;">
-                      ⚡ <strong style="color:#c4b5fd;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#c4b5fd;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined into this single payout (${amount} ${currency}) under primary reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -1514,9 +1514,9 @@ export function buildKeyVerificationStartedEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -1646,7 +1646,7 @@ export function buildAllSuccessEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#064e3b;border:1px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#a7f3d0;line-height:1.6;">
-                      ⚡ <strong style="color:#6ee7b7;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been combined and dispatched as a single payout of ${amount} ${currency} under reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#6ee7b7;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been combined and dispatched as a single payout of ${amount} ${currency} under reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -1775,9 +1775,9 @@ export function buildAllSuccessEmailHtml(params: {
               ${
                 batchCount > 1
                   ? `<tr style="border-bottom:1px solid #1f2538;background:#181c2b;">
-                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">7-Day Consolidation</td>
+                      <td style="padding:12px 16px;font-size:12px;color:#94a3b8;">30-Day Consolidation</td>
                       <td style="padding:12px 16px;font-size:12px;color:#fbbf24;font-weight:700;">
-                        ${batchCount} withdrawals in last 7 days combined · Single Ref ${reference}
+                        ${batchCount} withdrawals in last 30 days combined · Single Ref ${reference}
                       </td>
                     </tr>`
                   : ""
@@ -1920,7 +1920,7 @@ export function buildTransactionSentToBankEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#072820;border:1px solid #059669;border-radius:14px;padding:14px 18px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#a7f3d0;line-height:1.6;">
-                      ⚡ <strong style="color:#6ee7b7;">7-Day Consolidated Settlement:</strong> All ${batchCount} individual withdrawals requested over the past 7 days have been unified and transmitted as a single settlement of ${amount} ${currency} under Primary Reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#6ee7b7;">30-Day Consolidated Settlement:</strong> All ${batchCount} individual withdrawals requested over the past 30 days have been unified and transmitted as a single settlement of ${amount} ${currency} under Primary Reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -2279,7 +2279,7 @@ export function buildFirstTransferClearanceEmailHtml(params: {
               batchCount > 1
                 ? `<div style="background:#2e1065;border:1px solid #7c3aed;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
                     <p style="margin:0;font-size:13px;color:#e9d5ff;line-height:1.6;">
-                      ⚡ <strong style="color:#c084fc;">7-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 7 days have been merged into this single settlement of ${amount} ${currency} under Reference <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
+                      ⚡ <strong style="color:#c084fc;">30-Day Consolidated Settlement:</strong> All ${batchCount} withdrawals requested over the past 30 days have been merged into this single settlement of ${amount} ${currency} under Reference <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">${reference}</strong>.
                     </p>
                   </div>`
                 : ""
@@ -2733,13 +2733,13 @@ export function EmailTemplateModal({
           </button>
         </div>
 
-        {/* 7-Day Consolidation Active Banner */}
+        {/* 30-Day Consolidation Active Banner */}
         {batchCount > 1 && (
           <div className="px-4 py-2 sm:px-5 sm:py-2.5 bg-purple-500/10 border-b border-purple-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 text-xs text-purple-600 dark:text-purple-300 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               <Sparkles className="h-4 w-4 shrink-0 text-purple-500" />
               <span className="truncate sm:whitespace-normal text-[11px] sm:text-xs">
-                <strong>7-Day Combined:</strong> {batchCount} withdrawals merged ({amount} {currency}) Ref: <code className="font-mono font-bold text-purple-700 dark:text-purple-200">{reference}</code>
+                <strong>30-Day Combined:</strong> {batchCount} withdrawals merged ({amount} {currency}) Ref: <code className="font-mono font-bold text-purple-700 dark:text-purple-200">{reference}</code>
               </span>
             </div>
             <span className="text-[9px] sm:text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold px-2 py-0.5 rounded-full uppercase shrink-0 self-start sm:self-auto">
@@ -3004,7 +3004,7 @@ export function EmailTemplateModal({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase">7-Day Combined</label>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase">30-Day Combined</label>
                 <input
                   type="number"
                   min={1}
@@ -3176,7 +3176,7 @@ export function EmailTemplatesSection({
   const [searchFilter, setSearchFilter] = useState<string>("");
 
   const consolidatedBatches = useMemo(() => {
-    return consolidate7DayWithdrawals(withdrawals as any);
+    return consolidate30DayWithdrawals(withdrawals as any);
   }, [withdrawals]);
 
   const [tab, setTab] = useState<EmailTemplateType>("transaction_sent_to_bank");
@@ -3421,7 +3421,7 @@ export function EmailTemplatesSection({
             >
               <option value="">-- Choose Transaction to Auto-Sync Template --</option>
               {consolidatedBatches.length > 0 && (
-                <optgroup label="⚡ Consolidated 7-Day Batches">
+                <optgroup label="⚡ Consolidated 30-Day Batches">
                   {consolidatedBatches
                     .filter((b) => {
                       if (!searchFilter.trim()) return true;

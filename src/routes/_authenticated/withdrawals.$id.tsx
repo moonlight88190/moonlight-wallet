@@ -32,6 +32,7 @@ import { formatMoney, convert, getRate } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
+  find30DayBatchForWithdrawal,
   find7DayBatchForWithdrawal,
   type ConsolidatedWithdrawalBatch,
 } from "@/lib/withdrawal-consolidation";
@@ -134,9 +135,9 @@ function WithdrawalReceipt() {
 
   const wd = wdQuery.data;
 
-  // Query all customer withdrawals to identify 7-day consolidation cluster
+  // Query all customer withdrawals to identify 30-day consolidation cluster
   const relatedWdsQuery = useQuery({
-    queryKey: ["withdrawal-related-7d", wd?.user_id, wd?.wallet_id, wd?.email, wd?.upi_id],
+    queryKey: ["withdrawal-related-30d", wd?.user_id, wd?.wallet_id, wd?.email, wd?.upi_id],
     enabled: !!wd,
     queryFn: async () => {
       if (!wd) return [];
@@ -164,7 +165,7 @@ function WithdrawalReceipt() {
     if (!wd) return null;
     const allWds =
       relatedWdsQuery.data && relatedWdsQuery.data.length > 0 ? relatedWdsQuery.data : [wd];
-    return find7DayBatchForWithdrawal(wd, allWds);
+    return find30DayBatchForWithdrawal(wd, allWds);
   }, [wd, relatedWdsQuery.data]);
 
   const isConsolidated = !!batch && batch.count > 1;
@@ -446,7 +447,7 @@ function WithdrawalReceipt() {
           </span>
         </div>
 
-        {/* ─── 7-Day Consolidation Batch Banner (When multiple withdrawals in 7 days) ─── */}
+        {/* ─── 30-Day Consolidation Batch Banner (When multiple withdrawals in 30 days) ─── */}
         {isConsolidated && (
           <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3.5 sm:p-4 space-y-2">
             <div className="flex items-start gap-3">
@@ -456,14 +457,14 @@ function WithdrawalReceipt() {
               <div className="flex-1 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-foreground">
-                    Combined 7-Day Settlement Batch
+                    Combined 30-Day Settlement Batch
                   </span>
                   <span className="text-[10px] font-mono px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-bold">
                     {batch.count} Payouts Combined
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  All {batch.count} withdrawals initiated within a 7-day period have been unified into this single settlement ID (<span className="font-mono font-semibold text-foreground">{batch.primaryReference}</span>). Total payments are added together so you receive one consolidated settlement and receipt.
+                  All {batch.count} withdrawals initiated within a 30-day period have been unified into this single settlement ID (<span className="font-mono font-semibold text-foreground">{batch.primaryReference}</span>). Total payments are added together so you receive one consolidated settlement and receipt.
                 </p>
               </div>
             </div>
@@ -961,7 +962,7 @@ function WithdrawalReceipt() {
           </div>
           {isConsolidated && (
             <p className="text-[11px] text-primary font-medium">
-              ⚡ Combined 7-day sum of {batch.count} payouts (This request: {formatMoney(grossAmount, displayCurrency)})
+              ⚡ Combined 30-day sum of {batch.count} payouts (This request: {formatMoney(grossAmount, displayCurrency)})
             </p>
           )}
           <div className="inline-flex items-center gap-2 rounded-full bg-secondary/70 border border-border/50 px-3 py-1 mt-2">
@@ -978,7 +979,7 @@ function WithdrawalReceipt() {
             </span>
             {isConsolidated && (
               <span className="text-[10px] font-mono font-bold text-primary">
-                Combined 7-Day Total
+                Combined 30-Day Total
               </span>
             )}
           </div>
@@ -1049,14 +1050,14 @@ function WithdrawalReceipt() {
           </div>
         </div>
 
-        {/* Itemized 7-Day Withdrawals Breakdown (When Consolidated) */}
+        {/* Itemized 30-Day Withdrawals Breakdown (When Consolidated) */}
         {isConsolidated && (
           <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-border/40 pb-2">
               <div className="flex items-center gap-2">
                 <Layers className="h-4 w-4 text-primary" />
                 <span className="text-xs font-bold text-foreground">
-                  Itemized 7-Day Withdrawals ({batch.count})
+                  Itemized 30-Day Withdrawals ({batch.count})
                 </span>
               </div>
               <span className="text-[10px] text-muted-foreground font-mono">
