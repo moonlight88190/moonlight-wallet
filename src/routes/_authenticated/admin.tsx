@@ -42,6 +42,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { EmailTemplateButton, EmailTemplatesSection } from "@/components/EmailTemplateModal";
 import {
+  consolidate30DayWithdrawals,
   consolidate7DayWithdrawals,
   type ConsolidatedWithdrawalBatch,
 } from "@/lib/withdrawal-consolidation";
@@ -955,7 +956,7 @@ function WithdrawalsSection({
   ];
 
   const consolidatedBatches = useMemo(() => {
-    return consolidate7DayWithdrawals(withdrawals as any);
+    return consolidate30DayWithdrawals(withdrawals as any);
   }, [withdrawals]);
 
   const toggleExpand = (batchId: string) => {
@@ -1004,7 +1005,7 @@ function WithdrawalsSection({
       );
       toast.success(
         selectedBatch.count > 1
-          ? `All ${selectedBatch.count} withdrawals in 7-day batch updated to ${newStatus} & note saved.`
+          ? `All ${selectedBatch.count} withdrawals in 30-day batch updated to ${newStatus} & note saved.`
           : `Withdrawal status updated to ${newStatus} & note saved.`,
       );
       setSelectedBatch(null);
@@ -1074,7 +1075,7 @@ function WithdrawalsSection({
             : status;
       toast.success(
         b.count > 1
-          ? `All ${b.count} withdrawals in 7-day batch ${b.primaryReference} marked as ${readable}.`
+          ? `All ${b.count} withdrawals in 30-day batch ${b.primaryReference} marked as ${readable}.`
           : `Withdrawal ${b.primaryReference} marked as ${readable}.`,
       );
       onDone();
@@ -1167,7 +1168,7 @@ function WithdrawalsSection({
                 {batch.count > 1 && (
                   <span className="bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
                     <Sparkles className="h-3 w-3 shrink-0" />
-                    Combined 7-Day ({batch.count} withdrawals)
+                    Combined 30-Day ({batch.count} withdrawals)
                   </span>
                 )}
 
@@ -1222,7 +1223,7 @@ function WithdrawalsSection({
               </div>
             )}
 
-            {/* 7-Day Itemized Sub-Withdrawals Toggle & Panel */}
+            {/* 30-Day Itemized Sub-Withdrawals Toggle & Panel */}
             {batch.count > 1 && (
               <div className="space-y-2">
                 <button
@@ -1233,7 +1234,7 @@ function WithdrawalsSection({
                   <div className="flex items-center gap-2">
                     <Layers className="h-3.5 w-3.5 text-purple-500" />
                     <span>
-                      {expandedBatches[batch.id] ? "Hide" : "Show"} Itemized 7-Day Breakdown ({batch.count} combined payouts · Total {formatMoney(batch.totalAmount, batch.currency)})
+                      {expandedBatches[batch.id] ? "Hide" : "Show"} Itemized 30-Day Breakdown ({batch.count} combined payouts · Total {formatMoney(batch.totalAmount, batch.currency)})
                     </span>
                   </div>
                   {expandedBatches[batch.id] ? (
@@ -1477,7 +1478,7 @@ function WithdrawalsSection({
                 <FileText className="h-4 w-4 text-primary" />
                 <span>
                   {selectedBatch.count > 1
-                    ? `Update 7-Day Batch (${selectedBatch.count} Withdrawals)`
+                    ? `Update 30-Day Batch (${selectedBatch.count} Withdrawals)`
                     : "Update Withdrawal Status & Add Custom Note"}
                 </span>
               </h3>
@@ -1491,7 +1492,7 @@ function WithdrawalsSection({
               </p>
               {selectedBatch.count > 1 && (
                 <div className="rounded-xl bg-purple-500/10 border border-purple-500/25 p-2.5 text-xs text-purple-700 dark:text-purple-300">
-                  ⚡ <strong>Consolidated 7-Day Settlement:</strong> Updating status or saving a note will apply to all {selectedBatch.count} merged withdrawals under primary ID {selectedBatch.primaryReference}.
+                  ⚡ <strong>Consolidated 30-Day Settlement:</strong> Updating status or saving a note will apply to all {selectedBatch.count} merged withdrawals under primary ID {selectedBatch.primaryReference}.
                 </div>
               )}
             </div>

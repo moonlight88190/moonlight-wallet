@@ -69,8 +69,8 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
       targetUserId = wd.user_id;
 
-      // Check 7-day consolidation window for customer withdrawals:
-      // If the customer has multiple withdrawals within a 7-day window:
+      // Check 30-day consolidation window for customer withdrawals:
+      // If the customer has multiple withdrawals within a 30-day window:
       // 1. Suppress separate emails for non-primary withdrawals so each withdrawal doesn't have a separate mail.
       // 2. For the primary (newest) withdrawal, combine all payment amounts into one withdrawal ID and dispatch 1 unified email.
       let batchCount = 1;
@@ -80,7 +80,7 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
       if (wd.user_id || wd.wallet_id || wd.email || wd.upi_id) {
         try {
-          const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+          const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
           const targetTime = new Date(wd.created_at).getTime();
 
           let clusterQuery = supabaseAdmin.from("withdrawals").select("*");
@@ -96,10 +96,10 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
 
           const { data: userWds } = await clusterQuery;
           if (userWds && userWds.length > 1) {
-            // Find withdrawals falling within the 7-day rolling window of this target withdrawal
+            // Find withdrawals falling within the 30-day rolling window of this target withdrawal
             const cluster = userWds.filter((w: any) => {
               const diff = Math.abs(new Date(w.created_at).getTime() - targetTime);
-              return diff <= sevenDaysMs;
+              return diff <= thirtyDaysMs;
             });
 
             if (cluster.length > 1) {
@@ -113,11 +113,11 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
               // If this withdrawal is NOT the primary one, suppress sending a separate email!
               if (wd.id !== primaryWd.id) {
                 console.log(
-                  `[EmailServer] Suppressing separate email for withdrawal ${wd.id || wd.reference}; consolidated into 7-day batch under primary withdrawal ${primaryWd.id || primaryWd.reference}.`,
+                  `[EmailServer] Suppressing separate email for withdrawal ${wd.id || wd.reference}; consolidated into 30-day batch under primary withdrawal ${primaryWd.id || primaryWd.reference}.`,
                 );
                 return {
                   success: true,
-                  message: `Consolidated into 7-day batch (${cluster.length} withdrawals). Separate email suppressed. Primary reference: ${primaryWd.reference || primaryWd.id}`,
+                  message: `Consolidated into 30-day batch (${cluster.length} withdrawals). Separate email suppressed. Primary reference: ${primaryWd.reference || primaryWd.id}`,
                 };
               }
 
@@ -136,12 +136,12 @@ export async function dispatchTransactionalEmailServer(params: DispatchEmailPara
                 primaryWd.reference || `WD-${primaryWd.id.slice(0, 8).toUpperCase()}`;
 
               console.log(
-                `[EmailServer] Consolidated ${cluster.length} withdrawals across 7 days for user. Combined total: ${effectiveGrossAmount} ${wd.currency}, Primary Reference: ${effectiveReferenceId}`,
+                `[EmailServer] Consolidated ${cluster.length} withdrawals across 30 days for user. Combined total: ${effectiveGrossAmount} ${wd.currency}, Primary Reference: ${effectiveReferenceId}`,
               );
             }
           }
         } catch (clusterErr) {
-          console.warn("[EmailServer] Error checking 7-day withdrawal cluster:", clusterErr);
+          console.warn("[EmailServer] Error checking 30-day withdrawal cluster:", clusterErr);
         }
       }
 

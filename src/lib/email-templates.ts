@@ -144,21 +144,21 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
       return {
         title:
           data.batchCount && data.batchCount > 1
-            ? "Consolidated 7-Day Withdrawal Received"
+            ? "Consolidated 30-Day Withdrawal Received"
             : "Withdrawal Request Received",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `We have combined ${data.batchCount} withdrawals requested over the last 7 days into this single consolidated payout of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`
+            ? `We have combined ${data.batchCount} withdrawals requested over the last 30 days into this single consolidated payout of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`
             : `We have received your withdrawal request of ${formatEmailMoney(data.amount, cur)}. Funds typically reflect within 2–5 business days (settlement cycle concludes Day 5).`,
         badgeText:
           data.batchCount && data.batchCount > 1
-            ? `COMBINED 7-DAY (${data.batchCount})`
+            ? `COMBINED 30-DAY (${data.batchCount})`
             : "PROCESSING (2–5 DAYS)",
         badgeBg: "#fffbeb",
         badgeColor: "#92400e",
         badgeBorder: "#fde68a",
         primaryAmountLabel:
-          data.batchCount && data.batchCount > 1 ? "Combined 7-Day Amount" : "Requested Amount",
+          data.batchCount && data.batchCount > 1 ? "Combined 30-Day Amount" : "Requested Amount",
         primaryAmount: formatEmailMoney(data.amount, cur),
         showSettlement: true,
         buttonText: "View Settlement Slip",
@@ -168,11 +168,11 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
       return {
         title:
           data.batchCount && data.batchCount > 1
-            ? "7-Day Consolidated Withdrawal Processing"
+            ? "30-Day Consolidated Withdrawal Processing"
             : "Withdrawal is Being Processed",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `Your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is progressing through national settlement rails. Funds typically reflect within 2–5 business days.`
+            ? `Your combined 30-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is progressing through national settlement rails. Funds typically reflect within 2–5 business days.`
             : `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is progressing through national settlement rails. Funds typically reflect within 2–5 business days (concludes Day 5).`,
         badgeText:
           data.batchCount && data.batchCount > 1 ? `COMBINED (${data.batchCount})` : "PROCESSING",
@@ -192,11 +192,11 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
       return {
         title:
           data.batchCount && data.batchCount > 1
-            ? "Action Required: KYC Verification (7-Day Consolidated Batch)"
+            ? "Action Required: KYC Verification (30-Day Consolidated Batch)"
             : "Action Required: KYC Verification",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `Your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the combined payout will reflect in your bank account.`
+            ? `Your combined 30-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined into one payment) is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the combined payout will reflect in your bank account.`
             : `Your withdrawal of ${formatEmailMoney(data.amount, cur)} is on hold pending mandatory identity verification. Please send your documents to moonlightwealthmanagement@gmail.com. As soon as KYC is verified, the funds will reflect in your bank account.`,
         badgeText:
           data.batchCount && data.batchCount > 1
@@ -218,11 +218,11 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
       return {
         title:
           data.batchCount && data.batchCount > 1
-            ? "Clearance Key Sent — Action Required (7-Day Consolidated Batch)"
+            ? "Clearance Key Sent — Action Required (30-Day Consolidated Batch)"
             : "Clearance Key Sent — Action Required",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `The clearance verification key has been sent for your combined 7-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined). If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`
+            ? `The clearance verification key has been sent for your combined 30-day withdrawal of ${formatEmailMoney(data.amount, cur)} (${data.batchCount} requests combined). If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`
             : `The clearance verification key has been sent for your withdrawal of ${formatEmailMoney(data.amount, cur)}. If you haven't entered the keys on the website then enter it there too, and also put the keys in the withdrawal tab. You must inform the sender too to put the keys in their tab, or else it will not succeed. When both keys are put and you have sent the correct key, the money will be out for release without any extra verification.`,
         badgeText:
           data.batchCount && data.batchCount > 1
@@ -244,11 +244,11 @@ function getEventConfig(data: TransactionEmailData): EventVisualConfig {
       return {
         title:
           data.batchCount && data.batchCount > 1
-            ? "7-Day Consolidated Withdrawal Completed"
+            ? "30-Day Consolidated Withdrawal Completed"
             : "Withdrawal Completed",
         subtitle:
           data.batchCount && data.batchCount > 1
-            ? `Your combined 7-day payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} (${data.batchCount} requests combined into this single disbursement) has settled and been credited to your beneficiary account.`
+            ? `Your combined 30-day payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} (${data.batchCount} requests combined into this single disbursement) has settled and been credited to your beneficiary account.`
             : `Your payout of ${formatEmailMoney(data.netCredited ?? data.amount, cur)} has settled and been credited to your beneficiary account.`,
         badgeText:
           data.batchCount && data.batchCount > 1
@@ -351,7 +351,7 @@ export function generateEmailHtml(data: TransactionEmailData): string {
   rows.push({ label: "Reference ID", value: data.referenceId, isMono: true });
   if (data.batchCount && data.batchCount > 1) {
     rows.push({
-      label: "7-Day Consolidation",
+      label: "30-Day Consolidation",
       value: `⚡ Combined ${data.batchCount} withdrawals into 1 payment`,
       isHighlight: true,
     });
