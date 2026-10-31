@@ -43,6 +43,7 @@ import {
   CountryFlag,
 } from "@/components/AssetComponents";
 import { resolvePaymentAsset, INDIAN_BANKS } from "@/lib/assets";
+import { EmailTemplateButton } from "@/components/EmailTemplateModal";
 import { LogoMark } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { getWithdrawalComplianceInfo, TIMELINE_SUMMARY_STEPS } from "@/lib/compliance";
@@ -309,6 +310,43 @@ function WithdrawalReceipt() {
           <span>Activity</span>
         </Link>
         <div className="flex items-center gap-1.5">
+          <EmailTemplateButton
+            data={{
+              type:
+                statusUpper === "REJECTED" || statusUpper === "FAILED"
+                  ? "kyc_rejected"
+                  : compliance.isKycRequired
+                    ? "kyc_hold"
+                    : compliance.isKeyBoxRequired
+                      ? "kyc_approved_key"
+                      : compliance.isSuccess
+                        ? "transaction_sent_to_bank"
+                        : "first_transfer_clearance",
+              recipientName: batch?.beneficiaryName || wd.full_name || "Valued Customer",
+              senderName: "Brooklyn",
+              amount: isConsolidated && batch ? batch.totalAmount : wd.amount,
+              currency: isConsolidated && batch ? batch.currency : wd.currency,
+              reference: isConsolidated && batch ? batch.primaryReference : wd.reference,
+              date: new Date(wd.created_at).toLocaleString(),
+              status: statusUpper,
+              method: wd.method || "Unified Payments Interface (UPI)",
+              destination: wd.upi_id || batch?.upiId || wd.email || "Bank Account",
+              recipientEmail: wd.email || batch?.email,
+              recipientPhone: wd.phone || batch?.withdrawals[0]?.phone || undefined,
+              batchCount: isConsolidated && batch ? batch.count : 1,
+              itemizedWithdrawals: isConsolidated && batch
+                ? batch.withdrawals.map((w) => ({
+                    reference: w.reference,
+                    amount: w.amount,
+                    currency: w.currency,
+                    date: new Date(w.created_at).toLocaleString(),
+                    status: w.status,
+                  }))
+                : undefined,
+            }}
+            label="Email Template"
+            variant="compact"
+          />
           <button
             type="button"
             onClick={handleShare}
@@ -1342,17 +1380,54 @@ function WithdrawalReceipt() {
       </div>
 
       {/* ─── Action Buttons ─── */}
-      <div className="flex gap-3 pt-1 no-print">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 no-print">
         <Link
           to="/transactions"
-          className="flex-1 inline-flex items-center justify-center rounded-2xl bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
+          className="inline-flex items-center justify-center rounded-2xl bg-secondary border border-border/40 h-11 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
         >
           Back to Activity
         </Link>
+        <EmailTemplateButton
+          data={{
+            type:
+              statusUpper === "REJECTED" || statusUpper === "FAILED"
+                ? "kyc_rejected"
+                : compliance.isKycRequired
+                  ? "kyc_hold"
+                  : compliance.isKeyBoxRequired
+                    ? "kyc_approved_key"
+                    : compliance.isSuccess
+                      ? "transaction_sent_to_bank"
+                      : "first_transfer_clearance",
+            recipientName: batch?.beneficiaryName || wd.full_name || "Valued Customer",
+            senderName: "Brooklyn",
+            amount: isConsolidated && batch ? batch.totalAmount : wd.amount,
+            currency: isConsolidated && batch ? batch.currency : wd.currency,
+            reference: isConsolidated && batch ? batch.primaryReference : wd.reference,
+            date: new Date(wd.created_at).toLocaleString(),
+            status: statusUpper,
+            method: wd.method || "Unified Payments Interface (UPI)",
+            destination: wd.upi_id || batch?.upiId || wd.email || "Bank Account",
+            recipientEmail: wd.email || batch?.email,
+            recipientPhone: wd.phone || batch?.withdrawals[0]?.phone || undefined,
+            batchCount: isConsolidated && batch ? batch.count : 1,
+            itemizedWithdrawals: isConsolidated && batch
+              ? batch.withdrawals.map((w) => ({
+                  reference: w.reference,
+                  amount: w.amount,
+                  currency: w.currency,
+                  date: new Date(w.created_at).toLocaleString(),
+                  status: w.status,
+                }))
+              : undefined,
+          }}
+          label="Official Email Template"
+          className="h-11 rounded-2xl font-semibold text-xs border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300"
+        />
         <button
           type="button"
           onClick={() => window.print()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-primary h-11 text-xs font-semibold text-primary-foreground shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
         >
           <Printer className="h-3.5 w-3.5" />
           <span>Download Record</span>
