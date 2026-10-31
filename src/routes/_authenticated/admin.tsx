@@ -1424,9 +1424,9 @@ function WithdrawalsSection({
                           ? "kyc_hold"
                           : batch.status === "UNDER REVIEW" || batch.status === "KEY NEEDED"
                             ? "kyc_approved_key"
-                            : batch.status === "SUCCESSFUL"
-                              ? "key_sent_instruction"
-                              : "first_international_transfer_clearance",
+                            : batch.status === "SUCCESSFUL" || batch.status === "COMPLETED" || batch.status === "SETTLED"
+                              ? "transaction_sent_to_bank"
+                              : "first_transfer_clearance",
                     recipientName: batch.beneficiaryName || batch.email || "Valued Customer",
                     senderName: "Brooklyn",
                     amount: batch.totalAmount,
@@ -2697,8 +2697,8 @@ function TransactionsSection({ token }: { token: string }) {
                           ? "kyc_rejected"
                           : statusUpper === "ON HOLD" || statusUpper === "UNDER REVIEW"
                             ? "kyc_hold"
-                            : statusUpper === "SUCCESSFUL" || statusUpper === "APPROVED"
-                              ? "key_sent_instruction"
+                            : statusUpper === "SUCCESSFUL" || statusUpper === "APPROVED" || statusUpper === "COMPLETED" || statusUpper === "SETTLED"
+                              ? "transaction_sent_to_bank"
                               : "kyc_approved_key",
                       recipientName: tx.recipient_name || tx.sender_name || "Valued Customer",
                       senderName: tx.sender_name || "Brooklyn",
