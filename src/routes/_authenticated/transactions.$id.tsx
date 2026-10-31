@@ -551,7 +551,7 @@ function Receipt() {
                   </Link>
 
                   <a
-                    href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Ref: ${tx.reference || tx.id}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Desk,\n\nI am submitting my KYC verification documents for withdrawal ref: ${tx.reference || tx.id}.\n\nBeneficiary: ${tx.recipient_name}\nAmount: ${formatMoney(grossAmt, tx.currency)}\n\nAttached:\n1. Live selfie photo\n2. Matching ID document (School ID / College ID / Aadhaar / PAN)\n\nThank you,\n${tx.recipient_name}`)}`}
+                    href={`mailto:moonlightwealthmanagement@gmail.com?subject=${encodeURIComponent(`KYC Verification Documents - Ref: ${referenceCode}`)}&body=${encodeURIComponent(`Hello Moonlight Compliance Desk,\n\nI am submitting my KYC verification documents for withdrawal ref: ${referenceCode}.\n\nBeneficiary: ${rawData.full_name || rawData.recipient_name || "Valued Customer"}\nAmount: ${formatMoney(grossAmount, currency)}\n\nAttached:\n1. Live selfie photo\n2. Matching ID document (School ID / College ID / Aadhaar / PAN)\n\nThank you,\n${rawData.full_name || rawData.recipient_name || "Valued Customer"}`)}`}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-500/30 bg-card hover:bg-secondary text-foreground font-semibold text-[11px] py-1.5 transition-colors cursor-pointer"
                   >
                     <Mail className="h-3 w-3 text-amber-600 dark:text-amber-400" />
@@ -696,6 +696,34 @@ function Receipt() {
                 <p className="text-[10px] text-foreground font-medium pt-0.5">
                   ⚡ When both keys are put and the correct key has been sent, the money will be out for release without any extra verification.
                 </p>
+              </div>
+            ) : complianceInfo.isSuccess ? (
+              <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 p-3.5 space-y-2.5 text-xs text-left">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Moonlight Complete · Sent to Bank for Review</span>
+                  </div>
+                  <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-800 dark:text-emerald-200">
+                    Dispatched
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Moonlight has completed and finalized every step for this payout. The transaction has been dispatched and transmitted directly to your receiving bank for inward clearing review.
+                </p>
+                <div className="rounded-lg bg-card/80 border border-emerald-500/30 p-2.5 space-y-1">
+                  <p className="font-semibold text-emerald-700 dark:text-emerald-300 text-[11px]">
+                    ⚠️ Moonlight has zero control over the transaction now
+                  </p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    The funds have officially left Moonlight custody and are in your destination bank's clearing rail. Moonlight cannot modify or cancel the transfer.
+                  </p>
+                </div>
+                <div className="rounded-lg bg-blue-500/10 border border-blue-500/25 p-2.5">
+                  <p className="text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed font-medium">
+                    💳 <strong>When will the money reflect?</strong> After your receiving bank concludes its standard review, the transaction will automatically reflect in your account and you will receive your funds.
+                  </p>
+                </div>
               </div>
             ) : complianceInfo.isHold ? (
               <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">

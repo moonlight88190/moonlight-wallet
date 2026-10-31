@@ -15,6 +15,7 @@ import {
   ChevronDown,
   SlidersHorizontal,
   Globe,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export type EmailTemplateType =
   | "kyc_rejected"
   | "key_verification_started"
   | "all_success"
+  | "transaction_sent_to_bank"
   | "first_transfer_clearance";
 
 export interface ItemizedWithdrawalEntry {
@@ -43,20 +45,20 @@ export interface ItemizedWithdrawalEntry {
 }
 
 export interface EmailContextData {
-  type?: EmailTemplateType;
-  recipientName?: string;
-  senderName?: string;
-  amount?: string | number;
-  currency?: string;
-  method?: string;
-  destination?: string;
-  status?: string;
-  reference?: string;
-  date?: string;
-  batchCount?: number;
-  recipientEmail?: string;
-  recipientPhone?: string;
-  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+  type?: EmailTemplateType | undefined;
+  recipientName?: string | undefined;
+  senderName?: string | undefined;
+  amount?: string | number | undefined;
+  currency?: string | undefined;
+  method?: string | undefined;
+  destination?: string | undefined;
+  status?: string | undefined;
+  reference?: string | undefined;
+  date?: string | undefined;
+  batchCount?: number | undefined;
+  recipientEmail?: string | undefined;
+  recipientPhone?: string | undefined;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[] | undefined;
 }
 
 function buildItemizedTableHtml(
@@ -142,6 +144,8 @@ export function getKycEmailSubject(
       return `Key Verification In Progress — Payout Ref: ${reference} (${amount || ""} ${currency || ""})`;
     case "all_success":
       return `Payout Approved & Dispatched — ${amount || ""} ${currency || ""} — Ref: ${reference}`;
+    case "transaction_sent_to_bank":
+      return `Moonlight Process Complete: Funds Transmitted to Your Bank for Review — Ref: ${reference} (${amount || ""} ${currency || ""})`;
     case "first_transfer_clearance":
       return `First International Transfer & Withdrawal: Final Clearance Notice (5–7 Days) — Ref: ${reference}`;
     default:
@@ -1636,6 +1640,291 @@ export function buildAllSuccessEmailHtml(params: {
 }
 
 /**
+ * TEMPLATE 8: Transaction Sent to User Bank for Review (Final Handover)
+ * Notifies the user that Moonlight has completed and finalized every single step,
+ * has debited the funds and transmitted the transaction to the user's receiving bank for inward review.
+ * Explains clearly and authoritatively that Moonlight has zero control over the transaction now,
+ * and once the receiving bank completes its review, the money will automatically reflect in the user account.
+ */
+export function buildTransactionSentToBankEmailHtml(params: {
+  recipientName: string;
+  amount: string;
+  currency: string;
+  method: string;
+  destination: string;
+  reference: string;
+  date: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  senderName?: string;
+  batchCount?: number;
+  itemizedWithdrawals?: ItemizedWithdrawalEntry[];
+}): string {
+  const {
+    recipientName,
+    amount,
+    currency,
+    method,
+    destination,
+    reference,
+    date,
+    recipientEmail = "customer@gmail.com",
+    recipientPhone = "+91 98765 43210",
+    batchCount = 1,
+    itemizedWithdrawals = [],
+  } = params;
+
+  const isUpi =
+    method.toLowerCase().includes("upi") ||
+    destination.includes("@") ||
+    method.toLowerCase().includes("unified");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Moonlight Settlement Complete — Sent to Bank for Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  \${MOBILE_EMAIL_STYLES}
+</head>
+<body style="margin:0;padding:0;background:#0d0f17;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#f8fafc;">
+  <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f17;padding:36px 12px;">
+    <tr><td align="center">
+      <table class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;border-radius:20px;overflow:hidden;background:#141724;border:1px solid #23283b;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+
+        <!-- Brand Header -->
+        <tr>
+          <td class="email-header" style="background:#0a0c13;padding:28px 36px;border-bottom:1px solid #1e2333;text-align:center;">
+            <img class="email-logo" src="\${LOGO_URL}" alt="Moonlight" width="130" style="display:block;margin:0 auto 6px;max-width:130px;height:auto;" />
+            <p style="margin:0;color:#94a3b8;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;">Moonlight Financial Settlement Rail · Treasury Operations</p>
+          </td>
+        </tr>
+
+        <!-- Green / Emerald Status Banner -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#059669,#047857);padding:14px 24px;text-align:center;">
+            <p style="margin:0;color:#ffffff;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
+              🏛️ MOONLIGHT CLEARANCE COMPLETE · SENT TO BENEFICIARY BANK FOR REVIEW
+            </p>
+          </td>
+        </tr>
+
+        <!-- Main Body -->
+        <tr>
+          <td class="email-body" style="padding:34px 30px;background:#141724;">
+            <p style="margin:0 0 10px;font-size:16px;color:#f8fafc;font-weight:600;">Dear <strong>\${recipientName}</strong>,</p>
+            
+            <p style="margin:0 0 18px;font-size:14px;color:#e2e8f0;line-height:1.65;">
+              This is an official notice confirming that <strong style="color:#34d399;">Moonlight has completed and finalized every single step</strong> for your payout of <strong style="color:#ffffff;">\${amount} \${currency}</strong>. All internal compliance protocols, identity verifications, KeyBox clearances, and outbound treasury fund deductions have been 100% completed on our end.
+            </p>
+
+            \${
+              batchCount > 1
+                ? \`<div style="background:#064e3b;border:1px solid #059669;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="margin:0;font-size:13px;color:#a7f3d0;line-height:1.6;">
+                      ⚡ <strong style="color:#6ee7b7;">7-Day Consolidated Settlement:</strong> All \${batchCount} withdrawals requested over the past 7 days have been combined and dispatched as a single payout of \${amount} \${currency} under Reference ID <strong style="color:#38bdf8;font-family:'IBM Plex Mono',monospace;">\${reference}</strong>.
+                    </p>
+                  </div>\`
+                : ""
+            }
+
+            <!-- Dispatched Amount Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f121e;border:2px solid #059669;border-radius:16px;margin-bottom:24px;text-align:center;">
+              <tr>
+                <td style="padding:22px 20px;">
+                  <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;">
+                    \${batchCount > 1 ? \`Settled Payout (\${batchCount} Withdrawals Combined)\` : "Transmitted Settlement Amount"}
+                  </p>
+                  <p class="email-amount" style="margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:800;color:#34d399;letter-spacing:-0.5px;">
+                    \${amount} <span class="email-amount-sub" style="font-size:20px;font-weight:700;color:#f8fafc;">\${currency}</span>
+                  </p>
+                  
+                  <div style="display:inline-block;background:#1e2336;border:1px solid #333c55;border-radius:999px;padding:6px 16px;">
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        \${
+                          isUpi
+                            ? \`<td style="padding-right:8px;vertical-align:middle;">
+                                <img src="\${UPI_LOGO_URL}" alt="UPI" width="46" style="display:block;max-width:46px;height:auto;" />
+                               </td>\`
+                            : ""
+                        }
+                        <td style="vertical-align:middle;font-size:12px;font-weight:600;color:#f8fafc;">
+                          \${method}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Critical Notice Box: Transferred to Bank & Zero Moonlight Control -->
+            <div style="background:#042f2e;border:2px solid #0d9488;border-radius:14px;padding:18px 20px;margin-bottom:22px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="32" style="vertical-align:top;font-size:22px;padding-right:12px;">⚖️</td>
+                  <td>
+                    <h3 style="margin:0 0 6px;font-size:13px;color:#2dd4bf;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      Funds Dispatched to Your Bank · Custody Transferred
+                    </h3>
+                    <p style="margin:0 0 10px;font-size:13px;color:#f0fdfa;line-height:1.65;">
+                      Your transaction has officially been <strong>dispatched and sent directly to your receiving bank</strong> for statutory inward review and account validation.
+                    </p>
+                    <div style="background:#02201e;border-radius:10px;padding:12px 14px;border:1px solid #14b8a6;">
+                      <p style="margin:0;font-size:12px;color:#ccfbf1;font-weight:600;line-height:1.6;">
+                        ⚠️ <strong style="color:#ffffff;">Moonlight has zero control over the transaction now.</strong> All operations and obligations on Moonlight's platform are completely finished. The funds have departed Moonlight custody and are strictly within your beneficiary bank's internal settlement pipeline. Moonlight systems cannot reverse, cancel, hold, or modify the transfer.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Money Reflects in Account Section -->
+            <div style="background:#131d2e;border:2px solid #2563eb;border-radius:14px;padding:18px 20px;margin-bottom:22px;">
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td width="32" style="vertical-align:top;font-size:22px;padding-right:12px;">💳</td>
+                  <td>
+                    <h3 style="margin:0 0 6px;font-size:13px;color:#60a5fa;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                      When Will The Money Reflect In Your Account?
+                    </h3>
+                    <p style="margin:0 0 10px;font-size:13px;color:#e0f2fe;line-height:1.65;">
+                      Your bank is currently conducting its standard inward clearing review. <strong style="color:#38bdf8;">Once this bank review is complete, the transaction will automatically reflect in your account and you will receive your money.</strong>
+                    </p>
+                    <ul style="margin:0;padding-left:18px;font-size:12px;color:#bae6fd;line-height:1.6;">
+                      <li style="margin-bottom:4px;">No further actions, documents, or steps are needed from your side.</li>
+                      <li style="margin-bottom:4px;">The money is guaranteed to credit directly into your destination account upon your bank's review completion.</li>
+                      <li>Please check your bank app, passbook, or SMS alerts for credit confirmation.</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Interbank Settlement Milestones -->
+            <div style="background:#0c101c;border:1px solid #1e2438;border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+              <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">
+                Verified Clearance Timeline:
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#34d399;">Step 1:</strong> Moonlight Processing &amp; KYC Verification
+                  </td>
+                  <td align="right" style="padding-bottom:12px;font-size:10px;color:#34d399;font-weight:700;font-family:'IBM Plex Mono',monospace;">COMPLETED</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#34d399;">Step 2:</strong> Security KeyBox &amp; AML Clearing Match
+                  </td>
+                  <td align="right" style="padding-bottom:12px;font-size:10px;color:#34d399;font-weight:700;font-family:'IBM Plex Mono',monospace;">COMPLETED</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#059669;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">✓</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#34d399;">Step 3:</strong> Moonlight Treasury Outbound Fund Handover
+                  </td>
+                  <td align="right" style="padding-bottom:12px;font-size:10px;color:#34d399;font-weight:700;font-family:'IBM Plex Mono',monospace;">DISPATCHED</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;padding-bottom:12px;">
+                    <div style="background:#0284c7;color:#ffffff;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">⚡</div>
+                  </td>
+                  <td style="padding-bottom:12px;font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#38bdf8;">Step 4:</strong> Receiving Bank Inward Review &amp; Routing
+                  </td>
+                  <td align="right" style="padding-bottom:12px;font-size:10px;color:#38bdf8;font-weight:700;font-family:'IBM Plex Mono',monospace;">IN PROGRESS AT BANK</td>
+                </tr>
+                <tr>
+                  <td width="28" style="vertical-align:top;">
+                    <div style="background:#047857;color:#a7f3d0;width:20px;height:20px;border-radius:50%;text-align:center;font-size:11px;font-weight:bold;line-height:20px;">💰</div>
+                  </td>
+                  <td style="font-size:12px;color:#f8fafc;font-weight:600;">
+                    <strong style="color:#a7f3d0;">Step 5:</strong> Money Reflects &amp; Credits to User Account
+                  </td>
+                  <td align="right" style="font-size:10px;color:#fbbf24;font-weight:700;font-family:'IBM Plex Mono',monospace;">UPON REVIEW COMPLETION</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Transaction Audit Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #252b40;border-radius:12px;overflow:hidden;margin-bottom:24px;background:#0f121e;">
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;width:38%;">Beneficiary</td>
+                <td style="padding:10px 16px;font-size:12px;color:#f8fafc;font-weight:600;">\${recipientName}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Destination Account</td>
+                <td style="padding:10px 16px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#f8fafc;font-weight:600;">\${destination}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Payout Reference ID</td>
+                <td style="padding:10px 16px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#38bdf8;font-weight:700;">\${reference}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;background:#141724;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Moonlight Status</td>
+                <td style="padding:10px 16px;font-size:12px;color:#34d399;font-weight:700;">ALL STEPS COMPLETED &amp; DISPATCHED ✅</td>
+              </tr>
+              <tr style="border-bottom:1px solid #1f2538;">
+                <td style="padding:10px 16px;font-size:12px;color:#94a3b8;">Current Custody</td>
+                <td style="padding:10px 16px;font-size:12px;color:#f8fafc;font-weight:600;">Transferred to Beneficiary Bank (No Moonlight Control)</td>
+              </tr>
+              <tr style="background:#064e3b;">
+                <td style="padding:10px 16px;font-size:12px;color:#a7f3d0;font-weight:600;">Next Event</td>
+                <td style="padding:10px 16px;font-size:12px;color:#34d399;font-weight:700;">Funds Reflect in Bank Account Upon Review</td>
+              </tr>
+            </table>
+
+            \${buildItemizedTableHtml(itemizedWithdrawals, amount, currency)}
+
+            <!-- Reassurance Note -->
+            <div style="background:#0c101c;border:1px solid #1e2438;border-radius:12px;padding:16px 18px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:13px;color:#34d399;font-weight:700;">
+                ✓ Transfer Finalized on Moonlight
+              </p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
+                Because Moonlight has completed everything and transferred full custody to your receiving financial institution, the transaction cannot be stopped or cancelled. Your funds will reflect directly in your account as soon as your bank's review is finished.
+              </p>
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer" style="background:#0a0c13;padding:24px 32px;border-top:1px solid #1e2333;text-align:center;">
+            <p style="margin:0 0 6px;color:#64748b;font-size:11px;font-weight:600;">
+              Moonlight Financial · Official Bank Dispatch Confirmation
+            </p>
+            <p style="margin:0 0 8px;color:#475569;font-size:10px;line-height:1.6;">
+              This is an official automated dispatch notification. Inquiries regarding inward credit times may also be referenced with your destination bank using Reference ID <strong style="color:#94a3b8;">\${reference}</strong>.
+            </p>
+            <p style="margin:0;color:#374151;font-size:10px;">&copy; 2026 Moonlight Technologies Inc. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
  * TEMPLATE 7: First International Transfer Clearance (5–7 Business Days)
  * Reassures the customer that their first international transfer & withdrawal takes time,
  * but if their details (Gmail, Name, Phone Number, UPI ID) are correct, money will arrive
@@ -1997,19 +2286,21 @@ export function EmailTemplateModal({
   initialData,
 }: EmailTemplateModalProps) {
   const [tab, setTab] = useState<EmailTemplateType>(
-    initialData?.type === "first_transfer_clearance"
-      ? "first_transfer_clearance"
-      : initialData?.type === "key_sent_instruction"
-        ? "key_sent_instruction"
-        : initialData?.type === "kyc_approved_key"
-          ? "kyc_approved_key"
-          : initialData?.type === "kyc_rejected"
-            ? "kyc_rejected"
-            : initialData?.type === "key_verification_started"
-              ? "key_verification_started"
-              : initialData?.type === "all_success"
-                ? "all_success"
-                : "kyc_hold",
+    initialData?.type === "transaction_sent_to_bank"
+      ? "transaction_sent_to_bank"
+      : initialData?.type === "first_transfer_clearance"
+        ? "first_transfer_clearance"
+        : initialData?.type === "key_sent_instruction"
+          ? "key_sent_instruction"
+          : initialData?.type === "kyc_approved_key"
+            ? "kyc_approved_key"
+            : initialData?.type === "kyc_rejected"
+              ? "kyc_rejected"
+              : initialData?.type === "key_verification_started"
+                ? "key_verification_started"
+                : initialData?.type === "all_success"
+                  ? "all_success"
+                  : "kyc_hold",
   );
   const [previewMode, setPreviewMode] = useState<"visual" | "html">("visual");
 
@@ -2036,7 +2327,8 @@ export function EmailTemplateModal({
 
   useEffect(() => {
     if (initialData) {
-      if (initialData.type === "first_transfer_clearance") setTab("first_transfer_clearance");
+      if (initialData.type === "transaction_sent_to_bank") setTab("transaction_sent_to_bank");
+      else if (initialData.type === "first_transfer_clearance") setTab("first_transfer_clearance");
       else if (initialData.type === "key_sent_instruction") setTab("key_sent_instruction");
       else if (initialData.type === "kyc_approved_key") setTab("kyc_approved_key");
       else if (initialData.type === "kyc_rejected") setTab("kyc_rejected");
@@ -2134,6 +2426,22 @@ export function EmailTemplateModal({
         destination,
         reference,
         date,
+        batchCount,
+        itemizedWithdrawals,
+      });
+    }
+    if (tab === "transaction_sent_to_bank") {
+      return buildTransactionSentToBankEmailHtml({
+        recipientName: recipient,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        recipientEmail,
+        recipientPhone,
+        senderName: sender,
         batchCount,
         itemizedWithdrawals,
       });
@@ -2360,6 +2668,20 @@ export function EmailTemplateModal({
                 <Globe className="h-3.5 w-3.5 shrink-0" />
                 <span>7. 1st Transfer</span>
                 <span className="hidden md:inline">(5-7 Days &amp; AML)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("transaction_sent_to_bank")}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+                  tab === "transaction_sent_to_bank"
+                    ? "bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/40 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                )}
+              >
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span>8. Sent to Bank</span>
+                <span className="hidden md:inline">(Bank Review &amp; Credit)</span>
               </button>
             </div>
           </div>
@@ -2733,6 +3055,20 @@ export function EmailTemplatesSection() {
         date,
       });
     }
+    if (tab === "transaction_sent_to_bank") {
+      return buildTransactionSentToBankEmailHtml({
+        recipientName: recipient,
+        amount,
+        currency,
+        method,
+        destination,
+        reference,
+        date,
+        recipientEmail,
+        recipientPhone,
+        senderName: sender,
+      });
+    }
     if (tab === "first_transfer_clearance") {
       return buildFirstTransferClearanceEmailHtml({
         recipientName: recipient,
@@ -2814,7 +3150,7 @@ export function EmailTemplatesSection() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
         <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-semibold text-foreground">💡 7 Specialized Clearance Templates</p>
+          <p className="font-semibold text-foreground">💡 8 Specialized Clearance Templates</p>
           <p className="text-muted-foreground leading-relaxed">
             1. <strong>Withdrawal KYC Hold:</strong> Sent when a withdrawal is held. Contains required documents and guidance.<br />
             2. <strong>KYC Approved:</strong> Sent after KYC. Explains 5-digit key sent to sender (e.g. Brooklyn) to release payout.<br />
@@ -2822,7 +3158,8 @@ export function EmailTemplatesSection() {
             4. <strong>KYC Failed / Retry:</strong> Explains that photo was not taken live or did not match ID (School/College ID recommended).<br />
             5. <strong>Key Verification Started:</strong> Informs customer their KeyBox verification key has been received and verification is underway.<br />
             6. <strong>All Processes Complete:</strong> Dispatched confirmation stating all processes are complete and money will reflect anytime if UPI, name, number, and mail are correct.<br />
-            7. <strong>1st Transfer Clearance (5–7 Days):</strong> First international transfer &amp; withdrawal update. Reassures customer that if Gmail, Name, Number &amp; UPI are correct they will get funds in 5–7 days with no more recipient verification, noting sender must comply with Indian bank AML/safety inquiries in this final stretch.
+            7. <strong>1st Transfer Clearance (5–7 Days):</strong> First international transfer &amp; withdrawal update. Reassures customer that if Gmail, Name, Number &amp; UPI are correct they will get funds in 5–7 days with no more recipient verification, noting sender must comply with Indian bank AML/safety inquiries in this final stretch.<br />
+            8. <strong>Sent to Bank (Bank Review &amp; Credit):</strong> Final handover notification stating Moonlight has completed and finalized every step, has zero control over the transaction now, and funds will automatically reflect and credit once the receiving bank finishes its review.
           </p>
         </div>
       </div>
@@ -2925,6 +3262,20 @@ export function EmailTemplatesSection() {
             <Globe className="h-3.5 w-3.5 shrink-0" />
             <span>7. 1st Transfer</span>
             <span className="hidden md:inline">(5-7 Days &amp; AML)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("transaction_sent_to_bank")}
+            className={cn(
+              "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 whitespace-nowrap",
+              tab === "transaction_sent_to_bank"
+                ? "bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/40 shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+            )}
+          >
+            <Building2 className="h-3.5 w-3.5 shrink-0" />
+            <span>8. Sent to Bank</span>
+            <span className="hidden md:inline">(Bank Review &amp; Credit)</span>
           </button>
         </div>
 
