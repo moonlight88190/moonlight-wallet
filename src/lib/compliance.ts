@@ -324,15 +324,18 @@ export function getWithdrawalComplianceInfo(
     upperStatus === "SETTLED"
   ) {
     return {
-      statusLabel: "SUCCESS",
-      stageTitle: "Payout Settled",
-      description: "Withdrawal confirmed and funds dispatched to recipient account.",
-      currentStep: "Dispatched & Credited",
-      currentStepDescription: "Funds have been successfully dispatched and credited to the beneficiary account.",
-      nextStep: "Transfer Completed",
-      nextStepDescription: "The withdrawal has arrived at the receiving destination.",
-      estimatedArrivalDate: "Completed",
-      estimatedDaysText: "Settled",
+      statusLabel: "SENT TO BANK · SETTLED",
+      stageTitle: "Moonlight Cleared — Sent to Bank for Review",
+      description:
+        "Moonlight has completed and finalized every step for this payout. Funds have been transmitted directly to your receiving bank for statutory inward review. Moonlight has zero control over the funds now; the amount will reflect in your account once your bank review completes.",
+      currentStep: "Moonlight Cleared · Sent to Bank for Review",
+      currentStepDescription:
+        "Moonlight operations 100% completed. Outbound transaction has been transmitted to your receiving bank for routine inward clearance. Moonlight has zero control over funds now; money will reflect directly in your account upon bank review completion.",
+      nextStep: "Inward Bank Account Credit",
+      nextStepDescription:
+        "Your receiving bank conducts inward clearing and credits funds directly into your account upon review completion.",
+      estimatedArrivalDate: "Completed & Dispatched",
+      estimatedDaysText: "Sent to Bank",
       progressPercent: 100,
       isProcessing: false,
       isHold: false,
